@@ -14,11 +14,42 @@ every feature mentioned in the proposal as if it were a confirmed requirement.
 
 - `source/main.py` is the application entry point and currently empty.
 - `source/Control/`, `source/Model/`, `source/service/`, and `source/view/` are the
-  initial architecture folders. Follow the existing layout when implementing a
-  feature; explain any layout change needed for that feature.
+  MVC-S architecture folders. Follow the responsibilities below when implementing
+  a feature; explain any layout change needed for that feature.
 - `test/` is the current test directory. There is no configured test runner,
   dependency manifest, or runnable application yet. Update this guidance as setup
   becomes concrete; do not claim nonexistent commands passed.
+
+## MVC-S coding structure
+
+Use Model-View-Controller-Service (MVC-S) for application code, with the existing
+directory names and capitalization:
+
+| Layer | Directory | Responsibility |
+| --- | --- | --- |
+| Model | `source/Model/` | Domain data structures such as JobPosting, Skill, StudentProfile, and LearningPlan; persistence interfaces and implementations. |
+| View | `source/view/` | Screens, widgets, visual formatting, user input collection, and presentation state. |
+| Controller | `source/Control/` | Handle user actions, validate request shape, call services, and translate results or errors into data the view can present. |
+| Service | `source/service/` | Business rules, skill extraction, market calculations, skill-gap analysis, prerequisite ordering, and learning-plan generation; external-service integrations. |
+
+- The normal request flow is `View -> Controller -> Service -> Model`, followed
+  by results returning to the view. Views call controllers, and controllers call
+  services. Services use domain models and persistence abstractions.
+- Keep domain structures and persistence implementations in separate modules
+  within Model. Introduce a `repositories/` subpackage there when useful.
+- Views and controllers may import Model types to describe or display data.
+  Model must not import View, Controller, or Service. Service must not import View
+  or Controller. Controller must not depend on concrete view components.
+- Put application calculations and external API/LLM integration logic in Service.
+  Views and controllers must not perform SQL queries or call external services
+  directly. Services return structured results for controllers to expose.
+- Keep controllers focused on coordinating the requested action; put business
+  validation and reusable workflows in services. Views format results and handle
+  interactions without calculating domain scores or constructing learning plans.
+- Use `source/main.py` to configure and connect the layers and start the app.
+  Keep feature implementations in their appropriate layer modules.
+- For each coding task, identify the affected MVC-S layers and maintain these
+  boundaries. Adapt installed skill examples to this MVC-S layout.
 
 ## Implementation rules
 
