@@ -1,19 +1,20 @@
 # Project skills
 
-These five skills were selected from
+Five third-party skills were selected from
 [wshobson/agents](https://github.com/wshobson/agents) and
 [anthropics/skills](https://github.com/anthropics/skills) for development and UI
 work in this project. The application's UI framework is still undecided.
 
 | Skill | Purpose in this project |
 | --- | --- |
+| [`ct-task-workflow`](skills/ct-task-workflow/SKILL.md) | Use the sprint backlog to scope a task, verify its acceptance criteria, and prepare a handoff. Maintained in this repository. |
 | `python-project-structure` | Keep models, analysis, planning, storage, and interface modules understandable. |
 | `python-error-handling` | Validate imported job data and handle malformed records or external-service failures. |
 | `python-testing-patterns` | Verify normalization, skill-gap calculations, and learning-plan constraints using fixtures and mocks. |
 | `frontend-design` | Plan visual hierarchy, typography, colors, layout, and interaction states for student-facing screens. |
 | `wcag-audit-patterns` | Review keyboard access, labels, focus, contrast, and other accessibility concerns in a web interface. |
 
-## Installation and provenance
+## Third-party installation and provenance
 
 - The Python skills use `wshobson/agents` at commit
   `46891e7e60da0e52baf1050b7b6391b64e84c6d9`, from
@@ -44,6 +45,7 @@ session for this repository.
 
 Example requests:
 
+- "Use $ct-task-workflow to verify that E05 meets its acceptance criteria."
 - "Use $python-project-structure to organize the skill-gap module."
 - "Use $python-error-handling when implementing the job-data importer."
 - "Use $python-testing-patterns to verify prerequisite ordering."
