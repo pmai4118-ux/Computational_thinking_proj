@@ -145,6 +145,9 @@ Các bước:
 1. Chốt bảng việc, cách đặt nhánh và quy trình một người làm/một người review.
 2. Tạo mẫu ticket gồm đầu ra, phụ thuộc, kiểm tra và bằng chứng PR.
 3. Thống nhất lịch tích hợp ngắn; đổi hợp đồng phải cập nhật fixture cùng lúc.
+4. Mỗi thông điệp commit phải có dạng `[T...] <mô tả ngắn>`. Thay `T...` bằng
+   mã công việc trong bảng việc và đặt một dấu cách sau dấu `]`. Ví dụ
+   `[F02] Add interview domain models`. [Quy tắc commit](../AGENTS.md#task-scope-and-shared-contracts)
 
 Kiểm tra hoàn thành:
 
