@@ -25,6 +25,9 @@ every feature mentioned in the proposal as if it were a confirmed requirement.
   with the change. Surface missing upstream decisions instead of inventing contracts.
 - Use the configured project checks. Report the commands and outcomes, acceptance
   evidence, affected dependencies, and anything still blocked.
+- Write commit messages as `[T...] <short description>`, with one space after
+  the closing bracket. Replace `T...` with the actual task ID from the backlog,
+  as in `[F02] Add interview domain models`.
 - For a sprint PR, keep the diff scoped to its task, include the task ID in the
   title, and record how the reviewer can reproduce the acceptance check.
 
