@@ -37,12 +37,12 @@ The 53 MVP tasks total approximately 121-199 focused person-hours before separat
 | Window | Team result | Exit condition | Backlog |
 | --- | --- | --- | --- |
 | Days 1-2 | Shared scope, flows, data and API contracts; one representative question | Everyone builds against the same example payloads and agreed boundaries | P01-P08 |
-| Week 1 | Application skeleton, reviewed content started, clickable UI; one answer travels through all layers using a fixture provider | One question can be answered, evaluated, saved, and displayed without a live AI dependency | F01-F06, C01-C06, U01-U02; start E01-E04, I01-I03 |
-| Week 2 | Live Gemini adapter, deterministic scoring, persistent sessions, results and exercises | One complete four-question session works; failure and retry preserve the answer | E01-E09, I01-I06, U03-U07 |
+| Week 1 | Application skeleton and a one-question practice flow | A student can submit an answer, evaluate it with the fixture provider, save the result, and see it in the UI | F01-F06, C01-C06, U01-U02. Start the work needed for one question in E01-E02, E05-E07, E09, I01-I04, and U03-U04 |
+| Week 2 | Live Gemini adapter, deterministic scoring, persistent sessions, results and exercises | One complete four-question session works. Failure and retry preserve the answer | Finish E01-E09, I01-I06, and U03-U07 |
 | Week 3 | Feature-complete MVP, evaluation report, usability fixes, demo and documentation | Core acceptance checks pass and another teammate can run it from the README | U08, Q01-Q08 |
 | Optional Week 4 | Reliability, rubric calibration, rehearsal and selected small improvements | Release evidence is current; no unresolved critical issue in the core flow | Rework from Q tasks; optional X tasks only after the release gate |
 
-Critical path: P01 -> P03/P04/P05 -> F01/F02 -> F04/F05 -> I02 -> I04 -> I05 -> U04/U05 -> Q03/Q04 -> Q08. Content and AI validation must advance in parallel with UI work; neither can wait until the last week. The first fixture-based vertical slice may use one reviewed question and a minimal result page before the complete content bank and polished screens are ready.
+Use the [backlog dependencies](TASK_BREAKDOWN.md) to schedule work. Start the first integrated flow from the question and rubric in P05. Connect the fixture provider, validation, scoring, persistence, and session endpoints to a minimal answer form and result page. Content review and AI validation advance in parallel with UI work.
 
 For a three-week deadline, keep the core feature set, eight reviewed questions, local release, and template-based feedback. Cut optional extensions and visual extras first. If capacity still does not cover the core, reduce the content target or session length explicitly and update acceptance checks; do not silently ship incomplete rubric handling.
 
@@ -86,9 +86,9 @@ UX acceptance: complete the flow using only the keyboard; all controls have labe
 
 ## 6. Proposed technology and existing MVC-S layout
 
-Recommended stack: FastAPI, Pydantic for boundary schemas, Jinja2 page templates, semantic HTML/CSS, a small amount of browser JavaScript, SQLite through Python repository implementations, and pytest for behavior checks. The team must pin actual versions during setup. FastAPI supports [templates](https://fastapi.tiangolo.com/advanced/templates/) and [static assets](https://fastapi.tiangolo.com/tutorial/static-files/), which lets the View stay in the existing Python repository without a separate frontend build system.
+The F01 baseline on `main` uses Python 3.11 and locks the FastAPI, Pydantic, Jinja2, Uvicorn, and pytest dependencies in `uv.lock`. The remaining plan uses semantic HTML/CSS, a small amount of browser JavaScript, and SQLite through Python repositories. FastAPI supports templates and static assets within the existing Python repository. [Development setup](../README.md#python-development-setup) · [FastAPI templates](https://fastapi.tiangolo.com/advanced/templates/) · [FastAPI static files](https://fastapi.tiangolo.com/tutorial/static-files/)
 
-The following is a proposed layout. Only `main.py` and the existing layer directories are present today; the files below are planned, not implemented.
+The tree shows the F01 baseline and the proposed application modules. The four MVC-S packages and environment are in place. F05 will wire the app factory in `main.py`.
 
 ```text
 source/
@@ -125,10 +125,11 @@ source/
     templates/                     # HTML layouts/screens
     static/css/                    # shared tokens and components
     static/js/                     # interaction and API calls
-test/                              # unit/integration fixtures and checks
+test/                              # F01 smoke tests; unit/integration checks planned
 data/seed/                         # reviewed synthetic question/exercise data
 docs/                              # contracts, rubric guide, QA evidence
-pyproject.toml                     # to be created during setup
+pyproject.toml                     # F01 project and test configuration
+uv.lock                            # F01 dependency lockfile
 .env.example                       # variable names/placeholders only
 ```
 
@@ -195,5 +196,4 @@ These extensions are not automatically included in the three-to-four-week delive
 
 ## 12. Source basis and verification status
 
-The planning basis is the user's confirmed answers on 5 November 2026, repository `AGENTS.md`, and the previously reviewed group documents: [Decompose](https://docs.google.com/document/d/1BiDD8ktFh-9ekP1m1435rLgpxXiJAIUwpHAtqK0GXHg/edit), [Pattern-Recognize](https://docs.google.com/document/d/1Lt9SF7DkxAeevO7SVR-u5CwV0C07QILyH563PnpaoIU/edit), and [Abstraction](https://docs.google.com/document/d/1dr5U42ZqbVJuqsfbdvhUNiyDkXH4n-d00BjDSFr1Xxo/edit). Broader draft features remain optional. The API/framework links above were checked against official documentation while preparing this plan. No application implementation or application tests have been performed as part of this planning task.
-
+The plan draws on the user's confirmed answers from 5 November 2026, the repository's `AGENTS.md`, and the previously reviewed group documents. The F01 setup and smoke test results are recorded in the README. The remaining application behavior and release checks are tracked in the backlog. [Decompose](https://docs.google.com/document/d/1BiDD8ktFh-9ekP1m1435rLgpxXiJAIUwpHAtqK0GXHg/edit) · [Pattern-Recognize](https://docs.google.com/document/d/1Lt9SF7DkxAeevO7SVR-u5CwV0C07QILyH563PnpaoIU/edit) · [Abstraction](https://docs.google.com/document/d/1dr5U42ZqbVJuqsfbdvhUNiyDkXH4n-d00BjDSFr1Xxo/edit)

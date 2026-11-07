@@ -125,7 +125,7 @@ Testing owners should prepare fixtures as each feature arrives. Q01/Q02 are comp
 
 ## Suggested first task wave
 
-Begin P01 and P05's content exploration immediately, then finalize P02/P03 before P04. Once the scope and sample are agreed, team members can claim P06, P07 and early foundation/content tasks. P05 is not finalized before P03: exploration can start early, but the shared schema governs its final format. The first integration target is P05 + E02 + F04 + I03/I04 with a minimal answer/result View. Demonstrate that one-question path before increasing content volume or polishing all screens.
+Begin P01 and P05's content exploration immediately, then finalize P02/P03 before P04. Once the scope and sample are agreed, team members can claim P06, P07 and early foundation/content tasks. Use the P03 schema to finalize P05. Follow the Week 1 sequence to demonstrate one saved and scored answer with the fixture provider before increasing content volume or polishing the screens. [Delivery sequence](PROJECT_PLAN.md#3-delivery-sequence-and-gates)
 
 ## Definition of a completed implementation task
 
@@ -136,5 +136,4 @@ Begin P01 and P05's content exploration immediately, then finalize P02/P03 befor
 5. Affected contract, seed data and setup instructions agree with the final change.
 6. Integration is demonstrated in the current application; remaining limitations are explicit.
 
-This document is a planned backlog. No task is marked implemented or tested by the creation of this file.
-
+Use task PRs and acceptance evidence to track implementation status. [F01 development setup](../README.md#python-development-setup)
