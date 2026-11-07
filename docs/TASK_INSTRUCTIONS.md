@@ -153,18 +153,21 @@ Kiểm tra hoàn thành:
 
 ## F01 — Thiết lập dự án và phụ thuộc Python
 
+F01 đã có trên `main`. Xem các lệnh cài đặt và kết quả kiểm tra trên Windows trong [README](../README.md#python-development-setup).
+
 File cần mở hoặc tạo:
 
 - `pyproject.toml`
+- `uv.lock`
 - `README.md`
 - `source/__init__.py`
 - `test/conftest.py`
 
 Các bước:
 
-1. Chọn phiên bản Python dùng chung và khai báo FastAPI, Pydantic, Jinja2 cùng pytest.
-2. Tạo package init cần thiết trong các thư mục MVC-S hiện có; không đổi tên hoặc chữ hoa thư mục.
-3. Ghi cách tạo môi trường, cài dependency, chạy app và chạy test sau khi chúng tồn tại.
+1. Dùng CPython 3.11 và chạy `uv sync --locked` để cài các phiên bản đã khóa.
+2. Giữ nguyên tên và chữ hoa của các package MVC-S.
+3. Chạy `uv run --locked python -m pytest` và `uv pip check` theo README.
 
 Kiểm tra hoàn thành:
 
@@ -1246,4 +1249,3 @@ Kiểm tra hoàn thành:
 
 - Không có khóa ở client hoặc source.
 - Phiên/bài lưu được đọc lại sau restart và rollback có chỉ dẫn rõ.
-
