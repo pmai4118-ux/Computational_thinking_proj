@@ -1,6 +1,6 @@
 # Application delivery plan
 
-Planning date: 5 November 2026. Status: implementation proposal, with the confirmed requirements below. Companion: [small task backlog](TASK_BREAKDOWN.md).
+Planning date: 5 November 2026. P01 scope baseline: [MVP scope](scope.md), recorded 9 November 2026; team walkthrough and confirmation remain pending. Companion: [small task backlog](TASK_BREAKDOWN.md).
 
 ## 1. Confirmed requirements and remaining decisions
 
@@ -8,17 +8,17 @@ The team has eight people and approximately three to four weeks. The user will a
 
 Confirmed question-sourcing decision: select questions/material from open-source resources, retain original text and license/source metadata, and review translations, adaptations and rubrics before importing. See [question source workflow](QUESTION_SOURCES.md). Google AI Studio / Gemini is the provisional AI choice. Budget, account quota, exact model, hosting, required classroom technologies, daily availability, and the final submission date remain undecided. Do not commit to paid usage until the budget is selected. This plan makes no assignments to named people.
 
-Proposed defaults to confirm in Week 1:
+P01 MVP baseline (see [scope and remaining decisions](scope.md)):
 
-| Decision | Proposed default | Why it matters |
+| Decision | MVP baseline | Remaining note |
 | --- | --- | --- |
-| Audience | Software Engineering students preparing for Backend Intern/Fresher interviews | Keeps the question bank and rubrics achievable |
-| Interview format | Text answers; four questions per session; fixed coverage before adaptivity | Gives a complete, testable assessment flow |
-| Question coverage | Programming knowledge, technical case, algorithm explanation, AI-code critique | A concrete starting blueprint; each question uses appropriate criteria |
-| Content size | Eight reviewed questions minimum, twelve target; at least two variants per category | Gives an alternate practice question without requiring a large bank |
-| Identity | Anonymous local browser session, synthetic demonstration profiles | Avoids an account system during the class project |
-| Operation | One Python server, same-origin pages and API, local SQLite database | Reduces setup and integration work |
-| Release | Local demonstration first; hosted release only if required | Hosting changes storage, sessions, security, and deployment tasks |
+| Audience | Software Engineering students preparing for Backend Intern/Fresher interviews | Team confirmation remains pending |
+| Interview format | Vietnamese text answers; four questions per session; fixed coverage | Adaptive probing is deferred |
+| Question coverage | Programming knowledge, technical case, algorithm explanation, AI-code critique | C01 supplies the approved skill IDs and coverage records |
+| Content size | Eight reviewed questions minimum, twelve target; at least two variants per category | Validate against assigned team capacity |
+| Identity | Anonymous local browser session with synthetic demonstration profiles | Account system is outside the MVP |
+| Operation | One Python server, same-origin pages/API, local SQLite | Hosting and classroom requirements remain open |
+| Release | Local demonstration first | Hosted release only if required |
 
 ## 2. Product boundary
 
