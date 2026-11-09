@@ -32,6 +32,34 @@ class Settings:
         return "Dữ liệu minh họa" if self.provider is ProviderMode.FIXTURE else None
 
 
+def _database_file(value: str) -> Path:
+    invalid_path = "Set DATABASE_PATH to a SQLite file path, such as .local/interview.sqlite3."
+    path = Path(value)
+    # Path drops trailing separators and "." components that denote a directory.
+    last_component = value.replace("\\", "/").rsplit("/", 1)[-1]
+    if last_component in {"", ".", ".."} or "\0" in value or not path.name or path.is_reserved():
+        raise ConfigurationError(invalid_path)
+
+    try:
+        target = path.resolve()
+        is_directory = target.is_dir()
+    except (OSError, RuntimeError, ValueError):
+        raise ConfigurationError(invalid_path) from None
+    if is_directory:
+        raise ConfigurationError(invalid_path)
+
+    checkout = Path(__file__).resolve().parents[1]
+    if target.is_relative_to(checkout):
+        parts = target.relative_to(checkout).parts
+        in_private_dir = len(parts) > 1 and parts[0] == ".local"
+        if not in_private_dir and not target.name.endswith(".sqlite3"):
+            raise ConfigurationError(
+                "Set DATABASE_PATH inside the checkout to a file under .local/ "
+                "or use a filename ending in .sqlite3."
+            )
+    return path
+
+
 def load_settings(variables: Mapping[str, str] | None = None) -> Settings:
     """Validate process environment settings without opening files or clients."""
     env = environ if variables is None else variables
@@ -40,10 +68,7 @@ def load_settings(variables: Mapping[str, str] | None = None) -> Settings:
     except ValueError:
         raise ConfigurationError("Set EVALUATION_PROVIDER to fixture or gemini.") from None
 
-    raw_path = env.get("DATABASE_PATH", ".local/interview.sqlite3").strip()
-    database_path = Path(raw_path)
-    if not raw_path or "\0" in raw_path or database_path.name in {"", ".."}:
-        raise ConfigurationError("Set DATABASE_PATH to a SQLite file path, such as .local/interview.sqlite3.")
+    database_path = _database_file(env.get("DATABASE_PATH", ".local/interview.sqlite3").strip())
 
     timeout_message = "Set GEMINI_TIMEOUT_SECONDS to a finite number greater than zero."
     try:
