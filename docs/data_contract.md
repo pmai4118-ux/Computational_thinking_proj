@@ -3,8 +3,8 @@
 Status: proposed domain contract based on the P01 baseline in
 [`scope.md`](scope.md); team walkthrough and contract review remain pending. The
 MVP has four question categories and one question per category in a session.
-Approved skill IDs and detailed coverage remain C01 decisions. This contract does
-not make the illustrative records importable.
+[C01 defines the skill IDs and coverage blueprint](content_guide.md). The example
+records in this contract are for illustration only.
 
 ## Contract decisions
 
@@ -12,8 +12,8 @@ not make the illustrative records importable.
   Reusable content (`Question`, `Rubric`, `Exercise`) is immutable by version:
   edits keep the ID and increment the positive integer `version`. References to
   these records include both `id` and `version`.
-- `Skill.id` is stable within the approved skill catalog. C01 owns the catalog;
-  example IDs here are placeholders, not approved skill IDs. A criterion ID is
+- `Skill.id` is stable within the [C01 skill catalog](../data/seed/skills.json).
+  Example IDs here are placeholders. A criterion ID is
   stable within a rubric family; a changed criterion meaning gets a new ID.
 - Each question revision points to exactly one rubric revision. An answer records
   the question revision shown to the student. An evaluation snapshots the answer
@@ -36,14 +36,14 @@ not make the illustrative records importable.
   a curator, a different reviewer, a review timestamp, and completed source,
   license, content, and rubric checks. Timestamps serialize as ISO 8601 UTC.
 - P01 selects Backend Intern/Fresher preparation and the four categories listed in
-  `scope.md`. The model keeps category/role/level as strings; F02/C01 boundary
-  validation and approved skill IDs are still pending.
+  `scope.md`. [C01](content_guide.md) defines the values used for content
+  eligibility. F02 and C08 own typed model and seed validation.
 
 ## Records and ownership
 
 | Record | Required identity and links | Notes |
 | --- | --- | --- |
-| `Skill` | Stable `skill_id` | Catalog and approved IDs are C01 decisions. |
+| `Skill` | Stable `skill_id` | The [C01 catalog](../data/seed/skills.json) lists the IDs. |
 | `Question` | `question_id`, `version`, `rubric_ref`, `skill_ids`, `source_id`, review metadata | Prompt/adaptation and original source content stay distinguishable. |
 | `Rubric` | `rubric_id`, `version`, criteria, review metadata | Criteria and score boundaries are versioned with the rubric. |
 | `Criterion` | `criterion_id`, label, expected evidence, observable score levels | A criterion check refers to a criterion in the result's rubric version. |
@@ -282,8 +282,7 @@ their IDs and references to this contract, preserve their illustrative-only
 status, and agree the serialized schema in P04. No existing code, API payload,
 or seed fixture consumes that proposal today.
 
-P01 must still confirm the product scope. P04 must finalize API representations,
-session ownership, retry/idempotency and transitions. F02 must implement the
-remaining Session/Answer/Exercise classes and invariant checks. C01 must approve
-skill IDs. P05 must supply a real reviewed question/rubric/source set. These
-decisions remain open; this draft does not assert they have been approved.
+The P01 baseline still needs team confirmation. P04 must finalize API
+representations, session ownership, retry/idempotency and transitions. F02 must
+implement the remaining Session/Answer/Exercise classes and invariant checks.
+P05 must supply a reviewed question, rubric and source set.
