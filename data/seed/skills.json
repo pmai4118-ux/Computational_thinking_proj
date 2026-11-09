@@ -1,0 +1,22 @@
+[
+  {
+    "id": "skill.programming.code_semantics",
+    "label": "Giải thích hành vi của mã",
+    "description": "Dự đoán kết quả và giải thích quy tắc ngôn ngữ tạo ra hành vi đó. Khi đề yêu cầu sửa, chỉ ra cách giữ hành vi mà bên gọi cần."
+  },
+  {
+    "id": "skill.backend.data_consistency",
+    "label": "Giữ tính nhất quán của dữ liệu",
+    "description": "Chỉ ra tình huống có thể làm sai bất biến dữ liệu, đề xuất cách bảo vệ bất biến và nêu cách kiểm chứng khi nhiều yêu cầu tương tác."
+  },
+  {
+    "id": "skill.algorithms.correctness_and_complexity",
+    "label": "Lập luận về thuật toán",
+    "description": "Giải thích vì sao các bước trả về kết quả đúng, xử lý dữ liệu biên và phân tích thời gian, bộ nhớ theo cách triển khai."
+  },
+  {
+    "id": "skill.engineering.code_review_and_verification",
+    "label": "Đánh giá và kiểm chứng mã",
+    "description": "Đối chiếu mã được đề xuất với yêu cầu, chỉ ra lỗi có thể tái hiện, đề xuất bản sửa và kiểm tra độc lập bằng ví dụ cụ thể."
+  }
+]

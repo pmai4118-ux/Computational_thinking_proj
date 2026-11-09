@@ -1,0 +1,33 @@
+[
+  {
+    "id": "blueprint.backend_intern_fresher.fixed_four",
+    "version": 1,
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "language": "vi",
+    "allowed_difficulties": ["foundational", "applied"],
+    "on_missing_coverage": "error",
+    "slots": [
+      {
+        "category": "programming_knowledge",
+        "skill_id": "skill.programming.code_semantics",
+        "eligible_criterion_types": ["behavior_explanation", "contract_preservation", "test_design"]
+      },
+      {
+        "category": "technical_case",
+        "skill_id": "skill.backend.data_consistency",
+        "eligible_criterion_types": ["failure_analysis", "invariant_preservation", "test_design"]
+      },
+      {
+        "category": "algorithm_explanation",
+        "skill_id": "skill.algorithms.correctness_and_complexity",
+        "eligible_criterion_types": ["correctness_argument", "complexity_analysis", "test_design"]
+      },
+      {
+        "category": "ai_code_review",
+        "skill_id": "skill.engineering.code_review_and_verification",
+        "eligible_criterion_types": ["failure_analysis", "contract_preservation", "test_design"]
+      }
+    ]
+  }
+]
