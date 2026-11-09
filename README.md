@@ -44,8 +44,10 @@ local `.env` file. `source.config.load_settings()` reads the process environment
 | `DATABASE_PATH` | `.local/interview.sqlite3` | SQLite filename. Relative paths use the server's working directory. Launch from the repository root for this default. |
 
 Keep generated databases, logs, and private student records in the ignored
-`.local/` directory. F04 will own database initialization and F05 will call
-`load_settings()` when it builds the app.
+`.local/` directory. A database path inside the checkout must point to a file
+under `.local/` or a filename ending in `.sqlite3`. An absolute path outside the
+checkout can use any SQLite filename. F04 will own database initialization and
+F05 will call `load_settings()` when it builds the app.
 
 ### Application entry point
 
