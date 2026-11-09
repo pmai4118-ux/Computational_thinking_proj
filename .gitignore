@@ -59,8 +59,13 @@ cover/
 # Django stuff:
 *.log
 local_settings.py
-db.sqlite3
-db.sqlite3-journal
+
+# Interview app runtime data (database, logs, and private records)
+/.local/
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-shm
+*.sqlite3-wal
 
 # Flask stuff:
 instance/
