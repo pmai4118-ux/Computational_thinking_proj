@@ -327,6 +327,16 @@ versions, evidence and score semantics. There is no automatic lossy conversion.
 The PoC does not mark source/license checks or independent rubric review complete.
 See [the architecture report](../source/reports/architectureReport.pdf) for executable scoring semantics,
 limitations and the live evaluation procedure.
+The OOP refactor preserves serialized field names and `answerEvaluation/1`.
+`EvaluationInput.inputDigest()` retains the same canonical JSON hash, so existing
+recordings remain valid. `EvaluationService` now owns the lifecycle operations
+`createEvaluation`, `evaluateCriteria`, `generateFeedback`, and `readReport` as
+methods. It receives `RubricRules`, `EvidenceReview`, and `FeedbackBuilder`
+objects; each evaluation's state stays in an immutable `AnswerEvaluation`, not
+in shared service fields. `InterpreterFactory.createInterpreter()` selects a
+provider; `GeminiSettings.fromEnvironment()` reads its configuration. Callers
+of the earlier module-level Python helpers must use these objects. The CLI and
+JSON consumers require no migration.
 
 The architecture review moves persistence behind `Model/repositories`, puts
 request/response DTOs and error translation in `Control`, and centralizes wiring

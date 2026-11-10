@@ -1,3 +1,5 @@
+import hashlib
+import json
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StringConstraints
@@ -62,3 +64,7 @@ class EvaluationInput(FrozenData):
     rubrics: Annotated[tuple[Rubric, ...], Field(min_length=1, max_length=8)]
     answer: Answer
     exampleOnly: StrictBool = False
+
+    def inputDigest(self) -> str:
+        payload = json.dumps(self.model_dump(mode="json"), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()

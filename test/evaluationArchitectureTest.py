@@ -3,9 +3,14 @@ from pathlib import Path
 
 import pytest
 
-from source.service.providers.geminiInterpreter import readGeminiSettings
+from source.service.providers.geminiInterpreter import GeminiSettings
 from source.Control.evaluationController import EvaluationController
-from source.main import createController, createInterpreter
+from source.main import Application
+from source.service.providers.interpreterFactory import InterpreterFactory
+from source.service.rubricRules import RubricRules
+from source.service.evidenceReview import EvidenceReview
+from source.service.feedbackBuilder import FeedbackBuilder
+from source.view.evaluationView import EvaluationView
 from source.Model.answerData import EvaluationInput
 from source.Model.evaluationData import RecordedReview
 from source.Model.repositories.jsonEvaluationRepository import JsonEvaluationRepository
@@ -55,11 +60,16 @@ def testNoFileAccess(layer):
 
 
 def testCompositionRoot():
-    controller = createController()
+    application = Application()
+    controller = application.view.controller
+    assert isinstance(application.view, EvaluationView)
     assert isinstance(controller, EvaluationController)
     assert isinstance(controller.service, EvaluationService)
     assert isinstance(controller.service.repository, JsonEvaluationRepository)
-    assert controller.service.interpreterFactory is createInterpreter
+    assert isinstance(controller.service.interpreterFactory, InterpreterFactory)
+    assert isinstance(controller.service.rubricRules, RubricRules)
+    assert isinstance(controller.service.evidenceReview, EvidenceReview)
+    assert isinstance(controller.service.feedbackBuilder, FeedbackBuilder)
     assert controller.service.repository.reportDirectory == sourcePath / "reports" / "results"
     outputPath = controller.service.repository.resolveOutput(None)
     assert outputPath.parent == sourcePath / "reports" / "results"
@@ -109,7 +119,7 @@ class MemoryRepository:
 
 def testRepositoryCanBeReplaced():
     repository = MemoryRepository()
-    service = EvaluationService(repository, createInterpreter)
+    service = EvaluationService(repository, InterpreterFactory(), RubricRules(), EvidenceReview(), FeedbackBuilder())
     controller = EvaluationController(service)
     response = controller.submitAnswer({"inputPath": "memoryInput.json", "providerName": "recorded", "recordingPath": "memoryReview.json"})
     assert response.error is None
@@ -119,12 +129,13 @@ def testRepositoryCanBeReplaced():
 
 
 def testFailureDoesNotSave():
-    def failingFactory(providerName, recording):
-        raise EvaluationError("providerTimeout", "The provider timed out.", True)
+    class FailingFactory:
+        def createInterpreter(self, providerName, recording):
+            raise EvaluationError("providerTimeout", "The provider timed out.", True)
 
     repository = MemoryRepository()
     originalText = repository.inputs.answer.originalText
-    controller = EvaluationController(EvaluationService(repository, failingFactory))
+    controller = EvaluationController(EvaluationService(repository, FailingFactory(), RubricRules(), EvidenceReview(), FeedbackBuilder()))
     response = controller.submitAnswer({"inputPath": "memory.json", "providerName": "gemini"})
     assert response.error.code == "providerTimeout"
     assert response.error.retryable
@@ -135,7 +146,7 @@ def testFailureDoesNotSave():
 
 def testNewAnswerRevision():
     repository = MemoryRepository()
-    service = EvaluationService(repository, createInterpreter)
+    service = EvaluationService(repository, InterpreterFactory(), RubricRules(), EvidenceReview(), FeedbackBuilder())
     inputs = service.loadInputs(Path("memory.json"), Path("answer.txt"))
     assert inputs.answer.answerId != repository.inputs.answer.answerId
     assert inputs.answer.originalText == "New answer.\r\nPreserve line breaks."
@@ -146,7 +157,7 @@ def testConfigHidesSecret(monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "private-test-value")
     monkeypatch.setenv("GEMINI_MODEL", "configured-model")
     monkeypatch.setenv("EVALUATION_TIMEOUT", "20")
-    settings = readGeminiSettings()
+    settings = GeminiSettings.fromEnvironment()
     assert settings.timeoutSeconds == 20
     assert "private-test-value" not in repr(settings)
 
@@ -165,3 +176,64 @@ def testProgrammingErrorStaysVisible():
     controller = EvaluationController(BrokenService())
     with pytest.raises(ValueError, match="Unexpected calculation error"):
         controller.submitAnswer({"inputPath": "input.json", "providerName": "gemini"})
+
+
+def testProductionLogicUsesObjects():
+    for codePath in sourcePath.rglob("*.py"):
+        tree = ast.parse(codePath.read_text(encoding="utf-8"))
+        freeFunctions = [node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        expected = ["main"] if codePath == sourcePath / "main.py" else []
+        assert freeFunctions == expected, codePath
+
+
+def testInjectedRulesAreUsed():
+    class TrackingRules(RubricRules):
+        def __init__(self):
+            self.validatedInputs = []
+            self.scoredRubrics = []
+
+        def validateInputs(self, inputs):
+            self.validatedInputs.append(inputs)
+            return super().validateInputs(inputs)
+
+        def scoreChecks(self, rubric, checks):
+            self.scoredRubrics.append(rubric.rubricId)
+            return super().scoreChecks(rubric, checks)
+
+    repository = MemoryRepository()
+    rules = TrackingRules()
+    service = EvaluationService(repository, InterpreterFactory(), rules, EvidenceReview(), FeedbackBuilder())
+    report, outputPath = service.evaluateFiles(Path("input.json"), "recorded", Path("review.json"))
+    assert rules.validatedInputs
+    assert set(rules.scoredRubrics) == {rubric.rubricId for rubric in repository.inputs.rubrics}
+    assert repository.savedReports == [(report, outputPath)]
+
+
+def testEvaluationsKeepSeparateState():
+    repository = MemoryRepository()
+    factory = InterpreterFactory()
+    service = EvaluationService(repository, factory, RubricRules(), EvidenceReview(), FeedbackBuilder())
+    interpreter = factory.createInterpreter("recorded", repository.recording)
+    first = service.assessAnswer(repository.inputs, interpreter)
+    originalReport = first.model_dump_json()
+    second = service.assessAnswer(repository.inputs, interpreter)
+    assert first.model_dump_json() == originalReport
+    assert [item.score for item in first.results] == [item.score for item in second.results]
+    assert not ({item.resultId for item in first.results} & {item.resultId for item in second.results})
+    assert not hasattr(service, "results")
+    assert repository.savedReports == []
+
+
+def testFactorySelectsProviders(monkeypatch):
+    from source.service.providers.geminiInterpreter import GeminiInterpreter
+    from source.service.providers.recordedInterpreter import RecordedInterpreter
+
+    repository = MemoryRepository()
+    factory = InterpreterFactory()
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setenv("GEMINI_MODEL", "configured-model")
+    assert isinstance(factory.createInterpreter("recorded", repository.recording), RecordedInterpreter)
+    assert isinstance(factory.createInterpreter("gemini", None), GeminiInterpreter)
+    for providerName, recording in [("recorded", None), ("gemini", repository.recording), ("other", None)]:
+        with pytest.raises(EvaluationError, match="configuration"):
+            factory.createInterpreter(providerName, recording)

@@ -5,7 +5,7 @@ from urllib.error import HTTPError, URLError
 
 import pytest
 
-from source.service.providers.geminiInterpreter import readGeminiSettings
+from source.service.providers.geminiInterpreter import GeminiSettings
 from source.Model.answerData import EvaluationInput
 from source.Model.evaluationData import RecordedReview
 from source.service.evaluationErrors import EvaluationError
@@ -105,7 +105,7 @@ def testMissingConfiguration(monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_MODEL", raising=False)
     with pytest.raises(EvaluationError) as caught:
-        readGeminiSettings()
+        GeminiSettings.fromEnvironment()
     assert caught.value.code == "providerConfig"
 
 
@@ -113,3 +113,20 @@ def testOversizeResponse(monkeypatch):
     monkeypatch.setattr(geminiInterpreter, "urlopen", lambda request, timeout: io.BytesIO(b" " * 1000001))
     with pytest.raises(EvaluationError, match="1 MB"):
         GeminiInterpreter("test-key", "configured-model").interpret(sampleInputs())
+
+
+def testPromptCanBeReplaced():
+    from source.service.prompts.evaluationPrompt import EvaluationPrompt
+
+    class CustomPrompt(EvaluationPrompt):
+        version = "custom/1"
+
+        def systemPrompt(self):
+            return "Custom interpretation instructions."
+
+    prompt = CustomPrompt()
+    provider = GeminiInterpreter("test-key", "configured-model", prompt=prompt)
+    request = provider.buildRequest(sampleInputs())
+    assert provider.prompt is prompt
+    assert provider.promptVersion == "custom/1"
+    assert json.loads(request.data)["systemInstruction"]["parts"][0]["text"] == prompt.systemPrompt()

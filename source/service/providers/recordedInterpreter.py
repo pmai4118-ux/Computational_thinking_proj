@@ -1,7 +1,6 @@
 from source.Model.answerData import EvaluationInput
 from source.Model.evaluationData import Interpretation, RecordedReview
 from source.service.evaluationErrors import EvaluationError
-from source.service.providers.evidenceInterpreter import inputDigest
 
 
 class RecordedInterpreter:
@@ -13,6 +12,6 @@ class RecordedInterpreter:
         self.recording = recording
 
     def interpret(self, inputs: EvaluationInput) -> Interpretation:
-        if self.recording.inputHash != inputDigest(inputs):
+        if self.recording.inputHash != inputs.inputDigest():
             raise EvaluationError("recordingMismatch", "The recorded interpretation does not match this question, rubric, and original answer.")
         return self.recording.interpretation

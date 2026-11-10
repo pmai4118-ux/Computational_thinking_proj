@@ -1,32 +1,35 @@
 from pathlib import Path
+
 from source.Control.evaluationController import EvaluationController
-from source.Model.evaluationData import RecordedReview
 from source.Model.repositories.jsonEvaluationRepository import JsonEvaluationRepository
-from source.service.evaluationErrors import EvaluationError
 from source.service.evaluationService import EvaluationService
-from source.service.providers.evidenceInterpreter import EvidenceInterpreter
-from source.service.providers.geminiInterpreter import GeminiInterpreter, readGeminiSettings
-from source.service.providers.recordedInterpreter import RecordedInterpreter
-from source.view.evaluationView import readArguments, runView
+from source.service.evidenceReview import EvidenceReview
+from source.service.feedbackBuilder import FeedbackBuilder
+from source.service.providers.interpreterFactory import InterpreterFactory
+from source.service.rubricRules import RubricRules
+from source.view.evaluationView import EvaluationView
 
 
-def createInterpreter(providerName: str, recording: RecordedReview | None) -> EvidenceInterpreter:
-    if providerName == "recorded" and recording is not None:
-        return RecordedInterpreter(recording)
-    if providerName == "gemini":
-        settings = readGeminiSettings()
-        return GeminiInterpreter(settings.apiKey, settings.modelName, settings.timeoutSeconds)
-    raise EvaluationError("providerConfig", "Invalid interpretation provider configuration.")
+class Application:
+    def __init__(self, reportDirectory: Path | None = None):
+        resultDirectory = reportDirectory if reportDirectory is not None else Path(__file__).resolve().parent / "reports" / "results"
+        repository = JsonEvaluationRepository(resultDirectory)
+        service = EvaluationService(
+            repository,
+            InterpreterFactory(),
+            RubricRules(),
+            EvidenceReview(),
+            FeedbackBuilder(),
+        )
+        controller = EvaluationController(service)
+        self.view = EvaluationView(controller)
 
-
-def createController() -> EvaluationController:
-    repository = JsonEvaluationRepository(Path(__file__).resolve().parent / "reports" / "results")
-    service = EvaluationService(repository, createInterpreter)
-    return EvaluationController(service)
+    def run(self, arguments: list[str] | None = None) -> int:
+        return self.view.run(arguments)
 
 
 def main(arguments: list[str] | None = None) -> int:
-    return runView(createController(), readArguments(arguments))
+    return Application().run(arguments)
 
 
 if __name__ == "__main__":

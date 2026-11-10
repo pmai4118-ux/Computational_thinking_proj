@@ -48,7 +48,13 @@ run `uv lock`, then repeat the sync and checks. Include both files in the change
 
 ### Application entry point
 
-`source/main.py` currently composes the evaluation CLI through `createController`.
+`source/main.py` composes the evaluation CLI through `Application`.
+`Application.run()` starts `EvaluationView`, which calls `EvaluationController`.
+The controller delegates to `EvaluationService`, whose constructor receives a
+repository, interpreter factory, rubric rules, evidence reviewer, and feedback
+builder. Each responsibility has one implementation; provider selection uses a
+simple factory and the interpreters share a strategy interface. JSON inputs,
+outputs, and CLI arguments remain unchanged by the OOP refactor.
 F05 can add the web app factory alongside it. Once F05 provides an ASGI factory
 named `create_app`, the launch command will be
 `uv run --locked uvicorn source.main:create_app --factory --reload`.

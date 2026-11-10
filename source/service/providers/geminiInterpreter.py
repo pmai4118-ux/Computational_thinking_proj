@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from source.Model.answerData import EvaluationInput
 from source.Model.evaluationData import Interpretation
 from source.service.evaluationErrors import EvaluationError
-from source.service.prompts.evaluationPrompt import promptPayload, promptVersion, systemPrompt
+from source.service.prompts.evaluationPrompt import EvaluationPrompt
 
 
 @dataclass(frozen=True)
@@ -20,24 +20,23 @@ class GeminiSettings:
     modelName: str
     timeoutSeconds: float
 
-
-def readGeminiSettings() -> GeminiSettings:
-    apiKey = os.environ.get("GEMINI_API_KEY", "")
-    modelName = os.environ.get("GEMINI_MODEL", "")
-    if not apiKey.strip() or not modelName.strip():
-        raise EvaluationError("providerConfig", "GEMINI_API_KEY and GEMINI_MODEL are required.")
-    try:
-        timeoutSeconds = float(os.environ.get("EVALUATION_TIMEOUT", "45"))
-    except ValueError as error:
-        raise EvaluationError("providerConfig", "EVALUATION_TIMEOUT must be a number of seconds.") from error
-    return GeminiSettings(apiKey=apiKey, modelName=modelName, timeoutSeconds=timeoutSeconds)
+    @classmethod
+    def fromEnvironment(cls) -> "GeminiSettings":
+        apiKey = os.environ.get("GEMINI_API_KEY", "")
+        modelName = os.environ.get("GEMINI_MODEL", "")
+        if not apiKey.strip() or not modelName.strip():
+            raise EvaluationError("providerConfig", "GEMINI_API_KEY and GEMINI_MODEL are required.")
+        try:
+            timeoutSeconds = float(os.environ.get("EVALUATION_TIMEOUT", "45"))
+        except ValueError as error:
+            raise EvaluationError("providerConfig", "EVALUATION_TIMEOUT must be a number of seconds.") from error
+        return cls(apiKey=apiKey, modelName=modelName, timeoutSeconds=timeoutSeconds)
 
 
 class GeminiInterpreter:
     providerName = "gemini"
-    promptVersion = promptVersion
 
-    def __init__(self, apiKey: str, modelName: str, timeoutSeconds: float = 45):
+    def __init__(self, apiKey: str, modelName: str, timeoutSeconds: float = 45, prompt: EvaluationPrompt | None = None):
         if not apiKey.strip() or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,119}", modelName):
             raise EvaluationError("providerConfig", "Provide a valid GEMINI_API_KEY and GEMINI_MODEL without the models/ prefix.")
         if not 1 <= timeoutSeconds <= 120:
@@ -45,11 +44,13 @@ class GeminiInterpreter:
         self.apiKey = apiKey
         self.modelName = modelName
         self.timeoutSeconds = timeoutSeconds
+        self.prompt = prompt if prompt is not None else EvaluationPrompt()
+        self.promptVersion = self.prompt.version
 
     def buildRequest(self, inputs: EvaluationInput) -> Request:
         payload = {
-            "systemInstruction": {"parts": [{"text": systemPrompt()}]},
-            "contents": [{"role": "user", "parts": [{"text": json.dumps(promptPayload(inputs), ensure_ascii=False)}]}],
+            "systemInstruction": {"parts": [{"text": self.prompt.systemPrompt()}]},
+            "contents": [{"role": "user", "parts": [{"text": json.dumps(self.prompt.promptPayload(inputs), ensure_ascii=False)}]}],
             "generationConfig": {
                 "candidateCount": 1,
                 "maxOutputTokens": 16384,
