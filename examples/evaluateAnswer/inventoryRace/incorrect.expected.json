@@ -1,0 +1,53 @@
+{
+  "provisional": true,
+  "reviewedByHuman": false,
+  "scores": [
+    0,
+    0,
+    0
+  ],
+  "checks": [
+    {
+      "criterionId": "race.risk",
+      "status": "unmet",
+      "quote": "Hai yêu cầu đồng thời không bao giờ gây bán quá kho.",
+      "feedbackObservation": "Nhận định này trái với tiêu chí.",
+      "identifiedIssue": true
+    },
+    {
+      "criterionId": "race.detail",
+      "status": "unmet",
+      "quote": "Hai instance đọc stock=1 rồi ghi riêng luôn an toàn.",
+      "feedbackObservation": "Nhận định này trái với tiêu chí.",
+      "identifiedIssue": true
+    },
+    {
+      "criterionId": "atomic.guard",
+      "status": "unmet",
+      "quote": "Chỉ cần synchronized trong RAM của từng instance là đủ để bảo vệ kho chung.",
+      "feedbackObservation": "Nhận định này trái với tiêu chí.",
+      "identifiedIssue": true
+    },
+    {
+      "criterionId": "atomic.transaction",
+      "status": "unmet",
+      "quote": "Trừ kho rồi commit riêng; nếu tạo đơn lỗi thì không cần rollback.",
+      "feedbackObservation": "Nhận định này trái với tiêu chí.",
+      "identifiedIssue": true
+    },
+    {
+      "criterionId": "tests.concurrent",
+      "status": "unmet",
+      "quote": "Chỉ cần thử một yêu cầu tuần tự.",
+      "feedbackObservation": "Nhận định này trái với tiêu chí.",
+      "identifiedIssue": true
+    },
+    {
+      "criterionId": "tests.assertions",
+      "status": "unmet",
+      "quote": "Không cần kiểm tra số đơn, tồn cuối hay rollback.",
+      "feedbackObservation": "Nhận định này trái với tiêu chí.",
+      "identifiedIssue": true
+    }
+  ]
+}

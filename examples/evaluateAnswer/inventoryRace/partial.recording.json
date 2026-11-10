@@ -1,0 +1,106 @@
+{
+  "inputHash": "e92381ab1123389dafeb2ec328a3811762ac073b73b8b5478be5a6b6ded2f2e4",
+  "interpretation": {
+    "reviews": [
+      {
+        "rubricId": "poc.inventory.race",
+        "criterionChecks": [
+          {
+            "criterionId": "race.risk",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Hai yêu cầu đồng thời có thể bán vượt số lượng tồn.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "race.detail",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "omission",
+                "quote": null,
+                "location": "Entire originalText",
+                "observation": "Yêu cầu này không được trình bày.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "poc.inventory.atomicity",
+        "criterionChecks": [
+          {
+            "criterionId": "atomic.guard",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Dùng UPDATE có điều kiện stock >= 1 tại database và kiểm tra số dòng được cập nhật.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "atomic.transaction",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "omission",
+                "quote": null,
+                "location": "Entire originalText",
+                "observation": "Yêu cầu này không được trình bày.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "poc.inventory.tests",
+        "criterionChecks": [
+          {
+            "criterionId": "tests.concurrent",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Cho hai client gửi yêu cầu đồng thời.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "tests.assertions",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "omission",
+                "quote": null,
+                "location": "Entire originalText",
+                "observation": "Yêu cầu này không được trình bày.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

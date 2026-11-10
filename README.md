@@ -19,6 +19,13 @@ server-side environment configuration; Python validates evidence and computes
 scores. Local reports and private answer files belong in ignored `source/reports/results/`
 and `localAnswers/` directories.
 
+The [inventory-race examples](examples/evaluateAnswer/inventoryRace/README.md)
+exercise a provisional team case with five synthetic answers and recorded
+interpretations. They are not independent judgments or live-model results.
+Repeating the same saved input snapshot returns its completed report, including
+its original provider and model. Passing `--answerFile` creates a new answer ID;
+use the same saved input JSON to retry an existing answer.
+
 ## Python development setup
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and run these

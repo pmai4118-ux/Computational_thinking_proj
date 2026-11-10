@@ -19,7 +19,8 @@ def tempPath(request):
 
 def runCli(outputPath, *extraArgs):
     return subprocess.run([
-        sys.executable, "-m", "source.main", "--input", "examples/evaluateAnswer/sampleInput.json",
+        sys.executable, "-c", "import sys; from pathlib import Path; from source.main import Application; raise SystemExit(Application(Path(sys.argv[1])).run(sys.argv[2:]))", str(outputPath.parent / "cache"),
+        "--input", "examples/evaluateAnswer/sampleInput.json",
         "--provider", "recorded", "--recording", "examples/evaluateAnswer/sampleReview.json",
         "--output", str(outputPath), *extraArgs,
     ], cwd=repoPath, capture_output=True, encoding="utf-8", timeout=30)
@@ -36,12 +37,11 @@ def testCommandRoundTrip(tempPath):
     assert len(data["feedbackItems"]) == 4
     originalBytes = outputPath.read_bytes()
     repeated = runCli(outputPath)
-    assert repeated.returncode == 1
-    assert "outputExists" in repeated.stderr
+    assert repeated.returncode == 0, repeated.stderr
     assert outputPath.read_bytes() == originalBytes
     with pytest.raises(FileExistsError):
         JsonEvaluationRepository(tempPath).saveReport(EvaluationReport.model_validate(data), outputPath)
-    assert len(list(tempPath.iterdir())) == 1
+    assert len(list((tempPath / "cache").iterdir())) == 1
 
 
 def testTextPresentation(tempPath):

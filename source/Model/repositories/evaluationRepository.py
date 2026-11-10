@@ -15,7 +15,10 @@ class EvaluationRepository(Protocol):
     def loadRecording(self, recordingPath: Path) -> RecordedReview:
         ...
 
-    def resolveOutput(self, outputPath: Path | None) -> Path:
+    def findCompletedReport(self, inputHash: str) -> tuple[EvaluationReport, Path] | None:
+        ...
+
+    def resolveOutput(self, outputPath: Path | None, inputHash: str | None = None) -> Path:
         ...
 
     def saveReport(self, report: EvaluationReport, outputPath: Path) -> None:

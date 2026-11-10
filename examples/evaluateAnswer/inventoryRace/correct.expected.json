@@ -1,0 +1,53 @@
+{
+  "provisional": true,
+  "reviewedByHuman": false,
+  "scores": [
+    2,
+    2,
+    2
+  ],
+  "checks": [
+    {
+      "criterionId": "race.risk",
+      "status": "met",
+      "quote": "Hai yêu cầu đồng thời có thể bán vượt số lượng tồn.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "race.detail",
+      "status": "met",
+      "quote": "Hai instance cùng đọc stock=1 ở database chung, cùng kiểm tra còn hàng rồi ghi trừ theo dữ liệu đã đọc.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "atomic.guard",
+      "status": "met",
+      "quote": "Dùng UPDATE có điều kiện stock >= 1 tại database và kiểm tra số dòng được cập nhật.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "atomic.transaction",
+      "status": "met",
+      "quote": "Tạo đơn và trừ kho trong cùng transaction, rollback cả hai khi tạo đơn lỗi.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "tests.concurrent",
+      "status": "met",
+      "quote": "Cho hai client gửi yêu cầu đồng thời.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "tests.assertions",
+      "status": "met",
+      "quote": "Kiểm tra một đơn thành công và tồn cuối bằng 0; khi tạo đơn lỗi kiểm tra không có đơn và tồn được khôi phục.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    }
+  ]
+}

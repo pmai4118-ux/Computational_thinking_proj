@@ -320,6 +320,27 @@ cross-rubric total is produced. Results are accumulated in memory and published
 only after all validations succeed; the service saves through its repository a complete report without
 overwriting an existing file. Original input files are never changed.
 
+For this standalone PoC, the repository protocol also looks up completed reports
+by `inputHash`. A retry of the same serialized input snapshot reuses the stored
+report before creating an interpreter. The hash includes answer ID, revision,
+text, question and rubric snapshots, and `exampleOnly`; provider, model and prompt
+are not part of it. The reused report retains its original provider metadata,
+including when a later request names a different provider. A new answer, rubric,
+or question snapshot gets a new hash. The JSON repository keeps a canonical
+`report-<inputHash>.json` in its configured results directory. If there is no
+canonical report, a retry can reuse a matching report saved under the previous
+UUID filename in the same directory. On an initial run, a separate output path
+also receives an export. A path that resolves to the canonical file uses that
+file directly. A retry returns the path of the report it reused. `--answerFile`
+creates a new answer ID each time, so retry a saved input snapshot instead.
+Explicit reevaluation and concurrent request coordination remain future integration
+work.
+
+The provisional inventory-race example adapts the P05 pending-review case into
+separate PoC rubrics. Its mapping, source reference and synthetic expectations
+are documented in `examples/evaluateAnswer/inventoryRace/README.md`; they do not
+change or approve the original question-bank record.
+
 The new schema is **not** accepted by the existing draft question-bank JSON
 format without an explicit adapter and team decision. F02/P04 integration must
 agree whether to adopt this multi-rubric model or map it to P03 while preserving

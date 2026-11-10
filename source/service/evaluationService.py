@@ -51,8 +51,15 @@ class EvaluationService:
             raise EvaluationError("providerConfig", "Unsupported interpretation provider.")
         if (providerName == "recorded") != (recordingPath is not None):
             raise EvaluationError("providerConfig", "Recorded mode requires a matching recording file.")
-        resultPath = self.repository.resolveOutput(outputPath)
         inputs = self.loadInputs(inputPath, answerPath)
+        cached = self.repository.findCompletedReport(inputs.inputDigest())
+        if cached is not None:
+            report, cachedPath = cached
+            if not report.results or not report.feedbackItems:
+                raise EvaluationError("invalidState", "Stored evaluation is incomplete.")
+            self.validateResults(AnswerEvaluation(inputs=report.inputs, results=report.results, feedbackItems=report.feedbackItems))
+            return report, cachedPath
+        resultPath = self.repository.resolveOutput(outputPath, inputs.inputDigest())
         recording = self.repository.loadRecording(recordingPath) if recordingPath is not None else None
         interpreter = self.interpreterFactory.createInterpreter(providerName, recording)
         report = self.assessAnswer(inputs, interpreter)

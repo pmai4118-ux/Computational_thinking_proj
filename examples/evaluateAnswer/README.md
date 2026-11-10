@@ -6,6 +6,8 @@
 
 These examples have not been independently reviewed or approved as a question bank. The system reads submitted code as text and never executes it.
 
+The [inventory-race PoC](inventoryRace/README.md) adapts a teammate's pending-review backend case into five synthetic answer examples. Its recorded interpretations and provisional expectations exercise the code; they are not human-reviewed reference judgments or measurements of live model quality.
+
 ```powershell
 .\.venv\Scripts\python.exe -m source.main --input examples/evaluateAnswer/sampleInput.json --answerFile examples/evaluateAnswer/alternativeAnswer.txt --provider gemini
 ```

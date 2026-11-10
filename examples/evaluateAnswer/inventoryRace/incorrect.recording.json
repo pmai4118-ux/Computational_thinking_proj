@@ -1,0 +1,106 @@
+{
+  "inputHash": "087a701f4b306489f4e2f1b30abbb027612a57c7335dc8c543c21c487d5be10d",
+  "interpretation": {
+    "reviews": [
+      {
+        "rubricId": "poc.inventory.race",
+        "criterionChecks": [
+          {
+            "criterionId": "race.risk",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Hai yêu cầu đồng thời không bao giờ gây bán quá kho.",
+                "location": "originalText",
+                "observation": "Nhận định này trái với tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "race.detail",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Hai instance đọc stock=1 rồi ghi riêng luôn an toàn.",
+                "location": "originalText",
+                "observation": "Nhận định này trái với tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "poc.inventory.atomicity",
+        "criterionChecks": [
+          {
+            "criterionId": "atomic.guard",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Chỉ cần synchronized trong RAM của từng instance là đủ để bảo vệ kho chung.",
+                "location": "originalText",
+                "observation": "Nhận định này trái với tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "atomic.transaction",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Trừ kho rồi commit riêng; nếu tạo đơn lỗi thì không cần rollback.",
+                "location": "originalText",
+                "observation": "Nhận định này trái với tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "poc.inventory.tests",
+        "criterionChecks": [
+          {
+            "criterionId": "tests.concurrent",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Chỉ cần thử một yêu cầu tuần tự.",
+                "location": "originalText",
+                "observation": "Nhận định này trái với tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "tests.assertions",
+            "status": "unmet",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Không cần kiểm tra số đơn, tồn cuối hay rollback.",
+                "location": "originalText",
+                "observation": "Nhận định này trái với tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

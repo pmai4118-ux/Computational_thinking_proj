@@ -110,7 +110,10 @@ class MemoryRepository:
     def loadRecording(self, recordingPath):
         return self.recording
 
-    def resolveOutput(self, outputPath):
+    def findCompletedReport(self, inputHash):
+        return next(((report, path) for report, path in self.savedReports if report.inputHash == inputHash), None)
+
+    def resolveOutput(self, outputPath, inputHash=None):
         return outputPath or Path("memoryReport.json")
 
     def saveReport(self, report, outputPath):

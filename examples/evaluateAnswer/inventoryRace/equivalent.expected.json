@@ -1,0 +1,53 @@
+{
+  "provisional": true,
+  "reviewedByHuman": false,
+  "scores": [
+    2,
+    2,
+    2
+  ],
+  "checks": [
+    {
+      "criterionId": "race.risk",
+      "status": "met",
+      "quote": "Hai người mua cùng lúc có thể gây bán quá kho.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "race.detail",
+      "status": "met",
+      "quote": "Hai instance cùng đọc stock=1 từ database chung, cùng kiểm tra còn hàng rồi ghi trừ theo dữ liệu cũ.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "atomic.guard",
+      "status": "met",
+      "quote": "Khóa hàng bằng SELECT FOR UPDATE trong transaction, kiểm tra stock >= 1 trước khi trừ và từ chối nếu hết hàng.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "atomic.transaction",
+      "status": "met",
+      "quote": "Ghi đơn và cập nhật kho trong cùng transaction rồi rollback cả hai nếu ghi đơn thất bại.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "tests.concurrent",
+      "status": "met",
+      "quote": "Chạy hai luồng từ hai client cùng gửi lệnh mua.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "tests.assertions",
+      "status": "met",
+      "quote": "Assert chỉ một đơn thành công, stock cuối là 0; giả lập lỗi ghi đơn và assert không có đơn cùng stock ban đầu.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    }
+  ]
+}
