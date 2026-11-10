@@ -6,6 +6,21 @@ MVP has four question categories and one question per category in a session.
 Approved skill IDs and detailed coverage remain C01 decisions. This contract does
 not make the illustrative records importable.
 
+## Scope revision — 10 November 2026
+
+The user's current scope is text-answer technical practice only. `Question` no
+longer exposes `code` or `code_language`; `Answer` preserves the original `text`
+without code/editor/submission fields. No sandbox, external coding handoff,
+code feedback or AI-code-critique records are required. Keep criterion evidence,
+deterministic text-answer rubric scores, immutable revisions and failure/retry
+handling. See [current scope](scope.md) and [project specification](PROJECT_SPEC.md).
+The four categories are programming knowledge, technical case, algorithm
+explanation in prose, and technical reasoning/trade-offs. Skill IDs remain C01 work.
+
+The historical example below illustrates version and evidence links only. Its
+Python-default topic is not an approved current seed. The older code-bearing
+examples in `QUESTION_JSON_FORMAT.md` are archived references, not active payloads.
+
 ## Contract decisions
 
 - An ID names one logical record and is never reused for a different record.

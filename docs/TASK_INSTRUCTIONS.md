@@ -1,5 +1,7 @@
 # Hướng dẫn thực hiện từng công việc
 
+> Cập nhật 10/11/2026: áp dụng phạm vi tự luận trong docs/PROJECT_SPEC.md và docs/scope.md. Bỏ viết/sửa/review code, sandbox, LeetCode và vibe coding. C02–C04 chỉ tuyển chọn câu trả lời bằng lời; các hướng dẫn/mẫu code cũ không còn là yêu cầu hiện hành.
+
 Các đường dẫn tương đối thuộc repository ứng dụng Python, không phải thư mục dashboard. Tạo file khi chưa có; chỉ ghi kiểm tra đã thực sự thực hiện. Câu hỏi VA được tuyển chọn từ nguồn mở có giấy phép và được review.
 
 ## P01 — Chốt phạm vi, vai trò và cấp độ
@@ -11,7 +13,7 @@ File cần mở hoặc tạo:
 
 Các bước:
 
-1. Chốt Backend Intern/Fresher và bốn nhóm câu: lập trình, case, thuật toán, đánh giá code AI.
+1. Chốt Backend Intern/Fresher và bốn nhóm tự luận: kiến thức lập trình, case, giải thích thuật toán bằng lời, lập luận kỹ thuật/đánh đổi.
 2. Ghi rõ nguồn câu hỏi là tài liệu/mã nguồn mở có giấy phép; nhóm chọn lọc, dịch và xây rubric.
 3. Liệt kê MVP, phần hoãn, người duyệt và hạn dự kiến; thống nhất trước khi nhận các việc phụ thuộc.
 
@@ -365,29 +367,27 @@ Kiểm tra hoàn thành:
 
 Mẫu JSON câu hỏi, nguồn, fixture và rubric có trong docs/QUESTION_JSON_FORMAT.md và khối Mẫu JSON & rubric của việc này trên board.
 
-## C05 — Kiếm các câu hỏi về đánh giá code khi dùng AI
+## C05 — Tuyển chọn câu hỏi tự luận về lập luận kỹ thuật và đánh đổi
 
 File cần mở hoặc tạo:
 
-- `data/seed/questions/ai_review.json`
+- `data/seed/questions/technical_reasoning.json`
 - `data/seed/source_registry.json`
 - `docs/THIRD_PARTY_NOTICES.md`
-- `docs/QUESTION_JSON_FORMAT.md`
+- Bộ ví dụ tự luận mới theo `docs/data_contract.md`.
 
 Các bước:
 
-1. Chọn đoạn code nguồn mở có giấy phép và tạo tình huống kiểm tra code khi dùng trợ lý AI.
-2. Nếu chủ động thêm lỗi, ghi rõ đây là bản sửa phục vụ bài tập, không gán lỗi cho tác giả gốc.
-3. Viết yêu cầu phát hiện lỗi, kiểm chứng, sửa và giải thích; review test biên.
-4. Mở mẫu JSON và rubric bên dưới; tạo bản ghi thật với nguồn đã xác minh, giữ draft trong lúc chuẩn hóa và gửi review.
+1. Chọn tình huống có nguồn để người học so sánh phương án, giả định và đánh đổi.
+2. Yêu cầu trả lời bằng lời, không viết/sửa/review code hoặc kiểm chứng code AI.
+3. Viết rubric với bằng chứng quan sát được và chấp nhận lập luận tương đương.
+4. Giữ draft cho đến khi có người review độc lập kiểm tra nguồn, giấy phép và rubric.
 
 Kiểm tra hoàn thành:
 
-- Không tuyên bố code do AI sinh nếu không có căn cứ.
-- Giấy phép, attribution, bản sửa và các lỗi kỳ vọng đều truy xuất được.
-- JSON parse được, source_id khớp source registry và rubric có ID/version. Chỉ approved sau review độc lập; mọi mẫu example_only=true phải bị loại khỏi import thật.
-
-Mẫu JSON câu hỏi, nguồn, fixture và rubric có trong docs/QUESTION_JSON_FORMAT.md và khối Mẫu JSON & rubric của việc này trên board.
+- Có ít nhất hai câu đã review; không chứa bài code hoặc yêu cầu vibe coding.
+- Mọi nguồn, adaptation, skill ID và rubric version đều truy xuất được.
+- Không import ví dụ lịch sử trong `QUESTION_JSON_FORMAT.md` làm seed hiện hành.
 
 ## C06 — Xây danh mục bài tập và ánh xạ điểm thiếu
 

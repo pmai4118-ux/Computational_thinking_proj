@@ -102,7 +102,10 @@ class Rubric:
 
 @dataclass(frozen=True, slots=True)
 class Question:
-    """One immutable, localized question revision and exact rubric reference."""
+    """One immutable text-answer question revision and exact rubric reference.
+
+    Coding tasks, code submissions, and AI-code critique are outside the scope.
+    """
 
     id: QuestionId
     version: int
@@ -115,8 +118,6 @@ class Question:
     review: ReviewMetadata = ReviewMetadata()
     original_content: str | None = None
     adaptation_note: str | None = None
-    code: str | None = None
-    code_language: str | None = None
     constraints: tuple[str, ...] = ()
 
 

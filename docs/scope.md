@@ -1,6 +1,9 @@
 # P01 MVP scope: Backend Intern/Fresher interview practice
 
-Status: scope baseline selected for implementation on 9 November 2026. It follows
+Status: revised by the user on 10 November 2026 to text-only technical practice.
+Coding tasks, live-coding, LeetCode handoff, code storage/review and vibe coding /
+AI-code critique are excluded. Text-answer rubric evaluation remains in scope.
+The previous scope baseline was selected on 9 November 2026. It follows
 the current project plan and the user's request to complete P01. A team walkthrough
 and individual confirmation are still required before describing this as a
 team-wide agreement. Unresolved choices remain explicit below.
@@ -12,8 +15,11 @@ team-wide agreement. Unresolved choices remain explicit below.
 - Language: Vietnamese interface and question content; original source text is
   retained separately when material is translated or adapted.
 - Session: four text-answer questions, one from each fixed MVP category:
-  programming knowledge, technical case, algorithm explanation, and AI-code
-  critique. The first release uses fixed coverage; adaptive probing is deferred.
+  programming knowledge, technical case, algorithm explanation in prose, and
+  technical reasoning/trade-offs. The fourth category replaces AI-code critique
+  while retaining the existing four-question session length. C01 still owns the
+  detailed skill catalog. No category requires writing, running or reviewing code.
+  The first release uses fixed coverage; adaptive probing is deferred.
 - Feedback: criterion-level rubric outcome, score when evidence supports one,
   explanation, and evidence linked to the exact saved answer. Unresolved evidence
   remains distinct from a zero score or a processing failure.
@@ -49,6 +55,10 @@ equivalent valid answers before content is approved. Team members and reviewers
 remain unassigned until the user allocates them.
 
 ## Deferred from the first release
+
+Excluded by the latest user decision (not scheduled for a later release): coding
+questions, code editors/submissions/storage, sandbox execution, LeetCode links or
+submission tracking, AI-generated code critique and vibe-coding practice.
 
 - Job-description analysis, broad job-market collection, and multiple career
   tracks.

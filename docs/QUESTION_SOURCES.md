@@ -11,14 +11,14 @@ Confirmed on 5 November 2026: the VA question bank will use selected open-source
 5. Have another teammate review technical correctness, target level, license/provenance metadata, equivalent valid answers and observable rubric boundaries.
 6. Mark the item approved only after that review. The import service rejects or quarantines items with missing source/license/review metadata and reports the reason.
 
-Suggested question files: `data/seed/questions/programming.json`, `cases.json`, `algorithms.json`, and `ai_review.json`. These are proposed files in the Python application; the planning dashboard does not already contain a VA question bank.
+Suggested question files: `data/seed/questions/programming.json`, `cases.json`, `algorithms.json`, and `technical_reasoning.json`. All questions require prose-only answers; algorithm questions assess explanation without code. These are proposed files in the Python application; the planning dashboard does not already contain a VA question bank.
 
 ## Candidate sources to inspect
 
 - [TheAlgorithms/Python](https://github.com/TheAlgorithms/Python): algorithm implementation and explanatory material. Its [MIT license](https://github.com/TheAlgorithms/Python/blob/master/LICENSE.md) was inspected for this plan. Select suitable material and inspect file-specific notices. This is not a license for an unrelated external problem statement.
 - [Tech Interview Handbook](https://github.com/yangshun/tech-interview-handbook): preparation and explanation material. Its [MIT license](https://github.com/yangshun/tech-interview-handbook/blob/main/LICENSE) was inspected for this plan. Check whether each selected item belongs to the repository or is merely a link to third-party content.
 
-These are starting candidates, not an approved imported dataset. For AI-code critique, a team-modified version of reusable source code may become exercise material, but record modifications and never claim that it was AI-generated without evidence.
+These are starting candidates, not an approved imported dataset. The user removed coding tasks and AI-code critique on 10 November 2026. Select explanatory material for prose-only questions; do not turn implementation snippets into code-writing, code-review or vibe-coding exercises.
 
 ## Import checks
 

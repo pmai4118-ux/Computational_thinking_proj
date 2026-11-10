@@ -14,13 +14,20 @@ P01 MVP baseline (see [scope and remaining decisions](scope.md)):
 | --- | --- | --- |
 | Audience | Software Engineering students preparing for Backend Intern/Fresher interviews | Team confirmation remains pending |
 | Interview format | Vietnamese text answers; four questions per session; fixed coverage | Adaptive probing is deferred |
-| Question coverage | Programming knowledge, technical case, algorithm explanation, AI-code critique | C01 supplies the approved skill IDs and coverage records |
+| Question coverage | Programming knowledge, technical case, algorithm explanation in prose, technical reasoning/trade-offs | Revised by the user on 10 November 2026; C01 supplies approved skill IDs |
 | Content size | Eight reviewed questions minimum, twelve target; at least two variants per category | Validate against assigned team capacity |
 | Identity | Anonymous local browser session with synthetic demonstration profiles | Account system is outside the MVP |
 | Operation | One Python server, same-origin pages/API, local SQLite | Hosting and classroom requirements remain open |
 | Release | Local demonstration first | Hosted release only if required |
 
 ## 2. Product boundary
+
+User scope revision, 10 November 2026: all student answers are prose. Remove coding
+tasks, live-coding, code editors/submissions/storage, LeetCode handoff, sandbox
+execution and vibe coding / AI-code critique. Algorithm topics are explanation
+only. Rubric/evidence evaluation of text answers and failure-safe persistence
+remain required. The current [specification](PROJECT_SPEC.md) supersedes older
+coding requirements; legacy content examples must not be imported as current seeds.
 
 The first release must let a student start a practice session, answer questions, receive rubric-based results linked to their original answer, understand an observed gap, and open a reviewed exercise addressing that gap. The application must recover from an AI request failure without losing the submitted answer.
 

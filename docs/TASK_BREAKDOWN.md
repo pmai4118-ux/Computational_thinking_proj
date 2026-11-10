@@ -43,8 +43,8 @@ Each ticket should record: ID/title, implementer (unassigned), reviewer (unassig
 | C01 | Define stable skill IDs and the fixed session coverage blueprint | Content/S: seed skill/blueprint records | P01,P03 | 2-3 | Each question category has an explicit assessed skill and eligible criterion types |
 | C02 | Curate two open-source programming-knowledge questions with reviewed rubrics | Content: `data/seed/questions.*` | P05,C01 | 2-4 | Both accept equivalent answers; sources and review metadata recorded |
 | C03 | Curate/adapt two open-source technical-case variants with reviewed rubrics | Content | P05,C01 | 3-5 | Shared underlying concept and meaningful scenario differences reviewed |
-| C04 | Curate two open-source algorithm questions with reviewed rubrics | Content | P05,C01 | 2-4 | Correctness, explanation and complexity requirements match each question |
-| C05 | Select reusable open-source code for two reviewed AI-code-critique exercises | Content | P05,C01 | 2-4 | Code is presented as material to analyze; expected defects/checks reviewed |
+| C04 | Curate two prose-only algorithm explanation questions with reviewed rubrics | Content | P05,C01 | 2-4 | Reasoning, assumptions and complexity are assessed without writing or reviewing code |
+| C05 | Curate two technical reasoning/trade-off questions with reviewed rubrics | Content | P05,C01 | 2-4 | Prose-only answers explain alternatives and trade-offs; no AI-code critique |
 | C06 | Build the exercise catalog and criterion-gap mappings | Content/M: `data/seed/exercises.*` | C01,P05 | 3-4 | Each seeded gap has a reviewed exercise, prerequisite IDs and duration estimate |
 | C07 | Prepare 24 synthetic answer examples and independent expected judgments | Content/QA: `test/fixtures/` | C02,C03,C04,C05 | 4-6 | Correct, partial, wrong, equivalent, ambiguous and injection cases represented; calibration/held-out split recorded |
 | C08 | Validate and import seed data; report individual bad records and dataset-wide failures | S/M: `question_bank_service.py`, import command | F04,C02,C03,C04,C05,C06 | 2-4 | Bad IDs/rubrics/sources have useful context; invalid required coverage blocks release |

@@ -76,6 +76,12 @@ directory names and capitalization:
 
 ## Interview practice rules
 
+- Current user scope (10 November 2026): prose-only technical answers. Follow
+  `docs/PROJECT_SPEC.md` and `docs/scope.md`. Exclude coding tasks, code editors,
+  code submission/storage/execution/review, LeetCode handoff and vibe coding /
+  AI-code critique. Preserve deterministic rubric evaluation of text answers.
+- Historical code-question fixtures are archived examples, not active seeds.
+
 - Import reviewed question and rubric versions with their source and license
   metadata. Use `docs/QUESTION_SOURCES.md` and `docs/QUESTION_JSON_FORMAT.md` when
   available. The JSON examples are drafts until their contracts are agreed.

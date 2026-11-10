@@ -2,6 +2,19 @@
 
 Computational Thinking class project for a Vietnamese technical interview practice app.
 
+## Current product scope
+
+Updated by the user on 10 November 2026: technical questions and interview practice
+use prose answers only. Coding tasks, live-coding, LeetCode handoff, code editors,
+code storage/execution/review and vibe coding / AI-code critique are excluded.
+Keep answer history, evidence-linked feedback, deterministic text-answer rubric
+evaluation and failure/retry handling. See [specification](docs/PROJECT_SPEC.md),
+[scope](docs/scope.md) and [data contract](docs/data_contract.md).
+
+The domain skeleton is implemented in `source/Model/question.py`, `ids.py` and
+`evaluation.py`. Session/Answer/Exercise records and the application factory remain
+planned. Historical code-question examples are not active seed contracts.
+
 ## Python development setup
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and run these

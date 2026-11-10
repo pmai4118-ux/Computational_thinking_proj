@@ -1,5 +1,12 @@
 # Mẫu JSON câu hỏi và rubric — C02 đến C05
 
+> **Lưu trữ lịch sử — hết hiệu lực làm schema/seed hiện hành từ 10/11/2026.**
+> Người dùng đã bỏ bài code, live-coding và vibe coding/đánh giá code AI.
+> Các ví dụ bên dưới được giữ để truy vết, không dùng để tạo bài code hoặc import.
+> Schema hiện hành theo `docs/data_contract.md`, `docs/scope.md` và
+> `source/Model/question.py`; `code` và `code_language` đã bị loại khỏi Question.
+> C02–C05 cần bộ ví dụ tự luận mới được review trước khi import.
+
 Format đề xuất để nhóm chốt ở P03/P05. Đây là mẫu tự soạn minh họa cấu trúc, không phải câu hỏi nguồn mở đã được xác minh. Các file example_only=true, source/license còn null, review.status=draft, nên chưa đủ điều kiện import. Các đường dẫn thuộc ứng dụng Python tại repository gốc.
 
 ## C02: Đối số mặc định có thể thay đổi trong Python
