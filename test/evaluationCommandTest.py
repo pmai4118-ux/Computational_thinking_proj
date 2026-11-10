@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from source.Model.reportFiles import saveReport
+from source.Model.repositories.jsonEvaluationRepository import JsonEvaluationRepository
 from source.Model.evaluationData import EvaluationReport
 
 
@@ -19,7 +19,7 @@ def tempPath(request):
 
 def runCli(outputPath, *extraArgs):
     return subprocess.run([
-        sys.executable, "-m", "source.evaluateAnswer", "--input", "examples/evaluateAnswer/sampleInput.json",
+        sys.executable, "-m", "source.main", "--input", "examples/evaluateAnswer/sampleInput.json",
         "--provider", "recorded", "--recording", "examples/evaluateAnswer/sampleReview.json",
         "--output", str(outputPath), *extraArgs,
     ], cwd=repoPath, capture_output=True, encoding="utf-8", timeout=30)
@@ -40,24 +40,24 @@ def testCommandRoundTrip(tempPath):
     assert "outputExists" in repeated.stderr
     assert outputPath.read_bytes() == originalBytes
     with pytest.raises(FileExistsError):
-        saveReport(EvaluationReport.model_validate(data), outputPath)
+        JsonEvaluationRepository(tempPath).saveReport(EvaluationReport.model_validate(data), outputPath)
     assert len(list(tempPath.iterdir())) == 1
 
 
 def testTextPresentation(tempPath):
     completed = runCli(tempPath / "report.json")
     assert completed.returncode == 0, completed.stderr
-    assert "không phải AI đang chấm" in completed.stdout
-    assert "không suy ra năng lực tổng thể" in completed.stdout
+    assert "no live AI assessment" in completed.stdout
+    assert "no overall competency claim" in completed.stdout
     assert "originalText[" in completed.stdout
 
 
 def testNewAnswerNeedsReview(tempPath):
     answerPath = tempPath / "answer.txt"
-    answerPath.write_bytes("Bài mới.\r\nDòng hai.".encode("utf-8"))
+    answerPath.write_bytes("New answer.\r\nSecond line.".encode("utf-8"))
     outputPath = tempPath / "report.json"
     completed = runCli(outputPath, "--answerFile", str(answerPath))
     assert completed.returncode == 1
     assert "recordingMismatch" in completed.stderr
     assert not outputPath.exists()
-    assert answerPath.read_bytes() == "Bài mới.\r\nDòng hai.".encode("utf-8")
+    assert answerPath.read_bytes() == "New answer.\r\nSecond line.".encode("utf-8")

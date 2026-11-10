@@ -2,14 +2,14 @@
   "question": {
     "questionId": "question.findPair",
     "version": 1,
-    "prompt": "Viết hàm Python nhận danh sách số nguyên values và số nguyên target. Trả hai chỉ số khác nhau có tổng giá trị bằng target, hoặc None nếu không có. Giải thích thuật toán, tính đúng, độ phức tạp và đưa các ca kiểm thử với kết quả mong đợi.",
+    "prompt": "Write a Python function that receives a list of integers values and an integer target. Return two distinct indices whose values sum to target, or None if no pair exists. Explain the algorithm, correctness, complexity, and test cases with expected results.",
     "requirements": [
-      "Chỉ số tính từ 0; chấp nhận bất kỳ cặp hợp lệ.",
-      "Xử lý số trùng, số âm, danh sách rỗng, một phần tử và không có cặp.",
-      "Giải thích vì sao không dùng lại một phần tử; nêu thời gian, bộ nhớ của thuật toán đã dùng.",
-      "Nêu ca thông thường và các ca biên trên, kèm kết quả mong đợi."
+      "Use zero-based indices; any valid pair is acceptable.",
+      "Handle duplicates, negative values, an empty list, a single item, and no matching pair.",
+      "Explain why an item is not reused and state the time and space cost of the chosen algorithm.",
+      "Include a normal case and the listed edge cases with expected results."
     ],
-    "context": "Đầu vào luôn đúng kiểu. Không yêu cầu thuật toán tối ưu; cách giải khác đúng được chấp nhận. Code được đọc để nhận xét, không được thực thi trong PoC.",
+    "context": "Inputs have the declared types. An optimal algorithm is not required; correct alternatives are accepted. Code is read but never executed in this PoC.",
     "expectedLevel": "Backend Intern/Fresher"
   },
   "rubrics": [
@@ -17,35 +17,35 @@
       "rubricId": "rubric.knowledge",
       "version": 1,
       "questionId": "question.findPair",
-      "competency": "Kiến thức",
+      "competency": "Knowledge",
       "criteria": [
         {
           "criterionId": "complement",
-          "description": "Hiểu điều kiện tổng của cặp",
-          "acceptanceRule": "Giải thích hai giá trị cần có tổng bằng target; có thể dùng phần bù target - value hoặc phép kiểm tra tổng tương đương. Không bắt buộc dùng bảng băm.",
-          "reviewRule": "Chấp nhận diễn đạt/triển khai tương đương đúng. Nếu không nêu nội dung được yêu cầu, ghi omission/unmet. Nếu tham chiếu phần không được cung cấp hoặc mơ hồ, dùng insufficientEvidence; không tự điền ý.",
+          "description": "Understands the target sum",
+          "acceptanceRule": "Explain that two values must sum to target. A complement lookup or an equivalent sum check is acceptable; a hash table is not required.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
           "omissionMeansUnmet": true
         },
         {
           "criterionId": "complexity",
-          "description": "Phân tích thời gian và bộ nhớ",
-          "acceptanceRule": "Nêu đúng độ phức tạp của giải pháp thực sự dùng. Với bảng băm: kỳ vọng O(n) thời gian, O(n) bộ nhớ; không khẳng định bảo đảm O(n) mọi trường hợp.",
-          "reviewRule": "Chấp nhận diễn đạt/triển khai tương đương đúng. Nếu không nêu nội dung được yêu cầu, ghi omission/unmet. Nếu tham chiếu phần không được cung cấp hoặc mơ hồ, dùng insufficientEvidence; không tự điền ý.",
+          "description": "Analyzes time and space",
+          "acceptanceRule": "State the complexity of the actual solution. For a hash table, expected time is O(n) and space is O(n); do not claim guaranteed O(n) in all cases.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
           "omissionMeansUnmet": true
         }
       ],
       "scoreLevels": [
         {
           "value": 0.0,
-          "description": "Chưa xác nhận kiến thức nền tảng.",
-          "condition": "Không yêu cầu tiêu chí met.",
+          "description": "Core knowledge has not been confirmed.",
+          "condition": "No met criteria required.",
           "requiredMet": [],
           "minimumMet": 0
         },
         {
           "value": 1.0,
-          "description": "Giải thích đúng điều kiện tổng; phân tích chi phí chưa đủ.",
-          "condition": "Phải đáp ứng: complement.",
+          "description": "Explains the target sum but not the full cost.",
+          "condition": "Required: complement.",
           "requiredMet": [
             "complement"
           ],
@@ -53,8 +53,8 @@
         },
         {
           "value": 2.0,
-          "description": "Giải thích đúng điều kiện tổng và chi phí giải pháp.",
-          "condition": "Phải đáp ứng: complement, complexity.",
+          "description": "Explains both the target sum and the solution cost.",
+          "condition": "Required: complement, complexity.",
           "requiredMet": [
             "complement",
             "complexity"
@@ -62,41 +62,41 @@
           "minimumMet": 2
         }
       ],
-      "scoringRule": "Chọn mức cao nhất thỏa requiredMet và minimumMet. Thiếu tiêu chí nền tảng không đạt mức cao hơn. Nếu các khả năng của tiêu chí chưa rõ dẫn đến nhiều mức, chưa chấm điểm. Không cộng điểm giữa các năng lực."
+      "scoringRule": "Select the highest level satisfying requiredMet and minimumMet. If unresolved criteria can change the level, leave the score null. Do not add scores across competencies."
     },
     {
       "rubricId": "rubric.reasoning",
       "version": 1,
       "questionId": "question.findPair",
-      "competency": "Giải quyết vấn đề",
+      "competency": "Problem solving",
       "criteria": [
         {
           "criterionId": "distinct",
-          "description": "Bảo đảm hai chỉ số khác nhau",
-          "acceptanceRule": "Mô tả cơ chế không tái sử dụng cùng phần tử. Chấp nhận bảng băm kiểm tra trước khi thêm, hoặc cách khác bảo đảm chỉ số khác.",
-          "reviewRule": "Chấp nhận diễn đạt/triển khai tương đương đúng. Nếu không nêu nội dung được yêu cầu, ghi omission/unmet. Nếu tham chiếu phần không được cung cấp hoặc mơ hồ, dùng insufficientEvidence; không tự điền ý.",
+          "description": "Ensures distinct indices",
+          "acceptanceRule": "Explain how the same item cannot be used twice. Checking a hash table before inserting the current item or another sound method is acceptable.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
           "omissionMeansUnmet": true
         },
         {
           "criterionId": "correctness",
-          "description": "Lập luận tìm cặp và trường hợp không có cặp",
-          "acceptanceRule": "Giải thích vì sao cặp trả về đúng và vì sao kết luận không có cặp sau khi xét đủ khả năng. Chấp nhận lập luận phù hợp với cách giải khác.",
-          "reviewRule": "Chấp nhận diễn đạt/triển khai tương đương đúng. Nếu không nêu nội dung được yêu cầu, ghi omission/unmet. Nếu tham chiếu phần không được cung cấp hoặc mơ hồ, dùng insufficientEvidence; không tự điền ý.",
+          "description": "Justifies found and missing pairs",
+          "acceptanceRule": "Explain why any returned pair is valid and why no pair exists after all possibilities are considered. Accept reasoning appropriate to an alternative algorithm.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
           "omissionMeansUnmet": true
         }
       ],
       "scoreLevels": [
         {
           "value": 0.0,
-          "description": "Chưa bảo đảm điều kiện cặp chỉ số.",
-          "condition": "Không yêu cầu tiêu chí met.",
+          "description": "Distinct indices have not been established.",
+          "condition": "No met criteria required.",
           "requiredMet": [],
           "minimumMet": 0
         },
         {
           "value": 1.0,
-          "description": "Bảo đảm chỉ số khác nhau; lập luận chưa đầy đủ.",
-          "condition": "Phải đáp ứng: distinct.",
+          "description": "Distinct indices are established but the argument is incomplete.",
+          "condition": "Required: distinct.",
           "requiredMet": [
             "distinct"
           ],
@@ -104,8 +104,8 @@
         },
         {
           "value": 2.0,
-          "description": "Lập luận đủ cho kết quả tìm thấy và không tìm thấy.",
-          "condition": "Phải đáp ứng: distinct, correctness.",
+          "description": "Reasoning covers both found and missing pairs.",
+          "condition": "Required: distinct, correctness.",
           "requiredMet": [
             "distinct",
             "correctness"
@@ -113,41 +113,41 @@
           "minimumMet": 2
         }
       ],
-      "scoringRule": "Chọn mức cao nhất thỏa requiredMet và minimumMet. Thiếu tiêu chí nền tảng không đạt mức cao hơn. Nếu các khả năng của tiêu chí chưa rõ dẫn đến nhiều mức, chưa chấm điểm. Không cộng điểm giữa các năng lực."
+      "scoringRule": "Select the highest level satisfying requiredMet and minimumMet. If unresolved criteria can change the level, leave the score null. Do not add scores across competencies."
     },
     {
       "rubricId": "rubric.solution",
       "version": 1,
       "questionId": "question.findPair",
-      "competency": "Triển khai giải pháp",
+      "competency": "Implementation",
       "criteria": [
         {
           "criterionId": "implementation",
-          "description": "Có triển khai thuật toán hợp lệ",
-          "acceptanceRule": "Code Python tìm đúng cặp trên đầu vào hợp lệ, kể cả số âm và số trùng, không dùng một phần tử hai lần. Không yêu cầu trùng code mẫu; chấp nhận cả vét cạn nếu đúng.",
-          "reviewRule": "Chấp nhận diễn đạt/triển khai tương đương đúng. Nếu không nêu nội dung được yêu cầu, ghi omission/unmet. Nếu tham chiếu phần không được cung cấp hoặc mơ hồ, dùng insufficientEvidence; không tự điền ý.",
+          "description": "Implements a valid algorithm",
+          "acceptanceRule": "Python code finds a valid pair for valid inputs, including negatives and duplicates, without reusing an item. Brute force is acceptable if correct.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
           "omissionMeansUnmet": true
         },
         {
           "criterionId": "returnValue",
-          "description": "Trả đúng đầu ra yêu cầu",
-          "acceptanceRule": "Trả hai chỉ số gốc khác nhau nếu có cặp, None nếu không có; không trả giá trị thay chỉ số.",
-          "reviewRule": "Chấp nhận diễn đạt/triển khai tương đương đúng. Nếu không nêu nội dung được yêu cầu, ghi omission/unmet. Nếu tham chiếu phần không được cung cấp hoặc mơ hồ, dùng insufficientEvidence; không tự điền ý.",
+          "description": "Returns the required output",
+          "acceptanceRule": "Return two distinct original indices when a pair exists and None otherwise; do not return values instead of indices.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
           "omissionMeansUnmet": true
         }
       ],
       "scoreLevels": [
         {
           "value": 0.0,
-          "description": "Chưa có triển khai hợp lệ được xác nhận.",
-          "condition": "Không yêu cầu tiêu chí met.",
+          "description": "A valid implementation has not been confirmed.",
+          "condition": "No met criteria required.",
           "requiredMet": [],
           "minimumMet": 0
         },
         {
           "value": 1.0,
-          "description": "Triển khai tìm cặp hợp lệ; hợp đồng trả về còn thiếu.",
-          "condition": "Phải đáp ứng: implementation.",
+          "description": "A valid pair algorithm is present, but the return contract is incomplete.",
+          "condition": "Required: implementation.",
           "requiredMet": [
             "implementation"
           ],
@@ -155,8 +155,8 @@
         },
         {
           "value": 2.0,
-          "description": "Triển khai hợp lệ và đúng hợp đồng đầu ra.",
-          "condition": "Phải đáp ứng: implementation, returnValue.",
+          "description": "The implementation and return contract are valid.",
+          "condition": "Required: implementation, returnValue.",
           "requiredMet": [
             "implementation",
             "returnValue"
@@ -164,41 +164,41 @@
           "minimumMet": 2
         }
       ],
-      "scoringRule": "Chọn mức cao nhất thỏa requiredMet và minimumMet. Thiếu tiêu chí nền tảng không đạt mức cao hơn. Nếu các khả năng của tiêu chí chưa rõ dẫn đến nhiều mức, chưa chấm điểm. Không cộng điểm giữa các năng lực."
+      "scoringRule": "Select the highest level satisfying requiredMet and minimumMet. If unresolved criteria can change the level, leave the score null. Do not add scores across competencies."
     },
     {
       "rubricId": "rubric.testing",
       "version": 1,
       "questionId": "question.findPair",
-      "competency": "Kiểm thử",
+      "competency": "Testing",
       "criteria": [
         {
           "criterionId": "normalCase",
-          "description": "Có ca thông thường với kết quả mong đợi",
-          "acceptanceRule": "Nêu ít nhất một đầu vào có cặp và chỉ số đầu ra đúng.",
-          "reviewRule": "Chấp nhận diễn đạt/triển khai tương đương đúng. Nếu không nêu nội dung được yêu cầu, ghi omission/unmet. Nếu tham chiếu phần không được cung cấp hoặc mơ hồ, dùng insufficientEvidence; không tự điền ý.",
+          "description": "Includes a normal case with expected result",
+          "acceptanceRule": "Give at least one input with a pair and the correct output indices.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
           "omissionMeansUnmet": true
         },
         {
           "criterionId": "edgeCases",
-          "description": "Có ca biên với kết quả mong đợi",
-          "acceptanceRule": "Có số trùng, số âm, danh sách rỗng, một phần tử không được dùng hai lần và trường hợp không có cặp; mỗi ca nêu kết quả mong đợi đúng.",
-          "reviewRule": "Chấp nhận diễn đạt/triển khai tương đương đúng. Nếu không nêu nội dung được yêu cầu, ghi omission/unmet. Nếu tham chiếu phần không được cung cấp hoặc mơ hồ, dùng insufficientEvidence; không tự điền ý.",
+          "description": "Includes edge cases with expected results",
+          "acceptanceRule": "Cover duplicate values, negative values, an empty list, one item that cannot be reused, and no pair, with correct expected results.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
           "omissionMeansUnmet": true
         }
       ],
       "scoreLevels": [
         {
           "value": 0.0,
-          "description": "Chưa có ca kiểm tra đúng được xác nhận.",
-          "condition": "Không yêu cầu tiêu chí met.",
+          "description": "No correct test case has been confirmed.",
+          "condition": "No met criteria required.",
           "requiredMet": [],
           "minimumMet": 0
         },
         {
           "value": 1.0,
-          "description": "Có ca thông thường; chưa đủ các ca biên yêu cầu.",
-          "condition": "Phải đáp ứng: normalCase.",
+          "description": "A normal case is present but required edge cases are incomplete.",
+          "condition": "Required: normalCase.",
           "requiredMet": [
             "normalCase"
           ],
@@ -206,8 +206,8 @@
         },
         {
           "value": 2.0,
-          "description": "Có ca thông thường và đủ các ca biên yêu cầu.",
-          "condition": "Phải đáp ứng: normalCase, edgeCases.",
+          "description": "Normal and required edge cases are present.",
+          "condition": "Required: normalCase, edgeCases.",
           "requiredMet": [
             "normalCase",
             "edgeCases"
@@ -215,14 +215,14 @@
           "minimumMet": 2
         }
       ],
-      "scoringRule": "Chọn mức cao nhất thỏa requiredMet và minimumMet. Thiếu tiêu chí nền tảng không đạt mức cao hơn. Nếu các khả năng của tiêu chí chưa rõ dẫn đến nhiều mức, chưa chấm điểm. Không cộng điểm giữa các năng lực."
+      "scoringRule": "Select the highest level satisfying requiredMet and minimumMet. If unresolved criteria can change the level, leave the score null. Do not add scores across competencies."
     }
   ],
   "answer": {
     "answerId": "answer.findPair.demo",
     "revision": 1,
     "questionId": "question.findPair",
-    "originalText": "Tìm phần bù target - value. Lưu giá trị đã gặp cùng chỉ số trong bảng băm.\nKiểm tra phần bù trước khi lưu phần tử hiện tại nên hai chỉ số luôn khác nhau.\nChỉ lưu phần tử đã duyệt: nếu có phần bù thì cặp tìm được đúng; nếu duyệt hết mà không gặp thì không có cặp.\n\ndef findPair(values, target):\n    seen = {}\n    for index, value in enumerate(values):\n        needed = target - value\n        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None\n\nTra cứu bảng băm trung bình O(1) mỗi lượt nên tổng thời gian kỳ vọng O(n), bộ nhớ O(n).\nKhông bảo đảm O(n) trong trường hợp băm xấu nhất.\nVí dụ [2, 7, 11], target=9 trả [0, 1].\nKiểm tra [3, 3], target=6 trả [0, 1]; [-2, 5], target=3 trả [0, 1].\nKiểm tra [3], target=6 trả None; [], target=0 trả None; [1, 2], target=8 trả None.\n"
+    "originalText": "Find the complement target - value. Store earlier values and their indices in a hash table.\nCheck the complement before adding the current item, so the two indices are always distinct.\nOnly earlier items are stored: a found complement gives a valid pair; after scanning all items without one, no pair exists.\n\ndef findPair(values, target):\n    seen = {}\n    for index, value in enumerate(values):\n        needed = target - value\n        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None\n\nAverage hash lookup is O(1), so expected total time is O(n) and extra space is O(n).\nO(n) time is not guaranteed in the worst hash case.\nExample: [2, 7, 11], target=9 returns [0, 1].\nTests: [3, 3], target=6 returns [0, 1]; [-2, 5], target=3 returns [0, 1].\nTests: [3], target=6 returns None; [], target=0 returns None; [1, 2], target=8 returns None.\n"
   },
   "exampleOnly": true
 }

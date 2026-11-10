@@ -5,6 +5,7 @@ from urllib.error import HTTPError, URLError
 
 import pytest
 
+from source.service.providers.geminiInterpreter import readGeminiSettings
 from source.Model.answerData import EvaluationInput
 from source.Model.evaluationData import RecordedReview
 from source.service.evaluationErrors import EvaluationError
@@ -104,7 +105,7 @@ def testMissingConfiguration(monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_MODEL", raising=False)
     with pytest.raises(EvaluationError) as caught:
-        GeminiInterpreter.fromEnvironment()
+        readGeminiSettings()
     assert caught.value.code == "providerConfig"
 
 

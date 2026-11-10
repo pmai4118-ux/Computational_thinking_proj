@@ -6,7 +6,7 @@ from source.service.providers.evidenceInterpreter import inputDigest
 
 class RecordedInterpreter:
     providerName = "recorded"
-    modelName = "Dữ liệu diễn giải có sẵn; không phải AI đang chấm"
+    modelName = "Recorded interpretation; no live AI assessment"
     promptVersion = "recorded/1"
 
     def __init__(self, recording: RecordedReview):
@@ -14,5 +14,5 @@ class RecordedInterpreter:
 
     def interpret(self, inputs: EvaluationInput) -> Interpretation:
         if self.recording.inputHash != inputDigest(inputs):
-            raise EvaluationError("recordingMismatch", "Bản diễn giải không thuộc đúng câu hỏi, rubric và bài gốc này.")
+            raise EvaluationError("recordingMismatch", "The recorded interpretation does not match this question, rubric, and original answer.")
         return self.recording.interpretation

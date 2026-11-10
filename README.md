@@ -5,18 +5,18 @@ Computational Thinking class project for a Vietnamese technical interview practi
 ## Answer evaluation PoC
 
 The `evaluateAnswer` branch adds a standalone Python evaluation flow based on the
-updated user abstraction. It preserves the shared P03 models and the reserved
-web entry point. See [Vietnamese setup, rubric rules and limitations](docs/evaluateAnswer.md).
+updated user abstraction. `source/main.py` wires the MVC-S layers; the shared P03
+models remain available. See the [architecture and function-flow report](source/reports/architectureReport.pdf).
 
 After the development setup below:
 
 ```powershell
-.\.venv\Scripts\python.exe -m source.evaluateAnswer --input examples/evaluateAnswer/sampleInput.json --provider recorded --recording examples/evaluateAnswer/sampleReview.json
+.\.venv\Scripts\python.exe -m source.main --input examples/evaluateAnswer/sampleInput.json --provider recorded --recording examples/evaluateAnswer/sampleReview.json
 ```
 
 Recorded mode is explicitly illustrative. Live interpretation uses Gemini via
 server-side environment configuration; Python validates evidence and computes
-scores. Local reports and private answer files belong in ignored `localReports/`
+scores. Local reports and private answer files belong in ignored `source/reports/results/`
 and `localAnswers/` directories.
 
 ## Python development setup
@@ -48,8 +48,9 @@ run `uv lock`, then repeat the sync and checks. Include both files in the change
 
 ### Application entry point
 
-`source/main.py` is reserved for the F05 app factory. Once F05 provides an ASGI
-factory named `create_app`, the launch command will be
+`source/main.py` currently composes the evaluation CLI through `createController`.
+F05 can add the web app factory alongside it. Once F05 provides an ASGI factory
+named `create_app`, the launch command will be
 `uv run --locked uvicorn source.main:create_app --factory --reload`.
 
 ## Coding agent setup

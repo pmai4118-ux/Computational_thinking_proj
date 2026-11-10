@@ -46,7 +46,7 @@ class EvaluationResult(FrozenData):
     @modelValidator(mode="after")
     def checkScore(self):
         if (self.status == "graded") != (self.score is not None):
-            raise ValueError("graded cần điểm; insufficientEvidence cần score=null.")
+            raise ValueError("graded requires a score; insufficientEvidence requires score=null.")
         return self
 
 
