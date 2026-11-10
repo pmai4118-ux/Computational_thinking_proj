@@ -1,0 +1,18 @@
+1. Phân tích khiếm khuyết kỹ thuật:
+- Toán tử // thực thi floor division, làm mất phần dư và sai lệch độ chính xác toán học của giá trị trung bình thực.
+- Trường hợp biên tập hợp rỗng dẫn tới ZeroDivisionError, vi phạm giao ước API đã thỏa thuận là bắn ra ValueError.
+2. Phương án hiện thực hóa tương đương:
+Có thể sử dụng thư viện chuẩn statistics hoặc duyệt kiểm soát thủ công có độ chính xác cao:
+```python
+import math
+def average(nums):
+    n = len(nums)
+    if n == 0:
+        raise ValueError('Input sequence cannot be empty.')
+    total = math.fsum(nums)  # Giữ độ chính xác dấu phẩy động cao
+    return total / n
+```
+3. Kiểm thử kiểm chứng độc lập:
+- Kiểm thử độ chính xác thực: input [1, 2], expected 1.5.
+- Kiểm thử hợp đồng ngoại lệ biên rỗng: input [], kiểm tra ném đúng kiểu ValueError.
+- Kiểm thử miền giá trị mở rộng: input [-10.0, 10.0, -5.0, 5.0], expected 0.0.

@@ -1,0 +1,13 @@
+Đoạn code in ra cả hai lần đều là [1, 2].
+Nguyên nhân: Trong Python, tham số mặc định bucket=[] chỉ được khởi tạo một lần duy nhất tại thời điểm định nghĩa hàm (function definition time), chứ không phải mỗi lần gọi hàm. Khi hàm thực thi, bucket.append() làm thay đổi trực tiếp đối tượng list trong bộ nhớ, nên các lần gọi không truyền tham số sẽ dùng chung đối tượng này.
+Cách sửa an toàn: Dùng None làm giá trị mặc định và chỉ tạo list mới khi bucket is None:
+```python
+def add_item(value, bucket=None):
+    if bucket is None:
+        bucket = []
+    bucket.append(value)
+    return bucket
+```
+Kiểm thử:
+- Test 1 (không truyền bucket): a = add_item(1); b = add_item(2). Assert a == [1], b == [2], và a is not b.
+- Test 2 (truyền list rỗng tường minh): my_list = []; res = add_item(3, my_list). Assert res is my_list và my_list == [3].

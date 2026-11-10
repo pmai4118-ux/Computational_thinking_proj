@@ -1,0 +1,1 @@
+Em đã làm bài này rất chi tiết trong file báo cáo đính kèm assignment_python_report.pdf và push code giải thích cùng các file test unit lên branch feature/fix-bucket trên GitLab của nhóm. Thầy cô và hệ thống vui lòng mở file đính kèm xem kết quả chạy thực tế.

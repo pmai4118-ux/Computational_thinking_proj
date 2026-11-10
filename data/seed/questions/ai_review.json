@@ -1,0 +1,127 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c05.ai_average.v1",
+    "version": 1,
+    "category": "ai_code_critique",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "backend.code_review",
+      "ai.independent_code_verification"
+    ],
+    "source_id": "source.c05.ai_code_critique",
+    "prompt": "Bạn đang kiểm chứng một gợi ý code tính trung bình cộng. nums là list số hữu hạn; kết quả cần là trung bình thực, còn list rỗng phải raise ValueError. Hãy chỉ ra lỗi, sửa và nêu các test độc lập để kiểm chứng gợi ý.",
+    "code": "def average(nums):\n    return sum(nums) // len(nums)",
+    "code_language": "python",
+    "constraints": [
+      "Giả sử lớp nhận dữ liệu đã bảo đảm phần tử là số hữu hạn.",
+      "Đoạn code trong mẫu này do người soạn mẫu tạo; không phải nội dung đã xác minh do AI hoặc một tác giả nguồn mở tạo ra."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_case",
+      "summary": "Tình huống kiểm chứng mã nguồn do AI gợi ý trong dự án backend, đánh giá năng lực phát hiện lỗi, sửa đổi theo hợp đồng và thiết kế test độc lập.",
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c05.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c05.bugs",
+          "label": "Phát hiện lỗi theo yêu cầu",
+          "expected_evidence": [
+            "// làm tròn xuống thay vì trung bình thực.",
+            "List rỗng gây chia cho 0 thay vì ValueError theo hợp đồng."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Khẳng định code luôn đúng hoặc giải thích sai lỗi chính."
+            },
+            {
+              "score": 1,
+              "description": "Chỉ phát hiện đúng một trong hai lỗi."
+            },
+            {
+              "score": 2,
+              "description": "Phát hiện và giải thích đúng cả hai lỗi so với hợp đồng."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận ví dụ phản chứng thay cho thuật ngữ floor division."
+        },
+        {
+          "id": "c05.fix",
+          "label": "Sửa đúng cả hai hành vi",
+          "expected_evidence": [
+            "Dùng phép chia thực.",
+            "Chủ động raise ValueError khi rỗng."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Bản sửa vẫn sai cả hai yêu cầu chính."
+            },
+            {
+              "score": 1,
+              "description": "Sửa đúng một yêu cầu nhưng còn vi phạm yêu cầu kia."
+            },
+            {
+              "score": 2,
+              "description": "Sửa đúng chia thực và trường hợp rỗng mà không thay đổi hợp đồng."
+            }
+          ],
+          "equivalent_answers": "Có thể dùng cách tính trung bình tương đương nếu vẫn tuân theo hợp đồng, không bắt buộc một mẫu hàm."
+        },
+        {
+          "id": "c05.independent_tests",
+          "label": "Kiểm chứng độc lập với gợi ý",
+          "expected_evidence": [
+            "Test [1,2] cho 1.5.",
+            "Test [] raise ValueError và thêm một trường hợp số âm/thập phân."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không kiểm chứng hoặc chỉ dựa vào việc AI tự nhận code đúng."
+            },
+            {
+              "score": 1,
+              "description": "Có test độc lập nhưng thiếu một hành vi hoặc thiếu expected result."
+            },
+            {
+              "score": 2,
+              "description": "Các test cho chia thực, rỗng và số âm/thập phân có expected result tự xác định."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận test tay hoặc automated test, nhưng phải chỉ ra expected result trước khi dựa vào output gợi ý."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": "team.khoa",
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      }
+    }
+  }
+]

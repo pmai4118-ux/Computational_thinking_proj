@@ -1,0 +1,1 @@
+Em đã debug hàm này trong file notebook experiments.ipynb trên Google Colab. Em thấy code AI có một số chỗ chưa ổn nhưng em đã chạy thử nghiệm với nhiều mảng khác nhau và vẽ đồ thị phân phối. Thầy xem chi tiết trong notebook em gửi.

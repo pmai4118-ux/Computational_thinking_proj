@@ -1,0 +1,14 @@
+1. Hai lỗi vi phạm hợp đồng trong đoạn code gợi ý của AI:
+- Lỗi 1: Dùng phép chia nguyên // (floor division). Phép tính này luôn làm tròn xuống số nguyên gần nhất (ví dụ [1, 2] tổng là 3, 3 // 2 = 1 thay vì trung bình thực 1.5).
+- Lỗi 2: Khi danh sách nums rỗng ([]), hàm sẽ gọi sum([]) // len([]) tương đương 0 // 0, gây ra ngoại lệ ZeroDivisionError của Python thay vì chủ động kiểm tra và raise ValueError như hợp đồng yêu cầu.
+2. Đoạn code sửa chuẩn xác:
+```python
+def average(nums):
+    if not nums:
+        raise ValueError('nums list must not be empty')
+    return sum(nums) / len(nums)
+```
+3. Các bộ test độc lập để kiểm chứng:
+- Test 1 (Chia thực ra số thập phân): average([1, 2]) -> Kỳ vọng kết quả đúng bằng 1.5 (kiểm tra không bị làm tròn thành 1).
+- Test 2 (Danh sách rỗng): Gọi average([]) -> Kỳ vọng bắn ngoại lệ ValueError (bắt bằng pytest.raises(ValueError)).
+- Test 3 (Số âm và số thập phân): average([-2, 4, 1.5, -0.5]) -> Tổng là 3.0, chia cho 4 -> Kỳ vọng kết quả đúng bằng 0.75.

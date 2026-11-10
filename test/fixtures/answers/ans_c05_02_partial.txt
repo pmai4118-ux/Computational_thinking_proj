@@ -1,0 +1,7 @@
+Code của AI bị lỗi dùng phép chia làm tròn //. Ta phải đổi thành phép chia / thì mới ra số thực.
+Bản sửa của em:
+```python
+def average(nums):
+    return sum(nums) / len(nums)
+```
+Kiểm thử: gọi average([1, 2]) ra 1.5 rất chính xác.

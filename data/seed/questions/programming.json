@@ -1,0 +1,127 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c02.default_arguments.v1",
+    "version": 1,
+    "category": "programming_knowledge",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "backend.programming_fundamentals",
+      "python.default_arguments"
+    ],
+    "source_id": "source.c02.python_default_args",
+    "prompt": "Đoạn code in ra gì? Giải thích nguyên nhân và sửa để các lần gọi không truyền bucket có list riêng. Nếu truyền bucket, hàm phải append vào chính list đó. Đề xuất kiểm thử cho bản sửa.",
+    "code": "def add_item(value, bucket=[]):\n    bucket.append(value)\n    return bucket\n\nfirst = add_item(1)\nsecond = add_item(2)\nprint(first)\nprint(second)",
+    "code_language": "python",
+    "constraints": [
+      "Giả sử Python 3; hai lệnh print chạy sau cả hai lần gọi.",
+      "Giữ hành vi thêm vào list mà người gọi truyền rõ ràng, kể cả list rỗng."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_case",
+      "summary": "Câu hỏi phỏng vấn chuẩn về cơ chế tham số mặc định mutable trong hàm, được biên soạn theo rubric 3 tiêu chí đánh giá năng lực Fresher Backend.",
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c02.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c02.default_semantics",
+          "label": "Giải thích kết quả và nguyên nhân",
+          "expected_evidence": [
+            "Hai lần print đều là [1, 2].",
+            "Đối số mặc định được tạo một lần và list bị dùng chung."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Khẳng định hai list độc lập hoặc giải thích sai nguyên nhân."
+            },
+            {
+              "score": 1,
+              "description": "Nêu đúng kết quả nhưng chưa giải thích vì sao list dùng chung."
+            },
+            {
+              "score": 2,
+              "description": "Nêu đúng cả hai kết quả, thời điểm tạo mặc định và tác động mutation."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận diễn đạt tương đương về cùng đối tượng list; không cần khớp từ khóa."
+        },
+        {
+          "id": "c02.safe_fix",
+          "label": "Sửa đúng hợp đồng",
+          "expected_evidence": [
+            "Mỗi lần bỏ qua bucket tạo list mới.",
+            "List truyền tường minh vẫn được dùng, kể cả []."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Bản sửa vẫn dùng chung list mặc định hoặc không tạo được list riêng khi bỏ qua tham số."
+            },
+            {
+              "score": 1,
+              "description": "Tạo được list mặc định riêng nhưng chưa giữ đúng list truyền tường minh, chẳng hạn dùng bucket or []."
+            },
+            {
+              "score": 2,
+              "description": "Tạo list mới chỉ khi tham số bị bỏ qua và giữ đúng list đã truyền."
+            }
+          ],
+          "equivalent_answers": "None guard hoặc sentinel đúng đều hợp lệ; không bắt buộc một mẫu code duy nhất."
+        },
+        {
+          "id": "c02.tests",
+          "label": "Kiểm chứng bằng ví dụ cụ thể",
+          "expected_evidence": [
+            "Hai lần gọi bỏ qua bucket độc lập.",
+            "Một list rỗng truyền vào được cập nhật và giữ identity."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đưa kiểm thử dù đề yêu cầu hoặc kiểm thử khẳng định sai kết quả."
+            },
+            {
+              "score": 1,
+              "description": "Có một kiểm thử đúng nhưng thiếu một hành vi bắt buộc."
+            },
+            {
+              "score": 2,
+              "description": "Có kiểm thử cụ thể cho cả hai hành vi và kết quả mong đợi."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận assert hoặc mô tả input/output đủ rõ để người khác chạy lại."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": "team.bach",
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      }
+    }
+  }
+]

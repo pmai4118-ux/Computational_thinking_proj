@@ -2,12 +2,40 @@
   {
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
+    "id": "source.c02.python_default_args",
+    "title": "Python Common Gotchas - Default Mutable Arguments",
+    "url": "https://github.com/yangshun/tech-interview-handbook",
+    "file_path": "programming-languages/python.md",
+    "revision": "main-2026",
+    "authors": [
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
+    ],
+    "collected_at": "2026-11-05T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "What does the code snippet output? Explain the root cause of mutable default arguments in Python and propose a safe fix and test cases.",
+      "code": "def add_item(value, bucket=[]):\n    bucket.append(value)\n    return bucket"
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/yangshun/tech-interview-handbook/blob/main/LICENSE",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
     "id": "source.c03.concurrent_inventory",
     "title": "Concurrent Inventory Decrement & Race Condition Case",
     "url": "https://github.com/yangshun/tech-interview-handbook",
     "file_path": "system-design/concurrency.md",
     "revision": "main-2026",
-    "authors": ["Yangshun Tay", "Tech Interview Handbook Contributors"],
+    "authors": [
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
+    ],
     "collected_at": "2026-11-05T00:00:00Z",
     "original_language": "en",
     "original_content": {
@@ -20,6 +48,54 @@
       "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
       "status": "verified"
     }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c04.two_sum_algorithm",
+    "title": "Two Sum Algorithm Implementation and Complexity Analysis",
+    "url": "https://github.com/TheAlgorithms/Python",
+    "file_path": "searches/two_sum.py",
+    "revision": "master-2026",
+    "authors": [
+      "TheAlgorithms Contributors"
+    ],
+    "collected_at": "2026-11-05T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. Explain correctness, complexity, and edge tests.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Python/blob/master/LICENSE.md",
+      "required_notice": "Copyright (c) TheAlgorithms. Licensed under the MIT License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c05.ai_code_critique",
+    "title": "Average Calculation Verification & Contract Adherence",
+    "url": "https://github.com/TheAlgorithms/Python",
+    "file_path": "maths/average_mean.py",
+    "revision": "master-2026",
+    "authors": [
+      "TheAlgorithms Contributors",
+      "Team Adaptation"
+    ],
+    "collected_at": "2026-11-05T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Critique an AI-suggested implementation of average calculation. Identify bugs against contract, provide safe fix, and design independent unit tests.",
+      "code": "def average(nums):\n    return sum(nums) // len(nums)"
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Python/blob/master/LICENSE.md",
+      "required_notice": "Copyright (c) TheAlgorithms. Licensed under the MIT License.",
+      "status": "verified"
+    }
   }
 ]
-

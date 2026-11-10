@@ -1,0 +1,5 @@
+Đoạn code in ra:
+first là [1]
+second là [2]
+Vì mỗi lần gọi hàm add_item thì Python sẽ khởi tạo lại tham số mặc định bucket=[] là một list rỗng mới hoàn toàn. Biến first và second độc lập với nhau.
+Code này không có lỗi gì cần sửa. Ta không cần thêm kiểm thử vì hành vi này đã quá chuẩn.

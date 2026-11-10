@@ -1,0 +1,129 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c04.two_sum.v1",
+    "version": 1,
+    "category": "algorithm_explanation",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "algorithm.correctness",
+      "algorithm.complexity",
+      "data_structures.hash_map"
+    ],
+    "source_id": "source.c04.two_sum_algorithm",
+    "prompt": "Cho danh sách số nguyên nums và target, tìm hai vị trí khác nhau có tổng bằng target; trả None nếu không có. Giải thích thuật toán, vì sao đúng, độ phức tạp và kiểm thử biên.",
+    "code": null,
+    "code_language": null,
+    "constraints": [
+      "Chỉ số bắt đầu từ 0; không dùng cùng một vị trí hai lần.",
+      "Có thể có giá trị trùng nhau; nếu có nhiều cặp thì trả một cặp bất kỳ.",
+      "Đề không bắt buộc một độ phức tạp tối ưu cụ thể."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_case",
+      "summary": "Bài toán giải thuật tìm kiếm Two Sum từ kho TheAlgorithms/Python, xây dựng rubric đánh giá tính đúng đắn, phân tích độ phức tạp thời gian/bộ nhớ và kiểm thử biên cho Fresher Backend.",
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c04.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c04.correctness",
+          "label": "Thuật toán và lập luận đúng",
+          "expected_evidence": [
+            "Chỉ trả cặp vị trí khác nhau có đúng tổng.",
+            "Xử lý giá trị trùng và không tìm thấy."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Có thể dùng một vị trí hai lần hoặc trả cặp sai tổng."
+            },
+            {
+              "score": 1,
+              "description": "Ý tưởng phù hợp nhưng chưa giải thích một ràng buộc quan trọng."
+            },
+            {
+              "score": 2,
+              "description": "Thuật toán và lập luận đáp ứng đầy đủ các ràng buộc, kể cả duplicate/no-match."
+            }
+          ],
+          "equivalent_answers": "Duyệt cặp j>i hoặc hash lookup trước khi insert đều có thể đạt đủ nếu giải thích đúng; không ép theo đáp án mẫu."
+        },
+        {
+          "id": "c04.complexity",
+          "label": "Độ phức tạp khớp phương án",
+          "expected_evidence": [
+            "Nêu thời gian và bộ nhớ của chính cách đã chọn.",
+            "Nêu giả định average-case nếu dựa vào hash table."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Khẳng định độ phức tạp sai cho chính phương án."
+            },
+            {
+              "score": 1,
+              "description": "Nêu đúng một phần nhưng bỏ thời gian/bộ nhớ hoặc giả định quan trọng."
+            },
+            {
+              "score": 2,
+              "description": "Nêu đúng thời gian, bộ nhớ và giả định cần thiết."
+            }
+          ],
+          "equivalent_answers": "Cách O(n²) vẫn đạt tiêu chí này nếu phân tích đúng vì đề không yêu cầu tối ưu nhất."
+        },
+        {
+          "id": "c04.edge_tests",
+          "label": "Kiểm thử điều kiện biên",
+          "expected_evidence": [
+            "[3,3], target=6 trả hai vị trí khác nhau.",
+            "Input không đủ phần tử hoặc không có cặp trả None."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu test hoặc test cho phép dùng lại cùng vị trí."
+            },
+            {
+              "score": 1,
+              "description": "Có một nhóm test đúng nhưng thiếu duplicate hoặc no-match."
+            },
+            {
+              "score": 2,
+              "description": "Nêu test duplicate và no-match/không đủ phần tử với kết quả rõ ràng."
+            }
+          ],
+          "equivalent_answers": "Có thể dùng input tương đương; không bắt buộc đúng các số trong ví dụ."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": "team.nguyen",
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      }
+    }
+  }
+]
