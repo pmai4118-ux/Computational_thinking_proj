@@ -1,0 +1,14 @@
+Ta xét từng cặp chỉ số i và j với i < j. Nếu values[i] + values[j] bằng target thì trả cặp chỉ số đó. Điều kiện i < j bảo đảm hai phần tử khác nhau, kể cả khi chúng có cùng giá trị.
+
+def findPair(values, target):
+    for firstIndex in range(len(values)):
+        for secondIndex in range(firstIndex + 1, len(values)):
+            if values[firstIndex] + values[secondIndex] == target:
+                return [firstIndex, secondIndex]
+    return None
+
+Mỗi cặp chỉ số khác nhau được xét đúng một lần. Vì vậy cặp trả về có tổng đúng; nếu duyệt hết mà không thấy cặp thì không có lời giải.
+Có nhiều nhất n(n-1)/2 cặp nên thời gian O(n^2), bộ nhớ phụ O(1). Đề không bắt buộc thời gian tuyến tính.
+Ca thông thường: [2, 7, 11], target=9 trả [0, 1].
+Ca số trùng: [3, 3], target=6 trả [0, 1]. Ca số âm: [-2, 5], target=3 trả [0, 1].
+Ca một phần tử: [3], target=6 trả None. Ca rỗng: [], target=0 trả None. Ca không có cặp: [1, 2], target=8 trả None.

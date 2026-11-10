@@ -2,6 +2,23 @@
 
 Computational Thinking class project for a Vietnamese technical interview practice app.
 
+## Answer evaluation PoC
+
+The `evaluateAnswer` branch adds a standalone Python evaluation flow based on the
+updated user abstraction. It preserves the shared P03 models and the reserved
+web entry point. See [Vietnamese setup, rubric rules and limitations](docs/evaluateAnswer.md).
+
+After the development setup below:
+
+```powershell
+.\.venv\Scripts\python.exe -m source.evaluateAnswer --input examples/evaluateAnswer/sampleInput.json --provider recorded --recording examples/evaluateAnswer/sampleReview.json
+```
+
+Recorded mode is explicitly illustrative. Live interpretation uses Gemini via
+server-side environment configuration; Python validates evidence and computes
+scores. Local reports and private answer files belong in ignored `localReports/`
+and `localAnswers/` directories.
+
 ## Python development setup
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and run these

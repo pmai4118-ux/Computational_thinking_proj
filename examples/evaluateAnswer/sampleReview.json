@@ -1,0 +1,139 @@
+{
+  "inputHash": "a00235880522f7bbd00ccb19a951c875905b02727edc7a79d2571e9e1e861906",
+  "interpretation": {
+    "reviews": [
+      {
+        "rubricId": "rubric.knowledge",
+        "criterionChecks": [
+          {
+            "criterionId": "complement",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Tìm phần bù target - value.",
+                "location": "originalText",
+                "observation": "Nêu đúng quan hệ giữa phần tử hiện tại và phần bù cần tìm.",
+                "startOffset": 0,
+                "endOffset": 27
+              }
+            ]
+          },
+          {
+            "criterionId": "complexity",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Tra cứu bảng băm trung bình O(1) mỗi lượt nên tổng thời gian kỳ vọng O(n), bộ nhớ O(n).\nKhông bảo đảm O(n) trong trường hợp băm xấu nhất.",
+                "location": "originalText",
+                "observation": "Giải thích thời gian kỳ vọng theo tra cứu băm và nêu cả bộ nhớ cùng giới hạn trường hợp xấu nhất.",
+                "startOffset": 496,
+                "endOffset": 633
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "rubric.reasoning",
+        "criterionChecks": [
+          {
+            "criterionId": "distinct",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Kiểm tra phần bù trước khi lưu phần tử hiện tại nên hai chỉ số luôn khác nhau.",
+                "location": "originalText",
+                "observation": "Kiểm tra trên các chỉ số đã duyệt trước khi thêm chỉ số hiện tại, nên không lấy một phần tử hai lần.",
+                "startOffset": 75,
+                "endOffset": 153
+              }
+            ]
+          },
+          {
+            "criterionId": "correctness",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Chỉ lưu phần tử đã duyệt: nếu có phần bù thì cặp tìm được đúng; nếu duyệt hết mà không gặp thì không có cặp.",
+                "location": "originalText",
+                "observation": "Lập luận dựa trên các phần tử đã duyệt, bao gồm lý do không có cặp khi duyệt hết.",
+                "startOffset": 154,
+                "endOffset": 262
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "rubric.solution",
+        "criterionChecks": [
+          {
+            "criterionId": "implementation",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "def findPair(values, target):\n    seen = {}\n    for index, value in enumerate(values):\n        needed = target - value\n        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None",
+                "location": "originalText",
+                "observation": "Đọc code cho thấy kiểm tra phần bù trước khi thêm phần tử, hỗ trợ số âm và số trùng; đây là nhận xét từ code, không phải kết quả chạy code.",
+                "startOffset": 264,
+                "endOffset": 494
+              }
+            ]
+          },
+          {
+            "criterionId": "returnValue",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None",
+                "location": "originalText",
+                "observation": "Nhánh tìm thấy trả chỉ số cũ và hiện tại, nhánh kết thúc trả None.",
+                "startOffset": 383,
+                "endOffset": 494
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "rubric.testing",
+        "criterionChecks": [
+          {
+            "criterionId": "normalCase",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Ví dụ [2, 7, 11], target=9 trả [0, 1].",
+                "location": "originalText",
+                "observation": "Ca [2, 7, 11] với target=9 và kết quả [0, 1] phù hợp yêu cầu.",
+                "startOffset": 634,
+                "endOffset": 672
+              }
+            ]
+          },
+          {
+            "criterionId": "edgeCases",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Kiểm tra [3, 3], target=6 trả [0, 1]; [-2, 5], target=3 trả [0, 1].\nKiểm tra [3], target=6 trả None; [], target=0 trả None; [1, 2], target=8 trả None.",
+                "location": "originalText",
+                "observation": "Nêu đúng đầu vào và kết quả cho số trùng, số âm, rỗng, một phần tử và không có cặp.",
+                "startOffset": 673,
+                "endOffset": 823
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
