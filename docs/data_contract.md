@@ -287,3 +287,43 @@ session ownership, retry/idempotency and transitions. F02 must implement the
 remaining Session/Answer/Exercise classes and invariant checks. C01 must approve
 skill IDs. P05 must supply a real reviewed question/rubric/source set. These
 decisions remain open; this draft does not assert they have been approved.
+
+## Addendum: answer-evaluation PoC, schema `answerEvaluation/1`
+
+The user's newer `Abstraction.docx` and explicit implementation request require
+one rubric per assessed competency, multiple rubrics per question, and a declared
+multi-level score per rubric. They also permit an unknown criterion when it does
+not change the uniquely determined rubric level. These differ from the P03 draft
+above (one rubric per question, scores per criterion, unresolved criterion blocks
+the total). The PoC does not silently reinterpret P03 totals or replace its models.
+
+`source/Model/answerData.py` and `evaluationData.py` define a separate validated,
+immutable boundary using the user's camelCase names. Existing P03 dataclasses,
+IDs, examples and their future consumers stay intact. Existing ID types are reused.
+No runtime consumer of the P03 question/evaluation records existed in this
+checkout beyond their own type imports when the PoC was added. New consumers are
+the PoC controller, service, provider adapters, CLI/view, and its focused tests.
+
+| Addition | Reason / serialization |
+| --- | --- |
+| `Question.version`, `Rubric.version`, `Answer.revision` | Positive integers; report stores exact immutable input snapshots. |
+| `Criterion.omissionMeansUnmet` | Explicit boolean controlling whether an observed omission can support unmet. |
+| `ScoreLevel.requiredMet`, `minimumMet` | Executable positive gates and threshold; select highest matching value. Descriptions remain human-readable. |
+| Evidence `type`, `quote`, `location`, `observation`, `startOffset`, `endOffset` | Exact excerpts/ambiguities or explicit omissions. Same Python Unicode offset convention as P03. |
+| Result `status` | `graded` or `insufficientEvidence`; processing failures are separate errors, not fabricated results. |
+| `inputHash`, input snapshots, `providerName`, `modelName`, `promptVersion` | Bind recorded interpretations and reports to exact inputs and identify illustrative versus live processing. |
+| `exampleOnly` | Marks unreviewed synthetic PoC content; it does not bypass question-bank approval. |
+
+The report has one result per rubric, one check per criterion, and one feedback
+per result. Score must be a declared level or null with an explanation. No raw
+cross-rubric total is produced. Results are accumulated in memory and published
+only after all validations succeed; CLI writes a complete report without
+overwriting an existing file. Original input files are never changed.
+
+The new schema is **not** accepted by the existing draft question-bank JSON
+format without an explicit adapter and team decision. F02/P04 integration must
+agree whether to adopt this multi-rubric model or map it to P03 while preserving
+versions, evidence and score semantics. There is no automatic lossy conversion.
+The PoC does not mark source/license checks or independent rubric review complete.
+See [the implementation guide](evaluateAnswer.md) for executable scoring semantics,
+limitations and the live evaluation procedure.
