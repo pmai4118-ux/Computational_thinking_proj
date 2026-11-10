@@ -61,3 +61,18 @@ def testNewAnswerNeedsReview(tempPath):
     assert "recordingMismatch" in completed.stderr
     assert not outputPath.exists()
     assert answerPath.read_bytes() == "New answer.\r\nSecond line.".encode("utf-8")
+
+
+@pytest.mark.parametrize("content,errorCode", [
+    (b"\xff\xfeinvalid", "invalidEncoding"),
+    (b"x" * 1000001, "fileError"),
+], ids=["badEncoding", "oversize"])
+def testInvalidFileStopsBeforeAssessment(tempPath, content, errorCode):
+    answerPath = tempPath / "answer.txt"
+    answerPath.write_bytes(content)
+    outputPath = tempPath / "report.json"
+    completed = runCli(outputPath, "--answerFile", str(answerPath))
+    assert completed.returncode == 1
+    assert json.loads(completed.stderr)["error"]["code"] == errorCode
+    assert not outputPath.exists()
+    assert answerPath.read_bytes() == content

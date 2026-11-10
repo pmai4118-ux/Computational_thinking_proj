@@ -155,3 +155,13 @@ def testSingleRootEntryAndEnglishCode():
     assert {item.name for item in sourcePath.glob("*.py")} == {"__init__.py", "main.py"}
     for codePath in sourcePath.rglob("*.py"):
         assert codePath.read_text(encoding="utf-8").isascii(), codePath
+
+
+def testProgrammingErrorStaysVisible():
+    class BrokenService:
+        def evaluateFiles(self, *args):
+            raise ValueError("Unexpected calculation error.")
+
+    controller = EvaluationController(BrokenService())
+    with pytest.raises(ValueError, match="Unexpected calculation error"):
+        controller.submitAnswer({"inputPath": "input.json", "providerName": "gemini"})

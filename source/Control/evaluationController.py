@@ -26,6 +26,8 @@ class EvaluationController:
             failure = EvaluationFailure(code="invalidInput", message="Invalid request structure or values.", fields=fields)
         except FileExistsError:
             failure = EvaluationFailure(code="outputExists", message="The report already exists. Choose a new path to preserve it.")
-        except (OSError, ValueError):
+        except UnicodeError:
+            failure = EvaluationFailure(code="invalidEncoding", message="The input file must use UTF-8 encoding.")
+        except OSError:
             failure = EvaluationFailure(code="fileError", message="Cannot read or write the UTF-8 file. Check its path, permissions, and size.")
         return EvaluationResponse(error=failure)

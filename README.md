@@ -38,7 +38,7 @@ HTTP client used by FastAPI's test client. [uv locking and syncing](https://docs
 
 Use imports such as `source.Control` and `source.Model` with the existing
 capitalization. Pytest discovers tests under `test/`. The F01 smoke tests check
-Vietnamese HTML rendering and request validation with a small test app.
+Unicode HTML rendering and request validation with a small test app.
 
 Verified on Windows x64 with CPython 3.11.18. The locked install, dependency
 check, and both smoke tests passed in a fresh virtual environment.

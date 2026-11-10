@@ -11,23 +11,8 @@ def readTextFile(filePath: Path) -> str:
     with filePath.open("rb") as inputFile:
         rawText = inputFile.read(1000001)
     if len(rawText) > 1000000:
-        raise ValueError("The input file exceeds 1 MB.")
+        raise OSError("The input file exceeds 1 MB.")
     return rawText.decode("utf-8-sig")
-
-
-def writeNewReport(report: EvaluationReport, outputPath: Path) -> None:
-    outputPath.parent.mkdir(parents=True, exist_ok=True)
-    temporaryPath = None
-    try:
-        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=outputPath.parent, delete=False) as reportFile:
-            temporaryPath = Path(reportFile.name)
-            reportFile.write(report.model_dump_json(indent=2))
-            reportFile.flush()
-            os.fsync(reportFile.fileno())
-        os.link(temporaryPath, outputPath)
-    finally:
-        if temporaryPath is not None:
-            temporaryPath.unlink(missing_ok=True)
 
 
 class JsonEvaluationRepository:
@@ -50,4 +35,17 @@ class JsonEvaluationRepository:
         return resultPath
 
     def saveReport(self, report: EvaluationReport, outputPath: Path) -> None:
-        writeNewReport(report, outputPath)
+        outputPath.parent.mkdir(parents=True, exist_ok=True)
+        temporaryPath = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", dir=outputPath.parent, delete=False,
+            ) as reportFile:
+                temporaryPath = Path(reportFile.name)
+                reportFile.write(report.model_dump_json(indent=2))
+                reportFile.flush()
+                os.fsync(reportFile.fileno())
+            os.link(temporaryPath, outputPath)
+        finally:
+            if temporaryPath is not None:
+                temporaryPath.unlink(missing_ok=True)
