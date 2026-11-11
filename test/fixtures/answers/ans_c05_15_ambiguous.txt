@@ -1,0 +1,1 @@
+Bản sửa equals/hashCode đã nằm trong tệp đính kèm review.java; nội dung và test không có ở đây.

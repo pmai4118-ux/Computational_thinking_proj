@@ -1,0 +1,1 @@
+Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh hashCode từ các field. `==` so sánh hai String có cùng nội dung. Không cần sửa hoặc kiểm thử.

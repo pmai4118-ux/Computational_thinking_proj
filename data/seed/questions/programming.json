@@ -1,0 +1,128 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c02.string_immutability.v2",
+    "version": 2,
+    "category": "programming_knowledge",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "java.core.fundamentals",
+      "java.string.immutability"
+    ],
+    "source_id": "source.c02.java_string_immutability",
+    "prompt": "Tại sao đối tượng String trong Java được thiết kế là Immutable (không thể thay đổi)? Phân tích đoạn code minh họa bên dưới, nêu lợi ích của tính bất biến và cách xử lý khi cần nối chuỗi lặp nhiều lần.",
+    "code": "String first = \"Java\";\nString second = first.concat(\" Backend\");\nSystem.out.println(first);\nSystem.out.println(second);",
+    "code_language": "java",
+    "constraints": [
+      "Đoạn code chạy trên Java.",
+      "Giải thích giá trị của first và second sau concat.",
+      "Nêu một lợi ích của String immutable và cách phù hợp khi nối nhiều chuỗi trong vòng lặp."
+    ],
+    "adaptation": {
+      "kind": "adapted_from_project_question_bank",
+      "summary": "Java String immutability question selected from the project question bank and expanded with a short code example and a three-criterion Fresher Backend rubric.",
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c02.v2",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c02.immutability",
+          "label": "Giải thích tính bất biến và kết quả",
+          "expected_evidence": [
+            "String không bị thay đổi sau khi tạo.",
+            "concat tạo chuỗi mới; first vẫn là Java và second là Java Backend."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Cho rằng concat sửa đối tượng String hiện có hoặc đọc sai kết quả."
+            },
+            {
+              "score": 1,
+              "description": "Nêu String immutable hoặc kết quả đúng nhưng chưa giải thích cả hai."
+            },
+            {
+              "score": 2,
+              "description": "Giải thích String immutable, concat tạo object mới và nêu đúng cả hai giá trị."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận diễn đạt tương đương về object mới và giá trị ban đầu không đổi."
+        },
+        {
+          "id": "c02.immutability_benefits",
+          "label": "Nêu lợi ích phù hợp",
+          "expected_evidence": [
+            "Có thể chia sẻ chuỗi an toàn; hash ổn định khi làm key; hoặc lợi ích bảo mật/thread safety có giải thích."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu lợi ích hoặc nêu sai."
+            },
+            {
+              "score": 1,
+              "description": "Nêu một lợi ích đúng nhưng ít giải thích."
+            },
+            {
+              "score": 2,
+              "description": "Giải thích một lợi ích thực tế chính xác gắn với tính bất biến."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận một lợi ích đúng như hash key ổn định, an toàn khi chia sẻ hoặc giảm rủi ro thay đổi dữ liệu."
+        },
+        {
+          "id": "c02.string_construction",
+          "label": "Chọn cách nối chuỗi phù hợp",
+          "expected_evidence": [
+            "Nối ít lần có thể dùng concat/+.",
+            "Nối lặp nhiều lần nên cân nhắc StringBuilder."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đề xuất cách dùng hoặc đề xuất sai."
+            },
+            {
+              "score": 1,
+              "description": "Nêu cách nối hợp lệ nhưng chưa phân biệt trường hợp nối lặp."
+            },
+            {
+              "score": 2,
+              "description": "Nêu StringBuilder cho nối lặp và giải thích ngắn gọn."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận StringBuffer nếu có lý do cần đồng bộ; không bắt buộc cung cấp benchmark."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": "team.bach",
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": false,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      },
+      "technical_correctness_checked": null
+    }
+  }
+]

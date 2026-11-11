@@ -7,7 +7,10 @@
     "url": "https://github.com/yangshun/tech-interview-handbook",
     "file_path": "system-design/concurrency.md",
     "revision": "main-2026",
-    "authors": ["Yangshun Tay", "Tech Interview Handbook Contributors"],
+    "authors": [
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
+    ],
     "collected_at": "2026-11-05T00:00:00Z",
     "original_language": "en",
     "original_content": {
@@ -20,6 +23,175 @@
       "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
       "status": "verified"
     }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c02.java_string_immutability",
+    "title": "Project question bank: Java String immutability (Q007)",
+    "url": null,
+    "file_path": "data/seed/questions/raw_question_bank.json#Q007",
+    "revision": "project-seed",
+    "authors": [
+      "Project-provided question bank"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "vi",
+    "original_content": {
+      "question_text": "Tại sao đối tượng String trong Java được thiết kế là Immutable (không thể thay đổi)?",
+      "code": null
+    },
+    "license": {
+      "spdx_id": null,
+      "url": null,
+      "required_notice": null,
+      "status": "user_provided_license_unverified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c05.ai_code_critique_java_hashmap",
+    "title": "Project-authored Java HashMap key review exercise based on Q024",
+    "url": null,
+    "file_path": "data/seed/questions/raw_question_bank.json#Q024",
+    "revision": "project-seed-v2",
+    "authors": [
+      "Project team"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "vi",
+    "original_content": {
+      "question_text": "HashMap hoạt động như thế nào? Vai trò của hashCode() và equals() trong HashMap là gì?",
+      "code": "Project-authored synthetic Java snippet for equals/hashCode review."
+    },
+    "license": {
+      "spdx_id": null,
+      "url": null,
+      "required_notice": null,
+      "status": "project_authored_license_review_pending"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c04.employee_lookup_java",
+    "title": "Project question bank: employee lookup by ID (Q028)",
+    "url": null,
+    "file_path": "data/seed/questions/raw_question_bank.json#Q028",
+    "revision": "project-seed",
+    "authors": [
+      "Project-provided question bank"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "vi",
+    "original_content": {
+      "question_text": "Bạn có một danh sách 10.000 nhân viên và cần tìm nhân viên theo ID. Bạn sẽ chọn cấu trúc dữ liệu nào để tối ưu việc tìm kiếm? Vì sao?",
+      "code": null
+    },
+    "license": {
+      "spdx_id": null,
+      "url": null,
+      "required_notice": null,
+      "status": "user_provided_license_unverified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c04.binary_search",
+    "title": "TheAlgorithms/Java — Binary Search implementation",
+    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/searches/BinarySearch.java",
+    "file_path": "src/main/java/com/thealgorithms/searches/BinarySearch.java",
+    "revision": "master (accessed 2026-11-11)",
+    "authors": [
+      "Varun Upadhyay",
+      "Podshivalov Nikita"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "summary": "Java implementation at src/main/java/com/thealgorithms/searches/BinarySearch.java; exercise prompt and review variant are adapted by the project team.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
+      "status": "repository_license_verified_file_notice_review_pending"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c04.bubble_sort",
+    "title": "TheAlgorithms/Java — Bubble Sort implementation",
+    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/sorts/BubbleSort.java",
+    "file_path": "src/main/java/com/thealgorithms/sorts/BubbleSort.java",
+    "revision": "master (accessed 2026-11-11)",
+    "authors": [
+      "Varun Upadhyay",
+      "Podshivalov Nikita"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "summary": "Java implementation at src/main/java/com/thealgorithms/sorts/BubbleSort.java; exercise prompt and review variant are adapted by the project team.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
+      "status": "repository_license_verified_file_notice_review_pending"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c05.infix_to_postfix_review",
+    "title": "TheAlgorithms/Java — Infix-to-postfix implementation",
+    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/stacks/InfixToPostfix.java",
+    "file_path": "src/main/java/com/thealgorithms/stacks/InfixToPostfix.java",
+    "revision": "master (accessed 2026-11-11)",
+    "authors": [
+      "TheAlgorithms contributors; see source file for credited authors"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "summary": "Java implementation at src/main/java/com/thealgorithms/stacks/InfixToPostfix.java; exercise prompt and review variant are adapted by the project team.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
+      "status": "repository_license_verified_file_notice_review_pending"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c05.counting_sort_review",
+    "title": "TheAlgorithms/Java — Counting Sort implementation",
+    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/sorts/CountingSort.java",
+    "file_path": "src/main/java/com/thealgorithms/sorts/CountingSort.java",
+    "revision": "master (accessed 2026-11-11)",
+    "authors": [
+      "TheAlgorithms contributors; see source file for credited authors"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "summary": "Java implementation at src/main/java/com/thealgorithms/sorts/CountingSort.java; exercise prompt and review variant are adapted by the project team.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
+      "status": "repository_license_verified_file_notice_review_pending"
+    }
   }
 ]
-

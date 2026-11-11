@@ -1,0 +1,1 @@
+Em chọn ArrayList vì tìm kiếm trong List luôn O(1). Nếu danh sách chưa sắp xếp thì dùng binarySearch vẫn O(log n), không cần tạo index. Khi không tìm thấy thì trả nhân viên đầu tiên; HashMap tốn O(1) bộ nhớ.

@@ -1,0 +1,7 @@
+{
+  "schema_version": "question-review/1.0",
+  "question_id": "question.c04.employee_lookup.v2",
+  "review_status": "invalidated_by_java_migration",
+  "notes": "Previous language-specific review is superseded. Re-review this Java fixture independently before benchmark use.",
+  "reviews": []
+}

@@ -1,0 +1,1 @@
+Phát hiện `==` so sánh tham chiếu String thay vì nội dung. Em đổi sang Objects.equals trong equals, nhưng chưa override đúng equals(Object) và chưa cài hashCode. Test hai object cùng id thì HashMap get được value.

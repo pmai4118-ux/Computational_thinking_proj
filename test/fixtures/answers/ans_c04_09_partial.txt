@@ -1,0 +1,1 @@
+Em chọn HashMap, dùng employee ID làm key rồi gọi `get(id)` để tìm. Tra cứu thường O(1), còn duyệt List là O(n). Em chưa nói rõ chi phí dựng map/lưu bộ nhớ và chưa nêu test ID không tồn tại.

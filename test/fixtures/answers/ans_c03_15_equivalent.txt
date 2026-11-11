@@ -1,0 +1,1 @@
+Thay vì row lock, em dùng optimistic locking với cột version. Update có version cũ chỉ thành công một lần; request conflict không tạo order. Phần giảm tồn và ghi order ở một transaction; test hai instance: assert đúng một order, stock=0; giả lập lỗi insert thì assert không có order và stock được rollback.

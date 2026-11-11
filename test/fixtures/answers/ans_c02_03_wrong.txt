@@ -1,0 +1,1 @@
+String là mutable. concat sửa trực tiếp first nên sau lệnh đó cả first và second đều là Java Backend. Nối chuỗi nhiều lần bằng + luôn hiệu quả nhất; StringBuilder sẽ làm thay đổi chuỗi gốc.
