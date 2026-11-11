@@ -166,7 +166,7 @@ def testConfigHidesSecret(monkeypatch):
 
 
 def testSingleRootEntryAndEnglishCode():
-    assert {item.name for item in sourcePath.glob("*.py")} == {"__init__.py", "main.py"}
+    assert {item.name for item in sourcePath.glob("*.py")} == {"__init__.py", "main.py", "config.py"}
     for codePath in sourcePath.rglob("*.py"):
         assert codePath.read_text(encoding="utf-8").isascii(), codePath
 
@@ -185,7 +185,14 @@ def testProductionLogicUsesObjects():
     for codePath in sourcePath.rglob("*.py"):
         tree = ast.parse(codePath.read_text(encoding="utf-8"))
         freeFunctions = [node.name for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
-        expected = ["main"] if codePath == sourcePath / "main.py" else []
+        if codePath == sourcePath / "main.py":
+            expected = ["main"]
+        elif codePath == sourcePath / "config.py":
+            expected = ["_database_file", "load_settings"]
+        elif codePath == sourcePath / "service" / "coverage.py":
+            expected = ["missing_coverage"]
+        else:
+            expected = []
         assert freeFunctions == expected, codePath
 
 

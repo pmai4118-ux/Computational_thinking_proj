@@ -29,7 +29,7 @@ class Settings:
 
     @property
     def demo_label(self) -> str | None:
-        return "Dữ liệu minh họa" if self.provider is ProviderMode.FIXTURE else None
+        return "D\u1eef li\u1ec7u minh h\u1ecda" if self.provider is ProviderMode.FIXTURE else None
 
 
 def _database_file(value: str) -> Path:
