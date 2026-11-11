@@ -1,0 +1,5 @@
+{
+  "GEMINI_API_KEY": "REPLACE_WITH_YOUR_KEY",
+  "GEMINI_MODEL": "gemini-3.8-flash",
+  "EVALUATION_TIMEOUT": "60"
+}

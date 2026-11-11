@@ -39,7 +39,7 @@ class GeminiInterpreter:
     def __init__(self, apiKey: str, modelName: str, timeoutSeconds: float = 45, prompt: EvaluationPrompt | None = None):
         if not apiKey.strip() or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,119}", modelName):
             raise EvaluationError("providerConfig", "Provide a valid GEMINI_API_KEY and GEMINI_MODEL without the models/ prefix.")
-        if not 1 <= timeoutSeconds <= 120:
+        if isinstance(timeoutSeconds, bool) or not 1 <= timeoutSeconds <= 120:
             raise EvaluationError("providerConfig", "Timeout must be between 1 and 120 seconds.")
         self.apiKey = apiKey
         self.modelName = modelName
@@ -78,6 +78,11 @@ class GeminiInterpreter:
             return self.parseResponse(rawBody)
         except HTTPError as error:
             error.close()
+            if error.code == 402:
+                raise EvaluationError(
+                    "providerBilling",
+                    "This Gemini project has no available prepaid credits. Use a key from a project with available free-tier quota, or manage billing in Google AI Studio.",
+                ) from error
             if error.code == 429:
                 raise EvaluationError("providerQuota", "The AI service rate limit was reached; no score was created.", True) from error
             retryable = error.code >= 500 or error.code == 408

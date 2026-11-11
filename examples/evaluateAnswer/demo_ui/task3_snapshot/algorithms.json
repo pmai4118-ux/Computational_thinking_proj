@@ -1,0 +1,388 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c04.employee_lookup.v2",
+    "version": 2,
+    "category": "algorithm_explanation",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "algorithm.complexity",
+      "data_structures.hash_map",
+      "java.collections.map"
+    ],
+    "source_id": "source.c04.employee_lookup_java",
+    "prompt": "Bạn có một danh sách 10.000 nhân viên và cần tìm nhân viên theo ID. Bạn sẽ chọn cấu trúc dữ liệu nào để tối ưu việc tìm kiếm? Vì sao? Giả sử có nhiều lần tra cứu trên cùng tập dữ liệu và ID là duy nhất. Minh họa cách cài đặt bằng Java, nêu độ phức tạp và kiểm thử biên.",
+    "code": "Map<Long, Employee> employeesById = new HashMap<>();\nfor (Employee employee : employees) {\n    employeesById.put(employee.getId(), employee);\n}\nEmployee result = employeesById.get(targetId);",
+    "code_language": "java",
+    "constraints": [
+      "ID nhân viên duy nhất và ổn định.",
+      "Có nhiều lần tra cứu trên cùng tập dữ liệu.",
+      "Cần xử lý ID không tồn tại."
+    ],
+    "adaptation": {
+      "kind": "adapted_from_project_question_bank",
+      "summary": "Câu hỏi Q028 từ question bank về tra cứu nhân viên theo ID, mở rộng với nhiều truy vấn và ví dụ Java HashMap.",
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c04.v2",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c04.correctness",
+          "label": "Chọn cấu trúc và giải thích đúng",
+          "expected_evidence": [
+            "Dùng Map/HashMap với employee ID làm key.",
+            "Tra cứu HashMap theo ID và xử lý kết quả không có key."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Chọn cấu trúc không phù hợp hoặc mô tả sai tra cứu."
+            },
+            {
+              "score": 1,
+              "description": "Chọn Map phù hợp nhưng thiếu key/lookup hoặc điều kiện quan trọng."
+            },
+            {
+              "score": 2,
+              "description": "Giải thích HashMap id->employee, tra cứu get(id) và cách xử lý ID không tồn tại."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận Map implementation tương đương; TreeMap hợp lệ nếu giải thích nhu cầu sắp xếp/range lookup."
+        },
+        {
+          "id": "c04.complexity",
+          "label": "Phân tích độ phức tạp và chi phí",
+          "expected_evidence": [
+            "Tra cứu HashMap expected O(1), build index O(n), memory O(n).",
+            "Phân biệt với scan List O(n); nêu giả định nhiều lần query/hash distribution."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Nêu độ phức tạp sai hoặc bỏ qua trade-off."
+            },
+            {
+              "score": 1,
+              "description": "Nêu đúng lookup complexity nhưng thiếu chi phí dựng/lưu index hoặc giả định."
+            },
+            {
+              "score": 2,
+              "description": "So sánh đúng expected lookup O(1) với scan O(n), và ghi nhận build/memory O(n)."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận nêu worst-case phụ thuộc collision/hash implementation thay cho giả định average-case."
+        },
+        {
+          "id": "c04.edge_tests",
+          "label": "Kiểm thử và điều kiện biên",
+          "expected_evidence": [
+            "Test ID có trong map trả đúng Employee.",
+            "Test ID thiếu; nếu dựng map từ danh sách, kiểm tra index có thể tra cứu các bản ghi đã nạp."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu test có expected result hoặc expected result sai."
+            },
+            {
+              "score": 1,
+              "description": "Test lookup cơ bản nhưng thiếu ID không tồn tại hoặc expected result."
+            },
+            {
+              "score": 2,
+              "description": "Có test found và missing ID với expected result rõ."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận JUnit hoặc test tay có input và kết quả mong đợi."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": "team.nguyen",
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": false,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      }
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c04.binary_search.v2",
+    "version": 2,
+    "category": "algorithm_explanation",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "algorithm.binary_search",
+      "algorithm.correctness",
+      "algorithm.complexity"
+    ],
+    "source_id": "source.c04.binary_search",
+    "prompt": "Viết hàm Java lặp `static int binarySearch(int[] values, int target)` cho mảng số nguyên tăng dần; trả về một chỉ số hợp lệ nếu tìm thấy target và -1 nếu không có. Giải thích bất biến vòng lặp, cách cập nhật biên, độ phức tạp và test biên. Mảng rỗng là đầu vào hợp lệ; nếu có nhiều phần tử bằng target thì trả về chỉ số của một phần tử bất kỳ.",
+    "code": "// Implement iterative binary search over an ascending int[]; return index or -1.",
+    "code_language": "java",
+    "constraints": [
+      "Java method: static int binarySearch(int[] values, int target).",
+      "Input is sorted ascending; an empty array is valid.",
+      "Return any matching index, or -1 if target is absent."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_exercise",
+      "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật. Prompt revised after content review to make Java implementation and empty-array behavior explicit.",
+      "change_history": [
+        "Translated/adapted question and constraints for backend fresher practice.",
+        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
+      ],
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c04.binary_search.v2",
+      "version": 2,
+      "criteria": [
+        {
+          "id": "c04.binary_search_correctness",
+          "label": "Algorithm and invariant",
+          "expected_evidence": [
+            "Java implementation maintains a valid search interval and halves it based on comparison.",
+            "Uses consistent boundary updates (left = mid + 1 or right = mid - 1), returns a matching index, and returns -1 when exhausted.",
+            "Explains the loop invariant/correctness."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Does not maintain a valid interval or returns wrong result."
+            },
+            {
+              "score": 1,
+              "description": "Names binary search but omits a key boundary update, return condition, invariant, or required Java implementation."
+            },
+            {
+              "score": 2,
+              "description": "Provides a correct iterative Java implementation and explains boundary updates, the invariant, and found/not-found result."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c04.binary_search_complexity",
+          "label": "Complexity",
+          "expected_evidence": [
+            "Time O(log n), iterative auxiliary space O(1)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Claims linear/constant time incorrectly."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Gives time or space but not both."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Correctly gives O(log n) time and O(1) extra space."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c04.binary_search_tests",
+          "label": "Boundary tests",
+          "expected_evidence": [
+            "Empty/singleton, first/last or missing target.",
+            "Expected index/-1 stated."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: No runnable/checkable expected result."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: One useful case but misses important boundary."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Multiple boundaries with expected indices and -1."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      }
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c04.bubble_sort.v1",
+    "version": 1,
+    "category": "algorithm_explanation",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "algorithm.bubble_sort",
+      "algorithm.correctness",
+      "algorithm.complexity"
+    ],
+    "source_id": "source.c04.bubble_sort",
+    "prompt": "Mô tả Bubble Sort để sắp xếp mảng số nguyên tăng dần. Giải thích vì sao sau mỗi lượt phần tử lớn nhất còn lại nằm cuối vùng chưa sắp xếp, phân tích độ phức tạp và nêu test biên.",
+    "code": "// Sort int[] ascending using adjacent compare-and-swap passes; stop early if no swaps.",
+    "code_language": "java",
+    "constraints": [
+      "Java; các giả định và hợp đồng của đề cần được nêu rõ."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_exercise",
+      "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật.",
+      "change_history": [
+        "Translated/adapted question and constraints for backend fresher practice.",
+        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
+      ],
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c04.bubble_sort.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c04.bubble_sort_correctness",
+          "label": "Algorithm and invariant",
+          "expected_evidence": [
+            "Adjacent out-of-order values are swapped.",
+            "After each pass the maximum in the unsorted prefix reaches its final position."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Claims sorting without correct pass invariant."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Describes swaps but misses why a pass advances a maximum."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Explains adjacent swaps and pass invariant."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c04.bubble_sort_complexity",
+          "label": "Complexity",
+          "expected_evidence": [
+            "Worst/average O(n^2), optimized best O(n), extra space O(1)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Complexity materially incorrect."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Only some cases/spaces stated."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Correct best/average/worst and auxiliary space."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c04.bubble_sort_tests",
+          "label": "Boundary tests",
+          "expected_evidence": [
+            "Empty, singleton, duplicates and reverse-ordered input.",
+            "Expected sorted output stated."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: No useful test or expected output."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Tests ordinary case only."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Covers boundaries/duplicates and correct outputs."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      }
+    }
+  }
+]
