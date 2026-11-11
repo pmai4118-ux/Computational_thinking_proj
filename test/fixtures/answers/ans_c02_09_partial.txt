@@ -1,0 +1,1 @@
+Kết quả hai lần print là [1, 2] vì các lần gọi dùng chung list mặc định. Em sửa bằng None và tạo list khi None. Em chỉ test hai lần gọi không truyền bucket, lần lượt được [1] và [2].

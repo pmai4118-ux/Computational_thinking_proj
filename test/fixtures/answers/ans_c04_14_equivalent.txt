@@ -1,0 +1,1 @@
+Có thể dùng sorting kèm lưu index gốc và hai con trỏ. Khi tìm thấy tổng, trả index gốc chứ không trả value; duplicate được giữ ở hai vị trí. Sorting O(n log n), phụ thuộc cách lưu bản sao index; test duplicate [3,3], target=6 -> (0,1), no-match và input rỗng -> None.

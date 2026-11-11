@@ -1,0 +1,1 @@
+Em đã push code fix và unit test lên branch `fix-default-list`, trong đó có output của cả hai trường hợp.

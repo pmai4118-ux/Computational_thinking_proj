@@ -1,0 +1,1 @@
+Duyệt từng cặp khác vị trí và trả cặp đầu tiên có tổng bằng target. Em chưa giải thích duplicate và trường hợp không tìm thấy. Thuật toán dùng hai vòng lặp, O(n²) time, O(1) extra space. Có test [2,7] -> (0,1), chưa có test biên.

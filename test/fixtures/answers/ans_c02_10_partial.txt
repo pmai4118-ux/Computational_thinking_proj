@@ -1,0 +1,1 @@
+Em biết list mặc định bị dùng chung. Dùng bucket = bucket or [] thì mỗi lần gọi không truyền tham số sẽ có list riêng; em test hai lần mặc định ra [1] và [2].

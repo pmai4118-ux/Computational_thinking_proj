@@ -1,0 +1,1 @@
+Các bug, bản sửa và test độc lập được ghi trong file review riêng mà em chưa đính kèm.

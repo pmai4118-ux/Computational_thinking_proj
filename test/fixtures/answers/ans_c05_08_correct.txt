@@ -1,0 +1,1 @@
+Hai lỗi là phép chia nguyên và không xử lý danh sách rỗng. Bản sửa: nếu not nums thì raise ValueError; nếu không return sum(nums) / len(nums). Em tự tính expected trước: [1,2] là 1.5, [] ném ValueError, [1.5,2.5] là 2.0.

@@ -1,0 +1,1 @@
+Thiết kế transaction và test concurrency nằm trong sơ đồ gửi kèm, em không dán nội dung vào đây.

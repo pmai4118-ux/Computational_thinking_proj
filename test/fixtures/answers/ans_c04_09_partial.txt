@@ -1,0 +1,1 @@
+Em dùng hash map tìm target-x trước khi lưu phần tử hiện tại, nên không dùng lại cùng index. Độ phức tạp expected O(n), space O(n). Em chỉ test trường hợp bình thường, chưa test duplicate hoặc no-match.

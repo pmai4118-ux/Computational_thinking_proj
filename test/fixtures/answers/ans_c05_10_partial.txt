@@ -1,0 +1,1 @@
+List rỗng cần raise ValueError; em đã thêm kiểm tra này. Phép // vẫn được giữ vì average thường là số nguyên. Test [] và [2,4] -> 3.

@@ -1,0 +1,1 @@
+Em khóa row tồn kho bằng SELECT FOR UPDATE trong transaction dùng chung. Request thứ hai đọc lại thấy hết hàng; chỉ tạo order khi trừ kho thành công. Em verify đồng thời chỉ một order, stock=0, và lỗi insert order khiến transaction rollback.

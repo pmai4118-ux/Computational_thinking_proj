@@ -1,0 +1,1 @@
+Có thể chuyển sang stream average nếu kiểm tra stream không có phần tử và ném ValueError; với list hiện tại, `sum(nums, 0.0)/len(nums)` cũng cho phép chia thực. Em test [1,2]->1.5, []->ValueError và [-1,2]->0.5 theo hợp đồng.

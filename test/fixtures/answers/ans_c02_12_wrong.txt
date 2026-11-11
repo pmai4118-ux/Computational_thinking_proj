@@ -1,0 +1,1 @@
+Mỗi lần gọi hàm, Python tạo một bucket mới nên first là [1] và second là [2]. Không cần sửa code.

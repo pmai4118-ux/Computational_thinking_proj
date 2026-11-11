@@ -1,0 +1,1 @@
+Hai lần print đều ra [1, 2], vì bucket=[] được tạo một lần khi định nghĩa hàm và append làm thay đổi list dùng chung. Em đổi mặc định thành None, chỉ tạo [] khi bucket is None. Test gọi hai lần không truyền bucket phải cho [1] và [2] riêng; truyền b=[] phải trả đúng b và b thành [3].

@@ -1,0 +1,1 @@
+Em dùng sentinel object làm mặc định. Chỉ khi bucket is MISSING em mới tạo []; nếu người gọi truyền bucket=[] thì vẫn append vào đúng object đó. Hai lần gọi bỏ qua đối số tách biệt; test identity bằng `is`.

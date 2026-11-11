@@ -1,0 +1,1 @@
+Dấu // làm mất phần thập phân, ví dụ [1,2] trả 1 thay vì 1.5. Em sửa thành `/`. Em chưa xét list rỗng và test chỉ có [1,2] -> 1.5.

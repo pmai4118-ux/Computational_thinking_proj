@@ -1,0 +1,1 @@
+Duyệt mọi cặp i<j và trả hai index khi nums[i]+nums[j]=target; nếu duyệt hết thì trả None. i<j bảo đảm không dùng một phần tử hai lần và vẫn xét hai phần tử trùng giá trị ở vị trí khác nhau. Độ phức tạp O(n²), bộ nhớ phụ O(1). Test [3,3], target=6 -> (0,1); [1,2], target=8 -> None; [] -> None.

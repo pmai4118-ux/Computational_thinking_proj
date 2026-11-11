@@ -1,0 +1,1 @@
+Dùng hash map value->index: với mỗi x, tìm target-x trong map trước khi thêm x; kết thúc không tìm thấy thì None. Kiểm tra trước khi thêm ngăn dùng lại cùng index. Thời gian kỳ vọng O(n), space O(n). Test duplicate [4,4] -> hai index, no-match và list rỗng -> None.

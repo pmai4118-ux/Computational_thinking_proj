@@ -1,0 +1,1 @@
+Toán tử // làm tròn xuống nên [1,2] cho 1 thay vì 1.5; list rỗng gây chia cho 0 thay vì ValueError theo hợp đồng. Em kiểm tra rỗng rồi raise ValueError, sau đó dùng sum(nums)/len(nums). Tests: [1,2]->1.5, []->ValueError, [-1,2]->0.5.

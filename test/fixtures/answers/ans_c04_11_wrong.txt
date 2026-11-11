@@ -1,0 +1,1 @@
+Em sort mảng rồi tìm hai giá trị có tổng target, sau đó trả lại chính hai giá trị đó làm index. Khi không thấy thì trả index 0.

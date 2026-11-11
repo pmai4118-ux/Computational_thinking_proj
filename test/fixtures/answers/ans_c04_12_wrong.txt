@@ -1,0 +1,1 @@
+Dùng nums[i] + nums[i] để kiểm tra target; nếu đúng thì trả (i,i). Điều này vẫn là hai vị trí khác nhau vì tuple có hai phần tử.

@@ -1,0 +1,1 @@
+Hai instance có thể cùng đọc stock=1. Em dùng optimistic version để chỉ một transaction cập nhật thành công, rồi xử lý conflict. Em chưa nói rõ tạo order và trừ kho rollback chung ra sao. Test đồng thời có kiểm tra đúng một request thành công và stock=0.

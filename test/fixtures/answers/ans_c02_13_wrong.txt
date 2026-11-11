@@ -1,0 +1,1 @@
+Đoạn code in [1] rồi [2] vì tham số mặc định được reset sau mỗi lần gọi. Nếu sửa thì dùng bucket or [] và cách này giữ nguyên cả list rỗng người gọi truyền.

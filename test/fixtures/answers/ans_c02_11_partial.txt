@@ -1,0 +1,1 @@
+Hai lần in đều là [1, 2] vì list mặc định bị mutate và dùng chung. Bản sửa dùng None guard; em test cả hai lời gọi mặc định và list truyền tường minh rỗng. Em chưa ghi rõ expected output của hai test.

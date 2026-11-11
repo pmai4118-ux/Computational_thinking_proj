@@ -1,0 +1,1 @@
+Em đổi thành sum(nums) / (len(nums)-1) để list rỗng tránh chia 0; với list không rỗng kết quả vẫn là average.
