@@ -9,13 +9,13 @@
   "expected_evaluation": null,
   "annotation_status": "unscored_input_fixture",
   "classification_summary": {
-    "structured_non_answer": 97,
-    "topic_echo_non_answer": 97,
+    "structured_non_answer": 96,
+    "topic_echo_non_answer": 96,
     "generic_misconception": 101,
     "missing_external_context": 101,
     "off_topic": 101,
-    "technical_answer_attempt_unreviewed": 4,
-    "substantive_partial_answer_unreviewed": 4
+    "technical_answer_attempt_unreviewed": 5,
+    "substantive_partial_answer_unreviewed": 5
   },
   "limitations": [
     "The 97 unchanged original inputs use response-plan/topic-echo templates; these are not technically correct or substantive partial answers.",
@@ -1283,16 +1283,16 @@
         {
           "case_id": "complete_attempt",
           "label": "Câu trả lời có cấu trúc, có giải thích và ví dụ",
-          "classification": "structured_non_answer",
-          "classification_reason": "Response outline/meta-answer; does not provide requested technical facts or solve the case.",
+          "classification": "technical_answer_attempt_unreviewed",
+          "classification_reason": "Provides substantive HashMap facts: hashCode selects a bucket, equals distinguishes keys, and the answer explains identity equality vs value equality with a lookup test; still synthetic and not independently reviewed.",
           "scoreable": false,
           "answer": "HashMap lấy `hashCode()` của key để chọn bucket; nếu nhiều key cùng bucket, nó dùng `equals()` để phân biệt. Va chạm hash không có nghĩa hai key bằng nhau. Với key tự định nghĩa cần so sánh theo giá trị, phải override `equals(Object)` và `hashCode()` nhất quán: hai object bằng nhau phải có cùng hash code. `equals(UserKey)` chỉ overload, không override; nếu không override `equals(Object)`, HashMap dùng equality mặc định theo identity. Trung bình thao tác gần `O(1)`, nhưng còn phụ thuộc phân bố hash và resize.\n\nTest: tạo hai `UserKey` khác instance cùng id; sau khi cài value equality, chúng bằng nhau, có cùng hash code và `map.get(key2)` trả value lưu với `key1`. Với id khác nhau, chúng không bằng nhau."
         },
         {
           "case_id": "partial_attempt",
           "label": "Câu trả lời ngắn, mới nêu một ý",
-          "classification": "topic_echo_non_answer",
-          "classification_reason": "Repeats the topic and says detail is missing, without a scorable technical claim.",
+          "classification": "substantive_partial_answer_unreviewed",
+          "classification_reason": "Correctly states that hashCode selects the bucket and equals distinguishes colliding keys, but omits the equality/hashCode contract and details of the current overload behavior.",
           "scoreable": false,
           "answer": "`hashCode()` giúp HashMap chọn bucket, còn `equals()` phân biệt key khi có va chạm. Với key tự định nghĩa em biết cần override hai phương thức, nhưng chưa giải thích điều kiện chúng phải nhất quán hoặc hành vi khi không override `equals(Object)`."
         },
@@ -1300,7 +1300,7 @@
           "case_id": "misconception_attempt",
           "label": "Câu trả lời có khẳng định sai để thử phát hiện hiểu nhầm",
           "classification": "generic_misconception",
-          "classification_reason": "Unsupported blanket claim that Java/Spring/database handles all concerns; no criterion-specific knowledge.",
+          "classification_reason": "Contains specific HashMap misconceptions: it claims equal hash codes make keys equal and that equals(UserKey) overrides Object.equals(Object).",
           "scoreable": false,
           "answer": "HashMap chỉ so sánh `hashCode()` nên hai key cùng hash luôn được coi là bằng nhau. Khai báo `equals(UserKey)` cũng đã override `Object.equals(Object)`, vì vậy không cần viết `hashCode()`."
         },
