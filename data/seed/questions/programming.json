@@ -9,8 +9,7 @@
     "role": "backend_developer",
     "level": "intern_fresher",
     "skill_ids": [
-      "java.core.fundamentals",
-      "java.string.immutability"
+      "skill.programming.code_semantics"
     ],
     "source_id": "source.c02.java_string_immutability",
     "prompt": "Tại sao đối tượng String trong Java được thiết kế là Immutable (không thể thay đổi)? Phân tích đoạn code minh họa bên dưới, nêu lợi ích của tính bất biến và cách xử lý khi cần nối chuỗi lặp nhiều lần.",
@@ -22,12 +21,12 @@
       "Nêu một lợi ích của String immutable và cách phù hợp khi nối nhiều chuỗi trong vòng lặp."
     ],
     "adaptation": {
-      "kind": "adapted_from_project_question_bank",
-      "summary": "Java String immutability question selected from the project question bank and expanded with a short code example and a three-criterion Fresher Backend rubric.",
+      "kind": "adapted_from_open_source_handbook",
+      "summary": "Câu hỏi về tính bất biến của String trong Java được tuyển chọn và chuyển ngữ từ Tech Interview Handbook kết hợp ngân hàng Fresher Backend; bổ sung đoạn code minh họa và rubric 3 tiêu chí rõ ràng.",
       "translator_id": "team.phuc"
     },
     "rubric": {
-      "id": "rubric.c02.v2",
+      "id": "rubric.c02.string_immutability.v2",
       "version": 1,
       "criteria": [
         {
@@ -97,6 +96,132 @@
             }
           ],
           "equivalent_answers": "Chấp nhận StringBuffer nếu có lý do cần đồng bộ; không bắt buộc cung cấp benchmark."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": "team.bach",
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": false,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      },
+      "technical_correctness_checked": null
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c02.hashmap_internals.v1",
+    "version": 1,
+    "category": "programming_knowledge",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "skill.programming.code_semantics"
+    ],
+    "source_id": "source.c02.hashmap_internals",
+    "prompt": "Hãy trình bày nguyên lý hoạt động nội bộ của java.util.HashMap trong Java. Cụ thể: (1) HashMap tính vị trí index lưu trữ trong bucket array như thế nào khi put/get? (2) Vai trò và hợp đồng giữa hashCode() và equals() khi một đối tượng được dùng làm Key là gì? (3) HashMap xử lý xung đột băm (hash collision) ra sao, và cơ chế chuyển đổi cấu trúc dữ liệu từ Java 8 trở đi hoạt động như thế nào?",
+    "code": null,
+    "code_language": null,
+    "constraints": [
+      "Câu hỏi tự luận bằng lời, phân tích nguyên lý trên nền tảng Java chuẩn (từ Java 8 trở lên).",
+      "Phải làm rõ cả 3 khía cạnh: tính chỉ số mảng băm, hợp đồng equals-hashCode, và cơ chế giải quyết va chạm."
+    ],
+    "adaptation": {
+      "kind": "adapted_from_open_source_handbook",
+      "summary": "Tuyển chọn và bản địa hóa từ chủ đề Hash Table & Java Map trong Tech Interview Handbook; cấu trúc thành 3 trọng tâm kiểm tra năng lực lập trình Backend Fresher và thiết lập rubric 3 tiêu chí phân cấp 0-1-2.",
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c02.hashmap_internals.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c02.hash_index_lookup",
+          "label": "Cơ chế tính index mảng băm trong put/get",
+          "expected_evidence": [
+            "Sử dụng hashCode() của key kết hợp giải thuật băm phụ (hash spreading/rehash) để giảm thiểu va chạm.",
+            "Tính chỉ số index qua phép toán bitwise AND với độ dài mảng: index = (n - 1) & hash (với n là kích thước mảng dạng lũy thừa của 2)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu được cách tính index hoặc khẳng định dùng trực tiếp giá trị hashCode làm chỉ số mảng."
+            },
+            {
+              "score": 1,
+              "description": "Nêu được phép toán modulo hoặc bitwise với kích thước mảng nhưng chưa nêu rõ việc băm lại hash hoặc điều kiện kích thước lũy thừa 2."
+            },
+            {
+              "score": 2,
+              "description": "Trình bày chính xác index = (n - 1) & hash (hoặc hash % capacity), giải thích tại sao capacity luôn là lũy thừa của 2 để tối ưu phép bitwise AND."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận giải thích theo phép chia lấy dư hash % capacity nếu có nêu bản chất mảng kích thước 2^k dùng bitwise AND để tối ưu hiệu năng."
+        },
+        {
+          "id": "c02.hashcode_equals_contract",
+          "label": "Hợp đồng giữa hashCode() và equals()",
+          "expected_evidence": [
+            "Hai đối tượng equals bằng true thì bắt buộc phải có hashCode() bằng nhau.",
+            "Hai đối tượng có hashCode() bằng nhau chưa chắc đã equals bằng true (xảy ra collision).",
+            "Nếu ghi đè equals() mà quên ghi đè hashCode(), HashMap không thể tìm lại đối tượng khi get."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Hiểu sai hợp đồng, cho rằng hashCode bằng nhau thì đối tượng bắt buộc phải equals bằng nhau hoặc ngược lại."
+            },
+            {
+              "score": 1,
+              "description": "Nêu được một chiều của hợp đồng (equals true thì hashCode bằng nhau) nhưng chưa giải thích được hậu quả khi vi phạm trong HashMap."
+            },
+            {
+              "score": 2,
+              "description": "Trình bày đầy đủ cả 2 chiều của hợp đồng và phân tích rõ lỗi không tìm thấy Key (hoặc lưu trùng lặp) khi không override đồng thời cả hai phương thức."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận minh họa bằng ví dụ code hoặc giải thích bằng lời về tính bất biến của key và hậu quả mất key trong Map."
+        },
+        {
+          "id": "c02.collision_handling",
+          "label": "Xử lý xung đột băm và Treeification",
+          "expected_evidence": [
+            "Sử dụng phương pháp Separate Chaining (danh sách liên kết đơn LinkedList tại mỗi bucket).",
+            "Từ Java 8: Khi số phần tử trong 1 bucket vượt ngưỡng TREEIFY_THRESHOLD (thường là 8) và tổng capacity đạt tối thiểu (64), bucket sẽ chuyển từ LinkedList sang Red-Black Tree (TreeMap/TreeNode) để giảm độ phức tạp tìm kiếm từ O(n) xuống O(log n)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không biết cách xử lý va chạm hoặc nhầm lẫn sang Open Addressing mà không nêu Separate Chaining của Java."
+            },
+            {
+              "score": 1,
+              "description": "Nêu được Separate Chaining dùng LinkedList nhưng chưa nêu cơ chế chuyển sang Red-Black Tree trong Java 8."
+            },
+            {
+              "score": 2,
+              "description": "Nêu rõ Separate Chaining, ngưỡng chuyển đổi sang Red-Black Tree (ngưỡng 8/64) trong Java 8 và phân tích sự cải thiện độ phức tạp từ O(n) xuống O(log n)."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận nêu 'cây đỏ đen' hoặc 'cân bằng nhị phân tự cân bằng' và giải thích mục đích tránh tấn công từ chối dịch vụ (hash collision DOS attack)."
         }
       ],
       "scoring": {

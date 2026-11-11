@@ -28,24 +28,50 @@
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
     "id": "source.c02.java_string_immutability",
-    "title": "Project question bank: Java String immutability (Q007)",
-    "url": null,
-    "file_path": "data/seed/questions/raw_question_bank.json#Q007",
-    "revision": "project-seed",
+    "title": "Java String Immutability and Memory Semantics",
+    "url": "https://github.com/yangshun/tech-interview-handbook",
+    "file_path": "contents/programming-languages/java.md",
+    "revision": "main-2026",
     "authors": [
-      "Project-provided question bank"
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
     ],
     "collected_at": "2026-11-11T00:00:00Z",
-    "original_language": "vi",
+    "original_language": "en",
     "original_content": {
-      "question_text": "Tại sao đối tượng String trong Java được thiết kế là Immutable (không thể thay đổi)?",
+      "question_text": "Why is String immutable in Java, and what are the implications for memory efficiency, security, and thread-safety?",
+      "code": "String first = \"Java\";\nString second = first.concat(\" Backend\");"
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/yangshun/tech-interview-handbook/blob/main/LICENSE",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c02.hashmap_internals",
+    "title": "Hash Table Data Structure & Java HashMap Internals",
+    "url": "https://github.com/yangshun/tech-interview-handbook",
+    "file_path": "contents/algorithms/hash-table.md",
+    "revision": "main-2026",
+    "authors": [
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "How does a Hash Table work internally, how are collisions resolved with chaining and treeification, and what is the relationship between equals() and hashCode()?",
       "code": null
     },
     "license": {
-      "spdx_id": null,
-      "url": null,
-      "required_notice": null,
-      "status": "user_provided_license_unverified"
+      "spdx_id": "MIT",
+      "url": "https://github.com/yangshun/tech-interview-handbook/blob/main/LICENSE",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
+      "status": "verified"
     }
   },
   {
