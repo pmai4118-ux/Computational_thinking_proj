@@ -1,5 +1,10 @@
 # Synthetic evaluation examples
 
+For the standalone Antigravity web presentation (question selector, answer
+samples, setup and run commands), see
+[`demo_ui/README.md`](demo_ui/README.md). It does not replace this CLI evaluator
+or the main application.
+
 - `sampleInput.json` contains an authored Python question, four competency rubrics with three declared score levels each, and a submitted answer. The scoring engine is not limited to these levels.
 - `sampleReview.json` is a recorded interpretation bound to that exact input hash. It demonstrates and checks scoring logic; it is not a live Gemini result.
 - `alternativeAnswer.txt` presents a correct brute-force method. The question does not require linear time, so a different algorithm is not automatically wrong. Use it for manual review or with the configured Gemini provider.
