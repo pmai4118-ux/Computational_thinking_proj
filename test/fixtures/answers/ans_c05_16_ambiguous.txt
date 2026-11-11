@@ -1,1 +1,1 @@
-Em đã chạy notebook kiểm chứng, output và commit nằm ở repo private; nhờ mở liên kết trong email.
+Bản sửa equals/hashCode đã nằm trong tệp đính kèm review.java; nội dung và test không có ở đây.

@@ -1,1 +1,1 @@
-Em đã push code fix và unit test lên branch `fix-default-list`, trong đó có output của cả hai trường hợp.
+Em giải thích kết quả và lợi ích trong file đính kèm StringNotes.pdf; vui lòng mở file để chấm.

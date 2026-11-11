@@ -1,1 +1,1 @@
-Duyệt từng cặp khác vị trí và trả cặp đầu tiên có tổng bằng target. Em chưa giải thích duplicate và trường hợp không tìm thấy. Thuật toán dùng hai vòng lặp, O(n²) time, O(1) extra space. Có test [2,7] -> (0,1), chưa có test biên.
+Em chọn HashMap, dùng employee ID làm key rồi gọi `get(id)` để tìm. Tra cứu thường O(1), còn duyệt List là O(n). Em chưa nói rõ chi phí dựng map/lưu bộ nhớ và chưa nêu test ID không tồn tại.

@@ -1,1 +1,1 @@
-// và / đều cho kết quả trung bình chính xác như nhau với số nguyên. Khi nums rỗng Python tự trả 0, nên code hiện tại đáp ứng hợp đồng.
+Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh hashCode từ các field. `==` so sánh hai String có cùng nội dung. Không cần sửa hoặc kiểm thử.

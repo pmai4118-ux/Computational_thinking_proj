@@ -1,1 +1,1 @@
-Dùng nums[i] + nums[i] để kiểm tra target; nếu đúng thì trả (i,i). Điều này vẫn là hai vị trí khác nhau vì tuple có hai phần tử.
+Em chọn ArrayList vì tìm kiếm trong List luôn O(1). Nếu danh sách chưa sắp xếp thì dùng binarySearch vẫn O(log n), không cần tạo index. Khi không tìm thấy thì trả nhân viên đầu tiên; HashMap tốn O(1) bộ nhớ.

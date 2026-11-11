@@ -1,1 +1,1 @@
-Chứng minh thuật toán, độ phức tạp và các test em để trong notebook đính kèm.
+Phần giải thích HashMap, độ phức tạp và test em ghi trong file đính kèm employee_lookup.pdf; nội dung không có trong câu trả lời này.

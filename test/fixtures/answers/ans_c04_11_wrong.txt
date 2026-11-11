@@ -1,1 +1,1 @@
-Em sort mảng rồi tìm hai giá trị có tổng target, sau đó trả lại chính hai giá trị đó làm index. Khi không thấy thì trả index 0.
+Em chọn ArrayList vì tìm kiếm trong List luôn O(1). Nếu danh sách chưa sắp xếp thì dùng binarySearch vẫn O(log n), không cần tạo index. Khi không tìm thấy thì trả nhân viên đầu tiên; HashMap tốn O(1) bộ nhớ.

@@ -2,31 +2,6 @@
   {
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
-    "id": "source.c02.python_default_args",
-    "title": "Python Common Gotchas - Default Mutable Arguments",
-    "url": "https://github.com/yangshun/tech-interview-handbook",
-    "file_path": "programming-languages/python.md",
-    "revision": "main-2026",
-    "authors": [
-      "Yangshun Tay",
-      "Tech Interview Handbook Contributors"
-    ],
-    "collected_at": "2026-11-05T00:00:00Z",
-    "original_language": "en",
-    "original_content": {
-      "question_text": "What does the code snippet output? Explain the root cause of mutable default arguments in Python and propose a safe fix and test cases.",
-      "code": "def add_item(value, bucket=[]):\n    bucket.append(value)\n    return bucket"
-    },
-    "license": {
-      "spdx_id": "MIT",
-      "url": "https://github.com/yangshun/tech-interview-handbook/blob/main/LICENSE",
-      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
-      "status": "verified"
-    }
-  },
-  {
-    "schema_version": "source-record/0.1-proposal",
-    "example_only": false,
     "id": "source.c03.concurrent_inventory",
     "title": "Concurrent Inventory Decrement & Race Condition Case",
     "url": "https://github.com/yangshun/tech-interview-handbook",
@@ -52,50 +27,73 @@
   {
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
-    "id": "source.c04.two_sum_algorithm",
-    "title": "Two Sum Algorithm Implementation and Complexity Analysis",
-    "url": "https://github.com/TheAlgorithms/Python",
-    "file_path": "searches/two_sum.py",
-    "revision": "master-2026",
+    "id": "source.c02.java_string_immutability",
+    "title": "Project question bank: Java String immutability (Q007)",
+    "url": null,
+    "file_path": "data/seed/questions/raw_question_bank.json#Q007",
+    "revision": "project-seed",
     "authors": [
-      "TheAlgorithms Contributors"
+      "Project-provided question bank"
     ],
-    "collected_at": "2026-11-05T00:00:00Z",
-    "original_language": "en",
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "vi",
     "original_content": {
-      "question_text": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. Explain correctness, complexity, and edge tests.",
+      "question_text": "Tại sao đối tượng String trong Java được thiết kế là Immutable (không thể thay đổi)?",
       "code": null
     },
     "license": {
-      "spdx_id": "MIT",
-      "url": "https://github.com/TheAlgorithms/Python/blob/master/LICENSE.md",
-      "required_notice": "Copyright (c) TheAlgorithms. Licensed under the MIT License.",
-      "status": "verified"
+      "spdx_id": null,
+      "url": null,
+      "required_notice": null,
+      "status": "user_provided_license_unverified"
     }
   },
   {
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
-    "id": "source.c05.ai_code_critique",
-    "title": "Average Calculation Verification & Contract Adherence",
-    "url": "https://github.com/TheAlgorithms/Python",
-    "file_path": "maths/average_mean.py",
-    "revision": "master-2026",
+    "id": "source.c05.ai_code_critique_java_hashmap",
+    "title": "Project-authored Java HashMap key review exercise based on Q024",
+    "url": null,
+    "file_path": "data/seed/questions/raw_question_bank.json#Q024",
+    "revision": "project-seed-v2",
     "authors": [
-      "TheAlgorithms Contributors",
-      "Team Adaptation"
+      "Project team"
     ],
-    "collected_at": "2026-11-05T00:00:00Z",
-    "original_language": "en",
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "vi",
     "original_content": {
-      "question_text": "Critique an AI-suggested implementation of average calculation. Identify bugs against contract, provide safe fix, and design independent unit tests.",
-      "code": "def average(nums):\n    return sum(nums) // len(nums)"
+      "question_text": "HashMap hoạt động như thế nào? Vai trò của hashCode() và equals() trong HashMap là gì?",
+      "code": "Project-authored synthetic Java snippet for equals/hashCode review."
     },
     "license": {
-      "spdx_id": "MIT",
-      "url": "https://github.com/TheAlgorithms/Python/blob/master/LICENSE.md",
-      "required_notice": "Copyright (c) TheAlgorithms. Licensed under the MIT License.",
-      "status": "verified"
+      "spdx_id": null,
+      "url": null,
+      "required_notice": null,
+      "status": "project_authored_license_review_pending"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c04.employee_lookup_java",
+    "title": "Project question bank: employee lookup by ID (Q028)",
+    "url": null,
+    "file_path": "data/seed/questions/raw_question_bank.json#Q028",
+    "revision": "project-seed",
+    "authors": [
+      "Project-provided question bank"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "vi",
+    "original_content": {
+      "question_text": "Bạn có một danh sách 10.000 nhân viên và cần tìm nhân viên theo ID. Bạn sẽ chọn cấu trúc dữ liệu nào để tối ưu việc tìm kiếm? Vì sao?",
+      "code": null
+    },
+    "license": {
+      "spdx_id": null,
+      "url": null,
+      "required_notice": null,
+      "status": "user_provided_license_unverified"
     }
   }
 ]

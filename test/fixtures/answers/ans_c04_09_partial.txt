@@ -1,1 +1,1 @@
-Em dùng hash map tìm target-x trước khi lưu phần tử hiện tại, nên không dùng lại cùng index. Độ phức tạp expected O(n), space O(n). Em chỉ test trường hợp bình thường, chưa test duplicate hoặc no-match.
+Em chọn HashMap, dùng employee ID làm key rồi gọi `get(id)` để tìm. Tra cứu thường O(1), còn duyệt List là O(n). Em chưa nói rõ chi phí dựng map/lưu bộ nhớ và chưa nêu test ID không tồn tại.

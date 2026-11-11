@@ -1,9 +1,1 @@
-Ta chỉ cần duyệt qua mảng bằng một vòng lặp for:
-```python
-def two_sum(nums, target):
-    for i in range(len(nums)):
-        if nums[i] * 2 == target:
-            return (i, i)
-    return None
-```
-Thuật toán chạy trong thời gian O(1) và bộ nhớ O(1). Test với nums = [3, 4], target = 6 trả về (0, 0).
+Em chọn ArrayList vì tìm kiếm trong List luôn O(1). Nếu danh sách chưa sắp xếp thì dùng binarySearch vẫn O(log n), không cần tạo index. Khi không tìm thấy thì trả nhân viên đầu tiên; HashMap tốn O(1) bộ nhớ.

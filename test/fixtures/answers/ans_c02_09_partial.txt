@@ -1,1 +1,1 @@
-Kết quả hai lần print là [1, 2] vì các lần gọi dùng chung list mặc định. Em sửa bằng None và tạo list khi None. Em chỉ test hai lần gọi không truyền bucket, lần lượt được [1] và [2].
+String là immutable nên first không đổi sau concat. Chuỗi an toàn khi chia sẻ giữa các phần của chương trình. Có thể dùng phép + để nối chuỗi; em chưa nói rõ kết quả second và trường hợp nối lặp.

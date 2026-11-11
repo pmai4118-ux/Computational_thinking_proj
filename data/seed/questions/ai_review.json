@@ -2,8 +2,8 @@
   {
     "schema_version": "question-record/0.1-proposal",
     "example_only": false,
-    "id": "question.c05.ai_average.v1",
-    "version": 1,
+    "id": "question.c05.ai_hashmap_key.v2",
+    "version": 2,
     "category": "ai_code_critique",
     "language": "vi",
     "role": "backend_developer",
@@ -12,91 +12,92 @@
       "backend.code_review",
       "ai.independent_code_verification"
     ],
-    "source_id": "source.c05.ai_code_critique",
-    "prompt": "Bạn đang kiểm chứng một gợi ý code tính trung bình cộng. nums là list số hữu hạn; kết quả cần là trung bình thực, còn list rỗng phải raise ValueError. Hãy chỉ ra lỗi, sửa và nêu các test độc lập để kiểm chứng gợi ý.",
-    "code": "def average(nums):\n    return sum(nums) // len(nums)",
-    "code_language": "python",
+    "source_id": "source.c05.ai_code_critique_java_hashmap",
+    "prompt": "Bạn đang review gợi ý code Java cho key dùng trong HashMap. Hãy tìm lỗi trong equals/hashCode, sửa theo hợp đồng Java và nêu các test độc lập. Câu hỏi dựa trên: HashMap hoạt động như thế nào? Vai trò của hashCode() và equals() trong HashMap là gì?",
+    "code": "final class UserKey {\n    private final String id;\n    UserKey(String id) { this.id = id; }\n    public boolean equals(UserKey other) {\n        return this.id == other.id;\n    }\n}\n// Used as a key in HashMap<UserKey, String>.",
+    "code_language": "java",
     "constraints": [
-      "Giả sử lớp nhận dữ liệu đã bảo đảm phần tử là số hữu hạn.",
-      "Đoạn code trong mẫu này do người soạn mẫu tạo; không phải nội dung đã xác minh do AI hoặc một tác giả nguồn mở tạo ra."
+      "Xét hợp đồng Object.equals(Object) và Object.hashCode().",
+      "Hai UserKey có cùng id phải được xem là bằng nhau khi id bằng nhau.",
+      "Đề xuất kiểm thử lookup bằng một instance khác nhưng có cùng id."
     ],
     "adaptation": {
-      "kind": "adapted_open_source_case",
-      "summary": "Tình huống kiểm chứng mã nguồn do AI gợi ý trong dự án backend, đánh giá năng lực phát hiện lỗi, sửa đổi theo hợp đồng và thiết kế test độc lập.",
+      "kind": "adapted_from_project_question_bank",
+      "summary": "Tình huống kiểm chứng mã nguồn do AI gợi ý trong dự án backend, đánh giá năng lực phát hiện lỗi, sửa đổi theo hợp đồng và thiết kế test độc lập. Source content follows the user-provided Java question bank; question/rubric review is pending.",
       "translator_id": "team.phuc"
     },
     "rubric": {
-      "id": "rubric.c05.v1",
+      "id": "rubric.c05.v2",
       "version": 1,
       "criteria": [
         {
           "id": "c05.bugs",
           "label": "Phát hiện lỗi theo yêu cầu",
           "expected_evidence": [
-            "// làm tròn xuống thay vì trung bình thực.",
-            "List rỗng gây chia cho 0 thay vì ValueError theo hợp đồng."
+            "equals(UserKey) không override equals(Object).",
+            "So sánh String bằng == so object identity; thiếu hashCode nhất quán."
           ],
           "levels": [
             {
               "score": 0,
-              "description": "Khẳng định code luôn đúng hoặc giải thích sai lỗi chính."
+              "description": "Cho rằng code đúng hoặc mô tả lỗi sai."
             },
             {
               "score": 1,
-              "description": "Chỉ phát hiện đúng một trong hai lỗi."
+              "description": "Phát hiện đúng một lỗi chính."
             },
             {
               "score": 2,
-              "description": "Phát hiện và giải thích đúng cả hai lỗi so với hợp đồng."
+              "description": "Phát hiện đúng cả sai chữ ký/so sánh String và vi phạm hợp đồng equals/hashCode."
             }
           ],
-          "equivalent_answers": "Chấp nhận ví dụ phản chứng thay cho thuật ngữ floor division."
+          "equivalent_answers": "Chấp nhận diễn đạt tương đương về override signature, value equality và contract hashCode."
         },
         {
           "id": "c05.fix",
           "label": "Sửa đúng cả hai hành vi",
           "expected_evidence": [
-            "Dùng phép chia thực.",
-            "Chủ động raise ValueError khi rỗng."
+            "Override equals(Object), xử lý cùng tham chiếu/type/null phù hợp.",
+            "Dùng Objects.equals cho id và override hashCode từ cùng field."
           ],
           "levels": [
             {
               "score": 0,
-              "description": "Bản sửa vẫn sai cả hai yêu cầu chính."
+              "description": "Sửa không đúng hoặc không có sửa."
             },
             {
               "score": 1,
-              "description": "Sửa đúng một yêu cầu nhưng còn vi phạm yêu cầu kia."
+              "description": "Sửa được một phần, còn sai hợp đồng."
             },
             {
               "score": 2,
-              "description": "Sửa đúng chia thực và trường hợp rỗng mà không thay đổi hợp đồng."
+              "description": "Cài equals/hashCode nhất quán theo id."
             }
           ],
-          "equivalent_answers": "Có thể dùng cách tính trung bình tương đương nếu vẫn tuân theo hợp đồng, không bắt buộc một mẫu hàm."
+          "equivalent_answers": "Chấp nhận pattern Java tương đương, kể cả record nếu tương thích yêu cầu."
         },
         {
           "id": "c05.independent_tests",
           "label": "Kiểm chứng độc lập với gợi ý",
           "expected_evidence": [
-            "Test [1,2] cho 1.5.",
-            "Test [] raise ValueError và thêm một trường hợp số âm/thập phân."
+            "Hai instance khác nhau cùng id lookup được cùng entry.",
+            "Hai id khác nhau không bằng nhau; kiểm tra hashCode/equality contract."
           ],
           "levels": [
             {
               "score": 0,
-              "description": "Không kiểm chứng hoặc chỉ dựa vào việc AI tự nhận code đúng."
+              "description": "Không có kiểm thử có expected result."
             },
             {
               "score": 1,
-              "description": "Có test độc lập nhưng thiếu một hành vi hoặc thiếu expected result."
+              "description": "Có test một trường hợp nhưng thiếu lookup/equality quan trọng."
             },
             {
               "score": 2,
-              "description": "Các test cho chia thực, rỗng và số âm/thập phân có expected result tự xác định."
+              "description": "Test các key bằng nhau khác instance, key khác nhau và hành vi HashMap."
             }
           ],
-          "equivalent_answers": "Chấp nhận test tay hoặc automated test, nhưng phải chỉ ra expected result trước khi dựa vào output gợi ý."
+          "equivalent_answers": "Chấp nhận JUnit hoặc mô tả input/expected result đủ chạy lại."
         }
       ],
       "scoring": {
@@ -115,13 +116,14 @@
       "reviewer_id": "team.khoa",
       "reviewed_at": null,
       "checks": {
-        "source_and_license_verified": true,
-        "original_and_adaptation_preserved": true,
-        "technical_correctness_checked": true,
-        "rubric_levels_distinct": true,
-        "equivalent_answers_checked": true,
-        "review_cases_checked": true
-      }
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": false,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      },
+      "technical_correctness_checked": null
     }
   }
 ]

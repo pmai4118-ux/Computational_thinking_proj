@@ -1,1 +1,1 @@
-Đoạn code in [1] rồi [2] vì tham số mặc định được reset sau mỗi lần gọi. Nếu sửa thì dùng bucket or [] và cách này giữ nguyên cả list rỗng người gọi truyền.
+String là mutable. concat sửa trực tiếp first nên sau lệnh đó cả first và second đều là Java Backend. Nối chuỗi nhiều lần bằng + luôn hiệu quả nhất; StringBuilder sẽ làm thay đổi chuỗi gốc.

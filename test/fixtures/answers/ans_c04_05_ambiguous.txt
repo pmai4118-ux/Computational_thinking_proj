@@ -1,1 +1,1 @@
-Bài toán Two Sum này là bài kinh điển trên LeetCode rồi. Em đã submit giải thuật tối ưu đạt runtime 0ms và 100% memory trên profile LeetCode của em tại link leetcode.com/u/fresher_candidate. Thuật toán chắc chắn đúng.
+Phần giải thích HashMap, độ phức tạp và test em ghi trong file đính kèm employee_lookup.pdf; nội dung không có trong câu trả lời này.

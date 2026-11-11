@@ -1,15 +1,1 @@
-Kết quả in ra ở hai dòng print lần lượt là:
-[1, 2]
-[1, 2]
-Lý do: Biểu thức khởi tạo tham số mặc định được evaluate đúng một lần khi bytecode của hàm được load. Danh sách bucket là một đối tượng mutable tồn tại trong thuộc tính __defaults__ của function object. Mọi lời gọi không cung cấp đối số thứ hai đều trỏ vào cùng một ô nhớ và thao tác append() thực hiện in-place mutation.
-Phương án khắc phục tương đương: Sử dụng một singleton sentinel object độc nhất để phân biệt giữa việc người gọi không truyền tham số và người gọi truyền None:
-```python
-_MISSING = object()
-def add_item(value, bucket=_MISSING):
-    target = [] if bucket is _MISSING else bucket
-    target.append(value)
-    return target
-```
-Kế hoạch kiểm thử:
-- Case độc lập: Gọi liên tiếp không tham số thứ hai, kỳ vọng hai địa chỉ nhớ khác nhau id(add_item(10)) != id(add_item(20)).
-- Case bảo toàn đối tượng truyền vào: Khởi tạo custom_list = [], gọi ret = add_item(99, custom_list), verify id(ret) == id(custom_list) và custom_list == [99].
+String trong Java bất biến: sau khi tạo thì nội dung object không đổi. `concat` trả về object mới, nên `first` vẫn là `Java` còn `second` là `Java Backend`. Tính bất biến giúp chuỗi được chia sẻ an toàn và giữ hash ổn định khi làm key. Nếu nối lặp nhiều lần, dùng `StringBuilder` rồi gọi `toString()` để tránh tạo nhiều object trung gian.

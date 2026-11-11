@@ -1,10 +1,1 @@
-Đoạn code in ra cả hai lần đều là [1, 2].
-Nguyên nhân là do list bucket bị dùng chung giữa các lần gọi hàm add_item.
-Để sửa thì em dùng toán tử or:
-```python
-def add_item(value, bucket=None):
-    bucket = bucket or []
-    bucket.append(value)
-    return bucket
-```
-Kiểm thử thì em gọi add_item(1) ra [1], gọi add_item(2) ra [2] là chạy độc lập rồi.
+String là immutable nên first không đổi sau concat. Chuỗi an toàn khi chia sẻ giữa các phần của chương trình. Có thể dùng phép + để nối chuỗi; em chưa nói rõ kết quả second và trường hợp nối lặp.

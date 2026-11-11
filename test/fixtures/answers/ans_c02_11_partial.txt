@@ -1,1 +1,1 @@
-Hai lần in đều là [1, 2] vì list mặc định bị mutate và dùng chung. Bản sửa dùng None guard; em test cả hai lời gọi mặc định và list truyền tường minh rỗng. Em chưa ghi rõ expected output của hai test.
+String là immutable nên first không đổi sau concat. Chuỗi an toàn khi chia sẻ giữa các phần của chương trình. Có thể dùng phép + để nối chuỗi; em chưa nói rõ kết quả second và trường hợp nối lặp.

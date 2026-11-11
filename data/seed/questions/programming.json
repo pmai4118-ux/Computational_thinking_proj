@@ -2,101 +2,101 @@
   {
     "schema_version": "question-record/0.1-proposal",
     "example_only": false,
-    "id": "question.c02.default_arguments.v1",
-    "version": 1,
+    "id": "question.c02.string_immutability.v2",
+    "version": 2,
     "category": "programming_knowledge",
     "language": "vi",
     "role": "backend_developer",
     "level": "intern_fresher",
     "skill_ids": [
-      "backend.programming_fundamentals",
-      "python.default_arguments"
+      "java.core.fundamentals",
+      "java.string.immutability"
     ],
-    "source_id": "source.c02.python_default_args",
-    "prompt": "Đoạn code in ra gì? Giải thích nguyên nhân và sửa để các lần gọi không truyền bucket có list riêng. Nếu truyền bucket, hàm phải append vào chính list đó. Đề xuất kiểm thử cho bản sửa.",
-    "code": "def add_item(value, bucket=[]):\n    bucket.append(value)\n    return bucket\n\nfirst = add_item(1)\nsecond = add_item(2)\nprint(first)\nprint(second)",
-    "code_language": "python",
+    "source_id": "source.c02.java_string_immutability",
+    "prompt": "Tại sao đối tượng String trong Java được thiết kế là Immutable (không thể thay đổi)? Phân tích đoạn code minh họa bên dưới, nêu lợi ích của tính bất biến và cách xử lý khi cần nối chuỗi lặp nhiều lần.",
+    "code": "String first = \"Java\";\nString second = first.concat(\" Backend\");\nSystem.out.println(first);\nSystem.out.println(second);",
+    "code_language": "java",
     "constraints": [
-      "Giả sử Python 3; hai lệnh print chạy sau cả hai lần gọi.",
-      "Giữ hành vi thêm vào list mà người gọi truyền rõ ràng, kể cả list rỗng."
+      "Đoạn code chạy trên Java.",
+      "Giải thích giá trị của first và second sau concat.",
+      "Nêu một lợi ích của String immutable và cách phù hợp khi nối nhiều chuỗi trong vòng lặp."
     ],
     "adaptation": {
-      "kind": "adapted_open_source_case",
-      "summary": "Câu hỏi phỏng vấn chuẩn về cơ chế tham số mặc định mutable trong hàm, được biên soạn theo rubric 3 tiêu chí đánh giá năng lực Fresher Backend.",
+      "kind": "adapted_from_project_question_bank",
+      "summary": "Java String immutability question selected from the project question bank and expanded with a short code example and a three-criterion Fresher Backend rubric.",
       "translator_id": "team.phuc"
     },
     "rubric": {
-      "id": "rubric.c02.v1",
+      "id": "rubric.c02.v2",
       "version": 1,
       "criteria": [
         {
-          "id": "c02.default_semantics",
-          "label": "Giải thích kết quả và nguyên nhân",
+          "id": "c02.immutability",
+          "label": "Giải thích tính bất biến và kết quả",
           "expected_evidence": [
-            "Hai lần print đều là [1, 2].",
-            "Đối số mặc định được tạo một lần và list bị dùng chung."
+            "String không bị thay đổi sau khi tạo.",
+            "concat tạo chuỗi mới; first vẫn là Java và second là Java Backend."
           ],
           "levels": [
             {
               "score": 0,
-              "description": "Khẳng định hai list độc lập hoặc giải thích sai nguyên nhân."
+              "description": "Cho rằng concat sửa đối tượng String hiện có hoặc đọc sai kết quả."
             },
             {
               "score": 1,
-              "description": "Nêu đúng kết quả nhưng chưa giải thích vì sao list dùng chung."
+              "description": "Nêu String immutable hoặc kết quả đúng nhưng chưa giải thích cả hai."
             },
             {
               "score": 2,
-              "description": "Nêu đúng cả hai kết quả, thời điểm tạo mặc định và tác động mutation."
+              "description": "Giải thích String immutable, concat tạo object mới và nêu đúng cả hai giá trị."
             }
           ],
-          "equivalent_answers": "Chấp nhận diễn đạt tương đương về cùng đối tượng list; không cần khớp từ khóa."
+          "equivalent_answers": "Chấp nhận diễn đạt tương đương về object mới và giá trị ban đầu không đổi."
         },
         {
-          "id": "c02.safe_fix",
-          "label": "Sửa đúng hợp đồng",
+          "id": "c02.immutability_benefits",
+          "label": "Nêu lợi ích phù hợp",
           "expected_evidence": [
-            "Mỗi lần bỏ qua bucket tạo list mới.",
-            "List truyền tường minh vẫn được dùng, kể cả []."
+            "Có thể chia sẻ chuỗi an toàn; hash ổn định khi làm key; hoặc lợi ích bảo mật/thread safety có giải thích."
           ],
           "levels": [
             {
               "score": 0,
-              "description": "Bản sửa vẫn dùng chung list mặc định hoặc không tạo được list riêng khi bỏ qua tham số."
+              "description": "Không nêu lợi ích hoặc nêu sai."
             },
             {
               "score": 1,
-              "description": "Tạo được list mặc định riêng nhưng chưa giữ đúng list truyền tường minh, chẳng hạn dùng bucket or []."
+              "description": "Nêu một lợi ích đúng nhưng ít giải thích."
             },
             {
               "score": 2,
-              "description": "Tạo list mới chỉ khi tham số bị bỏ qua và giữ đúng list đã truyền."
+              "description": "Giải thích một lợi ích thực tế chính xác gắn với tính bất biến."
             }
           ],
-          "equivalent_answers": "None guard hoặc sentinel đúng đều hợp lệ; không bắt buộc một mẫu code duy nhất."
+          "equivalent_answers": "Chấp nhận một lợi ích đúng như hash key ổn định, an toàn khi chia sẻ hoặc giảm rủi ro thay đổi dữ liệu."
         },
         {
-          "id": "c02.tests",
-          "label": "Kiểm chứng bằng ví dụ cụ thể",
+          "id": "c02.string_construction",
+          "label": "Chọn cách nối chuỗi phù hợp",
           "expected_evidence": [
-            "Hai lần gọi bỏ qua bucket độc lập.",
-            "Một list rỗng truyền vào được cập nhật và giữ identity."
+            "Nối ít lần có thể dùng concat/+.",
+            "Nối lặp nhiều lần nên cân nhắc StringBuilder."
           ],
           "levels": [
             {
               "score": 0,
-              "description": "Không đưa kiểm thử dù đề yêu cầu hoặc kiểm thử khẳng định sai kết quả."
+              "description": "Không đề xuất cách dùng hoặc đề xuất sai."
             },
             {
               "score": 1,
-              "description": "Có một kiểm thử đúng nhưng thiếu một hành vi bắt buộc."
+              "description": "Nêu cách nối hợp lệ nhưng chưa phân biệt trường hợp nối lặp."
             },
             {
               "score": 2,
-              "description": "Có kiểm thử cụ thể cho cả hai hành vi và kết quả mong đợi."
+              "description": "Nêu StringBuilder cho nối lặp và giải thích ngắn gọn."
             }
           ],
-          "equivalent_answers": "Chấp nhận assert hoặc mô tả input/output đủ rõ để người khác chạy lại."
+          "equivalent_answers": "Chấp nhận StringBuffer nếu có lý do cần đồng bộ; không bắt buộc cung cấp benchmark."
         }
       ],
       "scoring": {
@@ -115,13 +115,14 @@
       "reviewer_id": "team.bach",
       "reviewed_at": null,
       "checks": {
-        "source_and_license_verified": true,
-        "original_and_adaptation_preserved": true,
-        "technical_correctness_checked": true,
-        "rubric_levels_distinct": true,
-        "equivalent_answers_checked": true,
-        "review_cases_checked": true
-      }
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": false,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      },
+      "technical_correctness_checked": null
     }
   }
 ]

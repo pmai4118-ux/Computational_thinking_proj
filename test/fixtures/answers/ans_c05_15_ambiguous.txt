@@ -1,1 +1,1 @@
-Các bug, bản sửa và test độc lập được ghi trong file review riêng mà em chưa đính kèm.
+Bản sửa equals/hashCode đã nằm trong tệp đính kèm review.java; nội dung và test không có ở đây.

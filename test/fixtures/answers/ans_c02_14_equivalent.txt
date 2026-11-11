@@ -1,1 +1,1 @@
-Em dùng sentinel object làm mặc định. Chỉ khi bucket is MISSING em mới tạo []; nếu người gọi truyền bucket=[] thì vẫn append vào đúng object đó. Hai lần gọi bỏ qua đối số tách biệt; test identity bằng `is`.
+String trong Java bất biến: sau khi tạo thì nội dung object không đổi. `concat` trả về object mới, nên `first` vẫn là `Java` còn `second` là `Java Backend`. Tính bất biến giúp chuỗi được chia sẻ an toàn và giữ hash ổn định khi làm key. Nếu nối lặp nhiều lần, dùng `StringBuilder` rồi gọi `toString()` để tránh tạo nhiều object trung gian.

@@ -1,13 +1,1 @@
-Em dùng một Hash Map để tìm two sum. Với mỗi số x, em tìm target - x trong map.
-Code:
-```python
-def two_sum(nums, target):
-    d = {val: idx for idx, val in enumerate(nums)}
-    for idx, val in enumerate(nums):
-        comp = target - val
-        if comp in d and d[comp] != idx:
-            return [idx, d[comp]]
-    return None
-```
-Độ phức tạp thời gian là O(n).
-Kiểm thử: mảng [2, 7, 11, 15], target 9 trả về [0, 1].
+Em chọn HashMap, dùng employee ID làm key rồi gọi `get(id)` để tìm. Tra cứu thường O(1), còn duyệt List là O(n). Em chưa nói rõ chi phí dựng map/lưu bộ nhớ và chưa nêu test ID không tồn tại.
