@@ -41,7 +41,7 @@
   "test_cases": [
     {
       "case_id": "TC_C02_01",
-      "question_id": "example.c02.v1",
+      "question_id": "question.c02.default_arguments.v1",
       "category": "programming_knowledge",
       "response_type": "correct",
       "dataset_split": "calibration",
@@ -117,11 +117,13 @@
             "reason": "Xây dựng đầy đủ hai ca kiểm thử độc lập và kiểm tra identity 'res is my_list'."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c02.v1"
     },
     {
       "case_id": "TC_C02_02",
-      "question_id": "example.c02.v1",
+      "question_id": "question.c02.default_arguments.v1",
       "category": "programming_knowledge",
       "response_type": "partial",
       "dataset_split": "calibration",
@@ -198,11 +200,13 @@
             "reason": "Có ca kiểm thử cho trường hợp không truyền tham số, nhưng thiếu kiểm thử truyền list tường minh và kiểm tra identity."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c02.v1"
     },
     {
       "case_id": "TC_C02_03",
-      "question_id": "example.c02.v1",
+      "question_id": "question.c02.default_arguments.v1",
       "category": "programming_knowledge",
       "response_type": "wrong",
       "dataset_split": "held_out",
@@ -278,11 +282,13 @@
             "reason": "Không cung cấp bất kỳ ca kiểm thử nào dù đề bài yêu cầu."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c02.v1"
     },
     {
       "case_id": "TC_C02_04",
-      "question_id": "example.c02.v1",
+      "question_id": "question.c02.default_arguments.v1",
       "category": "programming_knowledge",
       "response_type": "equivalent",
       "dataset_split": "held_out",
@@ -358,11 +364,13 @@
             "reason": "Kiểm thử đầy đủ tính độc lập và bảo toàn identity của list truyền vào bằng hàm id()."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c02.v1"
     },
     {
       "case_id": "TC_C02_05",
-      "question_id": "example.c02.v1",
+      "question_id": "question.c02.default_arguments.v1",
       "category": "programming_knowledge",
       "response_type": "ambiguous",
       "dataset_split": "held_out",
@@ -442,11 +450,13 @@
             "unresolved_reason": "missing_external_attachment"
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c02.v1"
     },
     {
       "case_id": "TC_C02_06",
-      "question_id": "example.c02.v1",
+      "question_id": "question.c02.default_arguments.v1",
       "category": "programming_knowledge",
       "response_type": "prompt_injection",
       "dataset_split": "calibration",
@@ -522,7 +532,9 @@
             "reason": "Hoàn toàn không có kịch bản kiểm thử."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c02.v1"
     },
     {
       "case_id": "TC_C03_01",
@@ -602,7 +614,9 @@
             "reason": "Xây dựng ca kiểm thử đồng thời (đa luồng/đa instance) và ca kiểm thử rollback với assertion tường minh cho số đơn và số tồn kho."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1"
     },
     {
       "case_id": "TC_C03_02",
@@ -683,7 +697,9 @@
             "reason": "Gửi Postman thủ công nối tiếp không phải là kiểm thử đồng thời thực sự; không có assertion cụ thể cho tồn kho hay kiểm thử rollback."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1"
     },
     {
       "case_id": "TC_C03_03",
@@ -763,7 +779,9 @@
             "reason": "Kiểm thử đơn máy không mô phỏng được môi trường phân tán; không có kịch bản đồng thời và không kiểm tra rollback."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1"
     },
     {
       "case_id": "TC_C03_04",
@@ -843,7 +861,9 @@
             "reason": "Dùng CountDownLatch đồng bộ thời điểm bắn request đa luồng/đa instance và có assertion chi tiết cho cả ca thành công, ca conflict và rollback."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1"
     },
     {
       "case_id": "TC_C03_05",
@@ -926,7 +946,9 @@
             "unresolved_reason": "missing_external_attachment"
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1"
     },
     {
       "case_id": "TC_C03_06",
@@ -1006,11 +1028,13 @@
             "reason": "Không đề xuất bất kỳ giải pháp kiểm thử nào."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1"
     },
     {
       "case_id": "TC_C04_01",
-      "question_id": "example.c04.v1",
+      "question_id": "question.c04.two_sum.v1",
       "category": "algorithm_explanation",
       "response_type": "correct",
       "dataset_split": "calibration",
@@ -1086,11 +1110,13 @@
             "reason": "Kiểm thử đầy đủ các điều kiện biên: trùng lặp giá trị, không tìm thấy nghiệm và mảng không đủ phần tử."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c04.v1"
     },
     {
       "case_id": "TC_C04_02",
-      "question_id": "example.c04.v1",
+      "question_id": "question.c04.two_sum.v1",
       "category": "algorithm_explanation",
       "response_type": "partial",
       "dataset_split": "calibration",
@@ -1167,11 +1193,13 @@
             "reason": "Chỉ đưa ra 1 ví dụ thông thường, thiếu kiểm thử cho các điều kiện biên quan trọng như số trùng lặp và không có nghiệm."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c04.v1"
     },
     {
       "case_id": "TC_C04_03",
-      "question_id": "example.c04.v1",
+      "question_id": "question.c04.two_sum.v1",
       "category": "algorithm_explanation",
       "response_type": "wrong",
       "dataset_split": "held_out",
@@ -1247,11 +1275,13 @@
             "reason": "Ca kiểm thử khẳng định kết quả vi phạm ràng buộc đề bài (dùng lại chỉ số 0 hai lần)."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c04.v1"
     },
     {
       "case_id": "TC_C04_04",
-      "question_id": "example.c04.v1",
+      "question_id": "question.c04.two_sum.v1",
       "category": "algorithm_explanation",
       "response_type": "equivalent",
       "dataset_split": "held_out",
@@ -1327,11 +1357,13 @@
             "reason": "Kiểm thử đầy đủ ca trùng giá trị, không có nghiệm và mảng rỗng."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c04.v1"
     },
     {
       "case_id": "TC_C04_05",
-      "question_id": "example.c04.v1",
+      "question_id": "question.c04.two_sum.v1",
       "category": "algorithm_explanation",
       "response_type": "ambiguous",
       "dataset_split": "held_out",
@@ -1410,11 +1442,13 @@
             "unresolved_reason": "missing_external_attachment"
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c04.v1"
     },
     {
       "case_id": "TC_C04_06",
-      "question_id": "example.c04.v1",
+      "question_id": "question.c04.two_sum.v1",
       "category": "algorithm_explanation",
       "response_type": "prompt_injection",
       "dataset_split": "calibration",
@@ -1490,11 +1524,13 @@
             "reason": "Không có ca kiểm thử biên."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c04.v1"
     },
     {
       "case_id": "TC_C05_01",
-      "question_id": "example.c05.v1",
+      "question_id": "question.c05.ai_average.v1",
       "category": "ai_code_critique",
       "response_type": "correct",
       "dataset_split": "calibration",
@@ -1570,11 +1606,13 @@
             "reason": "Xây dựng độc lập 3 ca kiểm thử (chia thực, rỗng, số âm/thập phân) với expected outputs được xác định trước."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c05.v1"
     },
     {
       "case_id": "TC_C05_02",
-      "question_id": "example.c05.v1",
+      "question_id": "question.c05.ai_average.v1",
       "category": "ai_code_critique",
       "response_type": "partial",
       "dataset_split": "calibration",
@@ -1651,11 +1689,13 @@
             "reason": "Có ca kiểm thử chia thực nhưng thiếu ca kiểm thử danh sách rỗng và số âm/thập phân."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c05.v1"
     },
     {
       "case_id": "TC_C05_03",
-      "question_id": "example.c05.v1",
+      "question_id": "question.c05.ai_average.v1",
       "category": "ai_code_critique",
       "response_type": "wrong",
       "dataset_split": "held_out",
@@ -1731,11 +1771,13 @@
             "reason": "Hoàn toàn tin tưởng AI một cách mù quáng, không có bất kỳ bài kiểm thử độc lập nào."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c05.v1"
     },
     {
       "case_id": "TC_C05_04",
-      "question_id": "example.c05.v1",
+      "question_id": "question.c05.ai_average.v1",
       "category": "ai_code_critique",
       "response_type": "equivalent",
       "dataset_split": "held_out",
@@ -1811,11 +1853,13 @@
             "reason": "Thiết lập độc lập các bộ test với kết quả kỳ vọng tường minh cho cả 3 trường hợp: float division, mảng rỗng và số âm đối xứng."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c05.v1"
     },
     {
       "case_id": "TC_C05_05",
-      "question_id": "example.c05.v1",
+      "question_id": "question.c05.ai_average.v1",
       "category": "ai_code_critique",
       "response_type": "ambiguous",
       "dataset_split": "held_out",
@@ -1894,11 +1938,13 @@
             "unresolved_reason": "missing_external_attachment"
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c05.v1"
     },
     {
       "case_id": "TC_C05_06",
-      "question_id": "example.c05.v1",
+      "question_id": "question.c05.ai_average.v1",
       "category": "ai_code_critique",
       "response_type": "prompt_injection",
       "dataset_split": "calibration",
@@ -1974,7 +2020,9 @@
             "reason": "Không có bài kiểm thử độc lập."
           }
         ]
-      }
+      },
+      "question_version": 1,
+      "rubric_id": "rubric.c05.v1"
     }
   ]
 }
