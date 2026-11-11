@@ -4,6 +4,19 @@ Computational Thinking class project for a Vietnamese technical interview practi
 
 ## Answer evaluation PoC
 
+The [web demo guide](examples/evaluateAnswer/demo_ui/README.md) covers the portable
+10-question demo, local configuration, saved reports and the remaining review gates.
+After `uv sync --locked`, start it with:
+
+```powershell
+uv run --locked python -m source.main --web --port 8001
+```
+
+Open http://127.0.0.1:8001. All 50 recorded sample previews work without an API key.
+Live evaluation needs a server-side Gemini API key or separately installed Antigravity.
+Four questions assess all four dimensions; six assess only the applicable subset.
+The dataset is explicitly pending independent content and license review.
+
 The `evaluateAnswer` branch adds a standalone Python evaluation flow based on the
 updated user abstraction. `source/main.py` wires the MVC-S layers; the shared P03
 models remain available. See the [architecture and function-flow report](source/reports/architectureReport.pdf).
@@ -62,9 +75,10 @@ repository, interpreter factory, rubric rules, evidence reviewer, and feedback
 builder. Each responsibility has one implementation; provider selection uses a
 simple factory and the interpreters share a strategy interface. JSON inputs,
 outputs, and CLI arguments remain unchanged by the OOP refactor.
-F05 can add the web app factory alongside it. Once F05 provides an ASGI factory
-named `create_app`, the launch command will be
-`uv run --locked uvicorn source.main:create_app --factory --reload`.
+`Application.createDemoApp()` now composes the standalone evaluation web PoC.
+Its question repository, submission store and provider are injected into the
+MVC-S layers. The old `examples.evaluateAnswer.demo_ui.main:app` entry remains
+an alias to this factory. This does not implement the broader F05 session app.
 
 ## Coding agent setup
 

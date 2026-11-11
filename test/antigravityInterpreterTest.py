@@ -4,15 +4,27 @@ import subprocess
 
 import pytest
 
-from examples.evaluateAnswer.demo_ui.controller import DemoController
+from source.Model.answerData import EvaluationInput
+from source.Model.evaluationData import RecordedReview
+from source.service.evidenceReview import EvidenceReview
 from source.service.evaluationErrors import EvaluationError
 from source.service.providers import antigravityInterpreter
 from source.service.providers.antigravityInterpreter import AntigravityInterpreter, AntigravitySettings
 
 
+fixtureDirectory = Path(__file__).resolve().parents[1] / "examples/evaluateAnswer/inventoryRace"
+
+
+def readInput(caseName):
+    return EvaluationInput.model_validate_json((fixtureDirectory / f"{caseName}.input.json").read_bytes())
+
+
+def readRecording(caseName):
+    return RecordedReview.model_validate_json((fixtureDirectory / f"{caseName}.recording.json").read_bytes())
+
+
 def sampleResponse(caseName="correct"):
-    controller = DemoController()
-    review = controller.repository.loadRecording(controller.fixtureDirectory / f"{caseName}.recording.json")
+    review = readRecording(caseName)
     output = {"reviews": {
         rubric.rubricId: {
             check.criterionId: check.model_dump(mode="json", exclude={"criterionId"})
@@ -36,7 +48,7 @@ def testSubscriptionTransportUsesStdinAndDeniesTools(monkeypatch):
         return subprocess.CompletedProcess(command, 0, json.dumps(sampleResponse()), "")
 
     monkeypatch.setattr(antigravityInterpreter.subprocess, "run", fakeRun)
-    inputs = DemoController().getExample("correct")
+    inputs = readInput("correct")
     interpretation = AntigravityInterpreter(AntigravitySettings()).interpret(inputs)
     assert len(interpretation.reviews) == 3
     assert len(calls) == 1
@@ -58,7 +70,7 @@ def testSubscriptionTransportUsesStdinAndDeniesTools(monkeypatch):
 
 
 def testSchemaUsesRequiredIdKeysAndOnlyTypedArrayItems():
-    inputs = DemoController().getExample("correct")
+    inputs = readInput("correct")
     schema = AntigravityInterpreter.responseSchema(inputs)
 
     def inspect(node):
@@ -95,7 +107,7 @@ def testProviderOutputCannotOmitOrInventIds(mutation):
         reviews["poc.inventory.race"]["atomic.guard"] = reviews["poc.inventory.race"].pop("race.risk")
     response = subprocess.CompletedProcess([], 0, json.dumps(event), "")
     with pytest.raises(EvaluationError) as caught:
-        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, DemoController().getExample("correct"))
+        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, readInput("correct"))
     assert caught.value.code == "providerOutput"
 
 
@@ -109,7 +121,7 @@ def testProviderOutputCannotOmitOrInventIds(mutation):
 def testInvalidOrFailedRunCreatesNoInterpretation(stdout, returnCode, errorCode):
     response = subprocess.CompletedProcess([], returnCode, stdout, "private-diagnostics")
     with pytest.raises(EvaluationError) as caught:
-        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, DemoController().getExample("correct"))
+        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, readInput("correct"))
     assert caught.value.code == errorCode
     assert "private-diagnostics" not in str(caught.value)
 
@@ -118,24 +130,23 @@ def testToolUseRejectsOtherwiseValidResult():
     events = [{"event": "step_update", "step_update": {"step_type": "tool", "tool_name": "run_command"}}, sampleResponse()]
     response = subprocess.CompletedProcess([], 0, "\n".join(json.dumps(event) for event in events), "")
     with pytest.raises(EvaluationError, match="tool action"):
-        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, DemoController().getExample("correct"))
+        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, readInput("correct"))
 
 
 def testFinishIsOnlyStructuredOutputSubmission():
     events = [{"event": "step_update", "step_update": {"step_type": "tool", "tool_name": "finish"}}, sampleResponse()]
     response = subprocess.CompletedProcess([], 0, "\n".join(json.dumps(event) for event in events), "")
-    assert len(AntigravityInterpreter(AntigravitySettings()).parseResponse(response, DemoController().getExample("correct")).reviews) == 3
+    assert len(AntigravityInterpreter(AntigravitySettings()).parseResponse(response, readInput("correct")).reviews) == 3
 
 
 @pytest.mark.parametrize("caseName", ["correct", "partial", "incorrect", "equivalent", "ambiguous"])
 def testKeyedOutputPreservesAllFiveGroundedRecordings(caseName):
-    controller = DemoController()
-    inputs = controller.getExample(caseName)
-    expected = controller.repository.loadRecording(controller.fixtureDirectory / f"{caseName}.recording.json").interpretation
+    inputs = readInput(caseName)
+    expected = readRecording(caseName).interpretation
     response = subprocess.CompletedProcess([], 0, json.dumps(sampleResponse(caseName)), "")
     actual = AntigravityInterpreter(AntigravitySettings()).parseResponse(response, inputs)
     assert actual == expected
-    controller.service.evidenceReview.validateInterpretation(inputs, actual)
+    EvidenceReview().validateInterpretation(inputs, actual)
 
 
 @pytest.mark.parametrize("caseName", ["correct", "partial"])
@@ -148,11 +159,10 @@ def testOmittedProviderMetadataIsResolvedWithoutGuessingEvidence(caseName):
                 for field in ("quote", "startOffset", "endOffset"):
                     if item[field] is None:
                         item.pop(field)
-    controller = DemoController()
-    inputs = controller.getExample(caseName)
+    inputs = readInput(caseName)
     response = subprocess.CompletedProcess([], 0, json.dumps(event), "")
     actual = AntigravityInterpreter(AntigravitySettings()).parseResponse(response, inputs)
-    validated = controller.service.evidenceReview.validateInterpretation(inputs, actual)
+    validated = EvidenceReview().validateInterpretation(inputs, actual)
     for review in validated.reviews:
         for check in review.criterionChecks:
             for evidence in check.evidence:
@@ -166,12 +176,11 @@ def testIncorrectSuppliedOffsetsStillFailEvidenceValidation():
     event = sampleResponse()
     evidence = event["result"]["structured_output"]["reviews"]["poc.inventory.race"]["race.risk"]["evidence"][0]
     evidence.update(startOffset=1, endOffset=1 + len(evidence["quote"]))
-    controller = DemoController()
-    inputs = controller.getExample("correct")
+    inputs = readInput("correct")
     response = subprocess.CompletedProcess([], 0, json.dumps(event), "")
     actual = AntigravityInterpreter(AntigravitySettings()).parseResponse(response, inputs)
     with pytest.raises(EvaluationError) as caught:
-        controller.service.evidenceReview.validateInterpretation(inputs, actual)
+        EvidenceReview().validateInterpretation(inputs, actual)
     assert caught.value.code == "invalidEvidence"
 
 
@@ -186,14 +195,14 @@ def testIncorrectSuppliedOffsetsStillFailEvidenceValidation():
 def testCliFailureDiagnosticsExcludeEchoedData(stdout, stderr, errorCode, retryable):
     response = subprocess.CompletedProcess([], 1, stdout, stderr)
     with pytest.raises(EvaluationError) as caught:
-        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, DemoController().getExample("correct"))
+        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, readInput("correct"))
     assert (caught.value.code, caught.value.retryable) == (errorCode, retryable)
 
 
 def testSuccessfulRunStillRejectsMalformedStream():
     response = subprocess.CompletedProcess([], 0, "not-json\n" + json.dumps(sampleResponse()), "")
     with pytest.raises(EvaluationError) as caught:
-        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, DemoController().getExample("correct"))
+        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, readInput("correct"))
     assert caught.value.code == "providerOutput"
 
 
@@ -203,7 +212,7 @@ def testPrintTimeoutOverridesSuccessfulExitAndPartialResult():
     stderr = 'AGY_ERROR: {"short_error":"print timeout after 1ns with the turn still in progress; the response is partial","status":"DEADLINE_EXCEEDED","retryable":false,"reason":"print_timeout"}'
     response = subprocess.CompletedProcess([], 0, json.dumps(sampleResponse()), stderr)
     with pytest.raises(EvaluationError) as caught:
-        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, DemoController().getExample("correct"))
+        AntigravityInterpreter(AntigravitySettings()).parseResponse(response, readInput("correct"))
     assert (caught.value.code, caught.value.retryable) == ("providerTimeout", True)
 
 
@@ -213,7 +222,7 @@ def testWindowsShimIsNotReportedAsAvailable(monkeypatch):
     interpreter = AntigravityInterpreter(AntigravitySettings())
     assert interpreter.executablePath() is None
     with pytest.raises(EvaluationError) as caught:
-        interpreter.interpret(DemoController().getExample("correct"))
+        interpreter.interpret(readInput("correct"))
     assert caught.value.code == "providerConfig"
 
 
@@ -224,7 +233,7 @@ def testTimeoutPreservesImmutableInput(monkeypatch):
         raise subprocess.TimeoutExpired("agy", 120)
 
     monkeypatch.setattr(antigravityInterpreter.subprocess, "run", timeout)
-    inputs = DemoController().getExample("correct")
+    inputs = readInput("correct")
     digest = inputs.inputDigest()
     with pytest.raises(EvaluationError) as caught:
         AntigravityInterpreter(AntigravitySettings()).interpret(inputs)

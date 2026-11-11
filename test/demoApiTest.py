@@ -1,191 +1,116 @@
-import io
-import json
+import sqlite3
 
 import pytest
 from fastapi.testclient import TestClient
-from urllib.error import HTTPError
 
-from examples.evaluateAnswer.demo_ui.controller import DemoController
-from examples.evaluateAnswer.demo_ui.main import create_app
-from source.service.providers import geminiInterpreter
-from source.service.providers.geminiInterpreter import GeminiSettings
-from source.service.providers.interpreterFactory import InterpreterFactory
+from source.main import Application
 
 
 @pytest.fixture
 def demoClient(tmp_path, monkeypatch):
-    for name in ("GEMINI_API_KEY", "GEMINI_MODEL", "EVALUATION_TIMEOUT"):
-        monkeypatch.delenv(name, raising=False)
-    path = tmp_path / "settings.json"
-    path.write_text(json.dumps({"GEMINI_API_KEY": "private-demo-test-key", "GEMINI_MODEL": "test-model"}))
-    controller = DemoController(interpreterFactory=InterpreterFactory(GeminiSettings("private-demo-test-key", "test-model", 60)), providerName="gemini")
-    controller.repository.reportDirectory = tmp_path / "reports"
-    with TestClient(create_app(controller, settingsPath=path, providerName="gemini")) as client:
-        yield client, controller
-    assert not controller.repository.reportDirectory.exists()
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    app = Application.createDemoApp(settingsPath=tmp_path / "absent.json", providerName="gemini", databasePath=tmp_path / "demo.sqlite3")
+    with TestClient(app) as client:
+        yield client, tmp_path / "demo.sqlite3"
 
 
-@pytest.mark.parametrize("caseName", ["correct", "partial", "incorrect", "equivalent", "ambiguous"])
-def testRecordedPreviewIsBoundToUnchangedAnswer(demoClient, caseName):
-    client, controller = demoClient
-    original = controller.getExample(caseName)
-    example = client.get("/api/examples/" + caseName).json()
-    result = client.post("/api/preview", json=example)
-    assert result.status_code == 200
-    assert result.json()["providerName"] == "recorded"
-    assert result.json()["inputHash"] == original.inputDigest()
-    example["answerText"] += " changed"
-    assert client.post("/api/preview", json=example).status_code == 409
-    assert controller.getExample(caseName) == original
+def requestBody(question, sample):
+    return {"questionId": question["questionId"], "questionVersion": question["version"], "rubricVersions": {rubric["rubricId"]: rubric["version"] for rubric in question["rubrics"]}, "answerText": sample["answerText"]}
 
 
-def testLiveReportUsesConfiguredModelAndKeepsKeyOnServer(demoClient, monkeypatch):
-    client, controller = demoClient
-    calls = []
-    recording = controller.repository.loadRecording(controller.fixtureDirectory / "correct.recording.json")
-
-    def fakeOpen(request, timeout):
-        calls.append(request)
-        assert timeout == 60
-        return io.BytesIO(json.dumps({"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": recording.interpretation.model_dump_json()}]}}]}).encode())
-
-    monkeypatch.setattr(geminiInterpreter, "urlopen", fakeOpen)
-    answer = controller.getExample("correct").answer.originalText
-    response = client.post("/api/evaluate", json={"answerText": answer})
-    assert response.status_code == 200
-    report = response.json()
-    assert report["providerName"] == "gemini"
-    assert report["modelName"] == "test-model"
-    assert report["inputs"]["answer"]["originalText"] == answer
-    assert [result["score"] for result in report["results"]] == [2, 2, 2]
-    assert len(calls) == 1
-    assert calls[0].full_url.endswith("/models/test-model:generateContent")
-    for path in ("/", "/api/status", "/static/demo.js"):
-        assert "private-demo-test-key" not in client.get(path).text
-    assert "private-demo-test-key" not in response.text
-    assert client.get("/api/status").json() == {"liveEvaluationConfigured": True, "providerName": "gemini", "modelName": "test-model"}
+def testAllFiftyPreviewsAndNoHiddenReferenceLeak(demoClient):
+    client, databasePath = demoClient
+    questions = client.get("/api/questions").json()
+    assert len(questions) == 10
+    assert "recording" not in str(questions) and "expectedScores" not in str(questions)
+    for question in questions:
+        for sampleType in question["examples"]:
+            caseName = sampleType["caseName"]
+            sample = client.get(f"/api/examples/{caseName}", params={"questionId": question["questionId"]}).json()
+            response = client.post("/api/preview", json={**requestBody(question, sample), "caseName": caseName})
+            assert response.status_code == 200, response.text
+            report = response.json()
+            expected = {"correct": 2, "partial": 1, "incorrect": 0, "equivalent": 2, "ambiguous": None}[caseName]
+            assert [result["score"] for result in report["results"]] == [expected] * len(question["rubrics"])
+            assert report["providerName"] == "recorded"
+            assert report["inputs"]["answer"]["originalText"] == sample["answerText"]
+            assert len(report["feedbackItems"]) == len(question["rubrics"])
+    with sqlite3.connect(databasePath) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM reports").fetchone()[0] == 50
 
 
-def testBillingFailureIsRecoverableWithoutChangingAnswer(demoClient, monkeypatch):
-    client, controller = demoClient
-    original = controller.getExample("correct")
-    calls = []
-
-    def failOpen(request, timeout):
-        calls.append(request)
-        raise HTTPError(request.full_url, 402, "private upstream details", {}, io.BytesIO(b"private body"))
-
-    monkeypatch.setattr(geminiInterpreter, "urlopen", failOpen)
-    response = client.post("/api/evaluate", json={"answerText": original.answer.originalText})
-    assert response.status_code == 402
-    assert "free-tier quota" in response.json()["detail"]
-    assert "private body" not in response.text
-    assert len(calls) == 1
-    assert controller.getExample("correct") == original
+def testPreviewVersionTextAndUnknownIds(demoClient):
+    client, databasePath = demoClient
+    question = client.get("/api/question").json()
+    sample = client.get("/api/examples/correct").json()
+    body = {**requestBody(question, sample), "caseName": "correct"}
+    assert client.post("/api/preview", json=body).status_code == 200
+    assert client.post("/api/preview", json={**body, "answerText": body["answerText"] + " changed"}).status_code == 409
+    assert client.post("/api/preview", json={**body, "questionVersion": 99}).status_code == 409
+    assert client.post("/api/preview", json={**body, "rubricVersions": {}}).status_code == 409
+    assert client.post("/api/preview", json={**body, "caseName": "unknown"}).status_code == 404
+    assert client.get("/api/question?questionId=unknown").status_code == 404
+    assert client.post("/api/evaluate", json={**body, "apiKey": "secret-value"}).status_code == 422
+    assert "secret-value" not in client.post("/api/evaluate", json={"answerText": "secret-value"}).text
 
 
-@pytest.mark.parametrize("body", [
-    {"promptFeedback": {"blockReason": "SAFETY"}},
-    {"candidates": [{"finishReason": "MAX_TOKENS", "content": {"parts": []}}]},
-])
-def testUpstreamRefusalAndIncompleteResultAreNotInputErrors(demoClient, monkeypatch, body):
-    client, controller = demoClient
-    original = controller.getExample("correct")
-    monkeypatch.setattr(geminiInterpreter, "urlopen", lambda request, timeout: io.BytesIO(json.dumps(body).encode()))
-    response = client.post("/api/evaluate", json={"answerText": original.answer.originalText})
-    assert response.status_code == 502
-    assert controller.getExample("correct") == original
+def testNoCredentialsKeepsSubmittedAnswerWithoutScore(demoClient):
+    client, databasePath = demoClient
+    assert client.get("/api/status").json()["liveEvaluationConfigured"] is False
+    question = client.get("/api/question").json()
+    sample = {"answerText": "My own original answer."}
+    body = {**requestBody(question, sample), "answerId": "answer.retry", "revision": 1}
+    response = client.post("/api/evaluate", json=body)
+    assert response.status_code == 503
+    with sqlite3.connect(databasePath) as connection:
+        assert "My own original answer." in connection.execute("SELECT payload FROM submissions").fetchone()[0]
+        assert connection.execute("SELECT COUNT(*) FROM reports").fetchone()[0] == 0
+    assert client.post("/api/evaluate", json={**body, "answerText": "Different answer."}).status_code == 409
+    assert client.post("/api/evaluate", json={**body, "answerText": "Different answer.", "revision": 2}).status_code == 503
 
 
-def testInjectedControllerSelectsItsOwnProvider(demoClient):
-    client, controller = demoClient
-    path = controller.repository.reportDirectory.parent / "injected-settings.json"
-    path.write_text(json.dumps({"GEMINI_API_KEY": "test-key", "GEMINI_MODEL": "test-model"}))
-    with TestClient(create_app(controller, settingsPath=path)) as injected:
-        assert injected.get("/api/status").json()["providerName"] == "gemini"
+def testErrorsDoNotLeakRequestOrProviderContent(demoClient, monkeypatch, caplog):
+    client, databasePath = demoClient
+    from source.service.demoService import DemoService
+    def failRequest(self, request):
+        raise RuntimeError("private-key-and-answer-secret")
+    monkeypatch.setattr(DemoService, "evaluateAnswer", failRequest)
+    question = client.get("/api/question").json()
+    response = client.post("/api/evaluate", json=requestBody(question, {"answerText": "private-answer"}))
+    assert response.status_code == 500
+    assert "private" not in response.text and "private" not in caplog.text
 
 
-def testCliTimeoutIsHttp504AndKeepsAnswer(tmp_path, monkeypatch):
-    from source.service.providers import antigravityInterpreter
-
-    monkeypatch.setattr(antigravityInterpreter.shutil, "which", lambda name: "C:/tools/agy.exe")
-    event = {"event": "result", "result": {"status": "SUCCESS", "response": ""}}
-    stderr = 'AGY_ERROR: {"status":"DEADLINE_EXCEEDED","short_error":"print timeout; returning partial output"}'
-    monkeypatch.setattr(antigravityInterpreter.subprocess, "run", lambda command, **kwargs: antigravityInterpreter.subprocess.CompletedProcess(command, 0, json.dumps(event), stderr))
-    controller = DemoController()
-    controller.repository.reportDirectory = tmp_path / "reports"
-    original = controller.getExample("correct")
-    with TestClient(create_app(controller, providerName="antigravity")) as client:
-        response = client.post("/api/evaluate", json={"answerText": original.answer.originalText})
-    assert response.status_code == 504
-    assert controller.getExample("correct") == original
-    assert not controller.repository.reportDirectory.exists()
+def testOriginAndStaticAssets(demoClient):
+    client, databasePath = demoClient
+    assert client.get("/").status_code == 200
+    for path in ("demo.js", "demoState.js", "demo.css"):
+        assert client.get("/static/" + path).status_code == 200
+    assert client.post("/api/evaluate", headers={"Origin": "https://unrelated.example"}, json={}).status_code == 403
+    assert client.post("/api/evaluate", content="x"*250001).status_code == 413
+    assert client.get("/").headers["Cache-Control"] == "no-store"
 
 
-def testUnverifiableLiveAssessmentIsReportedAsProviderFailure(demoClient, monkeypatch):
-    client, controller = demoClient
-    original = controller.getExample("correct")
-    recording = controller.repository.loadRecording(controller.fixtureDirectory / "correct.recording.json")
-    interpretation = recording.interpretation.model_copy(update={
-        "reviews": (recording.interpretation.reviews[0].model_copy(update={"rubricId": "unknown.rubric"}), *recording.interpretation.reviews[1:])
-    })
-
-    def fakeOpen(request, timeout):
-        return io.BytesIO(json.dumps({"candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": interpretation.model_dump_json()}]}}]}).encode())
-
-    monkeypatch.setattr(geminiInterpreter, "urlopen", fakeOpen)
-    response = client.post("/api/evaluate", json={"answerText": original.answer.originalText})
-    assert response.status_code == 502
-    assert "chưa khớp với rubric" in response.json()["detail"]
-    assert "unknown.rubric" not in response.text
-    assert controller.getExample("correct") == original
+def testDownloadMatchesSavedReportAndProvider(demoClient):
+    client, databasePath = demoClient
+    question = client.get("/api/question").json()
+    sample = client.get("/api/examples/correct").json()
+    report = client.post("/api/preview", json={**requestBody(question, sample), "caseName": "correct"}).json()
+    query = {name: report[name] for name in ("providerName", "modelName", "promptVersion")}
+    address = "/api/reports/" + report["inputHash"]
+    downloaded = client.get(address, params=query)
+    assert downloaded.status_code == 200
+    assert downloaded.json() == report
+    assert downloaded.headers["Content-Disposition"].startswith("attachment;")
+    assert client.get(address, params={**query, "providerName": "gemini"}).status_code == 404
+    assert client.get("/api/reports/invalid", params=query).status_code == 422
 
 
-@pytest.mark.parametrize("payload", [{"answerText": " "}, {"answerText": "answer", "apiKey": "browser-key"}, {"answerText": "answer", "modelName": "other-model"}])
-def testEvaluationRejectsBlankAnswerAndBrowserProviderSettings(demoClient, payload):
-    client, _ = demoClient
-    assert client.post("/api/evaluate", json=payload).status_code == 422
-
-
-def testDefaultAntigravityNeverReadsOrUsesApiKey(tmp_path, monkeypatch):
-    from source.service.providers import antigravityInterpreter
-
-    monkeypatch.delenv("DEMO_EVALUATION_PROVIDER", raising=False)
-    monkeypatch.setenv("GEMINI_API_KEY", "unused-api-key")
-    monkeypatch.setenv("GOOGLE_API_KEY", "unused-api-key")
-    monkeypatch.setattr(antigravityInterpreter.shutil, "which", lambda name: "C:/tools/agy.exe")
-    path = tmp_path / "inactive-api-settings.json"
-    path.write_text("malformed dormant API configuration")
-    controller = DemoController()
-    recording = controller.repository.loadRecording(controller.fixtureDirectory / "correct.recording.json")
-    calls = []
-
-    def fakeRun(command, **options):
-        calls.append(command)
-        assert "GEMINI_API_KEY" not in options["env"]
-        assert "GOOGLE_API_KEY" not in options["env"]
-        assert "unused-api-key" not in str(command)
-        output = {"reviews": {
-            review.rubricId: {
-                check.criterionId: check.model_dump(mode="json", exclude={"criterionId"})
-                for check in review.criterionChecks
-            }
-            for review in recording.interpretation.reviews
-        }}
-        event = {"event": "result", "result": {"status": "SUCCESS", "structured_output": output}}
-        return antigravityInterpreter.subprocess.CompletedProcess(command, 0, json.dumps(event), "")
-
-    def forbidApi(*args, **kwargs):
-        raise AssertionError("Dormant Gemini API must not be called")
-
-    monkeypatch.setattr(antigravityInterpreter.subprocess, "run", fakeRun)
-    monkeypatch.setattr(geminiInterpreter, "urlopen", forbidApi)
-    with TestClient(create_app(settingsPath=path)) as client:
-        status = client.get("/api/status").json()
-        assert status["providerName"] == "antigravity"
-        answer = controller.getExample("correct").answer.originalText
-        report = client.post("/api/evaluate", json={"answerText": answer})
-    assert report.status_code == 200
-    assert report.json()["providerName"] == "antigravity"
-    assert [item["score"] for item in report.json()["results"]] == [2, 2, 2]
-    assert len(calls) == 1
+def testInvalidProviderDoesNotBlockRecordedPreview(tmp_path, monkeypatch):
+    monkeypatch.setenv("DEMO_EVALUATION_PROVIDER", "unknown-provider")
+    app = Application.createDemoApp(settingsPath=tmp_path / "missing.json", databasePath=tmp_path / "demo.sqlite3")
+    with TestClient(app) as client:
+        assert client.get("/api/status").json()["liveEvaluationConfigured"] is False
+        question = client.get("/api/question").json()
+        sample = client.get("/api/examples/correct").json()
+        assert client.post("/api/preview", json={**requestBody(question, sample), "caseName": "correct"}).status_code == 200

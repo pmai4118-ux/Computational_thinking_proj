@@ -24,6 +24,9 @@ dev = [
 include = ["source", "source.*"]
 namespaces = false
 
+[tool.setuptools.package-data]
+"source.view" = ["web/*.html", "web/*.css", "web/*.js"]
+
 [tool.pytest.ini_options]
 testpaths = ["test"]
 addopts = ["--import-mode=importlib"]

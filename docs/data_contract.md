@@ -366,3 +366,56 @@ protocol and an injected interpreter factory. The CLI View calls the Controller;
 it does not read input files, write reports, or construct providers. PoC reports
 live in `source/reports` as requested. Shared planning and contract documents in
 `docs` retain their existing locations and owners.
+
+## Addendum: portable ten-question web PoC
+
+This standalone demo extends `answerEvaluation/1`, not the proposed P03 session
+contract. The report schema and CLI are unchanged. Web consumers are
+`source/view/web/demo.js`, `DemoController`, `DemoService` and their tests.
+The former example app entry is an alias to `Application.createDemoApp()`.
+
+`data/questionBank/catalog.json` uses `demoQuestionBank/1`. Each question contains
+source/adaptation/review metadata, an `EvaluationInput` template, four ordered
+dimensions and exact sample recordings. Dimension names are fixed to
+`Knowledge`, `Analysis`, `Testing`, `Implementation`. Only dimensions with
+`applies=true` have rubrics/results. A non-applicable dimension has no result or
+score; it is not a failed criterion and is not `insufficientEvidence`.
+
+| Endpoint | Contract |
+| --- | --- |
+| `GET /api/questions` | List prompt/context/requirements, versions, full rubrics, four applicability declarations, review/source metadata and available sample names. Does not return recording judgments or proposed scores. |
+| `GET /api/question?questionId=...` | One question; omitted ID selects the first. |
+| `GET /api/examples/{caseName}?questionId=...` | Matching sample text, ID and preview availability. |
+| `GET /api/status` | Configuration availability, provider/model, question/approval counts and demo mode. Configuration is not proof of a successful live call. |
+| `POST /api/preview` | Exact sample text and `caseName`; versioned request below. Uses recorded interpreter only. |
+| `POST /api/evaluate` | New answer with optional `answerId` and positive `revision`; versioned request below. Calls configured live interpreter. |
+| `GET /api/reports/{inputHash}` | Download stored JSON with provider/model/prompt query filters. Missing report is 404; ambiguous revisions are 409. Never substitutes a report from a different provider. |
+
+Both POST requests require `questionId`, integer `questionVersion`, complete
+`rubricVersions` mapping rubric ID to integer version, and nonempty `answerText`
+(maximum 40,000 characters). Unknown fields are rejected. The browser sends
+stable answer ID/revision for live retries; omission is supported for simple API
+clients but creates a new answer ID each time and cannot deduplicate their retry.
+Question/rubric version mismatch is 409. Unknown IDs are 404, malformed shape is
+422, unavailable configuration/storage is 503. Provider errors have safe codes
+and contain no report or score. See `DemoView.errorStatus` for provider mapping.
+
+The web store uses SQLite via a `SubmissionRepository` protocol. It saves original
+input before provider work. `(answerId, revision)` is immutable; a different
+snapshot under the same identity is rejected. Results are atomic full reports.
+The completed-result key includes input hash plus provider/model/prompt; recorded
+interpretations also contribute to the key. This intentionally differs from the
+older CLI's input-only cache: a recorded preview must not replace a live call.
+The `EvaluationInput.inputDigest()` definition itself is unchanged.
+
+`DemoService` serializes work within one process and checks cache after obtaining
+the lock. Multiple processes/servers are outside this PoC's concurrency contract.
+The app binds loopback by default; user authentication and multi-user report
+authorization remain later session-app work.
+
+All current catalog items are pending independent review. Demo mode labels them;
+approved-only mode rejects them. The review gate requires a reviewer distinct
+from the curator, completed checks, source/license metadata and reviewed sample
+references. No Task 3 owner approval or human judgment is inferred from tests.
+Original source snapshots and per-question adaptation notes are retained; the
+new 0/1/2 rubric is not asserted to preserve all semantics of the source rubric.
