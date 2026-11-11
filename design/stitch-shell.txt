@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Demo offline ghép từ các màn hình Stitch của interviewUS.">
+<title>interviewUS · Demo P06</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #faf9fe; font: 14px/1.45 "Segoe UI", sans-serif; }
+  iframe { display: block; border: 0; width: 100%; height: 100vh; height: 100dvh; }
+  details { position: fixed; z-index: 5; bottom: 14px; right: 14px; }
+  summary { width: max-content; margin-left: auto; padding: 8px 13px; border: 1px solid #e5d9f6; border-radius: 10px; background: #fff; color: #51318b; box-shadow: 0 4px 14px #30204c25; cursor: pointer; }
+  .picker { position: absolute; bottom: calc(100% + 8px); right: 0; width: min(480px, calc(100vw - 28px)); max-height: min(62dvh, 480px); overflow: auto; padding: 14px; border: 1px solid #e5d9f6; border-radius: 14px; background: #fff; box-shadow: 0 8px 28px #30204c26; color: #292044; }
+  .picker p { margin: 0 0 10px; }
+  .picker nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px; }
+  .picker button { font: inherit; color: inherit; background: #f7f3fc; border: 1px solid transparent; border-radius: 8px; padding: 8px; text-align: left; cursor: pointer; }
+  .picker button:hover { background: #efe7fc; }
+  .picker button[aria-current="page"] { border-color: #a07acb; background: #f0e6ff; }
+  :focus-visible { outline: 3px solid #7645b8; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<iframe id="screen" title="Giao diện interviewUS" sandbox="allow-scripts"></iframe>
+<details id="screen-picker">
+  <summary>Chọn màn hình</summary>
+  <div class="picker">
+    <p><strong>Demo Stitch P06</strong> · 22 màn hình mẫu</p>
+    <nav id="screen-list" aria-label="Danh sách màn hình"></nav>
+  </div>
+</details>
+<script id="stitch-data" type="application/json">@@STITCH_PAYLOAD@@</script>
+<script>
+  const { screens, assets } = JSON.parse(document.getElementById('stitch-data').textContent);
+  const byId = new Map(screens.map(screen => [screen.id, screen]));
+  const frame = document.getElementById('screen');
+  const picker = document.getElementById('screen-picker');
+  const list = document.getElementById('screen-list');
+  const legacy = {
+    'cau-hoi': 'question-library', 'phong-van': 'interview-setup', 'lo-trinh': 'learning-roadmap',
+    'tong-quan': 'dashboard', 'dang-nhap': 'auth-google', 'dau-vao': 'entry-assessment'
+  };
+  let active;
+  function render() {
+    const key = location.hash.slice(1);
+    const screen = byId.get(legacy[key] || key) || screens[0];
+    if (active === screen.id) return;
+    active = screen.id;
+    document.title = screen.title + ' · interviewUS';
+    frame.title = screen.title;
+    frame.srcdoc = screen.html.replace(/@@STITCH_ASSET_(\d+)@@/g, (_, index) => assets[Number(index)]);
+    for (const button of list.children) {
+      if (button.dataset.screen === active) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    }
+  }
+  function navigate(target) {
+    if (!byId.has(target)) return;
+    picker.open = false;
+    location.hash = target;
+    render();
+  }
+  for (const screen of screens) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.screen = screen.id;
+    button.textContent = screen.title;
+    button.addEventListener('click', () => navigate(screen.id));
+    list.append(button);
+  }
+  window.addEventListener('hashchange', render);
+  window.addEventListener('message', event => {
+    if (event.source === frame.contentWindow && event.data?.type === 'stitch-demo:navigate') navigate(event.data.target);
+  });
+  render();
+</script>
+</body>
+</html>

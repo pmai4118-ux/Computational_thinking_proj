@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-10",
+  "purpose": "Tên thư mục tiếng Anh, nội dung UI gốc giữ nguyên",
+  "mapping": {
+    "b_i_ki_m_tra_u_v_o_to_n_di_n_tr_c_nghi_m_t_lu_n_case_study": "entry-assessment",
+    "b_o_c_o_nh_gi_k_t_qu_ph_ng_v_n_interviewus": "interview-report",
+    "chi_ti_t_c_u_h_i_t_lu_n_k_thu_t_p03": "question-detail",
+    "dashboard_t_ng_quan_l_ch_i_m_danh_d01": "dashboard",
+    "h_s_c_nh_n_c_i_t_t_i_kho_n_interviewus": "account-settings",
+    "h_s_c_nh_n_thi_t_l_p_m_c_ti_u_a01": "profile-goals",
+    "hub_ph_ng_v_n_o_ch_n_ch_i01_i02": "interview-setup",
+    "k_t_qu_b_i_ki_m_tra_u_v_o_g_i_l_tr_nh_c_nh_n_h_a_interviewus": "assessment-result",
+    "l_ch_r_nh_nh_c_h_c_a03_interviewus": "study-schedule",
+    "l_ch_s_ph_ng_v_n_b_i_l_m_y_h01": "history",
+    "l_tr_nh_c_nh_n_h_a_ki_n_th_c_n_n_l01_l05": "learning-roadmap",
+    "luminous_violet_glass": "design-system",
+    "luy_n_t_p_c_h_ng_d_n_guided_practice_c_u_h_i_t_lu_n_k_thu_t_interviewus": "guided-practice",
+    "modal_x_c_nh_n_n_p_b_i_ki_m_tra_khi_c_n_c_u_ch_a_ho_n_th_nh": "incomplete-submission-dialog",
+    "ng_nh_p_t_o_t_i_kho_n_interviewus_auth_b_n_chu_n_desktop": "auth-standard",
+    "ng_nh_p_t_o_t_i_kho_n_interviewus_b_c_c_40_60_li_n_k_t_gmail": "auth-google",
+    "ph_ng_ph_ng_v_n_chuy_n_d_ng_interviewus_t_lu_n_70_30_voice": "interview-workspace",
+    "ph_ng_ph_ng_v_n_interviewus_t_lu_n_a_khung_logic_voice_70_30": "interview-workspace-structured",
+    "th_ng_b_o_nh_c_nh_h_c_t_p_trong_ng_y_notification_panel_interviewus": "notification-panel",
+    "th_vi_n_c_u_h_i_k_thu_t_interviewus_p01": "question-library",
+    "trang_ch_interviewus_ch_a_ng_nh_p_public_landing_page": "public-home",
+    "trang_ch_interviewus_white_violet_glass_ch_to_r": "member-home",
+    "trung_t_m_th_ng_b_o_l_u_tr_nh_c_h_c_interviewus": "notification-center"
+  }
+}

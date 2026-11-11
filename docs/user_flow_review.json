@@ -1,0 +1,1619 @@
+{
+  "title": "interviewUS — User flow toàn bộ các trang",
+  "date": "2026-11-10",
+  "status": "Inventory lịch sử trước UI-2026-11-10.2; xem USE_CASES.md và PROJECT_SPEC.md cho yêu cầu hiện hành",
+  "scope": "Tự luận kỹ thuật. Giữ 34 mã thiết kế; I06 coding đã loại, X01 voice hoãn ngoài bản review. Mascot chỉ hỗ trợ hiển thị, không phân tích cảm xúc.",
+  "groups": [
+    "Trang chủ",
+    "Luyện câu hỏi",
+    "Phỏng vấn ảo",
+    "Kết quả",
+    "Lộ trình",
+    "Tổng quan & lịch sử",
+    "Tiện ích",
+    "Hạt giống & nguồn"
+  ],
+  "screens": [
+    {
+      "id": "HOME01",
+      "group": "Trang chủ",
+      "name": "Trang chủ lần đầu",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Truy cập khi chưa có hoạt động được phép xem.",
+      "show": "Banner, mascot, ba cách luyện, gợi ý khởi đầu có nguồn; cây 0 XP thu gọn. Không hiển thị lịch sử hoặc thành tích giả.",
+      "actions": [
+        [
+          "Bắt đầu luyện tập",
+          "P02"
+        ],
+        [
+          "Tạo phiên phỏng vấn",
+          "I01"
+        ],
+        [
+          "Khám phá lộ trình",
+          "L01"
+        ],
+        [
+          "Xem nguồn câu gợi ý",
+          "QMETA01"
+        ]
+      ],
+      "back": "Logo hoặc menu Trang chủ luôn về HOME01/HOME02 theo dữ liệu thật.",
+      "states": [
+        [
+          "Gợi ý đang tải",
+          "Skeleton riêng khu gợi ý; ba thẻ luyện vẫn dùng được."
+        ],
+        [
+          "Không có câu đã review",
+          "Hiện Chưa có câu gợi ý; vẫn mở thư viện hoặc cấu hình phiên."
+        ],
+        [
+          "Lỗi tải",
+          "Thử lại vùng lỗi; không dựng số liệu thay thế."
+        ]
+      ],
+      "persist": "Chỉ đọc trạng thái người dùng/owner hiện tại; không tạo hoạt động học khi mở trang.",
+      "policy": "Điểm vào ưu tiên ba lựa chọn; hoạt động học bắt đầu khi người dùng thực hiện và lưu bài."
+    },
+    {
+      "id": "HOME02",
+      "group": "Trang chủ",
+      "name": "Trang chủ có tiến độ",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Truy cập khi có lịch sử hợp lệ của owner hiện tại.",
+      "show": "Tiếp tục bài gần nhất, cây XP, ba cách luyện, rail câu gợi ý và lịch sử ngang.",
+      "actions": [
+        [
+          "Chọn câu hỏi",
+          "P01"
+        ],
+        [
+          "Mở hub phỏng vấn",
+          "I01"
+        ],
+        [
+          "Mở lộ trình",
+          "L05"
+        ],
+        [
+          "Xem lịch sử đầy đủ",
+          "H01"
+        ],
+        [
+          "Xem cách nhận XP",
+          "XP01"
+        ],
+        [
+          "Tiếp tục bài đang dở",
+          "I04"
+        ]
+      ],
+      "back": "Từ bài tiếp tục trở lại Home giữ vị trí rail. Nếu hoạt động là kiểm tra nền thì mở L03 thay I04.",
+      "states": [
+        [
+          "Không còn phiên đang dở",
+          "Ẩn khối tiếp tục; không để nút vô tác dụng."
+        ],
+        [
+          "Phiên đã hết quyền",
+          "Giải thích, cho sao chép draft cục bộ nếu có; không mở bài của owner khác."
+        ],
+        [
+          "Chưa có đánh giá nền",
+          "CTA Lộ trình dẫn L01 thay L05."
+        ]
+      ],
+      "persist": "Đồng bộ cùng dữ liệu lịch sử/XP với Dashboard; không tạo hai nguồn số liệu.",
+      "policy": "Gợi ý cá nhân hóa phải giải thích căn cứ; chưa đủ dữ liệu dùng gợi ý khởi đầu."
+    },
+    {
+      "id": "P01",
+      "group": "Luyện câu hỏi",
+      "name": "Thư viện câu hỏi",
+      "phase": "Lõi luyện tập; rail mở rộng",
+      "entry": "Header, Home hoặc quay lại từ chi tiết.",
+      "show": "Tìm kiếm, bộ lọc chủ đề/cấp độ/loại/nguồn; danh sách phân trang; rail lịch sử và gợi ý riêng.",
+      "actions": [
+        [
+          "Mở câu hỏi",
+          "P03"
+        ],
+        [
+          "Xem nguồn",
+          "QMETA01"
+        ],
+        [
+          "Mở kết quả đã làm",
+          "F01"
+        ],
+        [
+          "Xem toàn bộ lịch sử",
+          "H01"
+        ]
+      ],
+      "back": "Giữ từ khóa, bộ lọc, trang dữ liệu và vị trí cuộn khi quay từ P03/F01.",
+      "states": [
+        [
+          "Không có kết quả lọc",
+          "Hiện bộ lọc đang áp dụng và nút Xóa bộ lọc."
+        ],
+        [
+          "Lỗi tải trang kế",
+          "Giữ trang cũ; cho thử lại, không xóa danh sách đang xem."
+        ],
+        [
+          "Không đủ quyền bài lịch sử",
+          "Chặn mở bài riêng; thư viện công khai vẫn xem được."
+        ]
+      ],
+      "persist": "Bộ lọc và vị trí thuộc presentation state; không ghi nhận đã làm khi chỉ mở câu.",
+      "policy": "Danh sách toàn bộ cuộn dọc/phân trang; chỉ gợi ý và lịch sử cuộn ngang."
+    },
+    {
+      "id": "P02",
+      "group": "Luyện câu hỏi",
+      "name": "Thư viện lần đầu",
+      "phase": "Lõi luyện tập",
+      "entry": "Mở Luyện câu hỏi khi chưa có lịch sử.",
+      "show": "Giải thích cách luyện, câu hỏi khởi đầu và bộ lọc; không dựng điểm yếu khi chưa đánh giá.",
+      "actions": [
+        [
+          "Chọn câu đầu tiên",
+          "P03"
+        ],
+        [
+          "Chọn phiên phỏng vấn",
+          "I01"
+        ],
+        [
+          "Về trang chủ",
+          "HOME01"
+        ]
+      ],
+      "back": "Quay Home giữ bộ lọc nếu người dùng đã chọn.",
+      "states": [
+        [
+          "Ngân hàng trống",
+          "Giải thích chưa có nội dung đã review; không tạo phiên rỗng."
+        ],
+        [
+          "Lỗi tải",
+          "Thử lại hoặc về Home."
+        ]
+      ],
+      "persist": "Không tạo Answer hoặc Session chỉ vì truy cập thư viện.",
+      "policy": "P01/P02 là hai trạng thái cùng trang, không cần nhân đôi template."
+    },
+    {
+      "id": "P03",
+      "group": "Luyện câu hỏi",
+      "name": "Chi tiết câu hỏi",
+      "phase": "Lõi luyện tập",
+      "entry": "Chọn card trong thư viện hoặc rail trên Home.",
+      "show": "Tiêu đề, đề tự luận, mục tiêu, ràng buộc, nguồn và tên tiêu chí đánh giá. Không lộ đáp án/rubric nội bộ trước nộp.",
+      "actions": [
+        [
+          "Bắt đầu luyện câu này",
+          "I03"
+        ],
+        [
+          "Xem nguồn và ghi nhận",
+          "QMETA01"
+        ],
+        [
+          "Quay thư viện",
+          "P01"
+        ]
+      ],
+      "back": "Trả đúng nơi vào Home/thư viện với bộ lọc và scroll cũ.",
+      "states": [
+        [
+          "Câu ngừng phát hành",
+          "Chặn lượt mới; lịch sử cũ vẫn gắn phiên bản cũ nếu còn quyền."
+        ],
+        [
+          "Đề không tải được",
+          "Thử tải lại hoặc quay danh sách."
+        ],
+        [
+          "Đã có bản nháp",
+          "Đề xuất tiếp tục thay vì âm thầm tạo bài mới."
+        ]
+      ],
+      "persist": "Lượt luyện khóa question ID/version và rubric ID/version đã hiển thị.",
+      "policy": "Không có code editor, chạy thử, link bài LeetCode hoặc yêu cầu review code."
+    },
+    {
+      "id": "I01",
+      "group": "Phỏng vấn ảo",
+      "name": "Hub phỏng vấn",
+      "phase": "Lõi phiên; chế độ mở rộng",
+      "entry": "Header/Home hoặc kết thúc một phiên.",
+      "show": "Tạo phiên mới, tiếp tục phiên và lịch sử ngang. Nêu rõ định dạng trả lời tự luận.",
+      "actions": [
+        [
+          "Tạo phiên mới",
+          "I02"
+        ],
+        [
+          "Tiếp tục câu đang làm",
+          "I04"
+        ],
+        [
+          "Mở tổng kết phiên cũ",
+          "F02"
+        ],
+        [
+          "Xem lịch sử",
+          "H01"
+        ]
+      ],
+      "back": "Về Home; không tự kết thúc phiên đang dở.",
+      "states": [
+        [
+          "Lần đầu",
+          "CTA tạo phiên; không có card lịch sử giả."
+        ],
+        [
+          "Có phiên đang đánh giá",
+          "Tiếp tục mở trạng thái cùng answer ID, không tạo phiên mới."
+        ],
+        [
+          "Resume thất bại",
+          "Thử đọc lại hoặc tạo phiên khác có xác nhận; giữ bài cũ."
+        ]
+      ],
+      "persist": "Resume dựa vào trạng thái server và ownership, không chỉ ID trong URL.",
+      "policy": "Không bắt người dùng xóa phiên cũ để bắt đầu phiên mới; giới hạn phiên hoạt động cần P04 chốt."
+    },
+    {
+      "id": "I02",
+      "group": "Phỏng vấn ảo",
+      "name": "Chọn chế độ",
+      "phase": "Thiết kế toàn sản phẩm; demo từng câu đã có mô tả",
+      "entry": "Tạo phiên từ I01.",
+      "show": "Mô phỏng: phản hồi cuối phiên; Có hướng dẫn: gợi mở và phản hồi từng câu. Demo rubric: phản hồi từng câu, không adaptive.",
+      "actions": [
+        [
+          "Chọn chế độ và tiếp tục",
+          "I03"
+        ],
+        [
+          "Quay hub",
+          "I01"
+        ]
+      ],
+      "back": "Giữ lựa chọn khi quay lại từ setup; chưa tạo phiên khi chỉ chọn radio.",
+      "states": [
+        [
+          "Chế độ chưa được triển khai",
+          "Ghi rõ chưa khả dụng; không giả nút bắt đầu hoạt động."
+        ],
+        [
+          "Thiếu lựa chọn",
+          "Focus vùng lựa chọn và giữ cấu hình khác."
+        ]
+      ],
+      "persist": "Khóa mode và thời điểm phản hồi vào cấu hình phiên khi xác nhận.",
+      "policy": "Hai chế độ full là đề xuất; demo hiện tại vẫn chấm ngay từng câu. Không áp policy demo lên mô phỏng."
+    },
+    {
+      "id": "I03",
+      "group": "Phỏng vấn ảo",
+      "name": "Thiết lập và làm rõ",
+      "phase": "Lõi phiên",
+      "entry": "I02, P03 hoặc hành động luyện lại từ kết quả.",
+      "show": "Vai trò, cấp độ, chủ đề, ngôn ngữ nội dung, phạm vi thực tế và thời lượng ước tính nếu có cấu hình. Không có ngôn ngữ lập trình.",
+      "actions": [
+        [
+          "Xác nhận mục tiêu và bắt đầu tự luận",
+          "I04"
+        ],
+        [
+          "Bắt đầu chế độ hướng dẫn",
+          "I05"
+        ],
+        [
+          "Hủy tạo phiên",
+          "I01"
+        ]
+      ],
+      "back": "Nếu đến từ P03/F04, Hủy về đúng câu/kết quả nguồn; không luôn đẩy về hub.",
+      "states": [
+        [
+          "Thiếu/mâu thuẫn mục tiêu",
+          "Hỏi rõ trước khi tạo; giữ trường đã điền."
+        ],
+        [
+          "Không đủ câu đã review",
+          "Nêu phần thiếu, cho đổi cấu hình hoặc hủy; không tự hạ coverage."
+        ],
+        [
+          "Bấm tạo trùng",
+          "Cùng creation token trả cùng phiên; pending khóa CTA."
+        ],
+        [
+          "Mất phản hồi tạo phiên",
+          "Đối soát token trước khi tạo lại."
+        ]
+      ],
+      "persist": "Server cố định danh sách question/rubric versions, mode và owner sau xác nhận.",
+      "policy": "Bốn nhóm câu và thời lượng là cấu hình có phiên bản; giao diện hiển thị số thực, không hardcode dữ liệu giả."
+    },
+    {
+      "id": "I04",
+      "group": "Phỏng vấn ảo",
+      "name": "Workspace tự luận",
+      "phase": "Lõi phiên",
+      "entry": "Sau xác nhận cấu hình hoặc resume bài đang dở.",
+      "show": "Đề và nguồn, tiến độ, transcript nếu thuộc chế độ đã triển khai, textarea trả lời, trạng thái lưu và nút gửi.",
+      "actions": [
+        [
+          "Gửi và xem kết quả theo chế độ",
+          "F01"
+        ],
+        [
+          "Hoàn tất hoặc kết thúc sớm",
+          "F02"
+        ],
+        [
+          "Lưu và thoát",
+          "I01"
+        ],
+        [
+          "Xem nguồn đề",
+          "QMETA01"
+        ]
+      ],
+      "back": "Không dùng browser Back để bỏ bài âm thầm; hỏi Hủy rời/Lưu và thoát/Bỏ bản nháp có xác nhận.",
+      "states": [
+        [
+          "Bài rỗng/quá giới hạn",
+          "Báo ngay cạnh textarea, giữ nội dung; chưa gọi AI."
+        ],
+        [
+          "Chưa xác nhận lưu",
+          "Giữ snapshot + submission ID; đối soát trước khi sửa hoặc nộp khác."
+        ],
+        [
+          "AI lỗi sau lưu",
+          "Giữ Answer; thử đánh giá lại cùng ID, không gán 0."
+        ],
+        [
+          "Mô phỏng còn câu",
+          "Sau lưu, sang câu tiếp theo; không mở F01 giữa phiên."
+        ],
+        [
+          "Thiếu bằng chứng",
+          "Kết quả có thể completed nhưng score null; không coi là lỗi hệ thống."
+        ]
+      ],
+      "persist": "Lưu bài trước đánh giá; bài đã nộp bất biến; draft cục bộ có nhãn riêng với đã lưu server.",
+      "policy": "Intent Trả lời/Hỏi rõ đề tách biệt. Không có editor, chạy code, microphone trong bản review này."
+    },
+    {
+      "id": "I05",
+      "group": "Phỏng vấn ảo",
+      "name": "Luyện có hướng dẫn",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Chọn mode hướng dẫn ở I03; không là tính năng đã triển khai.",
+      "show": "Workspace tự luận, hỏi rõ đề và gợi ý từng mức có ghi nhận trợ giúp; không tự viết hộ câu trả lời.",
+      "actions": [
+        [
+          "Gửi câu trả lời",
+          "F01"
+        ],
+        [
+          "Kết thúc phiên",
+          "F02"
+        ],
+        [
+          "Lưu và thoát",
+          "I01"
+        ]
+      ],
+      "back": "Đổi tab hoặc xem lại hint không xóa bài đang soạn.",
+      "states": [
+        [
+          "Đang lấy gợi ý",
+          "Giữ textarea dùng được; khóa yêu cầu hint trùng."
+        ],
+        [
+          "Hint lỗi",
+          "Giữ bài, thử lại hint hoặc tiếp tục tự làm."
+        ],
+        [
+          "Hết mức gợi ý",
+          "Hiện đã xem hết; vẫn trả lời được."
+        ],
+        [
+          "Sửa bài đã nộp",
+          "Tạo revision/lượt mới theo policy; không sửa Answer cũ."
+        ]
+      ],
+      "persist": "Lưu lịch sử trợ giúp, message intent và liên kết với attempt; không trừ điểm hint bằng quy tắc chưa công bố.",
+      "policy": "Ngân sách hint và quyền sửa bài cần duyệt. Demo rubric hiện tại không có hint hoặc follow-up thích ứng."
+    },
+    {
+      "id": "F01",
+      "group": "Kết quả",
+      "name": "Kết quả từng câu",
+      "phase": "Lõi rubric; gợi ý mở rộng",
+      "entry": "Đánh giá hoàn tất hoặc mở lại bài trong lịch sử.",
+      "show": "Nguyên văn bài, tiêu chí và bằng chứng; score/max khi có căn cứ, phần chưa đủ bằng chứng. Gợi ý cải thiện chỉ ở phiên bản full.",
+      "actions": [
+        [
+          "Mở căn cứ",
+          "F03"
+        ],
+        [
+          "Câu tiếp theo",
+          "I04"
+        ],
+        [
+          "Xem tổng kết",
+          "F02"
+        ],
+        [
+          "Luyện bài đồng cấu",
+          "F04"
+        ],
+        [
+          "Ôn mục liên quan",
+          "L06"
+        ]
+      ],
+      "back": "Đọc lịch sử có Back về nơi vào, không có quyền chuyển thứ tự phiên hiện tại.",
+      "states": [
+        [
+          "Đang đánh giá",
+          "Theo dõi cùng evaluation attempt; không tạo lại liên tục."
+        ],
+        [
+          "Đánh giá lỗi",
+          "Thử lại trên bài đã lưu."
+        ],
+        [
+          "Không đủ căn cứ",
+          "Hiện null với lý do; tổng null nếu còn tiêu chí bắt buộc chưa chấm được."
+        ],
+        [
+          "Không có bài đồng cấu/học liệu",
+          "Nêu chưa có, cho về thư viện; không tạo CTA cụt."
+        ]
+      ],
+      "persist": "Liên kết chính xác answer revision, question/rubric version và evaluation version.",
+      "policy": "Không lộ kết quả từng câu trong mô phỏng trước kết thúc; không suy ra năng lực toàn diện từ một câu."
+    },
+    {
+      "id": "F02",
+      "group": "Kết quả",
+      "name": "Tổng kết phiên",
+      "phase": "Lõi phiên",
+      "entry": "Hết câu, kết thúc sớm có xác nhận hoặc mở lịch sử.",
+      "show": "Các câu và kết quả; câu chưa làm/chưa đánh giá; trạng thái hoàn tất/kết thúc sớm. Không biến câu chưa làm thành điểm 0.",
+      "actions": [
+        [
+          "Xem kết quả một câu",
+          "F01"
+        ],
+        [
+          "Xem bằng chứng",
+          "F03"
+        ],
+        [
+          "Tạo phiên mới",
+          "I03"
+        ],
+        [
+          "Về hub",
+          "I01"
+        ],
+        [
+          "Mở lộ trình",
+          "L05"
+        ]
+      ],
+      "back": "Từ H01 quay lại giữ filter; từ phiên kết thúc về hub. L05 chỉ mở khi đủ dữ liệu nền; nếu chưa thì L01.",
+      "states": [
+        [
+          "Một số bài đang xử lý/lỗi",
+          "Nêu đúng trạng thái, retry từng bài được phép; tổng kết vẫn đọc được."
+        ],
+        [
+          "Kết thúc chưa trả lời câu nào",
+          "Hiện 0 bài đã gửi, không tạo điểm năng lực."
+        ],
+        [
+          "Lỗi đọc tổng kết",
+          "Thử lại, không tạo phiên thay thế."
+        ]
+      ],
+      "persist": "Giữ lịch sử trạng thái kết thúc và các answer refs; không cộng trung bình rubric khác thang thành điểm tổng giả.",
+      "policy": "Demo chỉ liệt kê điểm câu; phân tích gap/roadmap là đích thiết kế full, chưa cam kết sprint đã có."
+    },
+    {
+      "id": "F03",
+      "group": "Kết quả",
+      "name": "Căn cứ đánh giá",
+      "phase": "Lõi evidence",
+      "entry": "Chọn tiêu chí trong F01/F02 hoặc bài lịch sử.",
+      "show": "Tiêu chí/mức rubric, trích dẫn nguyên văn được tô đúng đoạn và giải thích; metadata phiên bản.",
+      "actions": [
+        [
+          "Quay kết quả câu",
+          "F01"
+        ],
+        [
+          "Quay tổng kết",
+          "F02"
+        ]
+      ],
+      "back": "Đóng panel về đúng control đã mở, giữ vị trí đọc và filter nguồn.",
+      "states": [
+        [
+          "Không có trích dẫn hợp lệ",
+          "Dùng quan sát có giới hạn hoặc báo thiếu bằng chứng; không bịa quote."
+        ],
+        [
+          "Lỗi tải bản gốc",
+          "Thử lại; không lấy revision khác để thay."
+        ],
+        [
+          "Hết quyền",
+          "Chặn bài gốc, cho quay nơi vào."
+        ]
+      ],
+      "persist": "Offsets là chỉ số Unicode Python, bắt đầu 0, end-exclusive; quote phải khớp Answer gốc.",
+      "policy": "Không có code/test runner output. Phiên bản rubric cũ vẫn xem được cùng kết quả cũ."
+    },
+    {
+      "id": "F04",
+      "group": "Kết quả",
+      "name": "Luyện đồng cấu",
+      "phase": "Thiết kế toàn sản phẩm / R8",
+      "entry": "F01/F02 khi có biến thể tự luận đã review cùng mẫu tư duy.",
+      "show": "Lý do chọn, kỹ năng chung, ngữ cảnh khác và nguồn; không tiết lộ lời giải.",
+      "actions": [
+        [
+          "Xác nhận và luyện biến thể",
+          "I03"
+        ],
+        [
+          "Về kết quả gốc",
+          "F01"
+        ],
+        [
+          "Tìm câu khác",
+          "P01"
+        ]
+      ],
+      "back": "Giữ link tới bài gốc và kết quả gốc.",
+      "states": [
+        [
+          "Chưa có biến thể đủ điều kiện",
+          "Thông báo và về thư viện/kết quả."
+        ],
+        [
+          "Biến thể bị thu hồi",
+          "Chặn lượt mới, không xóa bài cũ."
+        ]
+      ],
+      "persist": "Ghi quan hệ bài gốc–biến thể và skill IDs; lượt mới có Answer riêng.",
+      "policy": "Một lần làm sai không đủ kết luận học vẹt; chỉ nhận xét phạm vi bằng chứng có được."
+    },
+    {
+      "id": "L01",
+      "group": "Lộ trình",
+      "name": "Lộ trình trước kiểm tra nền",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Header/Home khi chưa có đánh giá nền hợp lệ cho mục tiêu.",
+      "show": "40% trên: Kiểm tra kiến thức nền và CTA lớn. 60% dưới: sidebar chặng + bản đồ zigzag xem trước, chưa gán cá nhân hóa.",
+      "actions": [
+        [
+          "Kiểm tra kiến thức nền",
+          "L02"
+        ],
+        [
+          "Xem trước một mục",
+          "L06"
+        ],
+        [
+          "Luyện câu trước",
+          "P01"
+        ]
+      ],
+      "back": "Về nơi vào; xem trước không tự đánh dấu đã học/đã xác minh.",
+      "states": [
+        [
+          "Chưa chọn mục tiêu",
+          "Thu thập mục tiêu tối thiểu trước giới thiệu bài kiểm tra."
+        ],
+        [
+          "Không có bộ đánh giá đã review",
+          "Giải thích và cho luyện câu; không dựng roadmap cá nhân giả."
+        ]
+      ],
+      "persist": "Chỉ lưu mục tiêu được xác nhận; preview không tạo assessment result.",
+      "policy": "40/60 là hai khối trên/dưới trên desktop; mobile xếp tự nhiên, không cố định chiều cao gây cắt nội dung."
+    },
+    {
+      "id": "L02",
+      "group": "Lộ trình",
+      "name": "Giới thiệu kiểm tra nền",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "L01 hoặc Kiểm tra lại từ L05.",
+      "show": "Mục tiêu, chủ đề, số câu/thời lượng từ cấu hình, lưu/tiếp tục và tác động của kiểm tra lại.",
+      "actions": [
+        [
+          "Xác nhận mục tiêu, bắt đầu",
+          "L03"
+        ],
+        [
+          "Hủy và quay roadmap",
+          "L01"
+        ]
+      ],
+      "back": "Kiểm tra lại từ L05 thì Hủy về L05; không reset kết quả cũ.",
+      "states": [
+        [
+          "Có lượt đang dở",
+          "Cho tiếp tục hoặc xác nhận tạo lượt mới; giữ lượt cũ."
+        ],
+        [
+          "Mục tiêu thiếu/mâu thuẫn",
+          "Hỏi rõ trước khi bắt đầu."
+        ],
+        [
+          "Tạo lượt lỗi",
+          "Giữ lựa chọn, thử lại có đối soát."
+        ]
+      ],
+      "persist": "Tạo assessment attempt và snapshot question/rubric versions sau xác nhận.",
+      "policy": "Không dùng số câu/thời lượng minh họa như cấu hình thật."
+    },
+    {
+      "id": "L03",
+      "group": "Lộ trình",
+      "name": "Làm kiểm tra nền",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Bắt đầu/tiếp tục từ L02 hoặc Home.",
+      "show": "Đề tự luận, câu i/N, điều hướng các câu theo policy, tiến độ lưu và nút rà soát nộp.",
+      "actions": [
+        [
+          "Rà câu chưa trả lời, xác nhận nộp",
+          "L04"
+        ],
+        [
+          "Lưu và thoát",
+          "L01"
+        ]
+      ],
+      "back": "Thoát theo quy tắc draft dùng chung; lần sau mở đúng câu đã lưu.",
+      "states": [
+        [
+          "Còn câu chưa trả lời",
+          "Liệt kê, cho quay lại hoặc xác nhận nộp chưa đủ; không tự gán 0."
+        ],
+        [
+          "Lưu/nộp lỗi",
+          "Giữ bài và token; chỉ đánh giá sau lưu thành công."
+        ],
+        [
+          "Reload",
+          "Khôi phục trạng thái được phép; không tự submit."
+        ]
+      ],
+      "persist": "Lưu theo từng câu và assessment attempt; không ghi đè lượt cũ.",
+      "policy": "Chính sách cho nộp thiếu và chuyển câu cần duyệt; đề xuất cho nộp có xác nhận và báo coverage chưa đủ."
+    },
+    {
+      "id": "L04",
+      "group": "Lộ trình",
+      "name": "Kết quả kiểm tra nền",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Nộp L03 hoặc mở lại assessment trong lịch sử.",
+      "show": "Kỹ năng đã kiểm tra, bằng chứng, giới hạn/thiếu dữ liệu, ngày đánh giá và đề xuất phần có căn cứ.",
+      "actions": [
+        [
+          "Mở lộ trình có căn cứ",
+          "L05"
+        ],
+        [
+          "Bổ sung kiểm tra",
+          "L02"
+        ],
+        [
+          "Xem bài/căn cứ",
+          "F03"
+        ]
+      ],
+      "back": "Về L01/L05 theo trạng thái đã lưu; không xóa kết quả chưa đầy đủ.",
+      "states": [
+        [
+          "Thiếu dữ liệu",
+          "Chỉ đề xuất phần đủ căn cứ, nêu phần còn thiếu."
+        ],
+        [
+          "Đánh giá một số câu lỗi",
+          "Retry đúng bài, giữ các kết quả đã có."
+        ],
+        [
+          "Không có học liệu phù hợp",
+          "Giải thích, không sinh node/nguồn giả."
+        ]
+      ],
+      "persist": "Lưu assessment result và nguồn bằng chứng; cập nhật roadmap có version/lý do.",
+      "policy": "Điểm nền chỉ áp cho phạm vi đã kiểm tra, không là chẩn đoán toàn bộ năng lực."
+    },
+    {
+      "id": "L05",
+      "group": "Lộ trình",
+      "name": "Lộ trình cá nhân hóa",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Có đánh giá nền hợp lệ; từ L04/header/Home.",
+      "show": "Giữ khối kết quả/kiểm tra lại 40% trên; 60% dưới gồm chặng trái + bản đồ zigzag phải, lý do chọn, tiên quyết và bài đến hạn.",
+      "actions": [
+        [
+          "Tiếp tục mục học",
+          "L06"
+        ],
+        [
+          "Ôn đến hạn",
+          "L08"
+        ],
+        [
+          "Xem kết quả nền",
+          "L04"
+        ],
+        [
+          "Kiểm tra lại",
+          "L02"
+        ]
+      ],
+      "back": "Đổi chặng giữ vị trí hợp lý và draft; không xóa dữ liệu khi quay Home.",
+      "states": [
+        [
+          "Chưa có đánh giá hợp lệ",
+          "Chuyển L01 với lý do."
+        ],
+        [
+          "Thiếu prerequisite/chu trình",
+          "Báo phần không xây được, không tạo thứ tự giả."
+        ],
+        [
+          "Mục tiêu thay đổi",
+          "Xin xác nhận tạo bản kế hoạch mới; giữ bản/kết quả cũ."
+        ],
+        [
+          "Thời gian không đủ",
+          "Nêu phạm vi không đáp ứng, cho sửa mục tiêu/ngân sách."
+        ]
+      ],
+      "persist": "Kế hoạch có căn cứ từ assessment, skill gaps, học liệu review và đồ thị tiên quyết.",
+      "policy": "XP không mở khóa chặng; tự báo cáo đã biết khác đã xác minh. LLM không tự bịa thứ tự/độ dài."
+    },
+    {
+      "id": "L06",
+      "group": "Lộ trình",
+      "name": "Chi tiết mục học",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Chọn node L05 hoặc gợi ý từ kết quả.",
+      "show": "Mục tiêu, lý do đề xuất, điều kiện, tài liệu có nguồn và thời lượng ước tính nếu có.",
+      "actions": [
+        [
+          "Kiểm tra kiến thức mục này",
+          "L07"
+        ],
+        [
+          "Luyện câu liên quan",
+          "P01"
+        ],
+        [
+          "Quay roadmap",
+          "L05"
+        ]
+      ],
+      "back": "Giữ chặng/node và vị trí; mở tài liệu ngoài không làm mất draft.",
+      "states": [
+        [
+          "Nguồn không truy cập được",
+          "Báo link lỗi và tài liệu thay thế đã review nếu có."
+        ],
+        [
+          "Chưa đủ tiên quyết",
+          "Giải thích phần cần trước; không khóa tùy tiện."
+        ],
+        [
+          "Tự xác nhận đã biết",
+          "Ghi self-report; đề xuất L07, không đánh dấu verified."
+        ]
+      ],
+      "persist": "Ghi hoạt động học hợp lệ theo quy tắc công bố; mở link không tự chứng minh đã học.",
+      "policy": "Học liệu có nguồn; không dùng nội dung AI tự sinh làm bài giảng đã kiểm chứng."
+    },
+    {
+      "id": "L07",
+      "group": "Lộ trình",
+      "name": "Kiểm tra mục học và kết quả",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "L06 hoặc kiểm tra lại mục cần củng cố.",
+      "show": "Bài tự luận ngắn, bài đã gửi, rubric và kết quả đạt/cần củng cố/chưa đủ căn cứ.",
+      "actions": [
+        [
+          "Về mục học để củng cố",
+          "L06"
+        ],
+        [
+          "Về roadmap cập nhật",
+          "L05"
+        ],
+        [
+          "Mở căn cứ",
+          "F03"
+        ]
+      ],
+      "back": "Trước nộp giữ draft; sau nộp xem read-only, luyện lại tạo lượt mới.",
+      "states": [
+        [
+          "Đạt tiêu chí đã công bố",
+          "Verified chỉ cho phạm vi bài kiểm tra."
+        ],
+        [
+          "Chưa đạt",
+          "Nêu căn cứ và học lại; không tự xóa tiến độ học."
+        ],
+        [
+          "Thiếu bằng chứng/lỗi AI",
+          "Giữ unknown hoặc failed đúng nghĩa, cho bổ sung/retry."
+        ]
+      ],
+      "persist": "Liên kết module, assessment attempt và kết quả cụ thể.",
+      "policy": "Ngưỡng đạt chưa chốt; UI không hardcode tỷ lệ hoặc tự suy ra từ XP."
+    },
+    {
+      "id": "L08",
+      "group": "Lộ trình",
+      "name": "Ôn tập ngắn",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "D01/L05/A04 khi có nội dung đến hạn hoặc người học chọn ôn.",
+      "show": "Flashcard lật đáp án rồi tự đánh giá, hoặc câu tự luận ngắn có rubric; tách hai kiểu kết quả.",
+      "actions": [
+        [
+          "Hoàn tất và về tổng quan",
+          "D01"
+        ],
+        [
+          "Về lộ trình",
+          "L05"
+        ],
+        [
+          "Học lại nguồn",
+          "L06"
+        ]
+      ],
+      "back": "Trả nơi vào; rời giữa lượt giữ tiến độ được xác nhận.",
+      "states": [
+        [
+          "Không có bài đến hạn",
+          "Thông báo rỗng hữu ích; cho xem roadmap hoặc luyện tự chọn."
+        ],
+        [
+          "Lưu lượt ôn lỗi",
+          "Giữ nội dung và event ID; retry không tạo hoạt động đôi."
+        ],
+        [
+          "Tự đánh giá flashcard",
+          "Không biến thành điểm rubric hoặc verified."
+        ]
+      ],
+      "persist": "Lưu loại ôn, phản hồi và lịch kế tiếp theo thuật toán/config có version.",
+      "policy": "SM-2/ngưỡng lịch ôn cần duyệt; bản này không thêm quiz lập trình hoặc bài code."
+    },
+    {
+      "id": "D01",
+      "group": "Tổng quan & lịch sử",
+      "name": "Tổng quan có dữ liệu",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Header/Home sau khi có hoạt động được phép xem.",
+      "show": "Việc hôm nay, tiếp tục, kết quả có coverage, số bài/phiên, lịch tháng điểm danh và rail lịch sử.",
+      "actions": [
+        [
+          "Tiếp tục phiên",
+          "I04"
+        ],
+        [
+          "Ôn tập hôm nay",
+          "L08"
+        ],
+        [
+          "Xem lịch sử",
+          "H01"
+        ],
+        [
+          "Mở kết quả một ngày",
+          "F01"
+        ]
+      ],
+      "back": "Từ chi tiết ngày/result về đúng tháng và ô ngày; không reset sang hôm nay vô cớ.",
+      "states": [
+        [
+          "Điểm danh chưa lưu/đang lưu/lỗi",
+          "Chỉ báo thành công sau xác nhận; retry cùng ngày, không cộng hai lần."
+        ],
+        [
+          "Tháng rỗng/ngày tương lai",
+          "Hiện đúng empty/disabled; không bịa hoạt động."
+        ],
+        [
+          "Chỉ điểm danh",
+          "Phân biệt có hoạt động học được lưu."
+        ],
+        [
+          "Thống kê lỗi một vùng",
+          "Giữ các vùng đã tải, retry riêng."
+        ]
+      ],
+      "persist": "Ngày theo timezone tài khoản/cấu hình; kiểm tra quyền dữ liệu từng record.",
+      "policy": "Mở trang/điểm danh không cộng XP. Không tổng hợp rubric khác thang thành một điểm năng lực giả."
+    },
+    {
+      "id": "D02",
+      "group": "Tổng quan & lịch sử",
+      "name": "Tổng quan lần đầu",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Mở Tổng quan khi chưa có hoạt động.",
+      "show": "Hành động khởi đầu, lịch thật với trạng thái trống, giải thích dữ liệu sẽ xuất hiện sau luyện tập.",
+      "actions": [
+        [
+          "Làm câu đầu tiên",
+          "P02"
+        ],
+        [
+          "Tạo phiên đầu tiên",
+          "I01"
+        ],
+        [
+          "Kiểm tra nền",
+          "L01"
+        ]
+      ],
+      "back": "Về Home lần đầu; không tạo thành tích để lấp dashboard.",
+      "states": [
+        [
+          "Chưa có dữ liệu",
+          "Ẩn chart không có ý nghĩa hoặc ghi chưa có dữ liệu."
+        ],
+        [
+          "Có điểm danh nhưng chưa học",
+          "Chỉ cập nhật attendance, vẫn giữ empty học tập."
+        ]
+      ],
+      "persist": "Không đánh dấu hoàn tất onboarding bằng mở trang nếu chưa có hành động có ý nghĩa.",
+      "policy": "D01/D02 là state của cùng template."
+    },
+    {
+      "id": "H01",
+      "group": "Tổng quan & lịch sử",
+      "name": "Lịch sử đầy đủ",
+      "phase": "Lõi xem lại; UI rail mở rộng",
+      "entry": "Home, Dashboard, hub hoặc menu tài khoản.",
+      "show": "Tab câu hỏi/phiên; lọc chủ đề, thời gian, trạng thái; card ngang theo tháng/trang dữ liệu.",
+      "actions": [
+        [
+          "Mở bài và kết quả",
+          "F01"
+        ],
+        [
+          "Mở tổng kết phiên",
+          "F02"
+        ],
+        [
+          "Tiếp tục bài dở",
+          "I04"
+        ],
+        [
+          "Quản lý dữ liệu",
+          "A05"
+        ]
+      ],
+      "back": "Quay nơi vào; khi từ kết quả trở về giữ tab/filter/trang/vị trí rail.",
+      "states": [
+        [
+          "Lịch sử trống",
+          "CTA tới luyện câu/phiên; không dựng card giả."
+        ],
+        [
+          "Filter không có kết quả",
+          "Xóa filter, giữ tab."
+        ],
+        [
+          "Bài đang đánh giá",
+          "Mở trạng thái đang xử lý, không nộp lại bài."
+        ],
+        [
+          "Bản cũ/đã kết thúc",
+          "Chỉ đọc; luyện lại tạo lượt mới, không thay nội dung cũ."
+        ]
+      ],
+      "persist": "Hiển thị đúng câu/version, answer revision, mode, ngày và trạng thái.",
+      "policy": "Bấm mở câu không là đã làm; đã gửi, đã đánh giá và hoàn tất phiên là các trạng thái khác nhau."
+    },
+    {
+      "id": "A01",
+      "group": "Tiện ích",
+      "name": "Hồ sơ và mục tiêu",
+      "phase": "Thiết kế toàn sản phẩm; demo dùng owner ẩn danh",
+      "entry": "Menu tài khoản hoặc yêu cầu bổ sung mục tiêu.",
+      "show": "Role, level, mục tiêu và mô tả phạm vi lưu. Không mặc định đã có hệ thống đăng nhập.",
+      "actions": [
+        [
+          "Lưu và về Home",
+          "HOME02"
+        ],
+        [
+          "Xem ảnh hưởng lộ trình",
+          "L05"
+        ]
+      ],
+      "back": "Đóng về đúng trang đã mở; form dirty cần xác nhận lưu/bỏ thay đổi.",
+      "states": [
+        [
+          "Thiếu hoặc sai trường",
+          "Giữ dữ liệu hợp lệ, focus trường cần sửa."
+        ],
+        [
+          "Lưu lỗi",
+          "Không báo thành công, giữ form."
+        ],
+        [
+          "Đổi mục tiêu có roadmap",
+          "Giải thích và xác nhận tạo đề xuất mới; không xóa lịch sử."
+        ]
+      ],
+      "persist": "Lưu preference của owner hiện tại; chưa chuyển draft giữa tài khoản hoặc trình duyệt.",
+      "policy": "Auth đầy đủ và đồng bộ nhiều thiết bị chưa chốt; không tự thêm social login/billing."
+    },
+    {
+      "id": "A02",
+      "group": "Tiện ích",
+      "name": "Giao diện và ngôn ngữ",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Tiện ích header hoặc menu tùy chọn.",
+      "show": "Sáng/tối/theo hệ thống; ngôn ngữ UI tách ngôn ngữ nội dung phiên. Không có ngôn ngữ lập trình.",
+      "actions": [
+        [
+          "Áp dụng và xem trang chủ",
+          "HOME02"
+        ],
+        [
+          "Quay phiên đang làm",
+          "I04"
+        ]
+      ],
+      "back": "Thực tế trả đúng trang/overlay nguồn, draft và focus; liên kết trên là ví dụ đích review.",
+      "states": [
+        [
+          "Đổi theme khi đang nhập",
+          "Chỉ đổi trình bày, không reset câu/form."
+        ],
+        [
+          "Ngôn ngữ chưa có bản dịch",
+          "Ghi chưa hỗ trợ; không tạo câu dịch chưa review."
+        ],
+        [
+          "Lưu preference lỗi",
+          "Báo thay đổi tạm thời nếu chỉ áp trong tab, cho thử lưu lại."
+        ]
+      ],
+      "persist": "Lưu preference theo cơ chế đã chốt; system theme theo thay đổi OS.",
+      "policy": "Đổi UI language không tự đổi phiên bản đề đang làm."
+    },
+    {
+      "id": "A03",
+      "group": "Tiện ích",
+      "name": "Lịch ôn và nhắc nhở",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Menu tài khoản hoặc đề xuất thiết lập nhắc ôn.",
+      "show": "Ngày/giờ rảnh, timezone và bật/tắt nhắc; ghi rõ nếu thông báo chưa triển khai.",
+      "actions": [
+        [
+          "Lưu và về tổng quan",
+          "D01"
+        ],
+        [
+          "Xem bài ôn",
+          "L08"
+        ]
+      ],
+      "back": "Hủy về trang nguồn giữ cấu hình cũ.",
+      "states": [
+        [
+          "Giờ trùng/không hợp lệ",
+          "Chỉ rõ xung đột; giữ lựa chọn khác."
+        ],
+        [
+          "Đổi timezone",
+          "Xem trước giờ mới và xác nhận, không âm thầm dịch lịch."
+        ],
+        [
+          "Không có quyền thông báo",
+          "Vẫn cho ôn thủ công; không bắt xin quyền mới mở trang."
+        ]
+      ],
+      "persist": "Lịch và preference có timezone; không hứa push/email đã hoạt động khi chưa có scheduler.",
+      "policy": "Cơ chế nhắc trong app/browser/email và xử lý DST cần chốt trước triển khai."
+    },
+    {
+      "id": "A04",
+      "group": "Tiện ích",
+      "name": "Thông báo",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Nút chuông trên header.",
+      "show": "Đã đọc/chưa đọc; kết quả sẵn sàng, bài đến hạn, phiên cần tiếp tục; mỗi thông báo có đích rõ.",
+      "actions": [
+        [
+          "Mở kết quả câu",
+          "F01"
+        ],
+        [
+          "Mở bài ôn",
+          "L08"
+        ],
+        [
+          "Tiếp tục phiên",
+          "I04"
+        ],
+        [
+          "Cài đặt nhắc",
+          "A03"
+        ]
+      ],
+      "back": "Đóng trả focus về chuông; mở đích rồi quay lại giữ vị trí danh sách.",
+      "states": [
+        [
+          "Không có thông báo",
+          "Empty có nội dung rõ."
+        ],
+        [
+          "Đích đã hết quyền/không còn",
+          "Thông báo và quay lại, không lộ bài người khác."
+        ],
+        [
+          "Đánh dấu đọc lỗi",
+          "Không mất thông báo; thử lại."
+        ]
+      ],
+      "persist": "Trạng thái đã đọc và đích ràng buộc owner; không dùng text AI làm URL điều hướng.",
+      "policy": "Chỉ tạo thông báo từ sự kiện được xác nhận, không giả tác vụ chạy nền."
+    },
+    {
+      "id": "A05",
+      "group": "Tiện ích",
+      "name": "Dữ liệu và quyền riêng tư",
+      "phase": "Thiết kế toàn sản phẩm; xóa cần duyệt policy",
+      "entry": "Menu tài khoản hoặc H01.",
+      "show": "Loại dữ liệu lưu, nơi lưu, quyền xem; chọn phạm vi xóa và hậu quả cụ thể trước xác nhận.",
+      "actions": [
+        [
+          "Hủy và về lịch sử",
+          "H01"
+        ],
+        [
+          "Sau xóa về Home đúng trạng thái",
+          "HOME01"
+        ]
+      ],
+      "back": "Đóng/hủy không thay đổi dữ liệu; trả nơi vào.",
+      "states": [
+        [
+          "Chưa xác nhận",
+          "Không xóa; không dùng nút mơ hồ."
+        ],
+        [
+          "Đang xóa",
+          "Chặn gửi trùng; chỉ cập nhật sau server xác nhận."
+        ],
+        [
+          "Lỗi/không rõ kết quả",
+          "Đối soát lại; không báo đã xóa giả."
+        ],
+        [
+          "Có phiên đang làm",
+          "Nêu draft/bài/result nào bị ảnh hưởng; cần quyết định policy trước xóa."
+        ]
+      ],
+      "persist": "Phải chốt cascade giữa Answer/Evaluation/XP, backup và thời gian giữ dữ liệu trước implementation.",
+      "policy": "Trang này mô tả UX, không thực hiện xóa thật. Retention và quyền xóa không tự coi đã được duyệt."
+    },
+    {
+      "id": "X02",
+      "group": "Tiện ích",
+      "name": "Mascot và trạng thái trợ lý",
+      "phase": "Hiển thị hỗ trợ",
+      "entry": "Hero hoặc workspace; tùy chọn thu gọn.",
+      "show": "Chờ, đang xử lý, lỗi; nhãn chữ đi kèm. Mascot không che đề hoặc textarea.",
+      "actions": [
+        [
+          "Thu gọn và tiếp tục làm bài",
+          "I04"
+        ],
+        [
+          "Về Home",
+          "HOME02"
+        ]
+      ],
+      "back": "Thu gọn/mở lại giữ bài và focus; không điều hướng bắt buộc.",
+      "states": [
+        [
+          "Ảnh không tải",
+          "Fallback tên/icon trạng thái, vẫn dùng form được."
+        ],
+        [
+          "Giảm chuyển động",
+          "Dùng ảnh tĩnh."
+        ],
+        [
+          "AI lỗi",
+          "Hiện đúng lỗi xử lý, không đóng vai cảm xúc của người học."
+        ]
+      ],
+      "persist": "Có thể lưu preference thu gọn; không thu âm, không xin camera/mic.",
+      "policy": "Không lip-sync/TTS/listening trong bản review này; X01 voice đã hoãn."
+    },
+    {
+      "id": "XP01",
+      "group": "Hạt giống & nguồn",
+      "name": "Quy tắc XP và các giai đoạn",
+      "phase": "Thiết kế toàn sản phẩm; tham số đề xuất",
+      "entry": "Cây trên Home hoặc giải thích phần thưởng.",
+      "show": "Sáu giai đoạn, XP hoạt động, mốc tiếp theo, điều kiện thưởng/giới hạn đã được duyệt; tách khỏi rubric.",
+      "actions": [
+        [
+          "Về cây trên Home",
+          "HOME02"
+        ],
+        [
+          "Chọn hoạt động luyện",
+          "P01"
+        ]
+      ],
+      "back": "Đóng về vùng cây/control nguồn.",
+      "states": [
+        [
+          "0 XP",
+          "Giải thích bắt đầu bằng hoạt động, không dựng lịch sử."
+        ],
+        [
+          "Giai đoạn cuối",
+          "Giữ tổng XP, thanh tối đa 100%, không tự reset."
+        ],
+        [
+          "Config chưa được duyệt",
+          "Gắn nhãn đề xuất, không hiển thị như quy tắc thật."
+        ]
+      ],
+      "persist": "Ngưỡng giai đoạn và mức thưởng cần version; không để AI quyết định XP.",
+      "policy": "XP không đo năng lực, không mở chặng, không mất khi nghỉ và không đổi tiền."
+    },
+    {
+      "id": "XP02",
+      "group": "Hạt giống & nguồn",
+      "name": "Xác nhận thưởng XP",
+      "phase": "Thiết kế toàn sản phẩm",
+      "entry": "Sự kiện hoàn tất đủ điều kiện đã được lưu.",
+      "show": "Đang xác nhận, đã thưởng, đã nhận trước, chạm giới hạn, lỗi, lên giai đoạn.",
+      "actions": [
+        [
+          "Xem cây cập nhật",
+          "HOME02"
+        ],
+        [
+          "Xem quy tắc",
+          "XP01"
+        ],
+        [
+          "Tiếp tục luyện dù đạt giới hạn",
+          "P01"
+        ]
+      ],
+      "back": "Thông báo thưởng không chặn xem kết quả hoặc học tiếp.",
+      "states": [
+        [
+          "Lỗi xác nhận thưởng",
+          "Giữ event ID, retry có giới hạn; bài học vẫn giữ."
+        ],
+        [
+          "Retry/reload sự kiện cũ",
+          "Hiện đã nhận; không cộng đôi."
+        ],
+        [
+          "Đạt giới hạn ngày",
+          "Giải thích không nhận thêm XP nhưng vẫn lưu bài."
+        ],
+        [
+          "Hoàn tất chưa đủ điều kiện",
+          "Không thưởng chỉ vì bấm kết thúc hoặc mở tab."
+        ]
+      ],
+      "persist": "Ledger event ID idempotent; loại hoạt động không thưởng chồng; ngày theo timezone cấu hình.",
+      "policy": "Chỉ cập nhật tổng sau xác nhận. Mức +10/+20/+15/+5 và cap 100 từ brief là đề xuất, chưa tự phê duyệt."
+    },
+    {
+      "id": "QMETA01",
+      "group": "Hạt giống & nguồn",
+      "name": "Nguồn và lịch sử ghi nhận",
+      "phase": "Lõi provenance; company metadata mở rộng",
+      "entry": "Card/chi tiết đề hoặc workspace.",
+      "show": "Nguồn nội dung, URL/revision, tác giả/giấy phép nếu biết, original/adaptation và review; công ty có bằng chứng riêng nếu có.",
+      "actions": [
+        [
+          "Quay chi tiết câu",
+          "P03"
+        ],
+        [
+          "Quay thư viện",
+          "P01"
+        ]
+      ],
+      "back": "Đóng về đúng card/workspace đã mở, giữ draft và focus.",
+      "states": [
+        [
+          "Chưa xác minh công ty/thời điểm",
+          "Hiển thị rõ, không bịa tên/ngày."
+        ],
+        [
+          "Nguồn không truy cập",
+          "Ghi trạng thái nguồn, không thay link gốc bằng link không tương đương."
+        ],
+        [
+          "Chỉ biết tháng/năm",
+          "Giữ độ chính xác thực; không chuyển thành ngày 01 giả."
+        ]
+      ],
+      "persist": "Tách thời điểm phỏng vấn được báo cáo, ngày nguồn đăng, nhập, cập nhật và review.",
+      "policy": "Tài liệu chính thức xác nhận kiến thức không tự chứng minh công ty từng hỏi. Không sao chép nội dung khi chưa xác minh quyền tái sử dụng."
+    }
+  ],
+  "journeys": [
+    {
+      "id": "J01",
+      "name": "Luyện một câu tự luận",
+      "path": [
+        "P01",
+        "P03",
+        "I03",
+        "I04",
+        "F01",
+        "F03",
+        "F04"
+      ],
+      "scenario": "Chọn câu → xác nhận mục tiêu → trả lời → lưu/đánh giá → xem căn cứ → chọn biến thể. Không có biến thể thì trở về P01.",
+      "check": "Quay lại thư viện giữ bộ lọc; bài gốc giữ nguyên; chưa làm không thành điểm 0."
+    },
+    {
+      "id": "J02",
+      "name": "Phỏng vấn mô phỏng",
+      "path": [
+        "I01",
+        "I02",
+        "I03",
+        "I04",
+        "F02",
+        "F01",
+        "F03"
+      ],
+      "scenario": "Chọn mô phỏng → làm rõ → lưu từng câu và đi tiếp → kết thúc mới mở tổng kết/kết quả.",
+      "check": "Không lộ điểm giữa phiên, không bỏ câu do điểm thấp, kết thúc sớm có nhãn chưa hoàn tất."
+    },
+    {
+      "id": "J03",
+      "name": "Luyện có hướng dẫn",
+      "path": [
+        "I01",
+        "I02",
+        "I03",
+        "I05",
+        "F01",
+        "F02"
+      ],
+      "scenario": "Xin gợi ý có chủ ý → giữ draft → gửi bài → phản hồi từng câu → tổng kết.",
+      "check": "Ghi nhận hỗ trợ; retry hint không tạo bản nộp hoặc trừ lượt hai lần. Đây là thiết kế full."
+    },
+    {
+      "id": "J04",
+      "name": "Kiểm tra nền tới lộ trình",
+      "path": [
+        "L01",
+        "L02",
+        "L03",
+        "L04",
+        "L05",
+        "L06",
+        "L07",
+        "L05"
+      ],
+      "scenario": "Xác nhận mục tiêu → tự luận đầu vào → kết quả có coverage → học nguồn → kiểm tra mục → cập nhật roadmap.",
+      "check": "Thiếu dữ liệu không cá nhân hóa giả; self-report không là verified; giữ layout 40/60 trên desktop."
+    },
+    {
+      "id": "J05",
+      "name": "Điểm danh và ôn tập",
+      "path": [
+        "D01",
+        "L08",
+        "D01"
+      ],
+      "scenario": "Xem tháng/ngày → điểm danh hôm nay → ôn một lượt → quay lại ngày có hoạt động đã lưu.",
+      "check": "Điểm danh và học tách biệt; lỗi check-in giữ ngày, retry idempotent, không tự cộng XP."
+    },
+    {
+      "id": "J06",
+      "name": "Lưu lỗi, AI lỗi và resume",
+      "path": [
+        "I04",
+        "I01",
+        "H01",
+        "I04",
+        "F01"
+      ],
+      "scenario": "Lưu lỗi giữ draft; lưu thành công nhưng AI lỗi giữ Answer; thoát rồi mở lại đúng bài và retry đánh giá.",
+      "check": "Không nộp lại tự động, không nhân đôi Answer, không lẫn owner/revision; lưu chưa xác nhận không báo thành công."
+    },
+    {
+      "id": "J07",
+      "name": "Tùy chọn không mất bài",
+      "path": [
+        "I04",
+        "A02",
+        "I04",
+        "A03",
+        "D01"
+      ],
+      "scenario": "Đang nhập → đổi theme → quay đúng draft → xem/cài lịch ôn → quay trang nguồn.",
+      "check": "Các đích là minh họa; thực tế overlay phải quay đúng nơi mở, giữ focus và dữ liệu chưa gửi."
+    },
+    {
+      "id": "J08",
+      "name": "Đối chiếu bằng chứng tự luận",
+      "path": [
+        "H01",
+        "F02",
+        "F01",
+        "F03",
+        "F01",
+        "H01"
+      ],
+      "scenario": "Mở phiên cũ → chọn câu → mở đúng tiêu chí → đọc quote trong bài gốc → quay lại lịch sử.",
+      "check": "J08 voice cũ được thay thế; quote khớp bản đã nộp, không dùng revision mới hoặc bằng chứng bịa."
+    },
+    {
+      "id": "J09",
+      "name": "Ba lối vào từ Trang chủ",
+      "path": [
+        "HOME01",
+        "P02",
+        "P03",
+        "HOME02",
+        "I01",
+        "L01",
+        "L05"
+      ],
+      "scenario": "Đây là ba nhánh độc lập để review: Home→thư viện; Home→hub phỏng vấn; Home→L01/L05 theo đánh giá nền, không phải chuỗi bắt buộc.",
+      "check": "Home không bắt đăng nhập hoặc tạo thành tích giả; ngõ vào đúng trạng thái có/không có dữ liệu."
+    },
+    {
+      "id": "J10",
+      "name": "Nhận XP và tăng giai đoạn",
+      "path": [
+        "F01",
+        "XP02",
+        "HOME02",
+        "XP01"
+      ],
+      "scenario": "Hoạt động đủ điều kiện đã lưu → đối soát thưởng → cập nhật cây → xem quy tắc.",
+      "check": "Retry không cộng đôi; XP không là điểm rubric; cap không chặn luyện tập."
+    },
+    {
+      "id": "J11",
+      "name": "Hồ sơ và thông báo",
+      "path": [
+        "A01",
+        "L05",
+        "A04",
+        "F01"
+      ],
+      "scenario": "Sửa mục tiêu → xác nhận tác động roadmap → mở thông báo kết quả đúng owner.",
+      "check": "Không xóa lịch sử khi đổi mục tiêu; đích hết quyền có đường trở lại."
+    },
+    {
+      "id": "J12",
+      "name": "Xóa dữ liệu có xác nhận",
+      "path": [
+        "H01",
+        "A05",
+        "H01",
+        "HOME01"
+      ],
+      "scenario": "Chọn phạm vi xóa → xem tác động → Hủy về H01 hoặc xác nhận xóa rồi về trạng thái Home tương ứng.",
+      "check": "Đây là nhánh lựa chọn, không xóa thật trong review; không báo thành công khi server chưa xác nhận."
+    }
+  ],
+  "decisions": [
+    {
+      "id": "R01",
+      "title": "Phạm vi tự luận",
+      "state": "Đã chốt bởi người dùng",
+      "proposal": "Bỏ code editor, bài code, lưu/chấm/review code, LeetCode và vibe coding. Giữ tự luận, lịch sử và rubric."
+    },
+    {
+      "id": "R02",
+      "title": "Số câu và nhóm câu",
+      "state": "Đề xuất cần review",
+      "proposal": "Giữ bốn câu/phiên theo baseline; nhóm thứ tư là lập luận/đánh đổi thay AI-code critique. C01 chốt skill IDs và dữ liệu."
+    },
+    {
+      "id": "R03",
+      "title": "Thời điểm phản hồi",
+      "state": "Đề xuất cần review",
+      "proposal": "Mô phỏng nhận phản hồi cuối phiên; hướng dẫn nhận từng câu; demo rubric vẫn hiển thị từng câu."
+    },
+    {
+      "id": "R04",
+      "title": "Sửa bài và thử lại",
+      "state": "Đề xuất cần review",
+      "proposal": "Demo một bài nộp/câu; sửa trước gửi. Luyện lại sau thành công tạo lượt/revision mới; giữ kết quả cũ."
+    },
+    {
+      "id": "R05",
+      "title": "Hint và follow-up",
+      "state": "Thiết kế full, chưa triển khai",
+      "proposal": "Hướng dẫn gợi ý từng mức, ghi nhận trợ giúp; cần chốt số mức/lượt và policy điểm, không tự trừ điểm."
+    },
+    {
+      "id": "R06",
+      "title": "Owner và đăng nhập",
+      "state": "Đề xuất cần review",
+      "proposal": "MVP dùng phiên ẩn danh cùng trình duyệt. Full auth/đồng bộ nhiều thiết bị chưa chốt; ID không cấp quyền truy cập."
+    },
+    {
+      "id": "R07",
+      "title": "Roadmap và ngưỡng đạt",
+      "state": "Đề xuất cần review",
+      "proposal": "Cá nhân hóa từ bằng chứng và prerequisite; chưa chốt ngưỡng đạt, cập nhật năng lực và thuật toán lịch ôn."
+    },
+    {
+      "id": "R08",
+      "title": "XP và attendance",
+      "state": "Đề xuất cần review",
+      "proposal": "XP theo sự kiện hợp lệ, chống cộng trùng; không thưởng điểm danh. Mốc cây/mức thưởng/cap từ brief chưa phê duyệt."
+    },
+    {
+      "id": "R09",
+      "title": "Lưu và xóa dữ liệu",
+      "state": "Đề xuất cần review",
+      "proposal": "Chốt thời hạn lưu, draft cục bộ, xóa liên đới Answer/Evaluation/XP và backup trước xây xóa thật."
+    },
+    {
+      "id": "R10",
+      "title": "Voice và mascot",
+      "state": "Voice hoãn; mascot giữ hiển thị",
+      "proposal": "X01 ngoài bản review tự luận bằng bàn phím; X02 giữ ảnh/trạng thái, không TTS/mic/camera hoặc phân tích cảm xúc."
+    },
+    {
+      "id": "R11",
+      "title": "Phạm vi demo và toàn sản phẩm",
+      "state": "Cần xác nhận ưu tiên triển khai",
+      "proposal": "Lõi gồm setup, tự luận, lưu bài, kết quả/căn cứ, tổng kết và lịch sử. Roadmap/XP/attendance/hint full được mô tả để review, không tự thêm vào sprint MVP."
+    },
+    {
+      "id": "R12",
+      "title": "Nộp kiểm tra còn thiếu câu",
+      "state": "Đề xuất cần review",
+      "proposal": "Cho xác nhận nộp chưa đủ với coverage rõ; câu chưa làm không là 0 và không tạo kết luận không có căn cứ."
+    }
+  ],
+  "superseded_by": "USE_CASES.md"
+}

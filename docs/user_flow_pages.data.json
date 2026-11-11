@@ -1,0 +1,2211 @@
+[
+  {
+    "id": "questions",
+    "name": "Câu hỏi luyện tập",
+    "short": "Luyện câu hỏi",
+    "scope": "Thiết kế theo UI ZIP · chưa triển khai",
+    "summary": "Chọn câu, trả lời bằng văn bản hoặc transcript đã xác nhận; hỏi trợ lý và xem căn cứ.",
+    "reading": "Thư viện → Chi tiết → Xác nhận mục tiêu → Trả lời → Kết quả.",
+    "rules": [
+      "Ba thao tác độc lập: Gửi chat, Dùng transcript và Nộp bài.",
+      "Nháp có revision; bài đã nộp bất biến. Không chấm audio hoặc lời AI trong chat.",
+      "Quay thư viện giữ filter/scroll; luyện lại tạo lượt mới."
+    ],
+    "nodes": [
+      {
+        "id": "list",
+        "x": 390,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Mở thư viện câu hỏi"
+        ],
+        "caption": [
+          "Tìm kiếm · lọc chủ đề/cấp độ"
+        ],
+        "type": "step",
+        "refs": [
+          "P01",
+          "P02"
+        ],
+        "detail": {
+          "action": "Chọn câu phù hợp từ danh sách đã được review.",
+          "next": "Mở chi tiết câu; nếu chưa có lịch sử thì hiển thị hướng dẫn khởi đầu."
+        }
+      },
+      {
+        "id": "empty",
+        "x": 30,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Không tìm thấy câu"
+        ],
+        "caption": [
+          "Xóa bộ lọc hoặc tải lại"
+        ],
+        "type": "error",
+        "refs": [],
+        "detail": {
+          "action": "Hiện rõ ngân hàng trống, bộ lọc không có kết quả hoặc lỗi tải.",
+          "next": "Cho xóa bộ lọc / tải lại; giữ danh sách đã tải nếu chỉ lỗi phân trang."
+        }
+      },
+      {
+        "id": "detail",
+        "x": 390,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Xem chi tiết câu"
+        ],
+        "caption": [
+          "Đề · mục tiêu · tiêu chí · nguồn"
+        ],
+        "type": "step",
+        "refs": [
+          "P03",
+          "QMETA01"
+        ],
+        "detail": {
+          "action": "Đọc đề, ràng buộc và nguồn; bấm “Luyện câu này”.",
+          "next": "Đến bước xác nhận mục tiêu; chưa mở đáp án hoặc rubric nội bộ."
+        }
+      },
+      {
+        "id": "setup",
+        "x": 390,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Xác nhận mục tiêu"
+        ],
+        "caption": [
+          "Vai trò · cấp độ · chủ đề"
+        ],
+        "type": "step",
+        "refs": [
+          "I03"
+        ],
+        "detail": {
+          "action": "Làm rõ thông tin còn thiếu và xác nhận trước khi bắt đầu.",
+          "next": "Chỉ tạo lượt khi cấu hình hợp lệ và có câu đủ điều kiện."
+        }
+      },
+      {
+        "id": "write",
+        "x": 390,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Soạn và nộp câu trả lời"
+        ],
+        "caption": [
+          "Văn bản / STT đã xác nhận"
+        ],
+        "type": "step",
+        "refs": [
+          "I04"
+        ],
+        "detail": {
+          "action": "Soạn các khối luận điểm; thêm, di chuyển, xóa có xác nhận. Chọn gõ hoặc chèn transcript đã xem/sửa.",
+          "next": "Nộp khóa snapshot nháp đã xác nhận; lưu Answer trước đánh giá. Gửi chat và Lưu nháp không nộp bài."
+        }
+      },
+      {
+        "id": "failure",
+        "x": 750,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Lưu / đánh giá gặp lỗi"
+        ],
+        "caption": [
+          "Giữ bài · thử lại đúng bước"
+        ],
+        "type": "error",
+        "refs": [],
+        "detail": {
+          "action": "Nếu chưa xác nhận lưu: giữ bản nháp và đối soát lần gửi. Nếu đã lưu nhưng AI lỗi: giữ bài đã nộp.",
+          "next": "Thử lại bước lỗi có giới hạn; không nộp trùng và không biến lỗi thành điểm 0."
+        }
+      },
+      {
+        "id": "result",
+        "x": 390,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Đọc kết quả câu"
+        ],
+        "caption": [
+          "Điểm có căn cứ · phần cần cải thiện"
+        ],
+        "type": "result",
+        "refs": [
+          "F01"
+        ],
+        "detail": {
+          "action": "Xem tiêu chí, điểm nếu đủ căn cứ, lý do và gợi ý ôn phù hợp.",
+          "next": "Mở trích dẫn, luyện câu liên quan hoặc quay lại thư viện."
+        }
+      },
+      {
+        "id": "evidence",
+        "x": 750,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Xem căn cứ"
+        ],
+        "caption": [
+          "Mở đúng đoạn trong bài gốc"
+        ],
+        "type": "result",
+        "refs": [
+          "F03"
+        ],
+        "detail": {
+          "action": "Chọn một tiêu chí để xem trích dẫn và giải thích tương ứng.",
+          "next": "Đóng phần căn cứ trở lại đúng tiêu chí đang đọc; bài gốc không thay đổi."
+        }
+      },
+      {
+        "id": "again",
+        "x": 30,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Luyện câu liên quan"
+        ],
+        "caption": [
+          "Cùng kỹ năng · khác ngữ cảnh"
+        ],
+        "type": "extension",
+        "refs": [
+          "F04"
+        ],
+        "detail": {
+          "action": "Chọn biến thể đã review để kiểm tra khả năng vận dụng.",
+          "next": "Tạo lượt luyện mới qua bước xác nhận. Không có biến thể thì về thư viện.",
+          "note": "Thiết kế ôn tập / R8; chưa coi tính năng đã triển khai."
+        }
+      },
+      {
+        "id": "voice",
+        "x": 750,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Ghi âm → xác nhận transcript"
+        ],
+        "caption": [
+          "Bắt đầu · Dừng · Sửa · Dùng"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Chọn Ghi âm, bấm Bắt đầu để xin quyền mic; Dừng rồi Nghe thử, Thu lại hoặc Chuyển thành văn bản.",
+          "next": "Xem/sửa transcript, chọn block và bấm Dùng transcript để đưa vào nháp. Sau đó mới bấm Nộp bài.",
+          "note": "Không chấm âm thanh. Từ chối mic/STT lỗi luôn quay về Văn bản; không ghi đè nháp mới hoặc tự nộp. Audio chỉ lưu tạm, server TTL tối đa 1 giờ."
+        }
+      },
+      {
+        "id": "chat",
+        "x": 30,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Chat trợ lý riêng"
+        ],
+        "caption": [
+          "Hỏi rõ · xin gợi ý có giới hạn"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Hỏi rõ đề; Guided/luyện câu cho xin gợi ý theo mức. Gửi chat chỉ tạo tin nhắn trong đúng thread.",
+          "next": "Đọc phản hồi rồi tiếp tục tự soạn bài. Không chèn đáp án AI vào nháp hoặc tạo bài nộp.",
+          "note": "Simulation/đầu vào không có hint nội dung trước nộp. Chia sẻ nháp phải chủ động; chat lỗi không chặn Lưu/Nộp bài."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "list",
+        "to": "detail",
+        "label": "",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "list",
+        "to": "empty",
+        "label": "Không có câu",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "empty",
+        "to": "list",
+        "label": "Thử lại",
+        "points": [
+          [
+            170,
+            40
+          ],
+          [
+            170,
+            20
+          ],
+          [
+            530,
+            20
+          ],
+          [
+            530,
+            40
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "detail",
+        "to": "setup",
+        "label": "Luyện câu này",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "setup",
+        "to": "write",
+        "label": "Đã xác nhận",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "write",
+        "to": "result",
+        "label": "Đã lưu và đánh giá",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "write",
+        "to": "failure",
+        "label": "Có lỗi",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "failure",
+        "to": "write",
+        "label": "Thử lại",
+        "points": [
+          [
+            890,
+            490
+          ],
+          [
+            890,
+            465
+          ],
+          [
+            670,
+            465
+          ],
+          [
+            670,
+            490
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "result",
+        "to": "evidence",
+        "label": "Xem chi tiết",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "result",
+        "to": "again",
+        "label": "Luyện thêm",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "again",
+        "to": "setup",
+        "label": "Lượt mới",
+        "points": [
+          [
+            30,
+            685
+          ],
+          [
+            10,
+            685
+          ],
+          [
+            10,
+            385
+          ],
+          [
+            390,
+            385
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "write",
+        "to": "voice",
+        "label": "Chọn ghi âm",
+        "points": [
+          [
+            670,
+            535
+          ],
+          [
+            710,
+            535
+          ],
+          [
+            710,
+            385
+          ],
+          [
+            750,
+            385
+          ]
+        ],
+        "kind": "normal"
+      },
+      {
+        "from": "voice",
+        "to": "write",
+        "label": "Dùng transcript",
+        "points": [
+          [
+            890,
+            430
+          ],
+          [
+            890,
+            450
+          ],
+          [
+            690,
+            450
+          ],
+          [
+            690,
+            490
+          ],
+          [
+            670,
+            490
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "write",
+        "to": "chat",
+        "label": "Gửi chat",
+        "points": null,
+        "kind": "normal"
+      }
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1060 770\" role=\"group\" aria-label=\"Sơ đồ Câu hỏi luyện tập\" class=\"flow-svg\"><title>User flow — Câu hỏi luyện tập</title><desc>Thư viện → Chi tiết → Xác nhận mục tiêu → Trả lời → Kết quả. Chọn một khối để xem chi tiết.</desc><defs><marker id=\"arrow-questions\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 0 L 10 5 L 0 10 z\" fill=\"#69778d\"/></marker></defs><style>.flow-svg{font-family:'Segoe UI',Arial,sans-serif}.edge path{fill:none;stroke:#69778d;stroke-width:1.7;stroke-linejoin:round}.edge.retry path{stroke-dasharray:5 4}.edge.optional path{stroke-dasharray:2 5}.edge-label rect{fill:#fff;opacity:.97}.edge-label text{font-size:11px;fill:#475569}.node{cursor:pointer;outline:none}.node .box{fill:#f5f3ff;stroke:#8b76bd;stroke-width:1.4}.node.extension .box{fill:#f8fafc;stroke:#9ca9ba;stroke-dasharray:5 3}.node.decision .box{fill:#fff8e7;stroke:#b58b30}.node.error .box{fill:#fff3ef;stroke:#c78570}.node.result .box{fill:#edf9f5;stroke:#478b77}.node.destination .box{fill:#eef4ff;stroke:#7792bd}.node-kind{font-size:10.5px;fill:#596579}.node-title{font-size:16px;font-weight:650;fill:#1e293b}.node-caption{font-size:12px;fill:#4d5b70}.node:hover .box{stroke:#594090;stroke-width:2.5}.node:focus .box,.node[aria-pressed=true] .box{stroke:#593699;stroke-width:3.5}.node[aria-pressed=true] .node-title{fill:#50317f}</style><rect width=\"1060\" height=\"770\" fill=\"white\"/><g class=\"edge normal\"><path d=\"M530,130 L530,190\" marker-end=\"url(#arrow-questions)\"/></g><g class=\"edge normal\"><path d=\"M390,85 L310,85\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"309.4\" y=\"64\" width=\"81.19999999999999\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"78\">Không có câu</tspan></text></g></g><g class=\"edge retry\"><path d=\"M170,40 L170,20 L530,20 L530,40\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"178\" y=\"15\" width=\"50.699999999999996\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"182\" y=\"29\">Thử lại</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,280 L530,340\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"295\" width=\"87.3\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"309\">Luyện câu này</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,430 L530,490\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"445\" width=\"75.1\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"459\">Đã xác nhận</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,580 L530,640\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"595\" width=\"117.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"609\">Đã lưu và đánh giá</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,535 L750,535\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"687.7\" y=\"514\" width=\"44.599999999999994\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"528\">Có lỗi</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,490 L890,465 L670,465 L670,490\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"462.5\" width=\"50.699999999999996\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"476.5\">Thử lại</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,685 L750,685\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"669.4\" y=\"664\" width=\"81.19999999999999\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"678\">Xem chi tiết</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,685 L310,685\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"315.5\" y=\"664\" width=\"69\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"678\">Luyện thêm</tspan></text></g></g><g class=\"edge retry\"><path d=\"M30,685 L10,685 L10,385 L390,385\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"-8.399999999999999\" y=\"664\" width=\"56.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"20\" y=\"678\">Lượt mới</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,535 L710,535 L710,385 L750,385\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"652.45\" y=\"514\" width=\"75.1\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"690\" y=\"528\">Chọn ghi âm</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,430 L890,450 L690,450 L690,490 L670,490\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"425\" width=\"99.5\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"439\">Dùng transcript</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,535 L310,535\" marker-end=\"url(#arrow-questions)\"/><g class=\"edge-label\"><rect x=\"321.6\" y=\"514\" width=\"56.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"528\">Gửi chat</tspan></text></g></g><g class=\"node step\" data-node=\"list\" tabindex=\"0\" role=\"button\" aria-label=\"Mở thư viện câu hỏi: Tìm kiếm · lọc chủ đề/cấp độ\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"61\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"87\">Mở thư viện câu hỏi</text><text class=\"node-caption\" x=\"410\" y=\"110\">Tìm kiếm · lọc chủ đề/cấp độ</text></g><g class=\"node error\" data-node=\"empty\" tabindex=\"0\" role=\"button\" aria-label=\"Không tìm thấy câu: Xóa bộ lọc hoặc tải lại\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"61\">Nhánh lỗi / ngoại lệ</text><text class=\"node-title\" x=\"50\" y=\"87\">Không tìm thấy câu</text><text class=\"node-caption\" x=\"50\" y=\"110\">Xóa bộ lọc hoặc tải lại</text></g><g class=\"node step\" data-node=\"detail\" tabindex=\"0\" role=\"button\" aria-label=\"Xem chi tiết câu: Đề · mục tiêu · tiêu chí · nguồn\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"211\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"237\">Xem chi tiết câu</text><text class=\"node-caption\" x=\"410\" y=\"260\">Đề · mục tiêu · tiêu chí · nguồn</text></g><g class=\"node step\" data-node=\"setup\" tabindex=\"0\" role=\"button\" aria-label=\"Xác nhận mục tiêu: Vai trò · cấp độ · chủ đề\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"361\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"387\">Xác nhận mục tiêu</text><text class=\"node-caption\" x=\"410\" y=\"410\">Vai trò · cấp độ · chủ đề</text></g><g class=\"node step\" data-node=\"write\" tabindex=\"0\" role=\"button\" aria-label=\"Soạn và nộp câu trả lời: Văn bản / STT đã xác nhận\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"511\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"537\">Soạn và nộp câu trả lời</text><text class=\"node-caption\" x=\"410\" y=\"560\">Văn bản / STT đã xác nhận</text></g><g class=\"node error\" data-node=\"failure\" tabindex=\"0\" role=\"button\" aria-label=\"Lưu / đánh giá gặp lỗi: Giữ bài · thử lại đúng bước\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"511\">Nhánh lỗi / ngoại lệ</text><text class=\"node-title\" x=\"770\" y=\"537\">Lưu / đánh giá gặp lỗi</text><text class=\"node-caption\" x=\"770\" y=\"560\">Giữ bài · thử lại đúng bước</text></g><g class=\"node result\" data-node=\"result\" tabindex=\"0\" role=\"button\" aria-label=\"Đọc kết quả câu: Điểm có căn cứ · phần cần cải thiện\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"661\">Kết quả</text><text class=\"node-title\" x=\"410\" y=\"687\">Đọc kết quả câu</text><text class=\"node-caption\" x=\"410\" y=\"710\">Điểm có căn cứ · phần cần cải thiện</text></g><g class=\"node result\" data-node=\"evidence\" tabindex=\"0\" role=\"button\" aria-label=\"Xem căn cứ: Mở đúng đoạn trong bài gốc\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"661\">Kết quả</text><text class=\"node-title\" x=\"770\" y=\"687\">Xem căn cứ</text><text class=\"node-caption\" x=\"770\" y=\"710\">Mở đúng đoạn trong bài gốc</text></g><g class=\"node extension\" data-node=\"again\" tabindex=\"0\" role=\"button\" aria-label=\"Luyện câu liên quan: Cùng kỹ năng · khác ngữ cảnh\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"661\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"50\" y=\"687\">Luyện câu liên quan</text><text class=\"node-caption\" x=\"50\" y=\"710\">Cùng kỹ năng · khác ngữ cảnh</text></g><g class=\"node step\" data-node=\"voice\" tabindex=\"0\" role=\"button\" aria-label=\"Ghi âm → xác nhận transcript: Bắt đầu · Dừng · Sửa · Dùng\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"361\">Bước thực hiện</text><text class=\"node-title\" x=\"770\" y=\"387\">Ghi âm → xác nhận transcript</text><text class=\"node-caption\" x=\"770\" y=\"410\">Bắt đầu · Dừng · Sửa · Dùng</text></g><g class=\"node step\" data-node=\"chat\" tabindex=\"0\" role=\"button\" aria-label=\"Chat trợ lý riêng: Hỏi rõ · xin gợi ý có giới hạn\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"511\">Bước thực hiện</text><text class=\"node-title\" x=\"50\" y=\"537\">Chat trợ lý riêng</text><text class=\"node-caption\" x=\"50\" y=\"560\">Hỏi rõ · xin gợi ý có giới hạn</text></g></svg>"
+  },
+  {
+    "id": "interview",
+    "name": "Phiên phỏng vấn",
+    "short": "Phiên phỏng vấn",
+    "scope": "Thiết kế hai mode theo ZIP · input text/STT độc lập",
+    "summary": "Thiết lập phiên, trả lời lần lượt bốn nhóm câu và xem tổng kết.",
+    "reading": "Chọn cấu hình → Xác nhận → Trả lời và lưu → Câu tiếp → Tổng kết.",
+    "rules": [
+      "Bốn nhóm tự luận; số câu/thời gian minh họa trong ảnh không tự thành cấu hình.",
+      "Guided: gợi ý theo yêu cầu, phản hồi từng câu. Simulation: chỉ clarification, phản hồi cuối phiên.",
+      "Hết giờ nếu có timer: giữ nháp riêng, không tự nộp bản ghi/transcript chưa xác nhận."
+    ],
+    "nodes": [
+      {
+        "id": "config",
+        "x": 390,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Chọn phiên và chế độ"
+        ],
+        "caption": [
+          "Chủ đề · cấp độ · cách nhận phản hồi"
+        ],
+        "type": "step",
+        "refs": [
+          "I01",
+          "I02"
+        ],
+        "detail": {
+          "action": "Từ danh sách phiên, chọn tạo phiên mới hoặc tiếp tục phiên đang dở.",
+          "next": "Chọn cấu hình và đọc rõ thời điểm nhận phản hồi; lựa chọn chưa khả dụng phải có nhãn."
+        }
+      },
+      {
+        "id": "setup",
+        "x": 390,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Làm rõ và xác nhận"
+        ],
+        "caption": [
+          "Kiểm tra mục tiêu và đủ câu hỏi"
+        ],
+        "type": "step",
+        "refs": [
+          "I03"
+        ],
+        "detail": {
+          "action": "Xác nhận vai trò, cấp độ, chủ đề và phạm vi của phiên.",
+          "next": "Khóa cấu hình cùng phiên bản câu hỏi/rubric; không bắt đầu khi thiếu nội dung bắt buộc."
+        }
+      },
+      {
+        "id": "missing",
+        "x": 750,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Thiếu thông tin / câu hỏi"
+        ],
+        "caption": [
+          "Sửa cấu hình hoặc hủy"
+        ],
+        "type": "error",
+        "refs": [],
+        "detail": {
+          "action": "Hỏi thông tin còn thiếu hoặc báo nhóm câu không đủ nội dung đã review.",
+          "next": "Trở lại cấu hình, giữ các lựa chọn đã nhập; không âm thầm giảm độ phủ."
+        }
+      },
+      {
+        "id": "write",
+        "x": 390,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Trả lời câu hiện tại"
+        ],
+        "caption": [
+          "Nhập tự luận → gửi → xác nhận lưu"
+        ],
+        "type": "step",
+        "refs": [
+          "I04",
+          "I05"
+        ],
+        "detail": {
+          "action": "Soạn văn bản hoặc ghi âm, xem/sửa và Dùng transcript. Khung chat riêng theo policy mode; lưu nháp không nộp bài.",
+          "next": "Nộp → xác nhận đã lưu. Guided mở phản hồi từng câu; Simulation chỉ báo đã nhận. Backend cũng chặn điểm trước kết thúc."
+        }
+      },
+      {
+        "id": "exit",
+        "x": 30,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Muốn rời / kết thúc sớm"
+        ],
+        "caption": [
+          "Hủy rời · lưu và thoát · kết thúc"
+        ],
+        "type": "decision",
+        "refs": [],
+        "detail": {
+          "action": "Hiển thị lựa chọn rõ khi người học rời trang.",
+          "next": "Hủy rời → ở lại; lưu và thoát → lần sau tiếp tục; xác nhận kết thúc → tổng kết phần đã làm.",
+          "note": "Chỉ báo đã lưu sau xác nhận. Không tự gửi bản nháp hoặc coi câu chưa làm là 0."
+        }
+      },
+      {
+        "id": "more",
+        "x": 390,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Còn câu trong phiên?"
+        ],
+        "caption": [
+          "Kiểm tra tiến độ sau mỗi lần lưu"
+        ],
+        "type": "decision",
+        "refs": [],
+        "detail": {
+          "action": "Đối chiếu số câu đã gửi với blueprint của phiên.",
+          "next": "Còn → mở câu tiếp. Hết hoặc đã xác nhận kết thúc sớm → tổng kết."
+        }
+      },
+      {
+        "id": "next",
+        "x": 750,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Mở câu tiếp theo"
+        ],
+        "caption": [
+          "Giữ nguyên bài đã nộp"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Tăng tiến độ sau khi bài hiện tại đã được lưu thành công.",
+          "next": "Quay lại workspace với đúng câu và cấu hình phiên; không bỏ câu do điểm thấp."
+        }
+      },
+      {
+        "id": "summary",
+        "x": 390,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Xem tổng kết phiên"
+        ],
+        "caption": [
+          "Đủ / thiếu câu · trạng thái từng bài"
+        ],
+        "type": "result",
+        "refs": [
+          "F02",
+          "F01",
+          "F03"
+        ],
+        "detail": {
+          "action": "Xem danh sách câu, kết quả, tiêu chí và căn cứ. Bài đang xử lý hoặc lỗi có nhãn riêng.",
+          "next": "Xem chi tiết câu, ôn điểm thiếu hoặc tạo phiên mới; kết quả cũ giữ nguyên."
+        }
+      },
+      {
+        "id": "resume",
+        "x": 30,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Tiếp tục phiên dở"
+        ],
+        "caption": [
+          "Mở đúng câu và bản nháp"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Chọn một phiên đang dở mà người dùng còn quyền truy cập.",
+          "next": "Khôi phục phần đã lưu và bản nháp được phép; không tự nộp bài khi mở lại."
+        }
+      },
+      {
+        "id": "voice",
+        "x": 750,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Văn bản hoặc ghi âm"
+        ],
+        "caption": [
+          "Transcript phải được xác nhận"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Chọn Ghi âm, bấm Bắt đầu để xin quyền mic; Dừng rồi Nghe thử, Thu lại hoặc Chuyển thành văn bản.",
+          "next": "Xem/sửa transcript, chọn block và bấm Dùng transcript để đưa vào nháp. Sau đó mới bấm Nộp bài.",
+          "note": "Không chấm âm thanh. Từ chối mic/STT lỗi luôn quay về Văn bản; không ghi đè nháp mới hoặc tự nộp. Audio chỉ lưu tạm, server TTL tối đa 1 giờ."
+        }
+      },
+      {
+        "id": "chat",
+        "x": 30,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Gửi tin cho trợ lý"
+        ],
+        "caption": [
+          "Không phải nút nộp câu trả lời"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Hỏi rõ đề; Guided/luyện câu cho xin gợi ý theo mức. Gửi chat chỉ tạo tin nhắn trong đúng thread.",
+          "next": "Đọc phản hồi rồi tiếp tục tự soạn bài. Không chèn đáp án AI vào nháp hoặc tạo bài nộp.",
+          "note": "Simulation/đầu vào không có hint nội dung trước nộp. Chia sẻ nháp phải chủ động; chat lỗi không chặn Lưu/Nộp bài."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "config",
+        "to": "setup",
+        "label": "Tạo phiên",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "config",
+        "to": "resume",
+        "label": "Có phiên dở",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "resume",
+        "to": "write",
+        "label": "Tiếp tục",
+        "points": [
+          [
+            170,
+            130
+          ],
+          [
+            170,
+            300
+          ],
+          [
+            390,
+            300
+          ],
+          [
+            390,
+            340
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "setup",
+        "to": "missing",
+        "label": "Chưa hợp lệ",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "setup",
+        "to": "write",
+        "label": "Đã xác nhận",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "write",
+        "to": "exit",
+        "label": "Rời trang",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "write",
+        "to": "more",
+        "label": "Đã lưu; phản hồi theo chế độ",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "more",
+        "to": "next",
+        "label": "Có",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "next",
+        "to": "write",
+        "label": "Tiếp tục",
+        "points": [
+          [
+            890,
+            490
+          ],
+          [
+            890,
+            385
+          ],
+          [
+            670,
+            385
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "more",
+        "to": "summary",
+        "label": "Không",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "exit",
+        "to": "summary",
+        "label": "Xác nhận kết thúc",
+        "points": [
+          [
+            30,
+            385
+          ],
+          [
+            10,
+            385
+          ],
+          [
+            10,
+            685
+          ],
+          [
+            390,
+            685
+          ]
+        ],
+        "kind": "normal"
+      },
+      {
+        "from": "write",
+        "to": "voice",
+        "label": "Đổi cách nhập",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "voice",
+        "to": "write",
+        "label": "Dùng transcript",
+        "points": [
+          [
+            890,
+            340
+          ],
+          [
+            890,
+            310
+          ],
+          [
+            670,
+            310
+          ],
+          [
+            670,
+            340
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "write",
+        "to": "chat",
+        "label": "Chat",
+        "points": [
+          [
+            390,
+            385
+          ],
+          [
+            340,
+            385
+          ],
+          [
+            340,
+            535
+          ],
+          [
+            310,
+            535
+          ]
+        ],
+        "kind": "normal"
+      }
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1060 770\" role=\"group\" aria-label=\"Sơ đồ Phiên phỏng vấn\" class=\"flow-svg\"><title>User flow — Phiên phỏng vấn</title><desc>Chọn cấu hình → Xác nhận → Trả lời và lưu → Câu tiếp → Tổng kết. Chọn một khối để xem chi tiết.</desc><defs><marker id=\"arrow-interview\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 0 L 10 5 L 0 10 z\" fill=\"#69778d\"/></marker></defs><style>.flow-svg{font-family:'Segoe UI',Arial,sans-serif}.edge path{fill:none;stroke:#69778d;stroke-width:1.7;stroke-linejoin:round}.edge.retry path{stroke-dasharray:5 4}.edge.optional path{stroke-dasharray:2 5}.edge-label rect{fill:#fff;opacity:.97}.edge-label text{font-size:11px;fill:#475569}.node{cursor:pointer;outline:none}.node .box{fill:#f5f3ff;stroke:#8b76bd;stroke-width:1.4}.node.extension .box{fill:#f8fafc;stroke:#9ca9ba;stroke-dasharray:5 3}.node.decision .box{fill:#fff8e7;stroke:#b58b30}.node.error .box{fill:#fff3ef;stroke:#c78570}.node.result .box{fill:#edf9f5;stroke:#478b77}.node.destination .box{fill:#eef4ff;stroke:#7792bd}.node-kind{font-size:10.5px;fill:#596579}.node-title{font-size:16px;font-weight:650;fill:#1e293b}.node-caption{font-size:12px;fill:#4d5b70}.node:hover .box{stroke:#594090;stroke-width:2.5}.node:focus .box,.node[aria-pressed=true] .box{stroke:#593699;stroke-width:3.5}.node[aria-pressed=true] .node-title{fill:#50317f}</style><rect width=\"1060\" height=\"770\" fill=\"white\"/><g class=\"edge normal\"><path d=\"M530,130 L530,190\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"145\" width=\"62.9\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"159\">Tạo phiên</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,85 L310,85\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"312.45\" y=\"64\" width=\"75.1\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"78\">Có phiên dở</tspan></text></g></g><g class=\"edge retry\"><path d=\"M170,130 L170,300 L390,300 L390,340\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"178\" y=\"200\" width=\"56.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"182\" y=\"214\">Tiếp tục</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,235 L750,235\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"672.45\" y=\"214\" width=\"75.1\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"228\">Chưa hợp lệ</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,280 L530,340\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"295\" width=\"75.1\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"309\">Đã xác nhận</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,385 L310,385\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"318.55\" y=\"364\" width=\"62.9\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"378\">Rời trang</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,430 L530,490\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"445\" width=\"178.79999999999998\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"459\">Đã lưu; phản hồi theo chế độ</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,535 L750,535\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"699.9\" y=\"514\" width=\"20.2\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"528\">Có</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,490 L890,385 L670,385\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"422.5\" width=\"56.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"436.5\">Tiếp tục</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,580 L530,640\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"595\" width=\"38.5\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"609\">Không</tspan></text></g></g><g class=\"edge normal\"><path d=\"M30,385 L10,385 L10,685 L390,685\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"-20.599999999999994\" y=\"351\" width=\"81.19999999999999\" height=\"31\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"20\" y=\"365\">Xác nhận kết</tspan><tspan x=\"20\" y=\"378\">thúc</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,385 L750,385\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"681.6\" y=\"351\" width=\"56.8\" height=\"31\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"365\">Đổi cách</tspan><tspan x=\"710\" y=\"378\">nhập</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,340 L890,310 L670,310 L670,340\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"310\" width=\"99.5\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"324\">Dùng transcript</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,385 L340,385 L340,535 L310,535\" marker-end=\"url(#arrow-interview)\"/><g class=\"edge-label\"><rect x=\"348.8\" y=\"364\" width=\"32.4\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"365\" y=\"378\">Chat</tspan></text></g></g><g class=\"node step\" data-node=\"config\" tabindex=\"0\" role=\"button\" aria-label=\"Chọn phiên và chế độ: Chủ đề · cấp độ · cách nhận phản hồi\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"61\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"87\">Chọn phiên và chế độ</text><text class=\"node-caption\" x=\"410\" y=\"110\">Chủ đề · cấp độ · cách nhận phản hồi</text></g><g class=\"node step\" data-node=\"setup\" tabindex=\"0\" role=\"button\" aria-label=\"Làm rõ và xác nhận: Kiểm tra mục tiêu và đủ câu hỏi\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"211\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"237\">Làm rõ và xác nhận</text><text class=\"node-caption\" x=\"410\" y=\"260\">Kiểm tra mục tiêu và đủ câu hỏi</text></g><g class=\"node error\" data-node=\"missing\" tabindex=\"0\" role=\"button\" aria-label=\"Thiếu thông tin / câu hỏi: Sửa cấu hình hoặc hủy\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"211\">Nhánh lỗi / ngoại lệ</text><text class=\"node-title\" x=\"770\" y=\"237\">Thiếu thông tin / câu hỏi</text><text class=\"node-caption\" x=\"770\" y=\"260\">Sửa cấu hình hoặc hủy</text></g><g class=\"node step\" data-node=\"write\" tabindex=\"0\" role=\"button\" aria-label=\"Trả lời câu hiện tại: Nhập tự luận → gửi → xác nhận lưu\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"361\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"387\">Trả lời câu hiện tại</text><text class=\"node-caption\" x=\"410\" y=\"410\">Nhập tự luận → gửi → xác nhận lưu</text></g><g class=\"node decision\" data-node=\"exit\" tabindex=\"0\" role=\"button\" aria-label=\"Muốn rời / kết thúc sớm: Hủy rời · lưu và thoát · kết thúc\" aria-pressed=\"false\"><path class=\"box\" d=\"M48,340 H292 L310,385 L292,430 H48 L30,385 Z\"/><text class=\"node-kind\" x=\"50\" y=\"361\">Điều kiện / lựa chọn</text><text class=\"node-title\" x=\"50\" y=\"387\">Muốn rời / kết thúc sớm</text><text class=\"node-caption\" x=\"50\" y=\"410\">Hủy rời · lưu và thoát · kết thúc</text></g><g class=\"node decision\" data-node=\"more\" tabindex=\"0\" role=\"button\" aria-label=\"Còn câu trong phiên?: Kiểm tra tiến độ sau mỗi lần lưu\" aria-pressed=\"false\"><path class=\"box\" d=\"M408,490 H652 L670,535 L652,580 H408 L390,535 Z\"/><text class=\"node-kind\" x=\"410\" y=\"511\">Điều kiện / lựa chọn</text><text class=\"node-title\" x=\"410\" y=\"537\">Còn câu trong phiên?</text><text class=\"node-caption\" x=\"410\" y=\"560\">Kiểm tra tiến độ sau mỗi lần lưu</text></g><g class=\"node step\" data-node=\"next\" tabindex=\"0\" role=\"button\" aria-label=\"Mở câu tiếp theo: Giữ nguyên bài đã nộp\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"511\">Bước thực hiện</text><text class=\"node-title\" x=\"770\" y=\"537\">Mở câu tiếp theo</text><text class=\"node-caption\" x=\"770\" y=\"560\">Giữ nguyên bài đã nộp</text></g><g class=\"node result\" data-node=\"summary\" tabindex=\"0\" role=\"button\" aria-label=\"Xem tổng kết phiên: Đủ / thiếu câu · trạng thái từng bài\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"661\">Kết quả</text><text class=\"node-title\" x=\"410\" y=\"687\">Xem tổng kết phiên</text><text class=\"node-caption\" x=\"410\" y=\"710\">Đủ / thiếu câu · trạng thái từng bài</text></g><g class=\"node step\" data-node=\"resume\" tabindex=\"0\" role=\"button\" aria-label=\"Tiếp tục phiên dở: Mở đúng câu và bản nháp\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"61\">Bước thực hiện</text><text class=\"node-title\" x=\"50\" y=\"87\">Tiếp tục phiên dở</text><text class=\"node-caption\" x=\"50\" y=\"110\">Mở đúng câu và bản nháp</text></g><g class=\"node step\" data-node=\"voice\" tabindex=\"0\" role=\"button\" aria-label=\"Văn bản hoặc ghi âm: Transcript phải được xác nhận\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"361\">Bước thực hiện</text><text class=\"node-title\" x=\"770\" y=\"387\">Văn bản hoặc ghi âm</text><text class=\"node-caption\" x=\"770\" y=\"410\">Transcript phải được xác nhận</text></g><g class=\"node step\" data-node=\"chat\" tabindex=\"0\" role=\"button\" aria-label=\"Gửi tin cho trợ lý: Không phải nút nộp câu trả lời\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"511\">Bước thực hiện</text><text class=\"node-title\" x=\"50\" y=\"537\">Gửi tin cho trợ lý</text><text class=\"node-caption\" x=\"50\" y=\"560\">Không phải nút nộp câu trả lời</text></g></svg>"
+  },
+  {
+    "id": "roadmap",
+    "name": "Lộ trình cá nhân hóa",
+    "short": "Lộ trình",
+    "scope": "Thiết kế từ kết quả đầu vào ba phần",
+    "summary": "Dùng kết quả trắc nghiệm, tự luận và tình huống để xem trước, kích hoạt và học theo lộ trình.",
+    "reading": "Mở lộ trình → Kiểm tra dữ liệu nền → Chọn mục → Học và kiểm tra → Cập nhật.",
+    "rules": [
+      "Preview khác active plan; bấm Kích hoạt mới đổi kế hoạch, retry không tạo trùng.",
+      "Thiếu kết quả đầu vào: chỉ xem trước và bổ sung phần thiếu, không dựng năng lực giả.",
+      "Thứ tự theo prerequisite, phát hiện chu trình/ngân sách không đủ; XP không mở khóa."
+    ],
+    "nodes": [
+      {
+        "id": "open",
+        "x": 390,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Mở lộ trình"
+        ],
+        "caption": [
+          "Đọc mục tiêu đang được xác nhận"
+        ],
+        "type": "extension",
+        "refs": [
+          "L01",
+          "L05"
+        ],
+        "detail": {
+          "action": "Mở trang từ điều hướng hoặc sau kết quả kiểm tra đầu vào.",
+          "next": "Kiểm tra có kết quả nền phù hợp với mục tiêu hiện tại hay chưa."
+        }
+      },
+      {
+        "id": "has",
+        "x": 390,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Có kết quả nền phù hợp?"
+        ],
+        "caption": [
+          "Kiểm tra phạm vi và bằng chứng"
+        ],
+        "type": "decision",
+        "refs": [],
+        "detail": {
+          "action": "Đối chiếu mục tiêu và phần kỹ năng đã được đánh giá.",
+          "next": "Có → mở lộ trình có căn cứ. Chưa → xem trước và đề nghị kiểm tra đầu vào."
+        }
+      },
+      {
+        "id": "test",
+        "x": 750,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Làm kiểm tra đầu vào"
+        ],
+        "caption": [
+          "Chuyển sang trang Kiểm tra đầu vào"
+        ],
+        "type": "destination",
+        "refs": [],
+        "detail": {
+          "action": "Giải thích cần kiểm tra gì trước khi cá nhân hóa.",
+          "next": "Sau khi có kết quả, quay lại lộ trình; chỉ lập phần đủ căn cứ.",
+          "go": "assessment"
+        }
+      },
+      {
+        "id": "choose",
+        "x": 390,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Chọn chặng và mục học"
+        ],
+        "caption": [
+          "Lý do chọn · tiên quyết · thời lượng"
+        ],
+        "type": "extension",
+        "refs": [
+          "L05",
+          "L06"
+        ],
+        "detail": {
+          "action": "Xem kế hoạch đề xuất và lý do từ evidence/tiên quyết; tùy chỉnh mục tiêu hoặc ngân sách rồi xác nhận Kích hoạt.",
+          "next": "Chỉ khi kích hoạt thành công mới đổi active plan; giữ bản cũ. Chọn chặng/node để học nguồn và luyện bài liên quan."
+        }
+      },
+      {
+        "id": "learn",
+        "x": 390,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Học rồi kiểm tra mục"
+        ],
+        "caption": [
+          "Trả lời tự luận ngắn, xem căn cứ"
+        ],
+        "type": "extension",
+        "refs": [
+          "L06",
+          "L07"
+        ],
+        "detail": {
+          "action": "Học nguồn rồi kiểm tra mục bằng tự luận; chọn văn bản hoặc STT đã xác nhận. Tự đánh dấu đã biết chỉ là self-report.",
+          "next": "Đạt → cập nhật phần đã xác minh. Cần củng cố → quay lại học. Lỗi/thiếu căn cứ → giữ trạng thái chưa xác định."
+        }
+      },
+      {
+        "id": "reinforce",
+        "x": 750,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Cần củng cố / chưa đủ căn cứ"
+        ],
+        "caption": [
+          "Học lại · bổ sung · thử đánh giá lại"
+        ],
+        "type": "error",
+        "refs": [],
+        "detail": {
+          "action": "Đọc lý do để phân biệt trả lời chưa đạt, thiếu bằng chứng và lỗi xử lý.",
+          "next": "Học lại hoặc bổ sung câu trả lời; nếu AI lỗi thì thử lại trên bài đã lưu. Không xóa kết quả cũ."
+        }
+      },
+      {
+        "id": "update",
+        "x": 390,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Cập nhật lộ trình"
+        ],
+        "caption": [
+          "Lưu kết quả và bước học tiếp"
+        ],
+        "type": "result",
+        "refs": [
+          "L05",
+          "L08"
+        ],
+        "detail": {
+          "action": "Cập nhật phạm vi kỹ năng đã xác minh; hiển thị phần cần ôn và mục tiếp theo.",
+          "next": "Chọn mục học tiếp hoặc mở Tổng quan để xem việc cần làm.",
+          "go": "overview"
+        }
+      },
+      {
+        "id": "change",
+        "x": 30,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Đổi mục tiêu / kiểm tra lại"
+        ],
+        "caption": [
+          "Xác nhận tạo phiên bản kế hoạch mới"
+        ],
+        "type": "extension",
+        "refs": [],
+        "detail": {
+          "action": "Cho biết việc thay mục tiêu hoặc kiểm tra lại ảnh hưởng đến kế hoạch ra sao.",
+          "next": "Giữ kế hoạch và bài cũ; chỉ cập nhật sau khi có xác nhận và kết quả mới."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "has",
+        "label": "",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "has",
+        "to": "test",
+        "label": "Chưa",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "has",
+        "to": "choose",
+        "label": "Có",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "test",
+        "to": "choose",
+        "label": "Có kết quả phù hợp",
+        "points": [
+          [
+            890,
+            280
+          ],
+          [
+            890,
+            315
+          ],
+          [
+            530,
+            315
+          ],
+          [
+            530,
+            340
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "choose",
+        "to": "change",
+        "label": "Điều chỉnh",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "choose",
+        "to": "learn",
+        "label": "Mở mục học",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "learn",
+        "to": "reinforce",
+        "label": "Chưa đạt / lỗi",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "reinforce",
+        "to": "learn",
+        "label": "Củng cố / thử lại",
+        "points": [
+          [
+            890,
+            580
+          ],
+          [
+            890,
+            610
+          ],
+          [
+            705,
+            610
+          ],
+          [
+            705,
+            535
+          ],
+          [
+            670,
+            535
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "learn",
+        "to": "update",
+        "label": "Đạt trong phạm vi kiểm tra",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "update",
+        "to": "choose",
+        "label": "Mục tiếp",
+        "points": [
+          [
+            390,
+            685
+          ],
+          [
+            340,
+            685
+          ],
+          [
+            340,
+            385
+          ],
+          [
+            390,
+            385
+          ]
+        ],
+        "kind": "retry"
+      }
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1060 770\" role=\"group\" aria-label=\"Sơ đồ Lộ trình cá nhân hóa\" class=\"flow-svg\"><title>User flow — Lộ trình cá nhân hóa</title><desc>Mở lộ trình → Kiểm tra dữ liệu nền → Chọn mục → Học và kiểm tra → Cập nhật. Chọn một khối để xem chi tiết.</desc><defs><marker id=\"arrow-roadmap\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 0 L 10 5 L 0 10 z\" fill=\"#69778d\"/></marker></defs><style>.flow-svg{font-family:'Segoe UI',Arial,sans-serif}.edge path{fill:none;stroke:#69778d;stroke-width:1.7;stroke-linejoin:round}.edge.retry path{stroke-dasharray:5 4}.edge.optional path{stroke-dasharray:2 5}.edge-label rect{fill:#fff;opacity:.97}.edge-label text{font-size:11px;fill:#475569}.node{cursor:pointer;outline:none}.node .box{fill:#f5f3ff;stroke:#8b76bd;stroke-width:1.4}.node.extension .box{fill:#f8fafc;stroke:#9ca9ba;stroke-dasharray:5 3}.node.decision .box{fill:#fff8e7;stroke:#b58b30}.node.error .box{fill:#fff3ef;stroke:#c78570}.node.result .box{fill:#edf9f5;stroke:#478b77}.node.destination .box{fill:#eef4ff;stroke:#7792bd}.node-kind{font-size:10.5px;fill:#596579}.node-title{font-size:16px;font-weight:650;fill:#1e293b}.node-caption{font-size:12px;fill:#4d5b70}.node:hover .box{stroke:#594090;stroke-width:2.5}.node:focus .box,.node[aria-pressed=true] .box{stroke:#593699;stroke-width:3.5}.node[aria-pressed=true] .node-title{fill:#50317f}</style><rect width=\"1060\" height=\"770\" fill=\"white\"/><g class=\"edge normal\"><path d=\"M530,130 L530,190\" marker-end=\"url(#arrow-roadmap)\"/></g><g class=\"edge normal\"><path d=\"M670,235 L750,235\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"693.8\" y=\"214\" width=\"32.4\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"228\">Chưa</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,280 L530,340\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"295\" width=\"20.2\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"309\">Có</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,280 L890,315 L530,315 L530,340\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"282.5\" width=\"117.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"296.5\">Có kết quả phù hợp</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,385 L310,385\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"315.5\" y=\"364\" width=\"69\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"378\">Điều chỉnh</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,430 L530,490\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"445\" width=\"69\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"459\">Mở mục học</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,535 L750,535\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"675.5\" y=\"501\" width=\"69\" height=\"31\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"515\">Chưa đạt /</tspan><tspan x=\"710\" y=\"528\">lỗi</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,580 L890,610 L705,610 L705,535 L670,535\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"580\" width=\"111.69999999999999\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"594\">Củng cố / thử lại</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,580 L530,640\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"595\" width=\"166.6\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"609\">Đạt trong phạm vi kiểm tra</tspan></text></g></g><g class=\"edge retry\"><path d=\"M390,685 L340,685 L340,385 L390,385\" marker-end=\"url(#arrow-roadmap)\"/><g class=\"edge-label\"><rect x=\"336.6\" y=\"664\" width=\"56.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"365\" y=\"678\">Mục tiếp</tspan></text></g></g><g class=\"node extension\" data-node=\"open\" tabindex=\"0\" role=\"button\" aria-label=\"Mở lộ trình: Đọc mục tiêu đang được xác nhận\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"61\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"410\" y=\"87\">Mở lộ trình</text><text class=\"node-caption\" x=\"410\" y=\"110\">Đọc mục tiêu đang được xác nhận</text></g><g class=\"node decision\" data-node=\"has\" tabindex=\"0\" role=\"button\" aria-label=\"Có kết quả nền phù hợp?: Kiểm tra phạm vi và bằng chứng\" aria-pressed=\"false\"><path class=\"box\" d=\"M408,190 H652 L670,235 L652,280 H408 L390,235 Z\"/><text class=\"node-kind\" x=\"410\" y=\"211\">Điều kiện / lựa chọn</text><text class=\"node-title\" x=\"410\" y=\"237\">Có kết quả nền phù hợp?</text><text class=\"node-caption\" x=\"410\" y=\"260\">Kiểm tra phạm vi và bằng chứng</text></g><g class=\"node destination\" data-node=\"test\" tabindex=\"0\" role=\"button\" aria-label=\"Làm kiểm tra đầu vào: Chuyển sang trang Kiểm tra đầu vào\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"211\">Chuyển trang</text><text class=\"node-title\" x=\"770\" y=\"237\">Làm kiểm tra đầu vào</text><text class=\"node-caption\" x=\"770\" y=\"260\">Chuyển sang trang Kiểm tra đầu vào</text></g><g class=\"node extension\" data-node=\"choose\" tabindex=\"0\" role=\"button\" aria-label=\"Chọn chặng và mục học: Lý do chọn · tiên quyết · thời lượng\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"361\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"410\" y=\"387\">Chọn chặng và mục học</text><text class=\"node-caption\" x=\"410\" y=\"410\">Lý do chọn · tiên quyết · thời lượng</text></g><g class=\"node extension\" data-node=\"learn\" tabindex=\"0\" role=\"button\" aria-label=\"Học rồi kiểm tra mục: Trả lời tự luận ngắn, xem căn cứ\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"511\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"410\" y=\"537\">Học rồi kiểm tra mục</text><text class=\"node-caption\" x=\"410\" y=\"560\">Trả lời tự luận ngắn, xem căn cứ</text></g><g class=\"node error\" data-node=\"reinforce\" tabindex=\"0\" role=\"button\" aria-label=\"Cần củng cố / chưa đủ căn cứ: Học lại · bổ sung · thử đánh giá lại\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"511\">Nhánh lỗi / ngoại lệ</text><text class=\"node-title\" x=\"770\" y=\"537\">Cần củng cố / chưa đủ căn cứ</text><text class=\"node-caption\" x=\"770\" y=\"560\">Học lại · bổ sung · thử đánh giá lại</text></g><g class=\"node result\" data-node=\"update\" tabindex=\"0\" role=\"button\" aria-label=\"Cập nhật lộ trình: Lưu kết quả và bước học tiếp\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"661\">Kết quả</text><text class=\"node-title\" x=\"410\" y=\"687\">Cập nhật lộ trình</text><text class=\"node-caption\" x=\"410\" y=\"710\">Lưu kết quả và bước học tiếp</text></g><g class=\"node extension\" data-node=\"change\" tabindex=\"0\" role=\"button\" aria-label=\"Đổi mục tiêu / kiểm tra lại: Xác nhận tạo phiên bản kế hoạch mới\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"361\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"50\" y=\"387\">Đổi mục tiêu / kiểm tra lại</text><text class=\"node-caption\" x=\"50\" y=\"410\">Xác nhận tạo phiên bản kế hoạch mới</text></g></svg>"
+  },
+  {
+    "id": "overview",
+    "name": "Tổng quan",
+    "short": "Tổng quan",
+    "scope": "Thiết kế dữ liệu thật · lịch sử và tiếp tục đúng owner",
+    "summary": "Biết hôm nay nên làm gì, tiếp tục bài dở hoặc xem lại kết quả đã có.",
+    "reading": "Mở tổng quan → Đọc trạng thái dữ liệu → Chọn việc cần làm → Quay lại cập nhật.",
+    "rules": [
+      "Luyện ngay / Tiếp tục / Xem bài dẫn đúng câu, phiên hoặc assessment.",
+      "Bài nguồn ghi âm xem transcript đã nộp; Luyện lại tạo lượt mới, không có kho audio.",
+      "Lịch theo timezone cấu hình; điểm danh khác học, không tự cộng XP khi mở trang."
+    ],
+    "nodes": [
+      {
+        "id": "open",
+        "x": 390,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Mở trang Tổng quan"
+        ],
+        "caption": [
+          "Việc hôm nay · tiến độ · lịch sử"
+        ],
+        "type": "step",
+        "refs": [
+          "D01",
+          "D02"
+        ],
+        "detail": {
+          "action": "Tải dữ liệu được phép xem của người dùng hiện tại.",
+          "next": "Hiển thị từng vùng đã tải; lỗi một vùng không làm mất toàn trang."
+        }
+      },
+      {
+        "id": "has",
+        "x": 390,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Đã có hoạt động học?"
+        ],
+        "caption": [
+          "Phân biệt dữ liệu thật và trang trống"
+        ],
+        "type": "decision",
+        "refs": [],
+        "detail": {
+          "action": "Kiểm tra bài đã nộp, phiên đang dở và kết quả đã được lưu.",
+          "next": "Chưa → hướng dẫn bắt đầu. Có → hiển thị các hành động phù hợp."
+        }
+      },
+      {
+        "id": "empty",
+        "x": 750,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Chưa có hoạt động"
+        ],
+        "caption": [
+          "Chọn cách bắt đầu luyện"
+        ],
+        "type": "step",
+        "refs": [
+          "D02"
+        ],
+        "detail": {
+          "action": "Cho chọn làm câu đầu tiên, tạo phiên hoặc làm kiểm tra đầu vào.",
+          "next": "Đi tới một trong ba trang tương ứng; không tạo điểm hay lịch sử minh họa.",
+          "links": [
+            "questions",
+            "interview",
+            "assessment"
+          ]
+        }
+      },
+      {
+        "id": "choose",
+        "x": 390,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Chọn việc muốn làm"
+        ],
+        "caption": [
+          "Tiếp tục · luyện · ôn · xem lại"
+        ],
+        "type": "step",
+        "refs": [
+          "D01"
+        ],
+        "detail": {
+          "action": "Đọc việc hôm nay và chọn đúng hành động cần thực hiện.",
+          "next": "Đi thẳng đến nội dung tương ứng, không bắt qua một bước điều hướng trung gian."
+        }
+      },
+      {
+        "id": "resume",
+        "x": 30,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Tiếp tục bài / phiên dở"
+        ],
+        "caption": [
+          "Mở đúng câu, giữ bài đã lưu"
+        ],
+        "type": "destination",
+        "refs": [],
+        "detail": {
+          "action": "Chọn phiên gần nhất còn có thể tiếp tục.",
+          "next": "Chuyển sang Phiên phỏng vấn; nếu là bài đầu vào thì về đúng bài kiểm tra đang dở.",
+          "links": [
+            "interview",
+            "assessment"
+          ]
+        }
+      },
+      {
+        "id": "learn",
+        "x": 750,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Luyện mới hoặc ôn tập"
+        ],
+        "caption": [
+          "Chọn câu · tạo phiên · mở lộ trình"
+        ],
+        "type": "destination",
+        "refs": [],
+        "detail": {
+          "action": "Chọn hoạt động từ tiến độ thực tế; nếu chưa có mục đến hạn, cho luyện tự chọn.",
+          "next": "Chuyển tới trang luyện câu hỏi, phiên phỏng vấn hoặc lộ trình.",
+          "links": [
+            "questions",
+            "interview",
+            "roadmap"
+          ]
+        }
+      },
+      {
+        "id": "history",
+        "x": 390,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Chọn bài trong lịch sử"
+        ],
+        "caption": [
+          "Lọc thời gian · chủ đề · trạng thái"
+        ],
+        "type": "step",
+        "refs": [
+          "H01"
+        ],
+        "detail": {
+          "action": "Lọc bài/phiên/assessment, xem chi tiết, transcript và bằng chứng đúng revision; cuộn rail không thay dữ liệu.",
+          "next": "Viết lại/Luyện lại tạo lượt mới; đóng chi tiết giữ filter/scroll/tháng-ngày. Không có nút nghe clip đã xóa."
+        }
+      },
+      {
+        "id": "calendar",
+        "x": 30,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Xem ngày / điểm danh"
+        ],
+        "caption": [
+          "Chọn ngày; xác nhận khi đã lưu"
+        ],
+        "type": "extension",
+        "refs": [
+          "D01"
+        ],
+        "detail": {
+          "action": "Xem hoạt động theo ngày hoặc điểm danh hôm nay theo chính sách đã duyệt.",
+          "next": "Chỉ đổi trạng thái sau xác nhận; retry không cộng trùng. Điểm danh không thay thế việc học."
+        }
+      },
+      {
+        "id": "return",
+        "x": 390,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Quay lại Tổng quan"
+        ],
+        "caption": [
+          "Cập nhật hoạt động đã được lưu"
+        ],
+        "type": "result",
+        "refs": [],
+        "detail": {
+          "action": "Sau khi hoàn thành hoặc xem lại, trở về đúng vùng đã mở.",
+          "next": "Cập nhật dữ liệu thực; chưa có thay đổi thì giữ nguyên thống kê, bộ lọc và vị trí."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "has",
+        "label": "",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "has",
+        "to": "empty",
+        "label": "Chưa",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "has",
+        "to": "choose",
+        "label": "Có",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "choose",
+        "to": "resume",
+        "label": "Tiếp tục",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "choose",
+        "to": "learn",
+        "label": "Luyện / ôn",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "choose",
+        "to": "history",
+        "label": "Xem lại",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "history",
+        "to": "calendar",
+        "label": "Xem theo ngày",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "history",
+        "to": "return",
+        "label": "Đóng chi tiết",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "calendar",
+        "to": "return",
+        "label": "Trở lại",
+        "points": [
+          [
+            170,
+            580
+          ],
+          [
+            170,
+            685
+          ],
+          [
+            390,
+            685
+          ]
+        ],
+        "kind": "normal"
+      }
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1060 770\" role=\"group\" aria-label=\"Sơ đồ Tổng quan\" class=\"flow-svg\"><title>User flow — Tổng quan</title><desc>Mở tổng quan → Đọc trạng thái dữ liệu → Chọn việc cần làm → Quay lại cập nhật. Chọn một khối để xem chi tiết.</desc><defs><marker id=\"arrow-overview\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 0 L 10 5 L 0 10 z\" fill=\"#69778d\"/></marker></defs><style>.flow-svg{font-family:'Segoe UI',Arial,sans-serif}.edge path{fill:none;stroke:#69778d;stroke-width:1.7;stroke-linejoin:round}.edge.retry path{stroke-dasharray:5 4}.edge.optional path{stroke-dasharray:2 5}.edge-label rect{fill:#fff;opacity:.97}.edge-label text{font-size:11px;fill:#475569}.node{cursor:pointer;outline:none}.node .box{fill:#f5f3ff;stroke:#8b76bd;stroke-width:1.4}.node.extension .box{fill:#f8fafc;stroke:#9ca9ba;stroke-dasharray:5 3}.node.decision .box{fill:#fff8e7;stroke:#b58b30}.node.error .box{fill:#fff3ef;stroke:#c78570}.node.result .box{fill:#edf9f5;stroke:#478b77}.node.destination .box{fill:#eef4ff;stroke:#7792bd}.node-kind{font-size:10.5px;fill:#596579}.node-title{font-size:16px;font-weight:650;fill:#1e293b}.node-caption{font-size:12px;fill:#4d5b70}.node:hover .box{stroke:#594090;stroke-width:2.5}.node:focus .box,.node[aria-pressed=true] .box{stroke:#593699;stroke-width:3.5}.node[aria-pressed=true] .node-title{fill:#50317f}</style><rect width=\"1060\" height=\"770\" fill=\"white\"/><g class=\"edge normal\"><path d=\"M530,130 L530,190\" marker-end=\"url(#arrow-overview)\"/></g><g class=\"edge normal\"><path d=\"M670,235 L750,235\" marker-end=\"url(#arrow-overview)\"/><g class=\"edge-label\"><rect x=\"693.8\" y=\"214\" width=\"32.4\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"228\">Chưa</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,280 L530,340\" marker-end=\"url(#arrow-overview)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"295\" width=\"20.2\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"309\">Có</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,385 L310,385\" marker-end=\"url(#arrow-overview)\"/><g class=\"edge-label\"><rect x=\"321.6\" y=\"364\" width=\"56.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"378\">Tiếp tục</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,385 L750,385\" marker-end=\"url(#arrow-overview)\"/><g class=\"edge-label\"><rect x=\"675.5\" y=\"364\" width=\"69\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"378\">Luyện / ôn</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,430 L530,490\" marker-end=\"url(#arrow-overview)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"445\" width=\"50.699999999999996\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"459\">Xem lại</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,535 L310,535\" marker-end=\"url(#arrow-overview)\"/><g class=\"edge-label\"><rect x=\"321.6\" y=\"501\" width=\"56.8\" height=\"31\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"515\">Xem theo</tspan><tspan x=\"350\" y=\"528\">ngày</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,580 L530,640\" marker-end=\"url(#arrow-overview)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"595\" width=\"87.3\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"609\">Đóng chi tiết</tspan></text></g></g><g class=\"edge normal\"><path d=\"M170,580 L170,685 L390,685\" marker-end=\"url(#arrow-overview)\"/><g class=\"edge-label\"><rect x=\"178\" y=\"617.5\" width=\"50.699999999999996\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"182\" y=\"631.5\">Trở lại</tspan></text></g></g><g class=\"node step\" data-node=\"open\" tabindex=\"0\" role=\"button\" aria-label=\"Mở trang Tổng quan: Việc hôm nay · tiến độ · lịch sử\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"61\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"87\">Mở trang Tổng quan</text><text class=\"node-caption\" x=\"410\" y=\"110\">Việc hôm nay · tiến độ · lịch sử</text></g><g class=\"node decision\" data-node=\"has\" tabindex=\"0\" role=\"button\" aria-label=\"Đã có hoạt động học?: Phân biệt dữ liệu thật và trang trống\" aria-pressed=\"false\"><path class=\"box\" d=\"M408,190 H652 L670,235 L652,280 H408 L390,235 Z\"/><text class=\"node-kind\" x=\"410\" y=\"211\">Điều kiện / lựa chọn</text><text class=\"node-title\" x=\"410\" y=\"237\">Đã có hoạt động học?</text><text class=\"node-caption\" x=\"410\" y=\"260\">Phân biệt dữ liệu thật và trang trống</text></g><g class=\"node step\" data-node=\"empty\" tabindex=\"0\" role=\"button\" aria-label=\"Chưa có hoạt động: Chọn cách bắt đầu luyện\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"211\">Bước thực hiện</text><text class=\"node-title\" x=\"770\" y=\"237\">Chưa có hoạt động</text><text class=\"node-caption\" x=\"770\" y=\"260\">Chọn cách bắt đầu luyện</text></g><g class=\"node step\" data-node=\"choose\" tabindex=\"0\" role=\"button\" aria-label=\"Chọn việc muốn làm: Tiếp tục · luyện · ôn · xem lại\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"361\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"387\">Chọn việc muốn làm</text><text class=\"node-caption\" x=\"410\" y=\"410\">Tiếp tục · luyện · ôn · xem lại</text></g><g class=\"node destination\" data-node=\"resume\" tabindex=\"0\" role=\"button\" aria-label=\"Tiếp tục bài / phiên dở: Mở đúng câu, giữ bài đã lưu\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"361\">Chuyển trang</text><text class=\"node-title\" x=\"50\" y=\"387\">Tiếp tục bài / phiên dở</text><text class=\"node-caption\" x=\"50\" y=\"410\">Mở đúng câu, giữ bài đã lưu</text></g><g class=\"node destination\" data-node=\"learn\" tabindex=\"0\" role=\"button\" aria-label=\"Luyện mới hoặc ôn tập: Chọn câu · tạo phiên · mở lộ trình\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"361\">Chuyển trang</text><text class=\"node-title\" x=\"770\" y=\"387\">Luyện mới hoặc ôn tập</text><text class=\"node-caption\" x=\"770\" y=\"410\">Chọn câu · tạo phiên · mở lộ trình</text></g><g class=\"node step\" data-node=\"history\" tabindex=\"0\" role=\"button\" aria-label=\"Chọn bài trong lịch sử: Lọc thời gian · chủ đề · trạng thái\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"511\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"537\">Chọn bài trong lịch sử</text><text class=\"node-caption\" x=\"410\" y=\"560\">Lọc thời gian · chủ đề · trạng thái</text></g><g class=\"node extension\" data-node=\"calendar\" tabindex=\"0\" role=\"button\" aria-label=\"Xem ngày / điểm danh: Chọn ngày; xác nhận khi đã lưu\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"511\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"50\" y=\"537\">Xem ngày / điểm danh</text><text class=\"node-caption\" x=\"50\" y=\"560\">Chọn ngày; xác nhận khi đã lưu</text></g><g class=\"node result\" data-node=\"return\" tabindex=\"0\" role=\"button\" aria-label=\"Quay lại Tổng quan: Cập nhật hoạt động đã được lưu\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"661\">Kết quả</text><text class=\"node-title\" x=\"410\" y=\"687\">Quay lại Tổng quan</text><text class=\"node-caption\" x=\"410\" y=\"710\">Cập nhật hoạt động đã được lưu</text></g></svg>"
+  },
+  {
+    "id": "login",
+    "name": "Đăng nhập",
+    "short": "Đăng nhập",
+    "scope": "Thiết kế theo auth 40/60: Google + email + khách",
+    "summary": "Đăng nhập Google hoặc email; tạo tài khoản, khôi phục mật khẩu và quay đúng đích.",
+    "reading": "Chọn Google / email / khách → Xác thực hoặc xác minh → Trở đúng trang đích.",
+    "rules": [
+      "Google và email/mật khẩu theo ZIP; trường .edu.vn/discount/GitHub chưa triển khai thì ẩn.",
+      "Tạo tài khoản cần xác minh email; reset dùng token có hạn, dùng một lần.",
+      "Liên kết lịch sử khách cần xác nhận; không tự gộp theo email, không lưu mật khẩu vào storage."
+    ],
+    "nodes": [
+      {
+        "id": "open",
+        "x": 390,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Mở trang Đăng nhập"
+        ],
+        "caption": [
+          "Ghi nhớ trang người dùng đang đến"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Mở từ nút đăng nhập hoặc khi một thao tác cần tài khoản theo chính sách full.",
+          "next": "Hiển thị lý do đăng nhập và giữ đích nội bộ để quay lại; giữ nháp được phép.",
+          "note": "Đây là thiết kế đề xuất theo yêu cầu mới, chưa phải backend auth đã có."
+        }
+      },
+      {
+        "id": "google",
+        "x": 390,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Tiếp tục với Google"
+        ],
+        "caption": [
+          "Chọn tài khoản và chấp thuận"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Bấm nút Google; thực hiện xác thực trên giao diện nhà cung cấp.",
+          "next": "Chờ kết quả; khóa bấm trùng, không yêu cầu nhập mật khẩu Google vào ứng dụng.",
+          "note": "Khách và email là các lựa chọn độc lập. Ghi nhớ phiên chỉ đổi TTL cookie theo config, không lưu mật khẩu."
+        }
+      },
+      {
+        "id": "cancel",
+        "x": 750,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Hủy / từ chối / lỗi kết nối"
+        ],
+        "caption": [
+          "Giữ đích đến và dữ liệu đang làm"
+        ],
+        "type": "error",
+        "refs": [],
+        "detail": {
+          "action": "Hiển thị trạng thái đăng nhập chưa hoàn tất bằng lời rõ ràng.",
+          "next": "Cho thử lại hoặc quay về trang trước; không báo đã đăng nhập khi chưa xác minh."
+        }
+      },
+      {
+        "id": "account",
+        "x": 390,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Tài khoản đã có hồ sơ?"
+        ],
+        "caption": [
+          "Sau khi xác thực thành công"
+        ],
+        "type": "decision",
+        "refs": [],
+        "detail": {
+          "action": "Server kiểm tra identity và tài khoản sau xác thực, không tin owner/email do client tự khai.",
+          "next": "Có hồ sơ → quay đúng đích. Lần đầu → xác nhận hồ sơ tối thiểu. Google/email không tự gộp theo địa chỉ email."
+        }
+      },
+      {
+        "id": "profile",
+        "x": 750,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Lần đầu: xác nhận hồ sơ"
+        ],
+        "caption": [
+          "Tên hiển thị · mục tiêu luyện"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Giải thích phạm vi lưu dữ liệu; thu mục tiêu tối thiểu khi cần.",
+          "next": "Xác nhận khởi tạo rồi trở lại trang đích. Nếu lưu lỗi, giữ form để thử lại."
+        }
+      },
+      {
+        "id": "return",
+        "x": 390,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Trở lại đúng trang đích"
+        ],
+        "caption": [
+          "Khôi phục ngữ cảnh, không tự gửi bài"
+        ],
+        "type": "result",
+        "refs": [],
+        "detail": {
+          "action": "Quay về thao tác đang thực hiện sau khi đăng nhập thành công.",
+          "next": "Nếu không có đích thì tới Tổng quan; người học tiếp tục chủ động.",
+          "links": [
+            "overview",
+            "questions",
+            "interview",
+            "roadmap",
+            "assessment"
+          ]
+        }
+      },
+      {
+        "id": "expired",
+        "x": 30,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Phiên đăng nhập hết hạn"
+        ],
+        "caption": [
+          "Giữ nháp; yêu cầu xác thực lại"
+        ],
+        "type": "error",
+        "refs": [],
+        "detail": {
+          "action": "Giải thích cần đăng nhập lại; không hiển thị dữ liệu riêng của tài khoản khác.",
+          "next": "Đăng nhập lại rồi kiểm tra quyền trước khi khôi phục. Không tự chuyển bài sang tài khoản mới."
+        }
+      },
+      {
+        "id": "merge",
+        "x": 390,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Nếu đang có lịch sử khách"
+        ],
+        "caption": [
+          "Cần chốt chính sách ghép dữ liệu"
+        ],
+        "type": "extension",
+        "refs": [],
+        "detail": {
+          "action": "Giải thích dữ liệu nào thuộc lượt khách và dữ liệu nào thuộc tài khoản.",
+          "next": "Chỉ thực hiện liên kết theo chính sách đã được duyệt; chưa có chính sách thì giữ tách biệt.",
+          "note": "Đây là điều kiện cần quyết định, không phải bước bắt buộc trong mọi lần đăng nhập."
+        }
+      },
+      {
+        "id": "email",
+        "x": 30,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Đăng nhập bằng email"
+        ],
+        "caption": [
+          "Email · mật khẩu · ghi nhớ phiên"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Validate form rồi xác thực server; icon mắt chỉ đổi hiển thị, không gọi server.",
+          "next": "Đúng credential → rotate session và kiểm tra hồ sơ. Sai → thông báo chung/rate limit, giữ email, không log mật khẩu."
+        }
+      },
+      {
+        "id": "reset",
+        "x": 30,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Quên mật khẩu"
+        ],
+        "caption": [
+          "Yêu cầu link → đặt mật khẩu mới"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Gửi yêu cầu reset có phản hồi trung tính; kiểm tra token có hạn/dùng một lần khi đặt lại.",
+          "next": "Reset thành công về đăng nhập. Link lỗi/hết hạn cho yêu cầu lại; không tự đăng nhập."
+        }
+      },
+      {
+        "id": "register",
+        "x": 750,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Tạo tài khoản"
+        ],
+        "caption": [
+          "Thông tin tối thiểu · xác minh email"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Đổi tab Tạo tài khoản, nhập tên/email/mật khẩu và chấp thuận điều khoản; gửi yêu cầu tạo.",
+          "next": "Xác minh email theo link có hạn rồi đăng nhập; Google lần đầu dùng provider identity đã xác thực. Không thu CV."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "google",
+        "label": "",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "google",
+        "to": "cancel",
+        "label": "Không thành công",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "cancel",
+        "to": "google",
+        "label": "Thử lại",
+        "points": [
+          [
+            890,
+            190
+          ],
+          [
+            890,
+            165
+          ],
+          [
+            670,
+            165
+          ],
+          [
+            670,
+            190
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "google",
+        "to": "account",
+        "label": "Đã xác thực",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "account",
+        "to": "profile",
+        "label": "Chưa có",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "account",
+        "to": "return",
+        "label": "Đã có",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "profile",
+        "to": "return",
+        "label": "Đã lưu hồ sơ",
+        "points": [
+          [
+            890,
+            430
+          ],
+          [
+            890,
+            460
+          ],
+          [
+            530,
+            460
+          ],
+          [
+            530,
+            490
+          ]
+        ],
+        "kind": "normal"
+      },
+      {
+        "from": "expired",
+        "to": "open",
+        "label": "Xác thực lại",
+        "points": [
+          [
+            170,
+            490
+          ],
+          [
+            170,
+            85
+          ],
+          [
+            390,
+            85
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "return",
+        "to": "merge",
+        "label": "Chỉ khi có lịch sử khách",
+        "points": null,
+        "kind": "optional"
+      },
+      {
+        "from": "open",
+        "to": "email",
+        "label": "Chọn email",
+        "points": [
+          [
+            390,
+            85
+          ],
+          [
+            340,
+            85
+          ],
+          [
+            340,
+            235
+          ],
+          [
+            310,
+            235
+          ]
+        ],
+        "kind": "normal"
+      },
+      {
+        "from": "email",
+        "to": "account",
+        "label": "Thành công",
+        "points": [
+          [
+            310,
+            235
+          ],
+          [
+            350,
+            235
+          ],
+          [
+            350,
+            385
+          ],
+          [
+            390,
+            385
+          ]
+        ],
+        "kind": "normal"
+      },
+      {
+        "from": "email",
+        "to": "reset",
+        "label": "Quên mật khẩu",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "open",
+        "to": "register",
+        "label": "Tạo tài khoản",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "register",
+        "to": "google",
+        "label": "Sau xác minh",
+        "points": [
+          [
+            890,
+            130
+          ],
+          [
+            890,
+            150
+          ],
+          [
+            530,
+            150
+          ],
+          [
+            530,
+            190
+          ]
+        ],
+        "kind": "retry"
+      }
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1060 770\" role=\"group\" aria-label=\"Sơ đồ Đăng nhập\" class=\"flow-svg\"><title>User flow — Đăng nhập</title><desc>Chọn Google / email / khách → Xác thực hoặc xác minh → Trở đúng trang đích. Chọn một khối để xem chi tiết.</desc><defs><marker id=\"arrow-login\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 0 L 10 5 L 0 10 z\" fill=\"#69778d\"/></marker></defs><style>.flow-svg{font-family:'Segoe UI',Arial,sans-serif}.edge path{fill:none;stroke:#69778d;stroke-width:1.7;stroke-linejoin:round}.edge.retry path{stroke-dasharray:5 4}.edge.optional path{stroke-dasharray:2 5}.edge-label rect{fill:#fff;opacity:.97}.edge-label text{font-size:11px;fill:#475569}.node{cursor:pointer;outline:none}.node .box{fill:#f5f3ff;stroke:#8b76bd;stroke-width:1.4}.node.extension .box{fill:#f8fafc;stroke:#9ca9ba;stroke-dasharray:5 3}.node.decision .box{fill:#fff8e7;stroke:#b58b30}.node.error .box{fill:#fff3ef;stroke:#c78570}.node.result .box{fill:#edf9f5;stroke:#478b77}.node.destination .box{fill:#eef4ff;stroke:#7792bd}.node-kind{font-size:10.5px;fill:#596579}.node-title{font-size:16px;font-weight:650;fill:#1e293b}.node-caption{font-size:12px;fill:#4d5b70}.node:hover .box{stroke:#594090;stroke-width:2.5}.node:focus .box,.node[aria-pressed=true] .box{stroke:#593699;stroke-width:3.5}.node[aria-pressed=true] .node-title{fill:#50317f}</style><rect width=\"1060\" height=\"770\" fill=\"white\"/><g class=\"edge normal\"><path d=\"M530,130 L530,190\" marker-end=\"url(#arrow-login)\"/></g><g class=\"edge normal\"><path d=\"M670,235 L750,235\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"672.45\" y=\"201\" width=\"75.1\" height=\"31\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"215\">Không thành</tspan><tspan x=\"710\" y=\"228\">công</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,190 L890,165 L670,165 L670,190\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"162.5\" width=\"50.699999999999996\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"176.5\">Thử lại</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,280 L530,340\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"295\" width=\"75.1\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"309\">Đã xác thực</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,385 L750,385\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"684.65\" y=\"364\" width=\"50.699999999999996\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"378\">Chưa có</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,430 L530,490\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"445\" width=\"38.5\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"459\">Đã có</tspan></text></g></g><g class=\"edge normal\"><path d=\"M890,430 L890,460 L530,460 L530,490\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"430\" width=\"81.19999999999999\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"444\">Đã lưu hồ sơ</tspan></text></g></g><g class=\"edge retry\"><path d=\"M170,490 L170,85 L390,85\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"178\" y=\"272.5\" width=\"81.19999999999999\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"182\" y=\"286.5\">Xác thực lại</tspan></text></g></g><g class=\"edge optional\"><path d=\"M530,580 L530,640\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"595\" width=\"154.39999999999998\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"609\">Chỉ khi có lịch sử khách</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,85 L340,85 L340,235 L310,235\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"330.5\" y=\"64\" width=\"69\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"365\" y=\"78\">Chọn email</tspan></text></g></g><g class=\"edge normal\"><path d=\"M310,235 L350,235 L350,385 L390,385\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"295.5\" y=\"214\" width=\"69\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"330\" y=\"228\">Thành công</tspan></text></g></g><g class=\"edge normal\"><path d=\"M170,280 L170,340\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"178\" y=\"295\" width=\"87.3\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"182\" y=\"309\">Quên mật khẩu</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,85 L750,85\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"684.65\" y=\"51\" width=\"50.699999999999996\" height=\"31\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"65\">Tạo tài</tspan><tspan x=\"710\" y=\"78\">khoản</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,130 L890,150 L530,150 L530,190\" marker-end=\"url(#arrow-login)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"125\" width=\"81.19999999999999\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"139\">Sau xác minh</tspan></text></g></g><g class=\"node step\" data-node=\"open\" tabindex=\"0\" role=\"button\" aria-label=\"Mở trang Đăng nhập: Ghi nhớ trang người dùng đang đến\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"61\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"87\">Mở trang Đăng nhập</text><text class=\"node-caption\" x=\"410\" y=\"110\">Ghi nhớ trang người dùng đang đến</text></g><g class=\"node step\" data-node=\"google\" tabindex=\"0\" role=\"button\" aria-label=\"Tiếp tục với Google: Chọn tài khoản và chấp thuận\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"211\">Bước thực hiện</text><text class=\"node-title\" x=\"410\" y=\"237\">Tiếp tục với Google</text><text class=\"node-caption\" x=\"410\" y=\"260\">Chọn tài khoản và chấp thuận</text></g><g class=\"node error\" data-node=\"cancel\" tabindex=\"0\" role=\"button\" aria-label=\"Hủy / từ chối / lỗi kết nối: Giữ đích đến và dữ liệu đang làm\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"211\">Nhánh lỗi / ngoại lệ</text><text class=\"node-title\" x=\"770\" y=\"237\">Hủy / từ chối / lỗi kết nối</text><text class=\"node-caption\" x=\"770\" y=\"260\">Giữ đích đến và dữ liệu đang làm</text></g><g class=\"node decision\" data-node=\"account\" tabindex=\"0\" role=\"button\" aria-label=\"Tài khoản đã có hồ sơ?: Sau khi xác thực thành công\" aria-pressed=\"false\"><path class=\"box\" d=\"M408,340 H652 L670,385 L652,430 H408 L390,385 Z\"/><text class=\"node-kind\" x=\"410\" y=\"361\">Điều kiện / lựa chọn</text><text class=\"node-title\" x=\"410\" y=\"387\">Tài khoản đã có hồ sơ?</text><text class=\"node-caption\" x=\"410\" y=\"410\">Sau khi xác thực thành công</text></g><g class=\"node step\" data-node=\"profile\" tabindex=\"0\" role=\"button\" aria-label=\"Lần đầu: xác nhận hồ sơ: Tên hiển thị · mục tiêu luyện\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"361\">Bước thực hiện</text><text class=\"node-title\" x=\"770\" y=\"387\">Lần đầu: xác nhận hồ sơ</text><text class=\"node-caption\" x=\"770\" y=\"410\">Tên hiển thị · mục tiêu luyện</text></g><g class=\"node result\" data-node=\"return\" tabindex=\"0\" role=\"button\" aria-label=\"Trở lại đúng trang đích: Khôi phục ngữ cảnh, không tự gửi bài\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"511\">Kết quả</text><text class=\"node-title\" x=\"410\" y=\"537\">Trở lại đúng trang đích</text><text class=\"node-caption\" x=\"410\" y=\"560\">Khôi phục ngữ cảnh, không tự gửi bài</text></g><g class=\"node error\" data-node=\"expired\" tabindex=\"0\" role=\"button\" aria-label=\"Phiên đăng nhập hết hạn: Giữ nháp; yêu cầu xác thực lại\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"511\">Nhánh lỗi / ngoại lệ</text><text class=\"node-title\" x=\"50\" y=\"537\">Phiên đăng nhập hết hạn</text><text class=\"node-caption\" x=\"50\" y=\"560\">Giữ nháp; yêu cầu xác thực lại</text></g><g class=\"node extension\" data-node=\"merge\" tabindex=\"0\" role=\"button\" aria-label=\"Nếu đang có lịch sử khách: Cần chốt chính sách ghép dữ liệu\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"661\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"410\" y=\"687\">Nếu đang có lịch sử khách</text><text class=\"node-caption\" x=\"410\" y=\"710\">Cần chốt chính sách ghép dữ liệu</text></g><g class=\"node step\" data-node=\"email\" tabindex=\"0\" role=\"button\" aria-label=\"Đăng nhập bằng email: Email · mật khẩu · ghi nhớ phiên\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"211\">Bước thực hiện</text><text class=\"node-title\" x=\"50\" y=\"237\">Đăng nhập bằng email</text><text class=\"node-caption\" x=\"50\" y=\"260\">Email · mật khẩu · ghi nhớ phiên</text></g><g class=\"node step\" data-node=\"reset\" tabindex=\"0\" role=\"button\" aria-label=\"Quên mật khẩu: Yêu cầu link → đặt mật khẩu mới\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"340\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"361\">Bước thực hiện</text><text class=\"node-title\" x=\"50\" y=\"387\">Quên mật khẩu</text><text class=\"node-caption\" x=\"50\" y=\"410\">Yêu cầu link → đặt mật khẩu mới</text></g><g class=\"node step\" data-node=\"register\" tabindex=\"0\" role=\"button\" aria-label=\"Tạo tài khoản: Thông tin tối thiểu · xác minh email\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"61\">Bước thực hiện</text><text class=\"node-title\" x=\"770\" y=\"87\">Tạo tài khoản</text><text class=\"node-caption\" x=\"770\" y=\"110\">Thông tin tối thiểu · xác minh email</text></g></svg>"
+  },
+  {
+    "id": "assessment",
+    "name": "Bài kiểm tra đầu vào",
+    "short": "Kiểm tra đầu vào",
+    "scope": "Thiết kế theo ZIP · người dùng xác nhận ba loại câu",
+    "summary": "Ba phần: trắc nghiệm, tự luận và tình huống; xác nhận nộp rồi dùng kết quả để lập kế hoạch.",
+    "reading": "Xác nhận mục tiêu → Làm bài → Rà soát → Lưu và đánh giá → Kết quả nền.",
+    "rules": [
+      "Trắc nghiệm đúng theo key, sai = 0, chưa chọn = unanswered; không gọi LLM chấm choice.",
+      "Tự luận/tình huống có Văn bản hoặc Ghi âm→sửa/xác nhận transcript. Chat không gợi ý nội dung trước nộp.",
+      "Nộp thiếu có xác nhận và coverage; tổng null khi partial/unknown/failed, không renormalize phần đã làm."
+    ],
+    "nodes": [
+      {
+        "id": "intro",
+        "x": 390,
+        "y": 40,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Xác nhận mục tiêu kiểm tra"
+        ],
+        "caption": [
+          "Vai trò · cấp độ · phạm vi đánh giá"
+        ],
+        "type": "extension",
+        "refs": [
+          "L02"
+        ],
+        "detail": {
+          "action": "Đọc hướng dẫn, số câu, thời lượng nếu đã cấu hình và tác động của việc kiểm tra lại.",
+          "next": "Bắt đầu lượt mới sau xác nhận hoặc tiếp tục lượt đang dở; giữ kết quả cũ."
+        }
+      },
+      {
+        "id": "write",
+        "x": 390,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Làm bài kiểm tra ba phần"
+        ],
+        "caption": [
+          "Trắc nghiệm · tự luận · tình huống"
+        ],
+        "type": "extension",
+        "refs": [
+          "L03"
+        ],
+        "detail": {
+          "action": "Chọn option ở trắc nghiệm; soạn blocks hoặc chèn transcript đã xác nhận ở tự luận/case. Tab/số câu/Câu trước giữ nháp, không nộp.",
+          "next": "Lưu & sang câu tiếp chỉ lưu draft; Nộp bài mở rà soát. Không khóa case chỉ vì phần trước chưa xong; chat chỉ thao tác/làm rõ trung tính."
+        }
+      },
+      {
+        "id": "resume",
+        "x": 30,
+        "y": 190,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Lưu và thoát / tiếp tục"
+        ],
+        "caption": [
+          "Mở lại đúng lượt và đúng câu"
+        ],
+        "type": "step",
+        "refs": [],
+        "detail": {
+          "action": "Chọn lưu và thoát; chỉ xác nhận lưu sau phản hồi thành công.",
+          "next": "Lần sau cho tiếp tục lượt cũ hoặc xác nhận tạo lượt khác, giữ lượt trước."
+        }
+      },
+      {
+        "id": "review",
+        "x": 390,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Rà soát: đã trả lời đủ?"
+        ],
+        "caption": [
+          "Xem danh sách câu còn trống"
+        ],
+        "type": "decision",
+        "refs": [],
+        "detail": {
+          "action": "Hiển thị các câu còn thiếu trước nút xác nhận nộp.",
+          "next": "Đủ → xác nhận nộp. Thiếu → quay lại làm hoặc xác nhận nộp phần đã có theo chính sách được duyệt."
+        }
+      },
+      {
+        "id": "missing",
+        "x": 750,
+        "y": 340,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Còn câu chưa trả lời"
+        ],
+        "caption": [
+          "Làm tiếp hoặc xác nhận nộp thiếu"
+        ],
+        "type": "decision",
+        "refs": [],
+        "detail": {
+          "action": "Nêu số câu chưa làm và giới hạn của kết quả nếu nộp lúc này.",
+          "next": "Làm tiếp quay về bài; nộp thiếu chỉ tiếp tục khi đã xác nhận.",
+          "note": "Người dùng xác nhận nộp thiếu thì lưu snapshot partial; phần chưa làm không tính 0."
+        }
+      },
+      {
+        "id": "submit",
+        "x": 390,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Nộp và đánh giá bài đã lưu"
+        ],
+        "caption": [
+          "Trích bằng chứng → đối chiếu rubric"
+        ],
+        "type": "extension",
+        "refs": [],
+        "detail": {
+          "action": "Server đếm lại câu trống và kiểm tra revision; xác nhận full/partial tạo snapshot atomic, khóa sửa mọi response.",
+          "next": "Choice so key đã review; tự luận/case diễn giải→xác thực→rubric. Lỗi từng item retry đúng snapshot, không chấm lại tất cả hoặc sửa đáp án."
+        }
+      },
+      {
+        "id": "failure",
+        "x": 750,
+        "y": 490,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Lưu / AI gặp lỗi"
+        ],
+        "caption": [
+          "Giữ bài, đối soát và thử lại"
+        ],
+        "type": "error",
+        "refs": [],
+        "detail": {
+          "action": "Phân biệt chưa lưu được với đã lưu nhưng chưa đánh giá được.",
+          "next": "Thử lại đúng bước có giới hạn; giữ các kết quả câu đã có, không chạy lại toàn bộ hoặc gán điểm 0."
+        }
+      },
+      {
+        "id": "result",
+        "x": 390,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Xem kết quả đầu vào"
+        ],
+        "caption": [
+          "Kỹ năng đã kiểm tra · phần còn thiếu"
+        ],
+        "type": "result",
+        "refs": [
+          "L04"
+        ],
+        "detail": {
+          "action": "Xem đáp án đối chiếu choice sau nộp, tiêu chí/quote tự luận, điểm từng item, completion và coverage riêng.",
+          "next": "Chỉ có tổng khi đủ required và evidence; partial/failed/unknown tổng null. Preview/Tùy chỉnh/Kích hoạt lộ trình là các thao tác riêng."
+        }
+      },
+      {
+        "id": "roadmap",
+        "x": 30,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Mở lộ trình cá nhân hóa"
+        ],
+        "caption": [
+          "Chỉ đề xuất phần có căn cứ"
+        ],
+        "type": "destination",
+        "refs": [],
+        "detail": {
+          "action": "Dùng kết quả đã xác nhận để chọn mục học có nguồn và tiên quyết.",
+          "next": "Chuyển sang trang Lộ trình cá nhân hóa.",
+          "go": "roadmap"
+        }
+      },
+      {
+        "id": "add",
+        "x": 750,
+        "y": 640,
+        "w": 280,
+        "h": 90,
+        "title": [
+          "Bổ sung phần còn thiếu"
+        ],
+        "caption": [
+          "Làm thêm / thử lại bài lỗi"
+        ],
+        "type": "extension",
+        "refs": [],
+        "detail": {
+          "action": "Xem kỹ năng nào chưa có đủ dữ liệu và lý do.",
+          "next": "Tạo lượt bổ sung có xác nhận hoặc thử lại bài đã lưu bị lỗi; không xóa kết quả cũ."
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "intro",
+        "to": "write",
+        "label": "Đã xác nhận",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "write",
+        "to": "resume",
+        "label": "Tạm dừng",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "write",
+        "to": "review",
+        "label": "Rà soát nộp",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "review",
+        "to": "missing",
+        "label": "Chưa đủ",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "missing",
+        "to": "write",
+        "label": "Làm tiếp",
+        "points": [
+          [
+            890,
+            340
+          ],
+          [
+            890,
+            235
+          ],
+          [
+            670,
+            235
+          ]
+        ],
+        "kind": "retry"
+      },
+      {
+        "from": "review",
+        "to": "submit",
+        "label": "Đủ; xác nhận nộp",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "missing",
+        "to": "submit",
+        "label": "Xác nhận nộp thiếu",
+        "points": [
+          [
+            890,
+            430
+          ],
+          [
+            890,
+            465
+          ],
+          [
+            530,
+            465
+          ],
+          [
+            530,
+            490
+          ]
+        ],
+        "kind": "normal"
+      },
+      {
+        "from": "submit",
+        "to": "failure",
+        "label": "Có lỗi",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "submit",
+        "to": "result",
+        "label": "Đã có kết quả",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "result",
+        "to": "roadmap",
+        "label": "Đủ căn cứ",
+        "points": null,
+        "kind": "normal"
+      },
+      {
+        "from": "result",
+        "to": "add",
+        "label": "Chưa đủ",
+        "points": null,
+        "kind": "normal"
+      }
+    ],
+    "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1060 770\" role=\"group\" aria-label=\"Sơ đồ Bài kiểm tra đầu vào\" class=\"flow-svg\"><title>User flow — Bài kiểm tra đầu vào</title><desc>Xác nhận mục tiêu → Làm bài → Rà soát → Lưu và đánh giá → Kết quả nền. Chọn một khối để xem chi tiết.</desc><defs><marker id=\"arrow-assessment\" viewBox=\"0 0 10 10\" refX=\"9\" refY=\"5\" markerWidth=\"6\" markerHeight=\"6\" orient=\"auto-start-reverse\"><path d=\"M 0 0 L 10 5 L 0 10 z\" fill=\"#69778d\"/></marker></defs><style>.flow-svg{font-family:'Segoe UI',Arial,sans-serif}.edge path{fill:none;stroke:#69778d;stroke-width:1.7;stroke-linejoin:round}.edge.retry path{stroke-dasharray:5 4}.edge.optional path{stroke-dasharray:2 5}.edge-label rect{fill:#fff;opacity:.97}.edge-label text{font-size:11px;fill:#475569}.node{cursor:pointer;outline:none}.node .box{fill:#f5f3ff;stroke:#8b76bd;stroke-width:1.4}.node.extension .box{fill:#f8fafc;stroke:#9ca9ba;stroke-dasharray:5 3}.node.decision .box{fill:#fff8e7;stroke:#b58b30}.node.error .box{fill:#fff3ef;stroke:#c78570}.node.result .box{fill:#edf9f5;stroke:#478b77}.node.destination .box{fill:#eef4ff;stroke:#7792bd}.node-kind{font-size:10.5px;fill:#596579}.node-title{font-size:16px;font-weight:650;fill:#1e293b}.node-caption{font-size:12px;fill:#4d5b70}.node:hover .box{stroke:#594090;stroke-width:2.5}.node:focus .box,.node[aria-pressed=true] .box{stroke:#593699;stroke-width:3.5}.node[aria-pressed=true] .node-title{fill:#50317f}</style><rect width=\"1060\" height=\"770\" fill=\"white\"/><g class=\"edge normal\"><path d=\"M530,130 L530,190\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"145\" width=\"75.1\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"159\">Đã xác nhận</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,235 L310,235\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"321.6\" y=\"214\" width=\"56.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"228\">Tạm dừng</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,280 L530,340\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"295\" width=\"75.1\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"309\">Rà soát nộp</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,385 L750,385\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"684.65\" y=\"364\" width=\"50.699999999999996\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"378\">Chưa đủ</tspan></text></g></g><g class=\"edge retry\"><path d=\"M890,340 L890,235 L670,235\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"272.5\" width=\"56.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"286.5\">Làm tiếp</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,430 L530,490\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"445\" width=\"105.6\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"459\">Đủ; xác nhận nộp</tspan></text></g></g><g class=\"edge normal\"><path d=\"M890,430 L890,465 L530,465 L530,490\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"898\" y=\"432.5\" width=\"117.8\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"902\" y=\"446.5\">Xác nhận nộp thiếu</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,535 L750,535\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"687.7\" y=\"514\" width=\"44.599999999999994\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"528\">Có lỗi</tspan></text></g></g><g class=\"edge normal\"><path d=\"M530,580 L530,640\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"538\" y=\"595\" width=\"87.3\" height=\"18\" rx=\"3\"/><text text-anchor=\"start\"><tspan x=\"542\" y=\"609\">Đã có kết quả</tspan></text></g></g><g class=\"edge normal\"><path d=\"M390,685 L310,685\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"318.55\" y=\"664\" width=\"62.9\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"350\" y=\"678\">Đủ căn cứ</tspan></text></g></g><g class=\"edge normal\"><path d=\"M670,685 L750,685\" marker-end=\"url(#arrow-assessment)\"/><g class=\"edge-label\"><rect x=\"684.65\" y=\"664\" width=\"50.699999999999996\" height=\"18\" rx=\"3\"/><text text-anchor=\"middle\"><tspan x=\"710\" y=\"678\">Chưa đủ</tspan></text></g></g><g class=\"node extension\" data-node=\"intro\" tabindex=\"0\" role=\"button\" aria-label=\"Xác nhận mục tiêu kiểm tra: Vai trò · cấp độ · phạm vi đánh giá\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"40\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"61\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"410\" y=\"87\">Xác nhận mục tiêu kiểm tra</text><text class=\"node-caption\" x=\"410\" y=\"110\">Vai trò · cấp độ · phạm vi đánh giá</text></g><g class=\"node extension\" data-node=\"write\" tabindex=\"0\" role=\"button\" aria-label=\"Làm bài kiểm tra ba phần: Trắc nghiệm · tự luận · tình huống\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"211\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"410\" y=\"237\">Làm bài kiểm tra ba phần</text><text class=\"node-caption\" x=\"410\" y=\"260\">Trắc nghiệm · tự luận · tình huống</text></g><g class=\"node step\" data-node=\"resume\" tabindex=\"0\" role=\"button\" aria-label=\"Lưu và thoát / tiếp tục: Mở lại đúng lượt và đúng câu\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"190\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"211\">Bước thực hiện</text><text class=\"node-title\" x=\"50\" y=\"237\">Lưu và thoát / tiếp tục</text><text class=\"node-caption\" x=\"50\" y=\"260\">Mở lại đúng lượt và đúng câu</text></g><g class=\"node decision\" data-node=\"review\" tabindex=\"0\" role=\"button\" aria-label=\"Rà soát: đã trả lời đủ?: Xem danh sách câu còn trống\" aria-pressed=\"false\"><path class=\"box\" d=\"M408,340 H652 L670,385 L652,430 H408 L390,385 Z\"/><text class=\"node-kind\" x=\"410\" y=\"361\">Điều kiện / lựa chọn</text><text class=\"node-title\" x=\"410\" y=\"387\">Rà soát: đã trả lời đủ?</text><text class=\"node-caption\" x=\"410\" y=\"410\">Xem danh sách câu còn trống</text></g><g class=\"node decision\" data-node=\"missing\" tabindex=\"0\" role=\"button\" aria-label=\"Còn câu chưa trả lời: Làm tiếp hoặc xác nhận nộp thiếu\" aria-pressed=\"false\"><path class=\"box\" d=\"M768,340 H1012 L1030,385 L1012,430 H768 L750,385 Z\"/><text class=\"node-kind\" x=\"770\" y=\"361\">Điều kiện / lựa chọn</text><text class=\"node-title\" x=\"770\" y=\"387\">Còn câu chưa trả lời</text><text class=\"node-caption\" x=\"770\" y=\"410\">Làm tiếp hoặc xác nhận nộp thiếu</text></g><g class=\"node extension\" data-node=\"submit\" tabindex=\"0\" role=\"button\" aria-label=\"Nộp và đánh giá bài đã lưu: Trích bằng chứng → đối chiếu rubric\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"511\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"410\" y=\"537\">Nộp và đánh giá bài đã lưu</text><text class=\"node-caption\" x=\"410\" y=\"560\">Trích bằng chứng → đối chiếu rubric</text></g><g class=\"node error\" data-node=\"failure\" tabindex=\"0\" role=\"button\" aria-label=\"Lưu / AI gặp lỗi: Giữ bài, đối soát và thử lại\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"490\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"511\">Nhánh lỗi / ngoại lệ</text><text class=\"node-title\" x=\"770\" y=\"537\">Lưu / AI gặp lỗi</text><text class=\"node-caption\" x=\"770\" y=\"560\">Giữ bài, đối soát và thử lại</text></g><g class=\"node result\" data-node=\"result\" tabindex=\"0\" role=\"button\" aria-label=\"Xem kết quả đầu vào: Kỹ năng đã kiểm tra · phần còn thiếu\" aria-pressed=\"false\"><rect class=\"box\" x=\"390\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"410\" y=\"661\">Kết quả</text><text class=\"node-title\" x=\"410\" y=\"687\">Xem kết quả đầu vào</text><text class=\"node-caption\" x=\"410\" y=\"710\">Kỹ năng đã kiểm tra · phần còn thiếu</text></g><g class=\"node destination\" data-node=\"roadmap\" tabindex=\"0\" role=\"button\" aria-label=\"Mở lộ trình cá nhân hóa: Chỉ đề xuất phần có căn cứ\" aria-pressed=\"false\"><rect class=\"box\" x=\"30\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"50\" y=\"661\">Chuyển trang</text><text class=\"node-title\" x=\"50\" y=\"687\">Mở lộ trình cá nhân hóa</text><text class=\"node-caption\" x=\"50\" y=\"710\">Chỉ đề xuất phần có căn cứ</text></g><g class=\"node extension\" data-node=\"add\" tabindex=\"0\" role=\"button\" aria-label=\"Bổ sung phần còn thiếu: Làm thêm / thử lại bài lỗi\" aria-pressed=\"false\"><rect class=\"box\" x=\"750\" y=\"640\" width=\"280\" height=\"90\" rx=\"10\"/><text class=\"node-kind\" x=\"770\" y=\"661\">Thiết kế mở rộng</text><text class=\"node-title\" x=\"770\" y=\"687\">Bổ sung phần còn thiếu</text><text class=\"node-caption\" x=\"770\" y=\"710\">Làm thêm / thử lại bài lỗi</text></g></svg>"
+  }
+]

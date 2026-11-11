@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="web_blank" name="shell-type"/>
+<title>Đăng nhập &amp; Tạo tài khoản - interviewUS</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface": "#faf9fe",
+            "on-primary-container": "#ede0ff",
+            "secondary-fixed": "#e9ddff",
+            "background": "#faf9fe",
+            "tertiary": "#4f4b6c",
+            "on-tertiary-container": "#e9e2ff",
+            "primary": "#630ed4",
+            "on-background": "#1a1c1f",
+            "surface-tint": "#732ee4",
+            "tertiary-fixed": "#e5deff",
+            "primary-fixed": "#eaddff",
+            "tertiary-fixed-dim": "#c8c2e9",
+            "outline-variant": "#ccc3d8",
+            "on-tertiary-fixed-variant": "#474363",
+            "inverse-on-surface": "#f1f0f5",
+            "secondary-fixed-dim": "#d0bcff",
+            "on-tertiary": "#ffffff",
+            "secondary": "#6b38d4",
+            "primary-container": "#7c3aed",
+            "primary-fixed-dim": "#d2bbff",
+            "secondary-container": "#8455ef",
+            "inverse-primary": "#d2bbff",
+            "surface-variant": "#e3e2e7",
+            "surface-container-low": "#f4f3f8",
+            "surface-container": "#eeedf2",
+            "on-error-container": "#93000a",
+            "on-secondary-fixed": "#23005c",
+            "on-surface-variant": "#4a4455",
+            "on-primary": "#ffffff",
+            "on-primary-fixed": "#25005a",
+            "on-surface": "#1a1c1f",
+            "error-container": "#ffdad6",
+            "surface-dim": "#dad9de",
+            "on-tertiary-fixed": "#1b1735",
+            "surface-bright": "#faf9fe",
+            "on-primary-fixed-variant": "#5a00c6",
+            "surface-container-lowest": "#ffffff",
+            "outline": "#7b7487",
+            "surface-container-high": "#e8e7ec",
+            "on-secondary": "#ffffff",
+            "error": "#ba1a1a",
+            "on-secondary-container": "#fffbff",
+            "on-error": "#ffffff",
+            "tertiary-container": "#686385",
+            "inverse-surface": "#2f3034",
+            "on-secondary-fixed-variant": "#5516be",
+            "surface-container-highest": "#e3e2e7"
+          },
+          fontFamily: {
+            "body": ["Plus Jakarta Sans", "sans-serif"],
+            "code": ["Space Grotesk", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-[#FAF9FE] text-[#1a1c1f] min-h-screen w-full relative overflow-x-hidden flex flex-col justify-between selection:bg-purple-100 selection:text-purple-900">
+<!-- Background Luminous Glassmorphic Orbs -->
+<div class="fixed top-[-10%] left-[-5%] w-[600px] h-[600px] rounded-full bg-[#7C3AED]/10 blur-[130px] pointer-events-none -z-10"></div>
+<div class="fixed top-[30%] right-[-10%] w-[550px] h-[550px] rounded-full bg-[#38BDF8]/10 blur-[140px] pointer-events-none -z-10"></div>
+<div class="fixed bottom-[-10%] left-[25%] w-[500px] h-[500px] rounded-full bg-[#A855F7]/10 blur-[140px] pointer-events-none -z-10"></div>
+<!-- Header / Top Navigation Bar -->
+<header class="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between z-10">
+<a class="flex items-center gap-3 group" href="#">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#630ed4] to-[#8455ef] flex items-center justify-center text-white shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-2xl font-bold">code_blocks</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5 leading-none">
+<span class="text-xl font-extrabold tracking-tight text-slate-900">interview<span class="text-[#630ed4]">US</span></span>
+<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-[#630ed4] font-code tracking-wide uppercase">Pro</span>
+</div>
+<span class="text-xs text-slate-500 font-medium mt-1">Luyện phỏng vấn kỹ thuật IT</span>
+</div>
+</a>
+<div class="flex items-center gap-4">
+<a class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-[#630ed4] transition-colors py-2 px-3.5 rounded-xl hover:bg-purple-50/60" href="#">
+<span class="material-symbols-outlined text-lg">arrow_back</span>
+<span>Quay về Trang chủ</span>
+</a>
+</div>
+</header>
+<!-- Main Centered Responsive Container (Desktop 1440px wide viewport ready) -->
+<main class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 my-auto flex items-center justify-center z-10">
+<div class="w-full rounded-3xl bg-white/85 backdrop-blur-2xl border border-white/90 shadow-2xl shadow-purple-500/10 overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
+<!-- CỘT TRÁI: 5 cols (Giới thiệu thương hiệu & Giá trị nền tảng) -->
+<section class="lg:col-span-5 p-8 lg:p-10 flex flex-col justify-between bg-gradient-to-br from-purple-50/70 via-white/50 to-indigo-50/30 border-b lg:border-b-0 lg:border-r border-slate-100">
+<div>
+<!-- Badge -->
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100/80 border border-purple-200/60 text-[#630ed4] text-xs font-semibold mb-4">
+<span class="material-symbols-outlined text-sm">stars</span>
+<span>Nền tảng chuyên sâu cho SV CNTT &amp; Fresher</span>
+</div>
+<!-- Headline -->
+<h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
+            Luyện từng câu, vững từng bước vào <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#630ed4] to-[#8455ef]">Big Tech</span>
+</h1>
+<p class="text-sm text-slate-600 mt-2 leading-relaxed">
+            Học sâu qua phản biện tự luận kỹ thuật cùng Us-Bot, phá bỏ thói quen học thuộc lòng code template.
+          </p>
+<!-- 3 Glass Feature Cards -->
+<div class="space-y-3.5 mt-6">
+<!-- Feature 1 -->
+<div class="p-4 rounded-2xl bg-white/90 border border-purple-100/80 shadow-xs hover:border-purple-200 hover:shadow-sm transition-all flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-xl bg-purple-100 text-[#630ed4] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl">psychology</span>
+</div>
+<div class="flex flex-col">
+<h2 class="text-sm font-bold text-slate-900">Tư duy bản chất, không học vẹt</h2>
+<p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                  Phân tích cơ chế JVM, Concurrency, Indexing B+Tree, thiết kế hệ thống và cân nhắc trade-offs.
+                </p>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="p-4 rounded-2xl bg-white/90 border border-purple-100/80 shadow-xs hover:border-purple-200 hover:shadow-sm transition-all flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-xl bg-indigo-100 text-[#4f4b6c] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl">smart_toy</span>
+</div>
+<div class="flex flex-col">
+<h2 class="text-sm font-bold text-slate-900">Trợ lý Us-Bot phản biện thời gian thực</h2>
+<p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                  Hỏi xoáy đáp xoay thông minh mô phỏng áp lực phỏng vấn thật từ các Senior Tech Lead.
+                </p>
+</div>
+</div>
+<!-- Feature 3 -->
+<div class="p-4 rounded-2xl bg-white/90 border border-purple-100/80 shadow-xs hover:border-purple-200 hover:shadow-sm transition-all flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-xl">fact_check</span>
+</div>
+<div class="flex flex-col">
+<h2 class="text-sm font-bold text-slate-900">Đánh giá minh bạch theo Rubric</h2>
+<p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                  Bằng chứng cụ thể, phân tích điểm khuyết và thang điểm rõ ràng giúp bứt phá rank kỹ năng.
+                </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Testimonial Card -->
+<div class="mt-6 pt-5 border-t border-slate-200/60">
+<div class="p-4 rounded-2xl bg-gradient-to-r from-purple-50/80 to-white/90 border border-purple-100/60 flex items-start gap-3">
+<div class="w-10 h-10 rounded-full bg-[#630ed4] text-white flex items-center justify-center shrink-0 font-bold text-xs shadow-sm">
+              TN
+            </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="text-xs font-bold text-slate-900">Trần Nhật Nam</span>
+<span class="text-[11px] text-purple-700 font-medium">• Fresher Backend @ VNG Corp</span>
+</div>
+<p class="text-xs text-slate-600 italic mt-1 leading-relaxed">
+                “Nhờ Us-Bot bắt bẻ cấu trúc Distributed Lock, mình tự tin trả lời vòng kỹ thuật và đỗ ngay lần đầu!”
+              </p>
+</div>
+</div>
+</div>
+</section>
+<!-- CỘT PHẢI: 7 cols (Form Đăng nhập & Tạo tài khoản chuyên nghiệp) -->
+<section class="lg:col-span-7 p-8 lg:p-12 bg-white flex flex-col justify-between">
+<div>
+<!-- Tab Switcher -->
+<div class="flex p-1.5 rounded-2xl bg-slate-100/80 border border-slate-200/60 mb-6">
+<button class="flex-1 py-3 rounded-xl font-bold text-sm text-center transition-all bg-white text-[#630ed4] shadow-sm" id="tab-login" onclick="switchAuthTab('login')" type="button">
+              Đăng nhập
+            </button>
+<button class="flex-1 py-3 rounded-xl font-bold text-sm text-center transition-all text-slate-600 hover:text-slate-900" id="tab-register" onclick="switchAuthTab('register')" type="button">
+              Tạo tài khoản mới
+            </button>
+</div>
+<!-- FORM: ĐĂNG NHẬP (Mặc định) -->
+<form class="space-y-4" id="form-login" onsubmit="event.preventDefault();">
+<!-- Email -->
+<div class="space-y-1.5">
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-700" for="login-email">Email sinh viên hoặc cá nhân</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-slate-400 text-xl pointer-events-none">mail</span>
+<input class="w-full pl-12 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white focus:border-[#7C3AED] focus:ring-4 focus:ring-purple-500/10 text-sm text-slate-900 placeholder:text-slate-400 transition-all outline-none" id="login-email" placeholder="vidu@hcmut.edu.vn hoặc name@gmail.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password -->
+<div class="space-y-1.5">
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-700" for="login-password">Mật khẩu</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-slate-400 text-xl pointer-events-none">lock</span>
+<input class="w-full pl-12 pr-12 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white focus:border-[#7C3AED] focus:ring-4 focus:ring-purple-500/10 text-sm text-slate-900 placeholder:text-slate-400 transition-all outline-none" id="login-password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-4 text-slate-400 hover:text-[#630ed4] transition-colors focus:outline-none flex items-center justify-center" onclick="togglePasswordVisibility('login-password', this)" type="button">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember & Forgot Password -->
+<div class="flex items-center justify-between text-xs pt-1">
+<label class="flex items-center gap-2 cursor-pointer select-none text-slate-700 font-medium">
+<input checked="" class="w-4 h-4 rounded border-slate-300 text-[#7C3AED] focus:ring-[#7C3AED] cursor-pointer" type="checkbox"/>
+<span>Ghi nhớ trên thiết bị này</span>
+</label>
+<a class="font-semibold text-[#630ed4] hover:text-[#7C3AED] hover:underline transition-colors" href="#">Quên mật khẩu?</a>
+</div>
+<!-- Submit CTA Button -->
+<button class="w-full mt-2 py-3.5 px-6 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] active:scale-[0.99] text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25 transition-all cursor-pointer" type="submit">
+<span>Đăng nhập vào interviewUS</span>
+<span class="material-symbols-outlined text-lg">arrow_forward</span>
+</button>
+</form>
+<!-- FORM: ĐĂNG KÝ (Ẩn ban đầu) -->
+<form class="space-y-3.5 hidden" id="form-register" onsubmit="event.preventDefault();">
+<!-- Fullname -->
+<div class="space-y-1">
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-700" for="reg-fullname">Họ và tên</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-slate-400 text-xl pointer-events-none">person</span>
+<input class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white focus:border-[#7C3AED] focus:ring-4 focus:ring-purple-500/10 text-sm text-slate-900 placeholder:text-slate-400 transition-all outline-none" id="reg-fullname" placeholder="Nguyễn Văn A" required="" type="text"/>
+</div>
+</div>
+<!-- Email -->
+<div class="space-y-1">
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-700" for="reg-email">Email (.edu.vn hoặc cá nhân)</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-slate-400 text-xl pointer-events-none">mail</span>
+<input class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white focus:border-[#7C3AED] focus:ring-4 focus:ring-purple-500/10 text-sm text-slate-900 placeholder:text-slate-400 transition-all outline-none" id="reg-email" placeholder="hoten@sv.hcmut.edu.vn" required="" type="email"/>
+</div>
+</div>
+<!-- Role Selector -->
+<div class="space-y-1">
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Giai đoạn mục tiêu</label>
+<div class="grid grid-cols-2 gap-2.5">
+<label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 cursor-pointer hover:border-purple-300 transition-all">
+<input checked="" class="text-[#7C3AED] focus:ring-[#7C3AED]" name="role" type="radio" value="intern"/>
+<span class="text-xs font-semibold text-slate-800">Sinh viên Thực tập</span>
+</label>
+<label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 cursor-pointer hover:border-purple-300 transition-all">
+<input class="text-[#7C3AED] focus:ring-[#7C3AED]" name="role" type="radio" value="fresher"/>
+<span class="text-xs font-semibold text-slate-800">Mới tốt nghiệp (Fresher)</span>
+</label>
+</div>
+</div>
+<!-- Password -->
+<div class="space-y-1">
+<label class="block text-xs font-bold uppercase tracking-wider text-slate-700" for="reg-password">Mật khẩu mới</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-slate-400 text-xl pointer-events-none">lock</span>
+<input class="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white focus:bg-white focus:border-[#7C3AED] focus:ring-4 focus:ring-purple-500/10 text-sm text-slate-900 placeholder:text-slate-400 transition-all outline-none" id="reg-password" oninput="checkPasswordStrength(this.value)" placeholder="Tối thiểu 8 ký tự" required="" type="password"/>
+<button class="absolute right-4 text-slate-400 hover:text-[#630ed4] transition-colors focus:outline-none flex items-center justify-center" onclick="togglePasswordVisibility('reg-password', this)" type="button">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+</div>
+<!-- Password strength meter -->
+<div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1 flex gap-1">
+<div class="h-full w-1/3 bg-slate-200 transition-colors rounded-full" id="bar-1"></div>
+<div class="h-full w-1/3 bg-slate-200 transition-colors rounded-full" id="bar-2"></div>
+<div class="h-full w-1/3 bg-slate-200 transition-colors rounded-full" id="bar-3"></div>
+</div>
+</div>
+<!-- Register CTA Button -->
+<button class="w-full mt-2 py-3.5 px-6 rounded-xl bg-[#7C3AED] hover:bg-[#6D28D9] active:scale-[0.99] text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-purple-500/25 transition-all cursor-pointer" type="submit">
+<span>Khởi tạo tài khoản interviewUS</span>
+<span class="material-symbols-outlined text-lg">rocket_launch</span>
+</button>
+</form>
+<!-- Divider -->
+<div class="relative my-5 flex items-center justify-center">
+<div class="w-full h-[1px] bg-slate-200"></div>
+<span class="absolute px-3 bg-white text-[11px] font-bold text-slate-400 tracking-wider uppercase font-code">Hoặc tiếp tục với</span>
+</div>
+<!-- Academic SSO & Social Auth Buttons -->
+<div class="space-y-2.5">
+<!-- Academic SSO Button -->
+<button class="w-full py-3 px-4 rounded-xl bg-purple-50 hover:bg-purple-100/80 border border-purple-200/80 text-[#630ed4] font-semibold text-xs sm:text-sm flex items-center justify-between transition-all group" type="button">
+<div class="flex items-center gap-3">
+<div class="w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-xs">
+<span class="material-symbols-outlined text-lg text-[#630ed4]">school</span>
+</div>
+<span>Đăng nhập tài khoản trường ĐH (.edu.vn)</span>
+</div>
+<span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#630ed4] text-white shadow-xs">Khuyên dùng</span>
+</button>
+<!-- Social Providers Row -->
+<div class="grid grid-cols-2 gap-2.5">
+<!-- Google -->
+<button class="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700 text-xs flex items-center justify-center gap-2.5 transition-all" type="button">
+<svg class="w-4 h-4 shrink-0" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"></path>
+</svg>
+<span>Google</span>
+</button>
+<!-- GitHub -->
+<button class="py-2.5 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 font-semibold text-slate-700 text-xs flex items-center justify-center gap-2.5 transition-all" type="button">
+<svg class="w-4 h-4 shrink-0 fill-current text-slate-900" viewbox="0 0 24 24">
+<path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path>
+</svg>
+<span>GitHub</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer inside form card -->
+<div class="mt-6 pt-4 flex flex-col items-center gap-2.5">
+<!-- MVP Guest Mode -->
+<a class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#630ed4] hover:text-[#7C3AED] hover:underline transition-colors group" href="#">
+<span class="material-symbols-outlined text-base group-hover:scale-110 transition-transform">visibility_off</span>
+<span>Chưa muốn tạo tài khoản? Trải nghiệm ẩn danh →</span>
+</a>
+<!-- Commitment & Policy -->
+<p class="text-[11px] text-slate-500 text-center leading-relaxed">
+            Bằng việc tiếp tục, bạn đồng ý với 
+            <a class="underline hover:text-[#630ed4]" href="#">Điều khoản Dịch vụ</a> và 
+            <a class="underline hover:text-[#630ed4]" href="#">Chính sách Bảo mật</a> của interviewUS.<br/>
+            Dữ liệu bài làm &amp; phản biện được bảo mật và chỉ dùng để cải thiện tiến độ của bạn.
+          </p>
+</div>
+</section>
+</div>
+</main>
+<!-- Global Footer -->
+<footer class="w-full max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 z-10 border-t border-slate-200/50 mt-auto">
+<div>
+      © 2026 <span class="font-bold text-slate-700">interviewUS</span>. Nền tảng luyện phỏng vấn kỹ thuật IT thế hệ mới.
+    </div>
+<div class="flex items-center gap-4">
+<a class="hover:text-[#630ed4] transition-colors" href="#">Điều khoản</a>
+<span>•</span>
+<a class="hover:text-[#630ed4] transition-colors" href="#">Bảo mật</a>
+<span>•</span>
+<a class="hover:text-[#630ed4] transition-colors flex items-center gap-1" href="#">
+<span>Cộng đồng Discord</span>
+</a>
+<span>•</span>
+<a class="hover:text-[#630ed4] transition-colors" href="#">GitHub</a>
+</div>
+</footer>
+<script>
+    function switchAuthTab(type) {
+      const loginTab = document.getElementById('tab-login');
+      const registerTab = document.getElementById('tab-register');
+      const loginForm = document.getElementById('form-login');
+      const registerForm = document.getElementById('form-register');
+
+      if (type === 'login') {
+        loginTab.className = 'flex-1 py-3 rounded-xl font-bold text-sm text-center transition-all bg-white text-[#630ed4] shadow-sm';
+        registerTab.className = 'flex-1 py-3 rounded-xl font-bold text-sm text-center transition-all text-slate-600 hover:text-slate-900';
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+      } else {
+        registerTab.className = 'flex-1 py-3 rounded-xl font-bold text-sm text-center transition-all bg-white text-[#630ed4] shadow-sm';
+        loginTab.className = 'flex-1 py-3 rounded-xl font-bold text-sm text-center transition-all text-slate-600 hover:text-slate-900';
+        registerForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+      }
+    }
+
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector('.material-symbols-outlined');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+      } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+      }
+    }
+
+    function checkPasswordStrength(val) {
+      const b1 = document.getElementById('bar-1');
+      const b2 = document.getElementById('bar-2');
+      const b3 = document.getElementById('bar-3');
+
+      // Reset
+      b1.className = 'h-full w-1/3 bg-slate-200 transition-colors rounded-full';
+      b2.className = 'h-full w-1/3 bg-slate-200 transition-colors rounded-full';
+      b3.className = 'h-full w-1/3 bg-slate-200 transition-colors rounded-full';
+
+      if (!val) return;
+
+      if (val.length >= 1) {
+        b1.className = 'h-full w-1/3 bg-rose-500 transition-colors rounded-full';
+      }
+      if (val.length >= 6) {
+        b1.className = 'h-full w-1/3 bg-amber-500 transition-colors rounded-full';
+        b2.className = 'h-full w-1/3 bg-amber-500 transition-colors rounded-full';
+      }
+      if (val.length >= 8 && /[A-Z]/.test(val) && /[0-9]/.test(val)) {
+        b1.className = 'h-full w-1/3 bg-emerald-500 transition-colors rounded-full';
+        b2.className = 'h-full w-1/3 bg-emerald-500 transition-colors rounded-full';
+        b3.className = 'h-full w-1/3 bg-emerald-500 transition-colors rounded-full';
+      }
+    }
+  </script>
+</body></html>
