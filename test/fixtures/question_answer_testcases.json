@@ -2115,29 +2115,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         }
       },
       {
@@ -2153,28 +2153,28 @@
             "status": "met",
             "score": 1,
             "evidence_quote": "`==` so sánh tham chiếu String",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "reason": "Identifies the String-reference comparison but misses the overload behavior and current HashMap identity semantics."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 1,
-            "evidence_quote": "chưa override đúng equals(Object)",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "thay bằng `Objects.equals`",
+            "reason": "Suggests value comparison but leaves the wrong equals signature and omits hashCode."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 1,
-            "evidence_quote": "Test hai object cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng id",
+            "reason": "Names a relevant lookup test but predicts success before the incomplete repair is applied."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         }
       },
       {
@@ -2189,29 +2189,29 @@
             "criterion_id": "c05.bugs",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "HashMap gọi overload `equals(UserKey)`",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           },
           {
             "criterion_id": "c05.fix",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "tự tạo hashCode từ các field.",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "Không cần sửa hay kiểm thử.",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         }
       },
       {
@@ -2226,29 +2226,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         }
       },
       {
@@ -2264,28 +2264,28 @@
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           },
           {
             "criterion_id": "c05.fix",
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Implements consistent equals/hashCode"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Tests equal and different keys through HashMap"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         }
       },
       {
@@ -2300,29 +2300,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         }
       },
       {
@@ -2337,29 +2337,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2375,29 +2375,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2414,28 +2414,28 @@
             "status": "met",
             "score": 1,
             "evidence_quote": "`==` so sánh tham chiếu String",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "reason": "Identifies the String-reference comparison but misses the overload behavior and current HashMap identity semantics."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 1,
-            "evidence_quote": "chưa override đúng equals(Object)",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "thay bằng `Objects.equals`",
+            "reason": "Suggests value comparison but leaves the wrong equals signature and omits hashCode."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 1,
-            "evidence_quote": "Test hai object cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng id",
+            "reason": "Names a relevant lookup test but predicts success before the incomplete repair is applied."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2452,28 +2452,28 @@
             "status": "met",
             "score": 1,
             "evidence_quote": "`==` so sánh tham chiếu String",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "reason": "Identifies the String-reference comparison but misses the overload behavior and current HashMap identity semantics."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 1,
-            "evidence_quote": "chưa override đúng equals(Object)",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "thay bằng `Objects.equals`",
+            "reason": "Suggests value comparison but leaves the wrong equals signature and omits hashCode."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 1,
-            "evidence_quote": "Test hai object cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng id",
+            "reason": "Names a relevant lookup test but predicts success before the incomplete repair is applied."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2489,29 +2489,29 @@
             "criterion_id": "c05.bugs",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "HashMap gọi overload `equals(UserKey)`",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           },
           {
             "criterion_id": "c05.fix",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "tự tạo hashCode từ các field.",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "Không cần sửa hay kiểm thử.",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2527,29 +2527,29 @@
             "criterion_id": "c05.bugs",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "HashMap gọi overload `equals(UserKey)`",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           },
           {
             "criterion_id": "c05.fix",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "tự tạo hashCode từ các field.",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "unmet",
             "score": 0,
-            "evidence_quote": "Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh ",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "Không cần sửa hay kiểm thử.",
+            "reason": "The answer incorrectly claims the overload is used, String == compares contents, or HashMap generates field-based hashCode."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2565,29 +2565,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2603,29 +2603,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2642,28 +2642,28 @@
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           },
           {
             "criterion_id": "c05.fix",
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Implements consistent equals/hashCode"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Tests equal and different keys through HashMap"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2680,28 +2680,28 @@
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           },
           {
             "criterion_id": "c05.fix",
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Implements consistent equals/hashCode"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "insufficient_evidence",
             "score": null,
             "evidence_quote": null,
-            "reason": "Tests equal and different keys through HashMap"
+            "reason": "The referenced external file is unavailable; criterion remains insufficientEvidence."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2717,29 +2717,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       },
@@ -2755,29 +2755,29 @@
             "criterion_id": "c05.bugs",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(UserKey)` overload chứ không override",
-            "reason": "Finds equals signature, String comparison and hashCode contract"
+            "evidence_quote": "`equals(UserKey)` là overload, không override `equals(Object)`",
+            "reason": "Finds the overload and String-reference comparison; explains inherited identity equality and does not misstate the current Object contract."
           },
           {
             "criterion_id": "c05.fix",
             "status": "met",
             "score": 2,
-            "evidence_quote": "equals(Object)` có kiểm tra type/null",
-            "reason": "Implements consistent equals/hashCode"
+            "evidence_quote": "override `equals(Object)`, xử lý cùng tham chiếu/kiểu/null",
+            "reason": "Proposes value equality by id and a matching hashCode implementation."
           },
           {
             "criterion_id": "c05.independent_tests",
             "status": "met",
             "score": 2,
-            "evidence_quote": "hai object khác nhau cùng id",
-            "reason": "Tests equal and different keys through HashMap"
+            "evidence_quote": "hai instance khác nhau cùng `id`",
+            "reason": "Tests equal-but-distinct keys, matching hash codes, HashMap lookup after the fix, and different IDs."
           }
         ],
         "annotator_evaluations": {
           "bach_score": null,
           "nguyen_score": null,
           "agreed_initially": null,
-          "disagreement_notes": "Previous labels invalidated by Java migration; human re-review required."
+          "disagreement_notes": "Question and answer content migrated to Java; previous human labels were invalidated. Re-review required."
         },
         "annotation_status": "provisional_generated_pending_human_review"
       }
