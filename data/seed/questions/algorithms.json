@@ -9,6 +9,7 @@
     "role": "backend_developer",
     "level": "intern_fresher",
     "skill_ids": [
+      "skill.algorithms.correctness_and_complexity",
       "algorithm.complexity",
       "data_structures.hash_map",
       "java.collections.map"
@@ -136,6 +137,7 @@
     "role": "backend_developer",
     "level": "intern_fresher",
     "skill_ids": [
+      "skill.algorithms.correctness_and_complexity",
       "algorithm.binary_search",
       "algorithm.correctness",
       "algorithm.complexity"

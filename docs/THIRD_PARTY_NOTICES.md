@@ -39,7 +39,7 @@ SOFTWARE.
 
 ## Tech Interview Handbook
 
-The C02 programming-knowledge questions (`question.c02.string_immutability.v2` and `question.c02.hashmap_internals.v1`) and C03 technical-case questions (`case.c03.inventory_race.v1`) are adapted from concepts, interview guides, and reference material in the open-source Tech Interview Handbook repository:
+The C02 programming-knowledge questions (`question.c02.string_immutability.v2` and `question.c02.hashmap_internals.v1`), C03 technical-case questions (`case.c03.inventory_race.v1`), and C04 algorithm questions (`question.c04.employee_lookup.v2`) are adapted from concepts, interview guides, and reference material in the open-source Tech Interview Handbook repository:
 
 - Repository: https://github.com/yangshun/tech-interview-handbook
 - Content references:

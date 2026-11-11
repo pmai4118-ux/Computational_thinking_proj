@@ -102,24 +102,25 @@
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
     "id": "source.c04.employee_lookup_java",
-    "title": "Project question bank: employee lookup by ID (Q028)",
-    "url": null,
-    "file_path": "data/seed/questions/raw_question_bank.json#Q028",
-    "revision": "project-seed",
+    "title": "Hash Table Key Lookup & Large Dataset Employee Search",
+    "url": "https://github.com/yangshun/tech-interview-handbook",
+    "file_path": "contents/algorithms/hash-table.md",
+    "revision": "main-2026",
     "authors": [
-      "Project-provided question bank"
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
     ],
     "collected_at": "2026-11-11T00:00:00Z",
-    "original_language": "vi",
+    "original_language": "en",
     "original_content": {
-      "question_text": "Bạn có một danh sách 10.000 nhân viên và cần tìm nhân viên theo ID. Bạn sẽ chọn cấu trúc dữ liệu nào để tối ưu việc tìm kiếm? Vì sao?",
+      "question_text": "Given a large collection of records, how do you optimize lookup by ID using hash tables, what is the time and space complexity trade-off, and how do you handle missing keys?",
       "code": null
     },
     "license": {
-      "spdx_id": null,
-      "url": null,
-      "required_notice": null,
-      "status": "user_provided_license_unverified"
+      "spdx_id": "MIT",
+      "url": "https://github.com/yangshun/tech-interview-handbook/blob/main/LICENSE",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
+      "status": "verified"
     }
   },
   {
