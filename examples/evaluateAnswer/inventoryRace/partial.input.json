@@ -1,0 +1,176 @@
+{
+  "question": {
+    "questionId": "question.inventoryRace.poc",
+    "version": 1,
+    "prompt": "Kho còn một sản phẩm. Hai yêu cầu mua đến đồng thời, có thể tới hai instance ứng dụng khác nhau. Đề xuất cách chỉ tạo tối đa một đơn thành công, không âm kho; giải thích transaction và cách kiểm thử.",
+    "requirements": [
+      "Cơ sở dữ liệu được dùng chung giữa các instance ứng dụng.",
+      "Nếu tạo đơn hàng thất bại thì thay đổi tồn kho cũng phải rollback.",
+      "Không yêu cầu thiết kế hệ thống thanh toán hoặc quy trình giao hàng bên ngoài."
+    ],
+    "context": "Tình huống PoC tạm thời, cần người review độc lập trước khi dùng làm chuẩn đánh giá.",
+    "expectedLevel": "Backend Intern/Fresher"
+  },
+  "rubrics": [
+    {
+      "rubricId": "poc.inventory.race",
+      "version": 1,
+      "questionId": "question.inventoryRace.poc",
+      "competency": "Nhận diện tranh chấp",
+      "criteria": [
+        {
+          "criterionId": "race.risk",
+          "description": "Nhận ra nguy cơ tranh chấp",
+          "acceptanceRule": "Nhận ra các yêu cầu đồng thời có thể bán quá số lượng tồn.",
+          "reviewRule": "Chấp nhận phương án tương đương đúng. Nội dung mơ hồ hoặc dẫn tới tài liệu không có là insufficientEvidence; không tự bổ sung chi tiết. Đánh dấu thiếu yêu cầu rõ ràng là unmet.",
+          "omissionMeansUnmet": true
+        },
+        {
+          "criterionId": "race.detail",
+          "description": "Giải thích thứ tự tranh chấp giữa instance",
+          "acceptanceRule": "Mô tả hai instance cùng đọc stock=1 và kiểm tra còn hàng trước khi ghi trừ theo dữ liệu đã đọc trong cơ sở dữ liệu chung.",
+          "reviewRule": "Chấp nhận phương án tương đương đúng. Nội dung mơ hồ hoặc dẫn tới tài liệu không có là insufficientEvidence; không tự bổ sung chi tiết. Đánh dấu thiếu yêu cầu rõ ràng là unmet.",
+          "omissionMeansUnmet": true
+        }
+      ],
+      "scoreLevels": [
+        {
+          "value": 0.0,
+          "description": "Chưa xác nhận yêu cầu cơ bản.",
+          "condition": "Mức nền.",
+          "requiredMet": [],
+          "minimumMet": 0
+        },
+        {
+          "value": 1.0,
+          "description": "Đáp ứng yêu cầu cơ bản; phần chi tiết chưa đầy đủ.",
+          "condition": "Cần race.risk.",
+          "requiredMet": [
+            "race.risk"
+          ],
+          "minimumMet": 1
+        },
+        {
+          "value": 2.0,
+          "description": "Đáp ứng yêu cầu cơ bản và chi tiết.",
+          "condition": "Cần race.risk và race.detail.",
+          "requiredMet": [
+            "race.risk",
+            "race.detail"
+          ],
+          "minimumMet": 2
+        }
+      ],
+      "scoringRule": "Chọn mức cao nhất thỏa các điều kiện; giữ null nếu tiêu chí chưa rõ có thể đổi mức. Không cộng điểm giữa các rubric."
+    },
+    {
+      "rubricId": "poc.inventory.atomicity",
+      "version": 1,
+      "questionId": "question.inventoryRace.poc",
+      "competency": "Bảo vệ tồn kho và transaction",
+      "criteria": [
+        {
+          "criterionId": "atomic.guard",
+          "description": "Bảo vệ tồn kho ở dữ liệu dùng chung",
+          "acceptanceRule": "Dùng một trong các cách tại database để không trừ quá kho: khóa hàng và kiểm tra tồn; cập nhật có điều kiện và kiểm tra số dòng; hoặc kiểm soát phiên bản lạc quan với xử lý xung đột/thử lại đúng.",
+          "reviewRule": "Chấp nhận phương án tương đương đúng. Nội dung mơ hồ hoặc dẫn tới tài liệu không có là insufficientEvidence; không tự bổ sung chi tiết. Đánh dấu thiếu yêu cầu rõ ràng là unmet.",
+          "omissionMeansUnmet": true
+        },
+        {
+          "criterionId": "atomic.transaction",
+          "description": "Tạo đơn và trừ kho cùng transaction",
+          "acceptanceRule": "Tạo đơn và trừ kho trong cùng transaction; rollback cả hai khi tạo đơn thất bại.",
+          "reviewRule": "Chấp nhận phương án tương đương đúng. Nội dung mơ hồ hoặc dẫn tới tài liệu không có là insufficientEvidence; không tự bổ sung chi tiết. Đánh dấu thiếu yêu cầu rõ ràng là unmet.",
+          "omissionMeansUnmet": true
+        }
+      ],
+      "scoreLevels": [
+        {
+          "value": 0.0,
+          "description": "Chưa xác nhận yêu cầu cơ bản.",
+          "condition": "Mức nền.",
+          "requiredMet": [],
+          "minimumMet": 0
+        },
+        {
+          "value": 1.0,
+          "description": "Đáp ứng yêu cầu cơ bản; phần chi tiết chưa đầy đủ.",
+          "condition": "Cần atomic.guard.",
+          "requiredMet": [
+            "atomic.guard"
+          ],
+          "minimumMet": 1
+        },
+        {
+          "value": 2.0,
+          "description": "Đáp ứng yêu cầu cơ bản và chi tiết.",
+          "condition": "Cần atomic.guard và atomic.transaction.",
+          "requiredMet": [
+            "atomic.guard",
+            "atomic.transaction"
+          ],
+          "minimumMet": 2
+        }
+      ],
+      "scoringRule": "Chọn mức cao nhất thỏa các điều kiện; giữ null nếu tiêu chí chưa rõ có thể đổi mức. Không cộng điểm giữa các rubric."
+    },
+    {
+      "rubricId": "poc.inventory.tests",
+      "version": 1,
+      "questionId": "question.inventoryRace.poc",
+      "competency": "Kiểm thử đồng thời",
+      "criteria": [
+        {
+          "criterionId": "tests.concurrent",
+          "description": "Tạo yêu cầu đồng thời",
+          "acceptanceRule": "Đề xuất hai client hoặc instance gửi yêu cầu đồng thời.",
+          "reviewRule": "Chấp nhận phương án tương đương đúng. Nội dung mơ hồ hoặc dẫn tới tài liệu không có là insufficientEvidence; không tự bổ sung chi tiết. Đánh dấu thiếu yêu cầu rõ ràng là unmet.",
+          "omissionMeansUnmet": true
+        },
+        {
+          "criterionId": "tests.assertions",
+          "description": "Kiểm tra bất biến và rollback",
+          "acceptanceRule": "Kiểm tra một đơn thành công, tồn cuối bằng 0; khi tạo đơn lỗi kiểm tra rollback đơn và tồn.",
+          "reviewRule": "Chấp nhận phương án tương đương đúng. Nội dung mơ hồ hoặc dẫn tới tài liệu không có là insufficientEvidence; không tự bổ sung chi tiết. Đánh dấu thiếu yêu cầu rõ ràng là unmet.",
+          "omissionMeansUnmet": true
+        }
+      ],
+      "scoreLevels": [
+        {
+          "value": 0.0,
+          "description": "Chưa xác nhận yêu cầu cơ bản.",
+          "condition": "Mức nền.",
+          "requiredMet": [],
+          "minimumMet": 0
+        },
+        {
+          "value": 1.0,
+          "description": "Đáp ứng yêu cầu cơ bản; phần chi tiết chưa đầy đủ.",
+          "condition": "Cần tests.concurrent.",
+          "requiredMet": [
+            "tests.concurrent"
+          ],
+          "minimumMet": 1
+        },
+        {
+          "value": 2.0,
+          "description": "Đáp ứng yêu cầu cơ bản và chi tiết.",
+          "condition": "Cần tests.concurrent và tests.assertions.",
+          "requiredMet": [
+            "tests.concurrent",
+            "tests.assertions"
+          ],
+          "minimumMet": 2
+        }
+      ],
+      "scoringRule": "Chọn mức cao nhất thỏa các điều kiện; giữ null nếu tiêu chí chưa rõ có thể đổi mức. Không cộng điểm giữa các rubric."
+    }
+  ],
+  "answer": {
+    "answerId": "answer.inventoryRace.partial",
+    "revision": 1,
+    "questionId": "question.inventoryRace.poc",
+    "originalText": "Hai yêu cầu đồng thời có thể bán vượt số lượng tồn.\nDùng UPDATE có điều kiện stock >= 1 tại database và kiểm tra số dòng được cập nhật.\nCho hai client gửi yêu cầu đồng thời."
+  },
+  "exampleOnly": true
+}

@@ -1,0 +1,53 @@
+{
+  "provisional": true,
+  "reviewedByHuman": false,
+  "scores": [
+    1,
+    1,
+    1
+  ],
+  "checks": [
+    {
+      "criterionId": "race.risk",
+      "status": "met",
+      "quote": "Hai yêu cầu đồng thời có thể bán vượt số lượng tồn.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "race.detail",
+      "status": "unmet",
+      "quote": null,
+      "feedbackObservation": "Yêu cầu này không được trình bày.",
+      "identifiedIssue": true
+    },
+    {
+      "criterionId": "atomic.guard",
+      "status": "met",
+      "quote": "Dùng UPDATE có điều kiện stock >= 1 tại database và kiểm tra số dòng được cập nhật.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "atomic.transaction",
+      "status": "unmet",
+      "quote": null,
+      "feedbackObservation": "Yêu cầu này không được trình bày.",
+      "identifiedIssue": true
+    },
+    {
+      "criterionId": "tests.concurrent",
+      "status": "met",
+      "quote": "Cho hai client gửi yêu cầu đồng thời.",
+      "feedbackObservation": "Nhận định này đáp ứng tiêu chí.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "tests.assertions",
+      "status": "unmet",
+      "quote": null,
+      "feedbackObservation": "Yêu cầu này không được trình bày.",
+      "identifiedIssue": true
+    }
+  ]
+}

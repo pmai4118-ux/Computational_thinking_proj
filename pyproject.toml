@@ -27,3 +27,5 @@ namespaces = false
 [tool.pytest.ini_options]
 testpaths = ["test"]
 addopts = ["--import-mode=importlib"]
+python_files = ["test_*.py", "*Test.py"]
+python_functions = ["test_*", "test[A-Z]*"]

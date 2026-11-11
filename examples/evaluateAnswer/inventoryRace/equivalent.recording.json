@@ -1,0 +1,106 @@
+{
+  "inputHash": "1116df5971dc0f0b4af82e528d5871aada6ba2a0786b8bff172349f7b173bad7",
+  "interpretation": {
+    "reviews": [
+      {
+        "rubricId": "poc.inventory.race",
+        "criterionChecks": [
+          {
+            "criterionId": "race.risk",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Hai người mua cùng lúc có thể gây bán quá kho.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "race.detail",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Hai instance cùng đọc stock=1 từ database chung, cùng kiểm tra còn hàng rồi ghi trừ theo dữ liệu cũ.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "poc.inventory.atomicity",
+        "criterionChecks": [
+          {
+            "criterionId": "atomic.guard",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Khóa hàng bằng SELECT FOR UPDATE trong transaction, kiểm tra stock >= 1 trước khi trừ và từ chối nếu hết hàng.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "atomic.transaction",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Ghi đơn và cập nhật kho trong cùng transaction rồi rollback cả hai nếu ghi đơn thất bại.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "poc.inventory.tests",
+        "criterionChecks": [
+          {
+            "criterionId": "tests.concurrent",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Chạy hai luồng từ hai client cùng gửi lệnh mua.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "tests.assertions",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Assert chỉ một đơn thành công, stock cuối là 0; giả lập lỗi ghi đơn và assert không có đơn cùng stock ban đầu.",
+                "location": "originalText",
+                "observation": "Nhận định này đáp ứng tiêu chí.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

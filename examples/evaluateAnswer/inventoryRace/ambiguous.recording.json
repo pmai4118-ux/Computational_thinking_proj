@@ -1,0 +1,106 @@
+{
+  "inputHash": "d53d4ef9f3c58d4243391ae7baad83a47545357578fb448992f3a404a8eda188",
+  "interpretation": {
+    "reviews": [
+      {
+        "rubricId": "poc.inventory.race",
+        "criterionChecks": [
+          {
+            "criterionId": "race.risk",
+            "status": "insufficientEvidence",
+            "evidence": [
+              {
+                "type": "ambiguity",
+                "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+                "location": "originalText",
+                "observation": "Cần tài liệu được nhắc tới để kết luận.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "race.detail",
+            "status": "insufficientEvidence",
+            "evidence": [
+              {
+                "type": "ambiguity",
+                "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+                "location": "originalText",
+                "observation": "Cần tài liệu được nhắc tới để kết luận.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "poc.inventory.atomicity",
+        "criterionChecks": [
+          {
+            "criterionId": "atomic.guard",
+            "status": "insufficientEvidence",
+            "evidence": [
+              {
+                "type": "ambiguity",
+                "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+                "location": "originalText",
+                "observation": "Cần tài liệu được nhắc tới để kết luận.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "atomic.transaction",
+            "status": "insufficientEvidence",
+            "evidence": [
+              {
+                "type": "ambiguity",
+                "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+                "location": "originalText",
+                "observation": "Cần tài liệu được nhắc tới để kết luận.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "poc.inventory.tests",
+        "criterionChecks": [
+          {
+            "criterionId": "tests.concurrent",
+            "status": "insufficientEvidence",
+            "evidence": [
+              {
+                "type": "ambiguity",
+                "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+                "location": "originalText",
+                "observation": "Cần tài liệu được nhắc tới để kết luận.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          },
+          {
+            "criterionId": "tests.assertions",
+            "status": "insufficientEvidence",
+            "evidence": [
+              {
+                "type": "ambiguity",
+                "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+                "location": "originalText",
+                "observation": "Cần tài liệu được nhắc tới để kết luận.",
+                "startOffset": null,
+                "endOffset": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

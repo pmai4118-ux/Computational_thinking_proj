@@ -1,0 +1,53 @@
+{
+  "provisional": true,
+  "reviewedByHuman": false,
+  "scores": [
+    null,
+    null,
+    null
+  ],
+  "checks": [
+    {
+      "criterionId": "race.risk",
+      "status": "insufficientEvidence",
+      "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+      "feedbackObservation": "Cần tài liệu được nhắc tới để kết luận.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "race.detail",
+      "status": "insufficientEvidence",
+      "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+      "feedbackObservation": "Cần tài liệu được nhắc tới để kết luận.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "atomic.guard",
+      "status": "insufficientEvidence",
+      "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+      "feedbackObservation": "Cần tài liệu được nhắc tới để kết luận.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "atomic.transaction",
+      "status": "insufficientEvidence",
+      "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+      "feedbackObservation": "Cần tài liệu được nhắc tới để kết luận.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "tests.concurrent",
+      "status": "insufficientEvidence",
+      "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+      "feedbackObservation": "Cần tài liệu được nhắc tới để kết luận.",
+      "identifiedIssue": false
+    },
+    {
+      "criterionId": "tests.assertions",
+      "status": "insufficientEvidence",
+      "quote": "Chi tiết giải pháp và kiểm thử nằm trong tệp đính kèm không có ở đây.",
+      "feedbackObservation": "Cần tài liệu được nhắc tới để kết luận.",
+      "identifiedIssue": false
+    }
+  ]
+}

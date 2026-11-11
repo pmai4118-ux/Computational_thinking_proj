@@ -1,0 +1,228 @@
+{
+  "question": {
+    "questionId": "question.findPair",
+    "version": 1,
+    "prompt": "Write a Python function that receives a list of integers values and an integer target. Return two distinct indices whose values sum to target, or None if no pair exists. Explain the algorithm, correctness, complexity, and test cases with expected results.",
+    "requirements": [
+      "Use zero-based indices; any valid pair is acceptable.",
+      "Handle duplicates, negative values, an empty list, a single item, and no matching pair.",
+      "Explain why an item is not reused and state the time and space cost of the chosen algorithm.",
+      "Include a normal case and the listed edge cases with expected results."
+    ],
+    "context": "Inputs have the declared types. An optimal algorithm is not required; correct alternatives are accepted. Code is read but never executed in this PoC.",
+    "expectedLevel": "Backend Intern/Fresher"
+  },
+  "rubrics": [
+    {
+      "rubricId": "rubric.knowledge",
+      "version": 1,
+      "questionId": "question.findPair",
+      "competency": "Knowledge",
+      "criteria": [
+        {
+          "criterionId": "complement",
+          "description": "Understands the target sum",
+          "acceptanceRule": "Explain that two values must sum to target. A complement lookup or an equivalent sum check is acceptable; a hash table is not required.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
+          "omissionMeansUnmet": true
+        },
+        {
+          "criterionId": "complexity",
+          "description": "Analyzes time and space",
+          "acceptanceRule": "State the complexity of the actual solution. For a hash table, expected time is O(n) and space is O(n); do not claim guaranteed O(n) in all cases.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
+          "omissionMeansUnmet": true
+        }
+      ],
+      "scoreLevels": [
+        {
+          "value": 0.0,
+          "description": "Core knowledge has not been confirmed.",
+          "condition": "No met criteria required.",
+          "requiredMet": [],
+          "minimumMet": 0
+        },
+        {
+          "value": 1.0,
+          "description": "Explains the target sum but not the full cost.",
+          "condition": "Required: complement.",
+          "requiredMet": [
+            "complement"
+          ],
+          "minimumMet": 1
+        },
+        {
+          "value": 2.0,
+          "description": "Explains both the target sum and the solution cost.",
+          "condition": "Required: complement, complexity.",
+          "requiredMet": [
+            "complement",
+            "complexity"
+          ],
+          "minimumMet": 2
+        }
+      ],
+      "scoringRule": "Select the highest level satisfying requiredMet and minimumMet. If unresolved criteria can change the level, leave the score null. Do not add scores across competencies."
+    },
+    {
+      "rubricId": "rubric.reasoning",
+      "version": 1,
+      "questionId": "question.findPair",
+      "competency": "Problem solving",
+      "criteria": [
+        {
+          "criterionId": "distinct",
+          "description": "Ensures distinct indices",
+          "acceptanceRule": "Explain how the same item cannot be used twice. Checking a hash table before inserting the current item or another sound method is acceptable.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
+          "omissionMeansUnmet": true
+        },
+        {
+          "criterionId": "correctness",
+          "description": "Justifies found and missing pairs",
+          "acceptanceRule": "Explain why any returned pair is valid and why no pair exists after all possibilities are considered. Accept reasoning appropriate to an alternative algorithm.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
+          "omissionMeansUnmet": true
+        }
+      ],
+      "scoreLevels": [
+        {
+          "value": 0.0,
+          "description": "Distinct indices have not been established.",
+          "condition": "No met criteria required.",
+          "requiredMet": [],
+          "minimumMet": 0
+        },
+        {
+          "value": 1.0,
+          "description": "Distinct indices are established but the argument is incomplete.",
+          "condition": "Required: distinct.",
+          "requiredMet": [
+            "distinct"
+          ],
+          "minimumMet": 1
+        },
+        {
+          "value": 2.0,
+          "description": "Reasoning covers both found and missing pairs.",
+          "condition": "Required: distinct, correctness.",
+          "requiredMet": [
+            "distinct",
+            "correctness"
+          ],
+          "minimumMet": 2
+        }
+      ],
+      "scoringRule": "Select the highest level satisfying requiredMet and minimumMet. If unresolved criteria can change the level, leave the score null. Do not add scores across competencies."
+    },
+    {
+      "rubricId": "rubric.solution",
+      "version": 1,
+      "questionId": "question.findPair",
+      "competency": "Implementation",
+      "criteria": [
+        {
+          "criterionId": "implementation",
+          "description": "Implements a valid algorithm",
+          "acceptanceRule": "Python code finds a valid pair for valid inputs, including negatives and duplicates, without reusing an item. Brute force is acceptable if correct.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
+          "omissionMeansUnmet": true
+        },
+        {
+          "criterionId": "returnValue",
+          "description": "Returns the required output",
+          "acceptanceRule": "Return two distinct original indices when a pair exists and None otherwise; do not return values instead of indices.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
+          "omissionMeansUnmet": true
+        }
+      ],
+      "scoreLevels": [
+        {
+          "value": 0.0,
+          "description": "A valid implementation has not been confirmed.",
+          "condition": "No met criteria required.",
+          "requiredMet": [],
+          "minimumMet": 0
+        },
+        {
+          "value": 1.0,
+          "description": "A valid pair algorithm is present, but the return contract is incomplete.",
+          "condition": "Required: implementation.",
+          "requiredMet": [
+            "implementation"
+          ],
+          "minimumMet": 1
+        },
+        {
+          "value": 2.0,
+          "description": "The implementation and return contract are valid.",
+          "condition": "Required: implementation, returnValue.",
+          "requiredMet": [
+            "implementation",
+            "returnValue"
+          ],
+          "minimumMet": 2
+        }
+      ],
+      "scoringRule": "Select the highest level satisfying requiredMet and minimumMet. If unresolved criteria can change the level, leave the score null. Do not add scores across competencies."
+    },
+    {
+      "rubricId": "rubric.testing",
+      "version": 1,
+      "questionId": "question.findPair",
+      "competency": "Testing",
+      "criteria": [
+        {
+          "criterionId": "normalCase",
+          "description": "Includes a normal case with expected result",
+          "acceptanceRule": "Give at least one input with a pair and the correct output indices.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
+          "omissionMeansUnmet": true
+        },
+        {
+          "criterionId": "edgeCases",
+          "description": "Includes edge cases with expected results",
+          "acceptanceRule": "Cover duplicate values, negative values, an empty list, one item that cannot be reused, and no pair, with correct expected results.",
+          "reviewRule": "Accept technically equivalent wording and implementations. Mark a clearly absent requirement as omission/unmet when permitted. Mark ambiguity or unavailable references as insufficientEvidence; do not invent reasoning.",
+          "omissionMeansUnmet": true
+        }
+      ],
+      "scoreLevels": [
+        {
+          "value": 0.0,
+          "description": "No correct test case has been confirmed.",
+          "condition": "No met criteria required.",
+          "requiredMet": [],
+          "minimumMet": 0
+        },
+        {
+          "value": 1.0,
+          "description": "A normal case is present but required edge cases are incomplete.",
+          "condition": "Required: normalCase.",
+          "requiredMet": [
+            "normalCase"
+          ],
+          "minimumMet": 1
+        },
+        {
+          "value": 2.0,
+          "description": "Normal and required edge cases are present.",
+          "condition": "Required: normalCase, edgeCases.",
+          "requiredMet": [
+            "normalCase",
+            "edgeCases"
+          ],
+          "minimumMet": 2
+        }
+      ],
+      "scoringRule": "Select the highest level satisfying requiredMet and minimumMet. If unresolved criteria can change the level, leave the score null. Do not add scores across competencies."
+    }
+  ],
+  "answer": {
+    "answerId": "answer.findPair.demo",
+    "revision": 1,
+    "questionId": "question.findPair",
+    "originalText": "Find the complement target - value. Store earlier values and their indices in a hash table.\nCheck the complement before adding the current item, so the two indices are always distinct.\nOnly earlier items are stored: a found complement gives a valid pair; after scanning all items without one, no pair exists.\n\ndef findPair(values, target):\n    seen = {}\n    for index, value in enumerate(values):\n        needed = target - value\n        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None\n\nAverage hash lookup is O(1), so expected total time is O(n) and extra space is O(n).\nO(n) time is not guaranteed in the worst hash case.\nExample: [2, 7, 11], target=9 returns [0, 1].\nTests: [3, 3], target=6 returns [0, 1]; [-2, 5], target=3 returns [0, 1].\nTests: [3], target=6 returns None; [], target=0 returns None; [1, 2], target=8 returns None.\n"
+  },
+  "exampleOnly": true
+}

@@ -14,6 +14,29 @@ evaluation and failure/retry handling. See [specification](docs/PROJECT_SPEC.md)
 The domain skeleton is implemented in `source/Model/question.py`, `ids.py` and
 `evaluation.py`. Session/Answer/Exercise records and the application factory remain
 planned. Historical code-question examples are not active seed contracts.
+## Answer evaluation PoC
+
+The `evaluateAnswer` branch adds a standalone Python evaluation flow based on the
+updated user abstraction. `source/main.py` wires the MVC-S layers; the shared P03
+models remain available. See the [architecture and function-flow report](source/reports/architectureReport.pdf).
+
+After the development setup below:
+
+```powershell
+.\.venv\Scripts\python.exe -m source.main --input examples/evaluateAnswer/sampleInput.json --provider recorded --recording examples/evaluateAnswer/sampleReview.json
+```
+
+Recorded mode is explicitly illustrative. Live interpretation uses Gemini via
+server-side environment configuration; Python validates evidence and computes
+scores. Local reports and private answer files belong in ignored `source/reports/results/`
+and `localAnswers/` directories.
+
+The [inventory-race examples](examples/evaluateAnswer/inventoryRace/README.md)
+exercise a provisional team case with five synthetic answers and recorded
+interpretations. They are not independent judgments or live-model results.
+Repeating the same saved input snapshot returns its completed report, including
+its original provider and model. Passing `--answerFile` creates a new answer ID;
+use the same saved input JSON to retry an existing answer.
 
 ## Python development setup
 
@@ -34,7 +57,7 @@ HTTP client used by FastAPI's test client. [uv locking and syncing](https://docs
 
 Use imports such as `source.Control` and `source.Model` with the existing
 capitalization. Pytest discovers tests under `test/`. The F01 smoke tests check
-Vietnamese HTML rendering and request validation with a small test app.
+Unicode HTML rendering and request validation with a small test app.
 
 Verified on Windows x64 with CPython 3.11.18. The locked install, dependency
 check, and both smoke tests passed in a fresh virtual environment.
@@ -64,8 +87,15 @@ F05 will call `load_settings()` when it builds the app.
 
 ### Application entry point
 
-`source/main.py` is reserved for the F05 app factory. Once F05 provides an ASGI
-factory named `create_app`, the launch command will be
+`source/main.py` composes the evaluation CLI through `Application`.
+`Application.run()` starts `EvaluationView`, which calls `EvaluationController`.
+The controller delegates to `EvaluationService`, whose constructor receives a
+repository, interpreter factory, rubric rules, evidence reviewer, and feedback
+builder. Each responsibility has one implementation; provider selection uses a
+simple factory and the interpreters share a strategy interface. JSON inputs,
+outputs, and CLI arguments remain unchanged by the OOP refactor.
+F05 can add the web app factory alongside it. Once F05 provides an ASGI factory
+named `create_app`, the launch command will be
 `uv run --locked uvicorn source.main:create_app --factory --reload`.
 
 ## Coding agent setup

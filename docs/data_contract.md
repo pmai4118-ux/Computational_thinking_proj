@@ -297,7 +297,87 @@ their IDs and references to this contract, preserve their illustrative-only
 status, and agree the serialized schema in P04. No existing code, API payload,
 or seed fixture consumes that proposal today.
 
-The P01 baseline still needs team confirmation. P04 must finalize API
-representations, session ownership, retry/idempotency and transitions. F02 must
-implement the remaining Session/Answer/Exercise classes and invariant checks.
-P05 must supply a reviewed question, rubric and source set.
+P01 must still confirm the product scope. P04 must finalize API representations,
+session ownership, retry/idempotency and transitions. F02 must implement the
+remaining Session/Answer/Exercise classes and invariant checks. C01 must approve
+skill IDs. P05 must supply a real reviewed question/rubric/source set. These
+decisions remain open; this draft does not assert they have been approved.
+
+## Addendum: answer-evaluation PoC, schema `answerEvaluation/1`
+
+The user's newer `Abstraction.docx` and explicit implementation request require
+one rubric per assessed competency, multiple rubrics per question, and a declared
+multi-level score per rubric. They also permit an unknown criterion when it does
+not change the uniquely determined rubric level. These differ from the P03 draft
+above (one rubric per question, scores per criterion, unresolved criterion blocks
+the total). The PoC does not silently reinterpret P03 totals or replace its models.
+
+`source/Model/answerData.py` and `evaluationData.py` define a separate validated,
+immutable boundary using the user's camelCase names. Existing P03 dataclasses,
+IDs, examples and their future consumers stay intact. Existing ID types are reused.
+No runtime consumer of the P03 question/evaluation records existed in this
+checkout beyond their own type imports when the PoC was added. New consumers are
+the PoC controller, service, provider adapters, CLI/view, and its focused tests.
+
+| Addition | Reason / serialization |
+| --- | --- |
+| `Question.version`, `Rubric.version`, `Answer.revision` | Positive integers; report stores exact immutable input snapshots. |
+| `Criterion.omissionMeansUnmet` | Explicit boolean controlling whether an observed omission can support unmet. |
+| `ScoreLevel.requiredMet`, `minimumMet` | Executable positive gates and threshold; select highest matching value. Descriptions remain human-readable. |
+| Evidence `type`, `quote`, `location`, `observation`, `startOffset`, `endOffset` | Exact excerpts/ambiguities or explicit omissions. Same Python Unicode offset convention as P03. |
+| Result `status` | `graded` or `insufficientEvidence`; processing failures are separate errors, not fabricated results. |
+| `inputHash`, input snapshots, `providerName`, `modelName`, `promptVersion` | Bind recorded interpretations and reports to exact inputs and identify illustrative versus live processing. |
+| `exampleOnly` | Marks unreviewed synthetic PoC content; it does not bypass question-bank approval. |
+
+The report has one result per rubric, one check per criterion, and one feedback
+per result. Score must be a declared level or null with an explanation. No raw
+cross-rubric total is produced. Results are accumulated in memory and published
+only after all validations succeed; the service saves through its repository a complete report without
+overwriting an existing file. Original input files are never changed.
+
+For this standalone PoC, the repository protocol also looks up completed reports
+by `inputHash`. A retry of the same serialized input snapshot reuses the stored
+report before creating an interpreter. The hash includes answer ID, revision,
+text, question and rubric snapshots, and `exampleOnly`; provider, model and prompt
+are not part of it. The reused report retains its original provider metadata,
+including when a later request names a different provider. A new answer, rubric,
+or question snapshot gets a new hash. The JSON repository keeps a canonical
+`report-<inputHash>.json` in its configured results directory. If there is no
+canonical report, a retry can reuse a matching report saved under the previous
+UUID filename in the same directory. On an initial run, a separate output path
+also receives an export. A path that resolves to the canonical file uses that
+file directly. A retry returns the path of the report it reused. `--answerFile`
+creates a new answer ID each time, so retry a saved input snapshot instead.
+Explicit reevaluation and concurrent request coordination remain future integration
+work.
+
+The provisional inventory-race example adapts the P05 pending-review case into
+separate PoC rubrics. Its mapping, source reference and synthetic expectations
+are documented in `examples/evaluateAnswer/inventoryRace/README.md`; they do not
+change or approve the original question-bank record.
+
+The new schema is **not** accepted by the existing draft question-bank JSON
+format without an explicit adapter and team decision. F02/P04 integration must
+agree whether to adopt this multi-rubric model or map it to P03 while preserving
+versions, evidence and score semantics. There is no automatic lossy conversion.
+The PoC does not mark source/license checks or independent rubric review complete.
+See [the architecture report](../source/reports/architectureReport.pdf) for executable scoring semantics,
+limitations and the live evaluation procedure.
+The OOP refactor preserves serialized field names and `answerEvaluation/1`.
+`EvaluationInput.inputDigest()` retains the same canonical JSON hash, so existing
+recordings remain valid. `EvaluationService` now owns the lifecycle operations
+`createEvaluation`, `evaluateCriteria`, `generateFeedback`, and `readReport` as
+methods. It receives `RubricRules`, `EvidenceReview`, and `FeedbackBuilder`
+objects; each evaluation's state stays in an immutable `AnswerEvaluation`, not
+in shared service fields. `InterpreterFactory.createInterpreter()` selects a
+provider; `GeminiSettings.fromEnvironment()` reads its configuration. Callers
+of the earlier module-level Python helpers must use these objects. The CLI and
+JSON consumers require no migration.
+
+The architecture review moves persistence behind `Model/repositories`, puts
+request/response DTOs and error translation in `Control`, and centralizes wiring
+in `source/main.py`. `EvaluationService` depends on an `EvaluationRepository`
+protocol and an injected interpreter factory. The CLI View calls the Controller;
+it does not read input files, write reports, or construct providers. PoC reports
+live in `source/reports` as requested. Shared planning and contract documents in
+`docs` retain their existing locations and owners.

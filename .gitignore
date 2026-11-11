@@ -231,3 +231,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local PoC answers and reports
+localReports/
+localAnswers/
+source/reports/results/

@@ -1,0 +1,139 @@
+{
+  "inputHash": "4cf7dc05172733c9fb6b8bafe0e79713162ec46433e4b16d0af850962945cd50",
+  "interpretation": {
+    "reviews": [
+      {
+        "rubricId": "rubric.knowledge",
+        "criterionChecks": [
+          {
+            "criterionId": "complement",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Find the complement target - value.",
+                "location": "originalText",
+                "observation": "The answer states the target complement relationship.",
+                "startOffset": 0,
+                "endOffset": 35
+              }
+            ]
+          },
+          {
+            "criterionId": "complexity",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Average hash lookup is O(1), so expected total time is O(n) and extra space is O(n).\nO(n) time is not guaranteed in the worst hash case.",
+                "location": "originalText",
+                "observation": "The expected lookup cost, space cost, and worst case limitation are stated.",
+                "startOffset": 542,
+                "endOffset": 678
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "rubric.reasoning",
+        "criterionChecks": [
+          {
+            "criterionId": "distinct",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Check the complement before adding the current item, so the two indices are always distinct.",
+                "location": "originalText",
+                "observation": "Checking earlier indices before inserting the current one prevents reusing an item.",
+                "startOffset": 92,
+                "endOffset": 184
+              }
+            ]
+          },
+          {
+            "criterionId": "correctness",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Only earlier items are stored: a found complement gives a valid pair; after scanning all items without one, no pair exists.",
+                "location": "originalText",
+                "observation": "The explanation covers both a found pair and an exhaustive unsuccessful scan.",
+                "startOffset": 185,
+                "endOffset": 308
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "rubric.solution",
+        "criterionChecks": [
+          {
+            "criterionId": "implementation",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "def findPair(values, target):\n    seen = {}\n    for index, value in enumerate(values):\n        needed = target - value\n        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None",
+                "location": "originalText",
+                "observation": "The code checks before insertion and handles duplicates and negatives; this is a reading of code, not an execution result.",
+                "startOffset": 310,
+                "endOffset": 540
+              }
+            ]
+          },
+          {
+            "criterionId": "returnValue",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None",
+                "location": "originalText",
+                "observation": "The found branch returns two indices, and the final branch returns None.",
+                "startOffset": 429,
+                "endOffset": 540
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rubricId": "rubric.testing",
+        "criterionChecks": [
+          {
+            "criterionId": "normalCase",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Example: [2, 7, 11], target=9 returns [0, 1].",
+                "location": "originalText",
+                "observation": "The example gives a valid input and expected indices.",
+                "startOffset": 679,
+                "endOffset": 724
+              }
+            ]
+          },
+          {
+            "criterionId": "edgeCases",
+            "status": "met",
+            "evidence": [
+              {
+                "type": "excerpt",
+                "quote": "Tests: [3, 3], target=6 returns [0, 1]; [-2, 5], target=3 returns [0, 1].\nTests: [3], target=6 returns None; [], target=0 returns None; [1, 2], target=8 returns None.",
+                "location": "originalText",
+                "observation": "The listed cases cover duplicates, negatives, empty and single lists, and no matching pair.",
+                "startOffset": 725,
+                "endOffset": 891
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
