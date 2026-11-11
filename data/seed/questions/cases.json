@@ -1,0 +1,137 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "case.c03.inventory_race.v1",
+    "version": 1,
+    "category": "technical_case",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "backend.concurrent_inventory"
+    ],
+    "source_id": "source.c03.concurrent_inventory",
+    "prompt": "Kho còn một sản phẩm. Hai yêu cầu mua đến đồng thời, có thể tới hai instance ứng dụng khác nhau. Đề xuất cách chỉ tạo tối đa một đơn thành công, không âm kho; giải thích transaction và cách kiểm thử.",
+    "code": null,
+    "code_language": null,
+    "constraints": [
+      "Cơ sở dữ liệu được dùng chung giữa các instance ứng dụng.",
+      "Nếu tạo đơn hàng thất bại thì thay đổi tồn kho cũng phải rollback.",
+      "Không yêu cầu thiết kế hệ thống thanh toán hoặc quy trình giao hàng bên ngoài."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_case",
+      "summary": "Tình huống phỏng vấn thực tế về kiểm soát tương tranh và race condition khi trừ tồn kho trong hệ thống phân tán, được dịch và thiết kế rubric đánh giá năng lực Fresher Backend.",
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c03.inventory_race.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c03.race",
+          "label": "Nhận ra thao tác tranh chấp",
+          "expected_evidence": [
+            "Hai luồng có thể cùng đọc stock=1 trước khi ghi.",
+            "Phân tích phải áp dụng cho nhiều instance ứng dụng độc lập."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Cho rằng thao tác đọc rồi ghi riêng lẻ luôn an toàn hoặc không nhận ra nguy cơ race condition."
+            },
+            {
+              "score": 1,
+              "description": "Nhận ra vấn đề đồng thời nhưng chưa chỉ ra được khoảng tranh chấp (interleaving) hoặc chỉ phân tích ở mức single-process/instance."
+            },
+            {
+              "score": 2,
+              "description": "Mô tả rõ ràng interleaving đọc-kiểm tra-ghi (check-then-act) và phạm vi hệ thống nhiều instance dùng chung cơ sở dữ liệu."
+            }
+          ],
+          "equivalent_answers": "Không bắt buộc gọi đúng thuật ngữ race condition nếu mô tả đúng bản chất xung đột đọc-ghi đồng thời giữa hai luồng."
+        },
+        {
+          "id": "c03.atomicity",
+          "label": "Giữ bất biến tại dữ liệu chia sẻ",
+          "expected_evidence": [
+            "Điều kiện kiểm tra còn hàng và trừ kho được bảo vệ nguyên tử (atomic).",
+            "Tạo đơn hàng và trừ kho thuộc cùng transaction có cơ chế rollback khi có lỗi."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Chỉ dùng khóa RAM (synchronized / local mutex) trên từng instance hoặc giải pháp vẫn để hai đơn cùng thành công gây âm kho."
+            },
+            {
+              "score": 1,
+              "description": "Có cơ chế bảo vệ kho ở database (row lock hoặc update có điều kiện) nhưng chưa bao quát transaction tạo đơn và rollback khi thất bại."
+            },
+            {
+              "score": 2,
+              "description": "Giải pháp tại tầng dữ liệu chia sẻ bảo đảm tối đa một đơn thành công, không âm kho và rollback toàn vẹn khi tạo đơn lỗi."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận conditional update (atomic decrement WHERE stock >= 1 kèm kiểm tra affected rows), pessimistic row locking (SELECT ... FOR UPDATE trong transaction), hoặc optimistic concurrency (version column) có xử lý conflict/retry chính xác."
+        },
+        {
+          "id": "c03.concurrent_tests",
+          "label": "Kiểm thử bất biến",
+          "expected_evidence": [
+            "Mô phỏng gửi hai yêu cầu đồng thời qua hai luồng hoặc hai client/instance.",
+            "Kiểm tra kết quả: số đơn hàng thành công (=1), số lượng tồn kho cuối (=0) và kiểm thử rollback khi lỗi."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đề xuất phương án kiểm thử hoặc kết quả mong đợi vi phạm bất biến tồn kho."
+            },
+            {
+              "score": 1,
+              "description": "Có kịch bản gửi đồng thời nhưng thiếu assertion cụ thể cho số đơn và tồn kho cuối cùng, hoặc thiếu kiểm tra rollback."
+            },
+            {
+              "score": 2,
+              "description": "Kịch bản kiểm thử đồng thời và kiểm thử rollback đều có assertion rõ ràng cho số đơn tạo thành công và số lượng tồn kho chính xác."
+            }
+          ],
+          "equivalent_answers": "Không bắt buộc framework kiểm thử cụ thể (JUnit, JMeter, k6, multithreading script); chấp nhận mô tả logic tạo yêu cầu đồng thời và kiểm tra dữ liệu kết quả."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Là unmet (điểm 0) nếu rubric yêu cầu rõ ràng và câu trả lời hoàn toàn bỏ qua hoặc sai; là insufficient_evidence (score null) nếu câu trả lời dẫn chiếu tệp đính kèm hoặc ngữ cảnh bên ngoài không có trong phiên.",
+        "provider_failure": "processing_error, không gán điểm hoặc kết luận năng lực người học",
+        "equivalent_answers": "Chấp nhận các phương án kiến trúc khác đúng đắn theo ràng buộc đề bài; không so khớp nguyên văn từ ngữ."
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Đã soạn xong câu hỏi và rubric đầy đủ tiêu chí quan sát được, sẵn sàng cho reviewer độc lập kiểm duyệt."
+    }
+  }
+]
+

@@ -1,0 +1,25 @@
+[
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c03.concurrent_inventory",
+    "title": "Concurrent Inventory Decrement & Race Condition Case",
+    "url": "https://github.com/yangshun/tech-interview-handbook",
+    "file_path": "system-design/concurrency.md",
+    "revision": "main-2026",
+    "authors": ["Yangshun Tay", "Tech Interview Handbook Contributors"],
+    "collected_at": "2026-11-05T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "How do you handle race conditions when two users attempt to purchase the last remaining item in stock simultaneously in a distributed system?",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/yangshun/tech-interview-handbook/blob/main/LICENSE",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
+      "status": "verified"
+    }
+  }
+]
+
