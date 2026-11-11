@@ -42,6 +42,26 @@ check, and both smoke tests passed in a fresh virtual environment.
 When intentionally changing dependencies, edit [pyproject.toml](pyproject.toml),
 run `uv lock`, then repeat the sync and checks. Include both files in the change.
 
+### Local configuration
+
+[.env.example](.env.example) lists the variables for the server process. Set
+them in the launching shell or have your launcher export them from an ignored
+local `.env` file. `source.config.load_settings()` reads the process environment.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `EVALUATION_PROVIDER` | `fixture` | Demo mode supplies the label **Dữ liệu minh họa**. Set `gemini` to require live settings. |
+| `GEMINI_API_KEY` | Unset | Required for `gemini`. Inject it as a server secret. |
+| `GEMINI_MODEL` | Unset | Required for `gemini`. Use the model selected in P07. |
+| `GEMINI_TIMEOUT_SECONDS` | `30` | A finite positive number of seconds. |
+| `DATABASE_PATH` | `.local/interview.sqlite3` | SQLite filename. Relative paths use the server's working directory. Launch from the repository root for this default. |
+
+Keep generated databases, logs, and private student records in the ignored
+`.local/` directory. A database path inside the checkout must point to a file
+under `.local/` or a filename ending in `.sqlite3`. An absolute path outside the
+checkout can use any SQLite filename. F04 will own database initialization and
+F05 will call `load_settings()` when it builds the app.
+
 ### Application entry point
 
 `source/main.py` is reserved for the F05 app factory. Once F05 provides an ASGI

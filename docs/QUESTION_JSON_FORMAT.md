@@ -9,6 +9,8 @@
 
 Format đề xuất để nhóm chốt ở P03/P05. Đây là mẫu tự soạn minh họa cấu trúc, không phải câu hỏi nguồn mở đã được xác minh. Các file example_only=true, source/license còn null, review.status=draft, nên chưa đủ điều kiện import. Các đường dẫn thuộc ứng dụng Python tại repository gốc.
 
+Dùng [danh mục và hướng dẫn C01](content_guide.md) để gắn skill ID cho bản ghi thật.
+
 ## C02: Đối số mặc định có thể thay đổi trong Python
 
 Mẫu minh họa tự soạn · format đề xuất cho P03/P05 · draft · chưa đủ điều kiện import. Source/license để null có chủ đích, không phải nguồn đã được xác minh.
