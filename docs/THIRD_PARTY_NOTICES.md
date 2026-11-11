@@ -2,14 +2,14 @@
 
 ## TheAlgorithms/Java
 
-The new C04 algorithm questions and C05 code-review fixtures are adapted from these source files:
+The new C04 algorithm questions and C05 code-review fixtures are adapted from these source files at upstream commit `b2af1db6dcae46521e97a6331eae8cea61933080` (pinned revision):
 
-- `src/main/java/com/thealgorithms/searches/BinarySearch.java` — https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/searches/BinarySearch.java
-- `src/main/java/com/thealgorithms/sorts/BubbleSort.java` — https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/sorts/BubbleSort.java
-- `src/main/java/com/thealgorithms/stacks/InfixToPostfix.java` — https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/stacks/InfixToPostfix.java
-- `src/main/java/com/thealgorithms/sorts/CountingSort.java` — https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/sorts/CountingSort.java
+- `src/main/java/com/thealgorithms/searches/BinarySearch.java` — https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/src/main/java/com/thealgorithms/searches/BinarySearch.java
+- `src/main/java/com/thealgorithms/sorts/BubbleSort.java` — https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/src/main/java/com/thealgorithms/sorts/BubbleSort.java
+- `src/main/java/com/thealgorithms/stacks/InfixToPostfix.java` — https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/src/main/java/com/thealgorithms/stacks/InfixToPostfix.java
+- `src/main/java/com/thealgorithms/sorts/CountingSort.java` — https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/src/main/java/com/thealgorithms/sorts/CountingSort.java
 
-Copyright (c) 2021 The Algorithms. Licensed under the MIT License. See https://github.com/TheAlgorithms/Java/blob/master/LICENSE.
+Copyright (c) 2021 The Algorithms. Licensed under the MIT License. See https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/LICENSE.
 
 The prompts and examples are translated/adapted for Vietnamese Backend Fresher practice. For C05, the project-authored review snippets deliberately introduce defects for evaluation practice. Those defects are not present in or attributed to the upstream implementation, and the snippets are not claimed to be actual AI outputs.
 
