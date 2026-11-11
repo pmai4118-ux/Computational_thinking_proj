@@ -1,7 +1,7 @@
 {
   "schema_version": "question-review/1.0",
-  "question_id": "question.c05.ai_hashmap_key.v2",
+  "question_id": "question.c05.ai_hashmap_key.v3",
   "review_status": "invalidated_by_java_migration",
-  "notes": "Previous language-specific review is superseded. Re-review this Java fixture independently before benchmark use.",
+  "notes": "Previous review was invalidated by Java migration and superseded by the corrected v3 prompt/rubric. Independent re-review is still required before benchmark use.",
   "reviews": []
 }

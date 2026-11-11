@@ -9,7 +9,7 @@ Các câu tham chiếu và rubric phiên bản 1:
 - `question.c02.string_immutability.v2` — tính bất biến của String trong Java.
 - `case.c03.inventory_race.v1` — tranh chấp khi trừ tồn kho.
 - `question.c04.employee_lookup.v2` — chọn cấu trúc dữ liệu tra cứu nhân viên theo ID (Q028) bằng Java.
-- `question.c05.ai_hashmap_key.v2` — review equals/hashCode cho key dùng trong HashMap Java.
+- `question.c05.ai_hashmap_key.v3` — review equals/hashCode cho key dùng trong HashMap Java.
 
 `test/fixtures/answers/` chứa câu trả lời văn bản; `test/fixtures/expected_evaluations.json` chứa nhãn, bằng chứng và liên kết câu hỏi/rubric; `test/fixtures/question_answer_testcases.json` là bản tổng hợp tra cứu. Không đưa các câu trả lời hay nhãn này vào seed được hiển thị cho người học.
 

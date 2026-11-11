@@ -129,8 +129,8 @@
   {
     "schema_version": "question-record/0.1-proposal",
     "example_only": false,
-    "id": "question.c04.binary_search.v1",
-    "version": 1,
+    "id": "question.c04.binary_search.v2",
+    "version": 2,
     "category": "algorithm_explanation",
     "language": "vi",
     "role": "backend_developer",
@@ -141,15 +141,17 @@
       "algorithm.complexity"
     ],
     "source_id": "source.c04.binary_search",
-    "prompt": "Cho mảng số nguyên đã sắp xếp tăng dần và target. Hãy mô tả/cài đặt phiên bản lặp của Binary Search trả về chỉ số nếu tìm thấy, -1 nếu không có. Giải thích bất biến vòng lặp, độ phức tạp và cách kiểm thử biên.",
+    "prompt": "Viết hàm Java lặp `static int binarySearch(int[] values, int target)` cho mảng số nguyên tăng dần; trả về một chỉ số hợp lệ nếu tìm thấy target và -1 nếu không có. Giải thích bất biến vòng lặp, cách cập nhật biên, độ phức tạp và test biên. Mảng rỗng là đầu vào hợp lệ; nếu có nhiều phần tử bằng target thì trả về chỉ số của một phần tử bất kỳ.",
     "code": "// Implement iterative binary search over an ascending int[]; return index or -1.",
     "code_language": "java",
     "constraints": [
-      "Java; các giả định và hợp đồng của đề cần được nêu rõ."
+      "Java method: static int binarySearch(int[] values, int target).",
+      "Input is sorted ascending; an empty array is valid.",
+      "Return any matching index, or -1 if target is absent."
     ],
     "adaptation": {
       "kind": "adapted_open_source_exercise",
-      "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật.",
+      "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật. Prompt revised after content review to make Java implementation and empty-array behavior explicit.",
       "change_history": [
         "Translated/adapted question and constraints for backend fresher practice.",
         "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
@@ -157,15 +159,16 @@
       "translator_id": "team.phuc"
     },
     "rubric": {
-      "id": "rubric.c04.binary_search.v1",
-      "version": 1,
+      "id": "rubric.c04.binary_search.v2",
+      "version": 2,
       "criteria": [
         {
           "id": "c04.binary_search_correctness",
           "label": "Algorithm and invariant",
           "expected_evidence": [
-            "Search interval is halved based on comparison.",
-            "Loop invariant preserves every possible target index; found returns a valid index, exhausted interval returns -1."
+            "Java implementation maintains a valid search interval and halves it based on comparison.",
+            "Uses consistent boundary updates (left = mid + 1 or right = mid - 1), returns a matching index, and returns -1 when exhausted.",
+            "Explains the loop invariant/correctness."
           ],
           "levels": [
             {
@@ -174,11 +177,11 @@
             },
             {
               "score": 1,
-              "description": "Đáp ứng một phần: Names binary search but omits a key boundary/invariant detail."
+              "description": "Names binary search but omits a key boundary update, return condition, invariant, or required Java implementation."
             },
             {
               "score": 2,
-              "description": "Đáp ứng đầy đủ: Explains interval updates and why termination gives correct found/not-found result."
+              "description": "Provides a correct iterative Java implementation and explains boundary updates, the invariant, and found/not-found result."
             }
           ],
           "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
