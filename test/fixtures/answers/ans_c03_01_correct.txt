@@ -1,0 +1,16 @@
+1. Phân tích tranh chấp: Vì hệ thống chạy đa instance, hai instance có thể cùng lúc đọc số lượng stock = 1 trước khi bất kỳ bên nào kịp ghi (check-then-act race condition). Nếu chỉ kiểm tra ở tầng code ứng dụng rồi ghi stock = stock - 1, cả hai instance đều trừ kho và tạo 2 đơn hàng, dẫn đến âm kho (stock = -1).
+2. Giải pháp kỹ thuật và Transaction: Vì DB dùng chung, ta phải kiểm soát tương tranh tại DB. Áp dụng câu lệnh Atomic Conditional Update kết hợp Database Transaction:
+```sql
+BEGIN TRANSACTION;
+UPDATE products SET stock = stock - 1 WHERE id = :productId AND stock >= 1;
+-- Kiểm tra số dòng bị ảnh hưởng (affected rows). Nếu affected_rows == 1:
+INSERT INTO orders (user_id, product_id, status) VALUES (:userId, :productId, 'SUCCESS');
+COMMIT;
+-- Nếu affected_rows == 0:
+ROLLBACK;
+-- Trả về thông báo hết hàng cho người dùng.
+```
+Nếu có bất kỳ exception nào xảy ra trong quá trình insert đơn hàng, câu lệnh ROLLBACK sẽ hoàn tác việc trừ tồn kho, đảm bảo tính nhất quán (Atomicity).
+3. Phương án kiểm thử:
+- Test đồng thời: Dùng multithreading (ví dụ CompletableFuture hoặc JMeter) gửi 2 request mua đồng thời đến 2 instance. Assertion: Chỉ duy nhất 1 request HTTP trả về 200 (hoặc tạo order thành công), 1 request trả về lỗi hết hàng (409/400). Kiểm tra database: bảng orders chỉ có đúng 1 bản ghi mới, cột stock của product đúng bằng 0.
+- Test rollback: Giả lập lỗi ở bước insert đơn hàng (ví dụ mock DB error hoặc vi phạm foreign key). Assertion: Transaction rollback hoàn toàn, số lượng stock vẫn giữ nguyên là 1, không có đơn hàng nào được tạo.

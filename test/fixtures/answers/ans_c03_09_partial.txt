@@ -1,0 +1,1 @@
+Em nhận ra race vì hai request có thể cùng đọc stock=1 ở hai instance. Có thể dùng conditional UPDATE và kiểm tra số dòng bị ảnh hưởng. Em mới test gửi hai request đồng thời, chưa nêu assertion số đơn/tồn kho hay rollback.

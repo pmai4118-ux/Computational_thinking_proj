@@ -1,0 +1,1 @@
+Code service, query và kết quả chạy integration test có trong repository private; nhờ anh/chị mở link được gửi trong nhóm.

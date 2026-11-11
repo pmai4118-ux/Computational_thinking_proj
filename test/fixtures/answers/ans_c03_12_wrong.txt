@@ -1,0 +1,1 @@
+Vì mỗi request chạy trên một thread riêng nên database tự xếp hàng; hai người mua không thể cùng lấy sản phẩm cuối.

@@ -1,0 +1,27 @@
+1. Cơ chế xung đột: Hai node backend độc lập truy vấn đồng thời đều nhận được trạng thái stock == 1. Cả hai tiến trình đều vượt qua điều kiện kiểm tra nghiệp vụ cục bộ trước khi ghi xuống đĩa, tạo ra write conflict dẫn đến âm kho.
+2. Giải pháp Optimistic Concurrency Control (OCC) và Transaction:
+Thay vì conditional update trực tiếp, em sử dụng Optimistic Locking với cột version:
+```sql
+-- Bảng products(id, stock, version)
+-- Khi đọc:
+SELECT id, stock, version FROM products WHERE id = :productId; -- Trả về stock=1, version=10
+```
+Trong Spring Boot / Java:
+```java
+@Transactional(isolation = Isolation.READ_COMMITTED)
+public OrderResult processOrder(Long userId, Long productId) {
+    Product product = productRepository.findById(productId);
+    if (product.getStock() < 1) throw new OutOfStockException();
+    product.setStock(product.getStock() - 1);
+    // Hibernate tự động sinh: UPDATE products SET stock = 0, version = 11 WHERE id = :id AND version = 10
+    productRepository.save(product);
+    Order order = new Order(userId, productId);
+    orderRepository.save(order);
+    return OrderResult.success(order);
+}
+```
+Node thứ hai khi update sẽ thấy version đã bị đổi thành 11, DB ném ra OptimisticLockException. Transaction của node thứ hai rollback hoàn toàn, đơn hàng không được tạo. Nếu có lỗi ở bước lưu Order, @Transactional cũng rollback cả phần trừ kho.
+3. Phương thức kiểm thử bất biến:
+- Sử dụng CountDownLatch khởi tạo cho 2 luồng đại diện cho 2 client bắn tới 2 instance độc lập để bắt đầu request cùng một tích tắc.
+- Assertion: Số lượng record trong bảng Order tăng đúng 1; giá trị stock cuối cùng trong bảng Product bằng 0; request còn lại bắt được lỗi 409 Conflict hoặc OutOfStockException.
+- Assertion Rollback: Thử nghiệm throw RuntimeException ngay sau khi save Product, xác nhận cả product.stock và order đều được rollback nguyên vẹn về trạng thái trước phiên.

@@ -1,0 +1,12 @@
+Để xử lý vấn đề này, trong code Java Backend ta chỉ cần thêm từ khóa synchronized vào method xử lý đặt hàng:
+```java
+public synchronized void buyProduct(Long productId) {
+    Product p = productRepo.findById(productId);
+    if (p.getStock() > 0) {
+        p.setStock(p.getStock() - 1);
+        productRepo.save(p);
+        orderRepo.createOrder();
+    }
+}
+```
+Từ khóa synchronized đảm bảo chỉ có 1 thread được thực thi tại một thời điểm nên chắc chắn không bao giờ bị âm kho. Kiểm thử bằng cách chạy hàm trên một máy cá nhân thấy chạy rất tốt.

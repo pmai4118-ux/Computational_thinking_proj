@@ -1,0 +1,1 @@
+Chỉ cần đặt @Transactional là check rồi update luôn nguyên tử và không thể oversell, không cần khóa hay điều kiện ở database.

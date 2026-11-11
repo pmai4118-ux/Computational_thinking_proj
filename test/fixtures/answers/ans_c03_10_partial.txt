@@ -1,0 +1,1 @@
+Nhiều luồng cùng cập nhật có thể gây sai tồn kho. Em sẽ dùng synchronized quanh đoạn cập nhật. Em định bắn hai request cùng lúc nhưng chưa nêu kết quả cần assert.

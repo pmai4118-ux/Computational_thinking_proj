@@ -1,0 +1,1 @@
+Hai request có thể cùng đọc stock=1 rồi cùng qua check-then-act trên database chung giữa hai instance. Em dùng UPDATE products SET stock=stock-1 WHERE id=? AND stock>=1, kiểm tra affected rows, tạo order trong cùng transaction và rollback cả hai nếu insert order lỗi. Test hai instance đồng thời phải có đúng một order, stock=0; test insert lỗi phải rollback.

@@ -1,0 +1,1 @@
+Em phát hiện `==` so sánh tham chiếu String chứ không so nội dung, nên em sẽ thay bằng `Objects.equals`. Tuy nhiên em chưa nhận ra chữ ký `equals(UserKey)` vẫn là overload chứ không phải `equals(Object)`, và em chưa thêm `hashCode()`. Em sẽ test hai instance khác nhau cùng id và dự đoán lookup sẽ lấy được value.

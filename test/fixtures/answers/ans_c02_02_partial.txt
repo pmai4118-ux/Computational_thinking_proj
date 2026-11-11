@@ -1,0 +1,1 @@
+String là immutable nên first không đổi sau concat. Chuỗi an toàn khi chia sẻ giữa các phần của chương trình. Có thể dùng phép + để nối chuỗi; em chưa nói rõ kết quả second và trường hợp nối lặp.

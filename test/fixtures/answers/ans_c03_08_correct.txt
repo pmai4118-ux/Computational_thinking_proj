@@ -1,0 +1,1 @@
+Dùng SELECT ... FOR UPDATE trong transaction để khóa hàng tồn ở DB dùng chung; sau khi khóa, chỉ request đầu trừ được sản phẩm cuối. Insert order và decrement cùng transaction để rollback đồng bộ. Test hai client: assert đúng một order thành công và stock=0; giả lập lỗi insert order rồi assert không có order và tồn kho được khôi phục.
