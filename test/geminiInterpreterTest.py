@@ -49,7 +49,7 @@ def testStructuredRequest(monkeypatch):
     assert "scoreLevels" not in data["rubrics"][0]
 
 
-@pytest.mark.parametrize("httpCode,errorCode,retryable", [(429, "providerQuota", True), (503, "providerHttp", True), (403, "providerHttp", False), (400, "providerHttp", False)])
+@pytest.mark.parametrize("httpCode,errorCode,retryable", [(402, "providerBilling", False), (429, "providerQuota", True), (503, "providerHttp", True), (403, "providerHttp", False), (400, "providerHttp", False)])
 def testHttpFailures(monkeypatch, httpCode, errorCode, retryable):
     calls = []
 
