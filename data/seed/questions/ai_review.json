@@ -125,5 +125,261 @@
       },
       "technical_correctness_checked": null
     }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c05.infix_postfix_review.v1",
+    "version": 1,
+    "category": "ai_code_critique",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "backend.code_review",
+      "java.stack",
+      "testing.boundary_cases"
+    ],
+    "source_id": "source.c05.infix_to_postfix_review",
+    "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển biểu thức infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy phát hiện lỗi, sửa và đề xuất test cho biểu thức có toán tử và ngoặc.",
+    "code": "import java.util.ArrayDeque;\nimport java.util.Deque;\n\nfinal class InfixConverter {\n    static int precedence(char op) {\n        return (op == '+' || op == '-') ? 1 : 2;\n    }\n    static String toPostfix(String expression) {\n        StringBuilder out = new StringBuilder();\n        Deque<Character> ops = new ArrayDeque<>();\n        for (char token : expression.toCharArray()) {\n            if (Character.isLetterOrDigit(token)) out.append(token);\n            else if (token == '(') ops.push(token);\n            else if (token == ')') {\n                while (ops.peek() != '(') out.append(ops.pop());\n                ops.pop();\n            } else {\n                while (!ops.isEmpty() && ops.peek() != '(' && precedence(token) <= precedence(ops.peek())) out.append(ops.pop());\n                ops.push(token);\n            }\n        }\n        return out.toString(); // defect: pending operators are discarded\n    }\n}",
+    "code_language": "java",
+    "constraints": [
+      "Java; các giả định và hợp đồng của đề cần được nêu rõ."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_exercise",
+      "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật.",
+      "change_history": [
+        "Translated/adapted question and constraints for backend fresher practice.",
+        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
+      ],
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c05.infix_postfix_review.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c05.infix_bug",
+          "label": "Find the defect",
+          "expected_evidence": [
+            "Operator stack is never drained after the input loop.",
+            "For a+b the snippet returns ab instead of ab+."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Declares output correct."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Notes result is incomplete but does not locate why."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Identifies pending operators are omitted and shows failing input/output."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c05.infix_fix",
+          "label": "Propose a valid fix",
+          "expected_evidence": [
+            "Pop remaining operators in LIFO order after scanning.",
+            "Do not emit unmatched opening parentheses; respect the declared precedence contract."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: No working repair."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Mentions a fix but misses stack order or precedence."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Drains operators correctly and respects precedence/parentheses."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c05.infix_tests",
+          "label": "Independent tests",
+          "expected_evidence": [
+            "a+b -> ab+; a+b*c -> abc*+; (a+b)*c -> ab+c*."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: No expected results."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: One case only or misses precedence/parentheses."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Checks operator drain, precedence, and parentheses with outputs."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      }
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c05.counting_sort_review.v1",
+    "version": 1,
+    "category": "ai_code_critique",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "backend.code_review",
+      "algorithm.counting_sort",
+      "testing.boundary_cases"
+    ],
+    "source_id": "source.c05.counting_sort_review",
+    "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng số nguyên, nhưng hợp đồng yêu cầu xử lý số âm, phần tử trùng và mảng rỗng. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy chỉ ra lỗi, sửa và thiết kế test độc lập.",
+    "code": "import java.util.Arrays;\n\nfinal class CountingSortSuggestion {\n    static int[] countingSort(int[] values) {\n        int max = Arrays.stream(values).max().getAsInt();\n        int[] count = new int[max + 1];\n        for (int value : values) count[value]++;\n        int[] out = new int[values.length];\n        int index = 0;\n        for (int value = 0; value < count.length; value++)\n            while (count[value]-- > 0) out[index++] = value;\n        return out;\n    }\n}",
+    "code_language": "java",
+    "constraints": [
+      "Java; các giả định và hợp đồng của đề cần được nêu rõ."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_exercise",
+      "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật.",
+      "change_history": [
+        "Translated/adapted question and constraints for backend fresher practice.",
+        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
+      ],
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c05.counting_sort_review.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c05.counting_bug",
+          "label": "Find defects",
+          "expected_evidence": [
+            "Empty input makes max().getAsInt fail.",
+            "Negative values index count below zero; max-only range cannot represent negatives."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Claims all input is handled."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Finds only one of empty/negative defects."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Finds both empty and negative-value failures against stated contract."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c05.counting_fix",
+          "label": "Repair to contract",
+          "expected_evidence": [
+            "Return empty result for empty input.",
+            "Use min/max range and offset value-min when counting and reconstructing."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Still fails an allowed input."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Fixes one defect only or offset is inconsistent."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Handles empty and negative values with consistent offset and output."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c05.counting_tests",
+          "label": "Independent tests",
+          "expected_evidence": [
+            "[] -> []; [-3,2,-3,0] -> [-3,-3,0,2]; duplicates preserved."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: No expected result."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Tests only non-negative input."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Tests empty, negative, duplicate and expected ordering."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      }
+    }
   }
 ]

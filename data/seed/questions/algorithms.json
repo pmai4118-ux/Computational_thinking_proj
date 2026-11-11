@@ -125,5 +125,261 @@
         "review_cases_checked": false
       }
     }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c04.binary_search.v1",
+    "version": 1,
+    "category": "algorithm_explanation",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "algorithm.binary_search",
+      "algorithm.correctness",
+      "algorithm.complexity"
+    ],
+    "source_id": "source.c04.binary_search",
+    "prompt": "Cho mảng số nguyên đã sắp xếp tăng dần và target. Hãy mô tả/cài đặt phiên bản lặp của Binary Search trả về chỉ số nếu tìm thấy, -1 nếu không có. Giải thích bất biến vòng lặp, độ phức tạp và cách kiểm thử biên.",
+    "code": "// Implement iterative binary search over an ascending int[]; return index or -1.",
+    "code_language": "java",
+    "constraints": [
+      "Java; các giả định và hợp đồng của đề cần được nêu rõ."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_exercise",
+      "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật.",
+      "change_history": [
+        "Translated/adapted question and constraints for backend fresher practice.",
+        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
+      ],
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c04.binary_search.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c04.binary_search_correctness",
+          "label": "Algorithm and invariant",
+          "expected_evidence": [
+            "Search interval is halved based on comparison.",
+            "Loop invariant preserves every possible target index; found returns a valid index, exhausted interval returns -1."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Does not maintain a valid interval or returns wrong result."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Names binary search but omits a key boundary/invariant detail."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Explains interval updates and why termination gives correct found/not-found result."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c04.binary_search_complexity",
+          "label": "Complexity",
+          "expected_evidence": [
+            "Time O(log n), iterative auxiliary space O(1)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Claims linear/constant time incorrectly."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Gives time or space but not both."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Correctly gives O(log n) time and O(1) extra space."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c04.binary_search_tests",
+          "label": "Boundary tests",
+          "expected_evidence": [
+            "Empty/singleton, first/last or missing target.",
+            "Expected index/-1 stated."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: No runnable/checkable expected result."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: One useful case but misses important boundary."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Multiple boundaries with expected indices and -1."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      }
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "question.c04.bubble_sort.v1",
+    "version": 1,
+    "category": "algorithm_explanation",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "skill_ids": [
+      "algorithm.bubble_sort",
+      "algorithm.correctness",
+      "algorithm.complexity"
+    ],
+    "source_id": "source.c04.bubble_sort",
+    "prompt": "Mô tả Bubble Sort để sắp xếp mảng số nguyên tăng dần. Giải thích vì sao sau mỗi lượt phần tử lớn nhất còn lại nằm cuối vùng chưa sắp xếp, phân tích độ phức tạp và nêu test biên.",
+    "code": "// Sort int[] ascending using adjacent compare-and-swap passes; stop early if no swaps.",
+    "code_language": "java",
+    "constraints": [
+      "Java; các giả định và hợp đồng của đề cần được nêu rõ."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_exercise",
+      "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật.",
+      "change_history": [
+        "Translated/adapted question and constraints for backend fresher practice.",
+        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
+      ],
+      "translator_id": "team.phuc"
+    },
+    "rubric": {
+      "id": "rubric.c04.bubble_sort.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c04.bubble_sort_correctness",
+          "label": "Algorithm and invariant",
+          "expected_evidence": [
+            "Adjacent out-of-order values are swapped.",
+            "After each pass the maximum in the unsorted prefix reaches its final position."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Claims sorting without correct pass invariant."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Describes swaps but misses why a pass advances a maximum."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Explains adjacent swaps and pass invariant."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c04.bubble_sort_complexity",
+          "label": "Complexity",
+          "expected_evidence": [
+            "Worst/average O(n^2), optimized best O(n), extra space O(1)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: Complexity materially incorrect."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Only some cases/spaces stated."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Correct best/average/worst and auxiliary space."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        },
+        {
+          "id": "c04.bubble_sort_tests",
+          "label": "Boundary tests",
+          "expected_evidence": [
+            "Empty, singleton, duplicates and reverse-ordered input.",
+            "Expected sorted output stated."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đáp ứng: No useful test or expected output."
+            },
+            {
+              "score": 1,
+              "description": "Đáp ứng một phần: Tests ordinary case only."
+            },
+            {
+              "score": 2,
+              "description": "Đáp ứng đầy đủ: Covers boundaries/duplicates and correct outputs."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable"
+      }
+    },
+    "review": {
+      "status": "pending_review",
+      "curator_id": "team.phuc",
+      "reviewer_id": null,
+      "reviewed_at": null,
+      "checks": {
+        "source_and_license_verified": false,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": false,
+        "rubric_levels_distinct": false,
+        "equivalent_answers_checked": false,
+        "review_cases_checked": false
+      }
+    }
   }
 ]

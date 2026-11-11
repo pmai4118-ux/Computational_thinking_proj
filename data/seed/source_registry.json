@@ -95,5 +95,103 @@
       "required_notice": null,
       "status": "user_provided_license_unverified"
     }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c04.binary_search",
+    "title": "TheAlgorithms/Java — Binary Search implementation",
+    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/searches/BinarySearch.java",
+    "file_path": "src/main/java/com/thealgorithms/searches/BinarySearch.java",
+    "revision": "master (accessed 2026-11-11)",
+    "authors": [
+      "Varun Upadhyay",
+      "Podshivalov Nikita"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "summary": "Java implementation at src/main/java/com/thealgorithms/searches/BinarySearch.java; exercise prompt and review variant are adapted by the project team.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
+      "status": "repository_license_verified_file_notice_review_pending"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c04.bubble_sort",
+    "title": "TheAlgorithms/Java — Bubble Sort implementation",
+    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/sorts/BubbleSort.java",
+    "file_path": "src/main/java/com/thealgorithms/sorts/BubbleSort.java",
+    "revision": "master (accessed 2026-11-11)",
+    "authors": [
+      "Varun Upadhyay",
+      "Podshivalov Nikita"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "summary": "Java implementation at src/main/java/com/thealgorithms/sorts/BubbleSort.java; exercise prompt and review variant are adapted by the project team.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
+      "status": "repository_license_verified_file_notice_review_pending"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c05.infix_to_postfix_review",
+    "title": "TheAlgorithms/Java — Infix-to-postfix implementation",
+    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/stacks/InfixToPostfix.java",
+    "file_path": "src/main/java/com/thealgorithms/stacks/InfixToPostfix.java",
+    "revision": "master (accessed 2026-11-11)",
+    "authors": [
+      "TheAlgorithms contributors; see source file for credited authors"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "summary": "Java implementation at src/main/java/com/thealgorithms/stacks/InfixToPostfix.java; exercise prompt and review variant are adapted by the project team.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
+      "status": "repository_license_verified_file_notice_review_pending"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.c05.counting_sort_review",
+    "title": "TheAlgorithms/Java — Counting Sort implementation",
+    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/sorts/CountingSort.java",
+    "file_path": "src/main/java/com/thealgorithms/sorts/CountingSort.java",
+    "revision": "master (accessed 2026-11-11)",
+    "authors": [
+      "TheAlgorithms contributors; see source file for credited authors"
+    ],
+    "collected_at": "2026-11-11T00:00:00Z",
+    "original_language": "en",
+    "original_content": {
+      "summary": "Java implementation at src/main/java/com/thealgorithms/sorts/CountingSort.java; exercise prompt and review variant are adapted by the project team.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
+      "status": "repository_license_verified_file_notice_review_pending"
+    }
   }
 ]

@@ -89,25 +89,35 @@
   },
   {
     "id": "Q009",
-    "part": "A - Java Core & Programming Fundamentals",
-    "category": "programming_knowledge",
+    "part": "D - Algorithm Explanation",
+    "category": "algorithm_explanation",
     "type": "practice",
     "difficulty": "Medium",
     "role": "backend_developer",
     "level": "intern_fresher",
-    "prompt": "Nếu sử dụng toán tử == để so sánh hai biến String có cùng nội dung nhưng được khởi tạo theo hai cách khác nhau, kết quả có thể như thế nào? Vì sao?",
-    "target_skills": ["java.core.string_pool"]
+    "prompt": "Cho mảng số nguyên đã sắp xếp tăng dần và target. Hãy mô tả/cài đặt phiên bản lặp của Binary Search trả về chỉ số nếu tìm thấy, -1 nếu không có. Giải thích bất biến vòng lặp, độ phức tạp và cách kiểm thử biên.",
+    "target_skills": [
+      "algorithm.binary_search",
+      "algorithm.correctness",
+      "algorithm.complexity"
+    ],
+    "source_id": "source.c04.binary_search"
   },
   {
     "id": "Q010",
-    "part": "A - Java Core & Programming Fundamentals",
-    "category": "programming_knowledge",
+    "part": "D - Algorithm Explanation",
+    "category": "algorithm_explanation",
     "type": "practice",
-    "difficulty": "Medium",
+    "difficulty": "Easy",
     "role": "backend_developer",
     "level": "intern_fresher",
-    "prompt": "Hãy mô tả quá trình một file Java được biên dịch và thực thi trên JVM.",
-    "target_skills": ["java.jvm.execution"]
+    "prompt": "Mô tả Bubble Sort để sắp xếp mảng số nguyên tăng dần. Giải thích vì sao sau mỗi lượt phần tử lớn nhất còn lại nằm cuối vùng chưa sắp xếp, phân tích độ phức tạp và nêu test biên.",
+    "target_skills": [
+      "algorithm.bubble_sort",
+      "algorithm.correctness",
+      "algorithm.complexity"
+    ],
+    "source_id": "source.c04.bubble_sort"
   },
   {
     "id": "Q011",
@@ -177,25 +187,37 @@
   },
   {
     "id": "Q017",
-    "part": "B - Object-Oriented Programming (OOP)",
-    "category": "programming_knowledge",
+    "part": "E - AI Code Review",
+    "category": "ai_code_critique",
     "type": "practice",
     "difficulty": "Medium",
     "role": "backend_developer",
     "level": "intern_fresher",
-    "prompt": "Trong một ứng dụng quản lý nhân viên, bạn sẽ thiết kế các class như Employee, Manager và Developer như thế nào để tận dụng tính kế thừa và đa hình?",
-    "target_skills": ["oop.class_design"]
+    "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển biểu thức infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy phát hiện lỗi, sửa và đề xuất test cho biểu thức có toán tử và ngoặc.",
+    "target_skills": [
+      "backend.code_review",
+      "java.stack",
+      "testing.boundary_cases"
+    ],
+    "source_id": "source.c05.infix_to_postfix_review",
+    "code": "String toPostfix(String expression) {\n    StringBuilder out = new StringBuilder();\n    Deque<Character> ops = new ArrayDeque<>();\n    for (char token : expression.toCharArray()) {\n        if (Character.isLetterOrDigit(token)) out.append(token);\n        else if (token == '(') ops.push(token);\n        else if (token == ')') {\n            while (ops.peek() != '(') out.append(ops.pop());\n            ops.pop();\n        } else {\n            while (!ops.isEmpty() && ops.peek() != '(' && precedence(token) <= precedence(ops.peek())) out.append(ops.pop());\n            ops.push(token);\n        }\n    }\n    return out.toString(); // deliberately omits pending operators\n}\n// precedence('+','-') < precedence('*','/')"
   },
   {
     "id": "Q018",
-    "part": "B - Object-Oriented Programming (OOP)",
-    "category": "programming_knowledge",
+    "part": "E - AI Code Review",
+    "category": "ai_code_critique",
     "type": "practice",
     "difficulty": "Medium",
     "role": "backend_developer",
     "level": "intern_fresher",
-    "prompt": "Khi nào nên sử dụng Composition thay vì Inheritance trong thiết kế class?",
-    "target_skills": ["oop.composition_over_inheritance"]
+    "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng số nguyên, nhưng hợp đồng yêu cầu xử lý số âm, phần tử trùng và mảng rỗng. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy chỉ ra lỗi, sửa và thiết kế test độc lập.",
+    "target_skills": [
+      "backend.code_review",
+      "algorithm.counting_sort",
+      "testing.boundary_cases"
+    ],
+    "source_id": "source.c05.counting_sort_review",
+    "code": "import java.util.Arrays;\n\nfinal class CountingSortSuggestion {\n    static int[] countingSort(int[] values) {\n        int max = Arrays.stream(values).max().getAsInt();\n        int[] count = new int[max + 1];\n        for (int value : values) count[value]++;\n        int[] out = new int[values.length];\n        int index = 0;\n        for (int value = 0; value < count.length; value++)\n            while (count[value]-- > 0) out[index++] = value;\n        return out;\n    }\n}"
   },
   {
     "id": "Q019",
@@ -1100,4 +1122,3 @@
     "target_skills": ["architecture.system_design", "database.schema_design", "api.rest_design"]
   }
 ]
-

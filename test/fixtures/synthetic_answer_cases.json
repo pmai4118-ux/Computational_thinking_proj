@@ -2,24 +2,26 @@
   "schema_version": "synthetic-answer-classification/1.0",
   "synthetic": true,
   "purpose": "Supplemental input-shape classification fixture; not a scored answer benchmark.",
-  "source_file": "Computersystem/synthetic_answer_cases.json",
+  "source_file": "test/fixtures/synthetic_answer_cases_raw.json",
   "question_count": 101,
   "answer_case_count": 505,
   "scoreable": false,
   "expected_evaluation": null,
   "annotation_status": "unscored_input_fixture",
   "classification_summary": {
-    "structured_non_answer": 101,
-    "topic_echo_non_answer": 101,
+    "structured_non_answer": 97,
+    "topic_echo_non_answer": 97,
     "generic_misconception": 101,
     "missing_external_context": 101,
-    "off_topic": 101
+    "off_topic": 101,
+    "technical_answer_attempt_unreviewed": 4,
+    "substantive_partial_answer_unreviewed": 4
   },
   "limitations": [
-    "complete_attempt is a response-structure template, not a technically correct answer.",
-    "partial_attempt echoes the prompt and does not provide a substantive partial answer.",
+    "The 97 unchanged original inputs use response-plan/topic-echo templates; these are not technically correct or substantive partial answers.",
+    "The four replacement questions have substantive synthetic answers, but they remain unscored and pending human review.",
     "These classes test input handling only; they must not be counted as rubric accuracy or gold labels.",
-    "Rubric coverage is not provided for all 101 questions."
+    "Rubric coverage is not provided for all 100 bank questions."
   ],
   "questions": [
     {
@@ -457,108 +459,108 @@
     {
       "question_id": "Q009",
       "question_source": "data/seed/questions/raw_question_bank.json",
-      "category": "programming_knowledge",
+      "category": "algorithm_explanation",
       "type": "practice",
-      "part": "A - Java Core & Programming Fundamentals",
+      "part": "D - Algorithm Explanation",
       "role": "backend_developer",
       "level": "intern_fresher",
-      "prompt": "Nếu sử dụng toán tử == để so sánh hai biến String có cùng nội dung nhưng được khởi tạo theo hai cách khác nhau, kết quả có thể như thế nào? Vì sao?",
+      "prompt": "Cho mảng số nguyên đã sắp xếp tăng dần và target. Hãy mô tả/cài đặt phiên bản lặp của Binary Search trả về chỉ số nếu tìm thấy, -1 nếu không có. Giải thích bất biến vòng lặp, độ phức tạp và cách kiểm thử biên.",
       "annotation_status": "unscored_input_fixture",
       "expected_evaluation": null,
       "answer_cases": [
         {
           "case_id": "complete_attempt",
-          "label": "Câu trả lời có cấu trúc, có giải thích và ví dụ",
-          "classification": "structured_non_answer",
-          "classification_reason": "Response outline/meta-answer; does not provide requested technical facts or solve the case.",
+          "label": "Câu trả lời đầy đủ",
+          "classification": "technical_answer_attempt_unreviewed",
+          "classification_reason": "Substantive domain answer supplied for testing; not a gold label.",
           "scoreable": false,
-          "answer": "Em sẽ trả lời câu hỏi: Nếu sử dụng toán tử == để so sánh hai biến String có cùng nội dung nhưng được khởi tạo theo hai cách khác nhau, kết quả có thể như thế nào? Vì sao?\n\nTrước hết em nêu khái niệm/cách tiếp cận chính, sau đó giải thích lý do và liên hệ với một tình huống Backend Java. Nếu có nhiều lựa chọn, em sẽ nói rõ ưu nhược điểm và điều kiện áp dụng. Cuối cùng em kiểm tra lại các trường hợp biên để chắc rằng giải pháp đáp ứng yêu cầu."
+          "answer": "Vì mảng tăng dần, Binary Search giữ đoạn khả dĩ [left,right]. Mỗi vòng tính mid; nếu a[mid] nhỏ hơn target thì left=mid+1, nếu lớn hơn thì right=mid-1, bằng nhau trả mid. Khi left>right target không tồn tại nên trả -1. Mỗi vòng giảm đoạn khoảng một nửa: O(log n) thời gian, O(1) bộ nhớ bổ sung dạng lặp. Test [1,3,5], target 3 -> 1; target 2 -> -1; mảng rỗng -> -1."
         },
         {
           "case_id": "partial_attempt",
-          "label": "Câu trả lời ngắn, mới nêu một ý",
-          "classification": "topic_echo_non_answer",
-          "classification_reason": "Repeats the topic and says detail is missing, without a scorable technical claim.",
+          "label": "Câu trả lời đúng một phần",
+          "classification": "substantive_partial_answer_unreviewed",
+          "classification_reason": "Contains a technical point but omits rubric-relevant explanation or tests.",
           "scoreable": false,
-          "answer": "Em nghĩ nội dung chính liên quan đến câu hỏi này là Nếu sử dụng toán tử == để so sánh hai biến String có cùng nội dung nhưng được khởi tạo theo hai cách khác nhau, kết quả có thể như thế nào? Vì sao và thường được dùng trong ứng dụng. Em chưa giải thích rõ cơ chế hoạt động hay trường hợp ngoại lệ."
+          "answer": "Dùng binary search trên mảng đã sắp xếp; so target với phần tử giữa rồi bỏ nửa không thể chứa kết quả. Em nhớ độ phức tạp là O(log n), nhưng chưa trình bày rõ cập nhật biên, trường hợp không có và test."
         },
         {
           "case_id": "misconception_attempt",
-          "label": "Câu trả lời có khẳng định sai để thử phát hiện hiểu nhầm",
+          "label": "Câu trả lời có hiểu nhầm",
           "classification": "generic_misconception",
-          "classification_reason": "Unsupported blanket claim that Java/Spring/database handles all concerns; no criterion-specific knowledge.",
+          "classification_reason": "Contains an explicit technical misconception for error-detection testing.",
           "scoreable": false,
-          "answer": "Theo em, với câu hỏi 'Nếu sử dụng toán tử == để so sánh hai biến String có cùng nội dung nhưng được khởi tạo theo hai cách khác nhau, kết quả có thể như thế nào? Vì sao?', chỉ cần chọn cách làm đơn giản nhất là đủ; Java/Spring/Database sẽ tự xử lý mọi vấn đề về hiệu năng, lỗi và dữ liệu đồng thời nên không cần kiểm tra thêm."
+          "answer": "Binary Search dùng được trên mọi mảng dù chưa sắp xếp; chỉ cần tìm ở nửa trái trước. Dùng left=mid và right=mid thì chắc chắn kết thúc, chạy O(1) và không cần trường hợp target không có."
         },
         {
           "case_id": "missing_context",
-          "label": "Câu trả lời viện dẫn nội dung không đính kèm",
+          "label": "Câu trả lời thiếu ngữ cảnh ngoài",
           "classification": "missing_external_context",
-          "classification_reason": "Relies on an attachment that is not included, so claimed evidence cannot be inspected.",
+          "classification_reason": "Refers to absent external material; evidence cannot be inspected.",
           "scoreable": false,
-          "answer": "Em đã giải thích đầy đủ và đưa ví dụ chạy được trong tệp đính kèm."
+          "answer": "Em đã giải thích điều kiện sắp xếp, bất biến và các test trong ảnh đính kèm binary-search.png; nội dung không có trong câu trả lời này."
         },
         {
           "case_id": "off_topic_attempt",
           "label": "Câu trả lời không liên quan",
           "classification": "off_topic",
-          "classification_reason": "Discusses personal preferences and does not address the technical question.",
+          "classification_reason": "Does not answer the technical prompt.",
           "scoreable": false,
-          "answer": "Em thích làm việc nhóm và luôn cố gắng hoàn thành công việc đúng hạn. Ngoài giờ học em thường đọc sách và nghe nhạc."
+          "answer": "Em thích làm backend vì được làm việc nhóm. Khi rảnh em thường đọc sách và nghe nhạc."
         }
       ]
     },
     {
       "question_id": "Q010",
       "question_source": "data/seed/questions/raw_question_bank.json",
-      "category": "programming_knowledge",
+      "category": "algorithm_explanation",
       "type": "practice",
-      "part": "A - Java Core & Programming Fundamentals",
+      "part": "D - Algorithm Explanation",
       "role": "backend_developer",
       "level": "intern_fresher",
-      "prompt": "Hãy mô tả quá trình một file Java được biên dịch và thực thi trên JVM.",
+      "prompt": "Mô tả Bubble Sort để sắp xếp mảng số nguyên tăng dần. Giải thích vì sao sau mỗi lượt phần tử lớn nhất còn lại nằm cuối vùng chưa sắp xếp, phân tích độ phức tạp và nêu test biên.",
       "annotation_status": "unscored_input_fixture",
       "expected_evaluation": null,
       "answer_cases": [
         {
           "case_id": "complete_attempt",
-          "label": "Câu trả lời có cấu trúc, có giải thích và ví dụ",
-          "classification": "structured_non_answer",
-          "classification_reason": "Response outline/meta-answer; does not provide requested technical facts or solve the case.",
+          "label": "Câu trả lời đầy đủ",
+          "classification": "technical_answer_attempt_unreviewed",
+          "classification_reason": "Substantive domain answer supplied for testing; not a gold label.",
           "scoreable": false,
-          "answer": "Em sẽ trả lời câu hỏi: Hãy mô tả quá trình một file Java được biên dịch và thực thi trên JVM.\n\nTrước hết em nêu khái niệm/cách tiếp cận chính, sau đó giải thích lý do và liên hệ với một tình huống Backend Java. Nếu có nhiều lựa chọn, em sẽ nói rõ ưu nhược điểm và điều kiện áp dụng. Cuối cùng em kiểm tra lại các trường hợp biên để chắc rằng giải pháp đáp ứng yêu cầu."
+          "answer": "Bubble Sort lặp qua các cặp liền kề và đổi chỗ khi sai thứ tự. Sau mỗi lượt, phần tử lớn nhất trong prefix chưa sắp xếp được đẩy đến cuối vùng đó; lượt kế tiếp bỏ qua phần đã cố định. Dừng sớm nếu một lượt không có swap. Thời gian trung bình/xấu O(n^2), tốt nhất O(n) khi đã sắp xếp với cờ swap, bộ nhớ phụ O(1). Test [] -> [], [4] -> [4], [3,1,2] -> [1,2,3], [2,2,1] -> [1,2,2]."
         },
         {
           "case_id": "partial_attempt",
-          "label": "Câu trả lời ngắn, mới nêu một ý",
-          "classification": "topic_echo_non_answer",
-          "classification_reason": "Repeats the topic and says detail is missing, without a scorable technical claim.",
+          "label": "Câu trả lời đúng một phần",
+          "classification": "substantive_partial_answer_unreviewed",
+          "classification_reason": "Contains a technical point but omits rubric-relevant explanation or tests.",
           "scoreable": false,
-          "answer": "Em nghĩ nội dung chính liên quan đến câu hỏi này là Hãy mô tả quá trình một file Java được biên dịch và thực thi trên JVM. và thường được dùng trong ứng dụng. Em chưa giải thích rõ cơ chế hoạt động hay trường hợp ngoại lệ."
+          "answer": "Bubble Sort so sánh phần tử kế nhau và đổi chỗ nếu phần tử trước lớn hơn. Cách này sắp xếp tăng dần nhưng thường O(n^2); em chưa giải thích vì sao mỗi lượt cố định phần tử lớn nhất hoặc test rỗng/trùng."
         },
         {
           "case_id": "misconception_attempt",
-          "label": "Câu trả lời có khẳng định sai để thử phát hiện hiểu nhầm",
+          "label": "Câu trả lời có hiểu nhầm",
           "classification": "generic_misconception",
-          "classification_reason": "Unsupported blanket claim that Java/Spring/database handles all concerns; no criterion-specific knowledge.",
+          "classification_reason": "Contains an explicit technical misconception for error-detection testing.",
           "scoreable": false,
-          "answer": "Theo em, với câu hỏi 'Hãy mô tả quá trình một file Java được biên dịch và thực thi trên JVM.', chỉ cần chọn cách làm đơn giản nhất là đủ; Java/Spring/Database sẽ tự xử lý mọi vấn đề về hiệu năng, lỗi và dữ liệu đồng thời nên không cần kiểm tra thêm."
+          "answer": "Bubble Sort luôn chạy O(n log n), cần mảng phụ O(n), và sau lượt đầu phần tử nhỏ nhất nằm cuối. Mảng đã sắp xếp vẫn cần đủ mọi vòng lặp."
         },
         {
           "case_id": "missing_context",
-          "label": "Câu trả lời viện dẫn nội dung không đính kèm",
+          "label": "Câu trả lời thiếu ngữ cảnh ngoài",
           "classification": "missing_external_context",
-          "classification_reason": "Relies on an attachment that is not included, so claimed evidence cannot be inspected.",
+          "classification_reason": "Refers to absent external material; evidence cannot be inspected.",
           "scoreable": false,
-          "answer": "Em đã giải thích đầy đủ và đưa ví dụ chạy được trong tệp đính kèm."
+          "answer": "Code Bubble Sort và output các bộ test được ghi trong file đính kèm result.txt; hiện không có nội dung để kiểm tra."
         },
         {
           "case_id": "off_topic_attempt",
           "label": "Câu trả lời không liên quan",
           "classification": "off_topic",
-          "classification_reason": "Discusses personal preferences and does not address the technical question.",
+          "classification_reason": "Does not answer the technical prompt.",
           "scoreable": false,
-          "answer": "Em thích làm việc nhóm và luôn cố gắng hoàn thành công việc đúng hạn. Ngoài giờ học em thường đọc sách và nghe nhạc."
+          "answer": "Em thường chọn công nghệ theo sở thích và muốn làm trong môi trường năng động."
         }
       ]
     },
@@ -889,110 +891,112 @@
     {
       "question_id": "Q017",
       "question_source": "data/seed/questions/raw_question_bank.json",
-      "category": "programming_knowledge",
+      "category": "ai_code_critique",
       "type": "practice",
-      "part": "B - Object-Oriented Programming (OOP)",
+      "part": "E - AI Code Review",
       "role": "backend_developer",
       "level": "intern_fresher",
-      "prompt": "Trong một ứng dụng quản lý nhân viên, bạn sẽ thiết kế các class như Employee, Manager và Developer như thế nào để tận dụng tính kế thừa và đa hình?",
+      "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển biểu thức infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy phát hiện lỗi, sửa và đề xuất test cho biểu thức có toán tử và ngoặc.",
       "annotation_status": "unscored_input_fixture",
       "expected_evaluation": null,
       "answer_cases": [
         {
           "case_id": "complete_attempt",
-          "label": "Câu trả lời có cấu trúc, có giải thích và ví dụ",
-          "classification": "structured_non_answer",
-          "classification_reason": "Response outline/meta-answer; does not provide requested technical facts or solve the case.",
+          "label": "Câu trả lời đầy đủ",
+          "classification": "technical_answer_attempt_unreviewed",
+          "classification_reason": "Substantive domain answer supplied for testing; not a gold label.",
           "scoreable": false,
-          "answer": "Em sẽ trả lời câu hỏi: Trong một ứng dụng quản lý nhân viên, bạn sẽ thiết kế các class như Employee, Manager và Developer như thế nào để tận dụng tính kế thừa và đa hình?\n\nTrước hết em nêu khái niệm/cách tiếp cận chính, sau đó giải thích lý do và liên hệ với một tình huống Backend Java. Nếu có nhiều lựa chọn, em sẽ nói rõ ưu nhược điểm và điều kiện áp dụng. Cuối cùng em kiểm tra lại các trường hợp biên để chắc rằng giải pháp đáp ứng yêu cầu."
+          "answer": "The snippet never drains the operator stack after the scan, so a+b produces ab rather than ab+. Pop the pending operators in LIFO order at the end; keep the established precedence and parentheses rules. Tests: a+b -> ab+, a+b*c -> abc*+, (a+b)*c -> ab+c*."
         },
         {
           "case_id": "partial_attempt",
-          "label": "Câu trả lời ngắn, mới nêu một ý",
-          "classification": "topic_echo_non_answer",
-          "classification_reason": "Repeats the topic and says detail is missing, without a scorable technical claim.",
+          "label": "Câu trả lời đúng một phần",
+          "classification": "substantive_partial_answer_unreviewed",
+          "classification_reason": "Contains a technical point but omits rubric-relevant explanation or tests.",
           "scoreable": false,
-          "answer": "Em nghĩ nội dung chính liên quan đến câu hỏi này là Trong một ứng dụng quản lý nhân viên, bạn sẽ thiết kế các class như Employee, Manager và Developer như thế nào để tận dụng tính kế thừa và đa hình và thường được dùng trong ứng dụng. Em chưa giải thích rõ cơ chế hoạt động hay trường hợp ngoại lệ."
+          "answer": "I see that operators remain on the stack at the end. The method needs a final stack-processing step, but I have not explained the pop order or tested precedence and parentheses."
         },
         {
           "case_id": "misconception_attempt",
-          "label": "Câu trả lời có khẳng định sai để thử phát hiện hiểu nhầm",
+          "label": "Câu trả lời có hiểu nhầm",
           "classification": "generic_misconception",
-          "classification_reason": "Unsupported blanket claim that Java/Spring/database handles all concerns; no criterion-specific knowledge.",
+          "classification_reason": "Contains an explicit technical misconception for error-detection testing.",
           "scoreable": false,
-          "answer": "Theo em, với câu hỏi 'Trong một ứng dụng quản lý nhân viên, bạn sẽ thiết kế các class như Employee, Manager và Developer như thế nào để tận dụng tính kế thừa và đa hình?', chỉ cần chọn cách làm đơn giản nhất là đủ; Java/Spring/Database sẽ tự xử lý mọi vấn đề về hiệu năng, lỗi và dữ liệu đồng thời nên không cần kiểm tra thêm."
+          "answer": "Code đúng vì toán tử đã được thêm vào output ngay khi đọc. Với `a+b` kết quả `a+b`; không cần stack hoặc kiểm tra ngoặc."
         },
         {
           "case_id": "missing_context",
-          "label": "Câu trả lời viện dẫn nội dung không đính kèm",
+          "label": "Câu trả lời thiếu ngữ cảnh ngoài",
           "classification": "missing_external_context",
-          "classification_reason": "Relies on an attachment that is not included, so claimed evidence cannot be inspected.",
+          "classification_reason": "Refers to absent external material; evidence cannot be inspected.",
           "scoreable": false,
-          "answer": "Em đã giải thích đầy đủ và đưa ví dụ chạy được trong tệp đính kèm."
+          "answer": "Em đã ghi lỗi, bản sửa và test vào tệp review-code.zip; nội dung không được gửi kèm."
         },
         {
           "case_id": "off_topic_attempt",
           "label": "Câu trả lời không liên quan",
           "classification": "off_topic",
-          "classification_reason": "Discusses personal preferences and does not address the technical question.",
+          "classification_reason": "Does not answer the technical prompt.",
           "scoreable": false,
-          "answer": "Em thích làm việc nhóm và luôn cố gắng hoàn thành công việc đúng hạn. Ngoài giờ học em thường đọc sách và nghe nhạc."
+          "answer": "Em thích dùng IDE có giao diện tối và thường cài nhiều plugin."
         }
-      ]
+      ],
+      "code": "String toPostfix(String expression) {\n    StringBuilder out = new StringBuilder();\n    Deque<Character> ops = new ArrayDeque<>();\n    for (char token : expression.toCharArray()) {\n        if (Character.isLetterOrDigit(token)) out.append(token);\n        else if (token == '(') ops.push(token);\n        else if (token == ')') {\n            while (ops.peek() != '(') out.append(ops.pop());\n            ops.pop();\n        } else {\n            while (!ops.isEmpty() && ops.peek() != '(' && precedence(token) <= precedence(ops.peek())) out.append(ops.pop());\n            ops.push(token);\n        }\n    }\n    return out.toString(); // deliberately omits pending operators\n}\n// precedence('+','-') < precedence('*','/')"
     },
     {
       "question_id": "Q018",
       "question_source": "data/seed/questions/raw_question_bank.json",
-      "category": "programming_knowledge",
+      "category": "ai_code_critique",
       "type": "practice",
-      "part": "B - Object-Oriented Programming (OOP)",
+      "part": "E - AI Code Review",
       "role": "backend_developer",
       "level": "intern_fresher",
-      "prompt": "Khi nào nên sử dụng Composition thay vì Inheritance trong thiết kế class?",
+      "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng số nguyên, nhưng hợp đồng yêu cầu xử lý số âm, phần tử trùng và mảng rỗng. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy chỉ ra lỗi, sửa và thiết kế test độc lập.",
       "annotation_status": "unscored_input_fixture",
       "expected_evaluation": null,
       "answer_cases": [
         {
           "case_id": "complete_attempt",
-          "label": "Câu trả lời có cấu trúc, có giải thích và ví dụ",
-          "classification": "structured_non_answer",
-          "classification_reason": "Response outline/meta-answer; does not provide requested technical facts or solve the case.",
+          "label": "Câu trả lời đầy đủ",
+          "classification": "technical_answer_attempt_unreviewed",
+          "classification_reason": "Substantive domain answer supplied for testing; not a gold label.",
           "scoreable": false,
-          "answer": "Em sẽ trả lời câu hỏi: Khi nào nên sử dụng Composition thay vì Inheritance trong thiết kế class?\n\nTrước hết em nêu khái niệm/cách tiếp cận chính, sau đó giải thích lý do và liên hệ với một tình huống Backend Java. Nếu có nhiều lựa chọn, em sẽ nói rõ ưu nhược điểm và điều kiện áp dụng. Cuối cùng em kiểm tra lại các trường hợp biên để chắc rằng giải pháp đáp ứng yêu cầu."
+          "answer": "Có hai lỗi: mảng rỗng làm `max().getAsInt()` ném NoSuchElementException; số âm tạo index âm nên lỗi ngoài phạm vi. Sửa bằng trả ngay mảng rỗng, lấy min/max rồi cấp count có độ dài max-min+1; đếm ở vị trí value-min và khôi phục giá trị bằng index+min. Test [] -> []; [-3,2,-3,0] -> [-3,-3,0,2]; [4,4] -> [4,4]. Cần kiểm tra range không tràn số hoặc quá lớn trước khi cấp phát."
         },
         {
           "case_id": "partial_attempt",
-          "label": "Câu trả lời ngắn, mới nêu một ý",
-          "classification": "topic_echo_non_answer",
-          "classification_reason": "Repeats the topic and says detail is missing, without a scorable technical claim.",
+          "label": "Câu trả lời đúng một phần",
+          "classification": "substantive_partial_answer_unreviewed",
+          "classification_reason": "Contains a technical point but omits rubric-relevant explanation or tests.",
           "scoreable": false,
-          "answer": "Em nghĩ nội dung chính liên quan đến câu hỏi này là Khi nào nên sử dụng Composition thay vì Inheritance trong thiết kế class và thường được dùng trong ứng dụng. Em chưa giải thích rõ cơ chế hoạt động hay trường hợp ngoại lệ."
+          "answer": "Đoạn code lỗi với số âm vì dùng trực tiếp value làm chỉ số mảng. Có thể trừ min khi đếm, nhưng em chưa xử lý mảng rỗng và chưa nêu cách khôi phục giá trị/test."
         },
         {
           "case_id": "misconception_attempt",
-          "label": "Câu trả lời có khẳng định sai để thử phát hiện hiểu nhầm",
+          "label": "Câu trả lời có hiểu nhầm",
           "classification": "generic_misconception",
-          "classification_reason": "Unsupported blanket claim that Java/Spring/database handles all concerns; no criterion-specific knowledge.",
+          "classification_reason": "Contains an explicit technical misconception for error-detection testing.",
           "scoreable": false,
-          "answer": "Theo em, với câu hỏi 'Khi nào nên sử dụng Composition thay vì Inheritance trong thiết kế class?', chỉ cần chọn cách làm đơn giản nhất là đủ; Java/Spring/Database sẽ tự xử lý mọi vấn đề về hiệu năng, lỗi và dữ liệu đồng thời nên không cần kiểm tra thêm."
+          "answer": "Counting Sort tự xử lý số âm và mảng rỗng; `max().getAsInt()` trả 0 nếu không có phần tử. Mảng count có kích thước max là đủ vì index max không cần lưu."
         },
         {
           "case_id": "missing_context",
-          "label": "Câu trả lời viện dẫn nội dung không đính kèm",
+          "label": "Câu trả lời thiếu ngữ cảnh ngoài",
           "classification": "missing_external_context",
-          "classification_reason": "Relies on an attachment that is not included, so claimed evidence cannot be inspected.",
+          "classification_reason": "Refers to absent external material; evidence cannot be inspected.",
           "scoreable": false,
-          "answer": "Em đã giải thích đầy đủ và đưa ví dụ chạy được trong tệp đính kèm."
+          "answer": "Em đã kiểm tra trường hợp số âm bằng test trong repository riêng, đường dẫn và expected output không được cung cấp."
         },
         {
           "case_id": "off_topic_attempt",
           "label": "Câu trả lời không liên quan",
           "classification": "off_topic",
-          "classification_reason": "Discusses personal preferences and does not address the technical question.",
+          "classification_reason": "Does not answer the technical prompt.",
           "scoreable": false,
-          "answer": "Em thích làm việc nhóm và luôn cố gắng hoàn thành công việc đúng hạn. Ngoài giờ học em thường đọc sách và nghe nhạc."
+          "answer": "Em thích code ngắn và thường dùng thư viện có sẵn thay vì tự cài thuật toán."
         }
-      ]
+      ],
+      "code": "import java.util.Arrays;\n\nfinal class CountingSortSuggestion {\n    static int[] countingSort(int[] values) {\n        int max = Arrays.stream(values).max().getAsInt();\n        int[] count = new int[max + 1];\n        for (int value : values) count[value]++;\n        int[] out = new int[values.length];\n        int index = 0;\n        for (int value = 0; value < count.length; value++)\n            while (count[value]-- > 0) out[index++] = value;\n        return out;\n    }\n}"
     },
     {
       "question_id": "Q019",
@@ -5476,5 +5480,12 @@
         }
       ]
     }
-  ]
+  ],
+  "source_question_count": 100,
+  "category_summary": {
+    "programming_knowledge": 77,
+    "technical_case": 20,
+    "algorithm_explanation": 2,
+    "ai_code_critique": 2
+  }
 }
