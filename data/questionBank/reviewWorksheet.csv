@@ -1,0 +1,375 @@
+﻿questionId,questionVersion,rubricId,rubricVersion,caseName,criterionId,proposedStatus,proposedScore,quote,reviewerStatus,reviewerScore,reviewerReason,reviewerId,reviewedAt
+demo.Q009,1,rubric.demo.Q009.knowledge,1,correct,demo.Q009.knowledge.1,met,2.0,Binary search uses ascending order to discard half of the candidate interval.,,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,correct,demo.Q009.knowledge.2,met,2.0,The iterative search takes O(log n) worst-case time and O(1) auxiliary space.,,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,correct,demo.Q009.analysis.1,met,2.0,"If a matching element exists, its index stays within the inclusive interval [low, high].",,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,correct,demo.Q009.analysis.2,met,2.0,Set low=mid+1 or high=mid-1 to shrink the interval; low+(high-low)/2 avoids sum overflow. Stop when low>high.,,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,correct,demo.Q009.testing.1,met,2.0,"Test [1,3,5], target 3 -> 1; target 4 -> -1.",,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,correct,demo.Q009.testing.2,met,2.0,"Test [], target 2 -> -1; [2], target 2 -> 0; [2,2], target 2 -> either 0 or 1.",,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,correct,demo.Q009.implementation.1,met,2.0,"static int binarySearch(int[] values, int target) {
+    int low = 0, high = values.length - 1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (values[mid] == target) return mid;
+        if (values[mid] < target) low = mid + 1;
+        else high = mid - 1;
+    }
+    return -1;
+}",,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,correct,demo.Q009.implementation.2,met,2.0,"The shown Java method returns -1 after the loop; an empty array starts with high=-1, so no element is accessed.",,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,partial,demo.Q009.knowledge.1,met,1.0,Binary search uses ascending order to discard half of the candidate interval.,,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,partial,demo.Q009.knowledge.2,unmet,1.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,partial,demo.Q009.analysis.1,met,1.0,"If a matching element exists, its index stays within the inclusive interval [low, high].",,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,partial,demo.Q009.analysis.2,unmet,1.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,partial,demo.Q009.testing.1,met,1.0,"Test [1,3,5], target 3 -> 1; target 4 -> -1.",,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,partial,demo.Q009.testing.2,unmet,1.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,partial,demo.Q009.implementation.1,met,1.0,"int low = 0, high = values.length - 1;
+while (low <= high) {
+    int mid = low + (high - low) / 2;
+    if (values[mid] == target) return mid;
+    if (values[mid] < target) low = mid + 1;
+    else high = mid - 1;
+}
+// The enclosing method's absence return is not supplied.",,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,partial,demo.Q009.implementation.2,unmet,1.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,incorrect,demo.Q009.knowledge.1,unmet,0.0,"Binary search works on any unsorted array. Repeatedly choose index 0, leave both bounds unchanged, and return 0 even when the target is absent. The runtime is always O(1).",,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,incorrect,demo.Q009.knowledge.2,unmet,0.0,"Binary search works on any unsorted array. Repeatedly choose index 0, leave both bounds unchanged, and return 0 even when the target is absent. The runtime is always O(1).",,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,incorrect,demo.Q009.analysis.1,unmet,0.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,incorrect,demo.Q009.analysis.2,unmet,0.0,"Binary search works on any unsorted array. Repeatedly choose index 0, leave both bounds unchanged, and return 0 even when the target is absent. The runtime is always O(1).",,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,incorrect,demo.Q009.testing.1,unmet,0.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,incorrect,demo.Q009.testing.2,unmet,0.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,incorrect,demo.Q009.implementation.1,unmet,0.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,incorrect,demo.Q009.implementation.2,unmet,0.0,,,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,equivalent,demo.Q009.knowledge.1,met,2.0,The sorted order lets us exclude one half after comparing the middle value.,,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,equivalent,demo.Q009.knowledge.2,met,2.0,The iterative search takes O(log n) worst-case time and O(1) auxiliary space.,,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,equivalent,demo.Q009.analysis.1,met,2.0,"If a matching element exists, its index stays within the inclusive interval [low, high].",,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,equivalent,demo.Q009.analysis.2,met,2.0,Set low=mid+1 or high=mid-1 to shrink the interval; low+(high-low)/2 avoids sum overflow. Stop when low>high.,,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,equivalent,demo.Q009.testing.1,met,2.0,"Test [1,3,5], target 3 -> 1; target 4 -> -1.",,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,equivalent,demo.Q009.testing.2,met,2.0,"Test [], target 2 -> -1; [2], target 2 -> 0; [2,2], target 2 -> either 0 or 1.",,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,equivalent,demo.Q009.implementation.1,met,2.0,"static int binarySearch(int[] values, int target) {
+    int low = 0, high = values.length - 1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (values[mid] == target) return mid;
+        if (values[mid] < target) low = mid + 1;
+        else high = mid - 1;
+    }
+    return -1;
+}",,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,equivalent,demo.Q009.implementation.2,met,2.0,"The shown Java method returns -1 after the loop; an empty array starts with high=-1, so no element is accessed.",,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,ambiguous,demo.Q009.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q009,1,rubric.demo.Q009.knowledge,1,ambiguous,demo.Q009.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,ambiguous,demo.Q009.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q009,1,rubric.demo.Q009.analysis,1,ambiguous,demo.Q009.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,ambiguous,demo.Q009.testing.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q009,1,rubric.demo.Q009.testing,1,ambiguous,demo.Q009.testing.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,ambiguous,demo.Q009.implementation.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q009,1,rubric.demo.Q009.implementation,1,ambiguous,demo.Q009.implementation.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,correct,demo.Q028.knowledge.1,met,2.0,"Use a HashMap<Long, Employee>: each unique stable employee ID maps to its employee.",,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,correct,demo.Q028.knowledge.2,met,2.0,"Index construction costs O(n) time and O(n) extra storage. HashMap lookup is expected O(1), not guaranteed worst-case O(1).",,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,correct,demo.Q028.analysis.1,met,2.0,"For many lookups, build the index once instead of scanning all employees on every query.",,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,correct,demo.Q028.analysis.2,met,2.0,"A missing key returns null and must be reported as not found; IDs are unique, so no duplicate replacement policy is needed here.",,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,correct,demo.Q028.testing.1,met,2.0,"With employee IDs 10 and 20, looking up 20 must return the employee whose ID is 20.",,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,correct,demo.Q028.testing.2,met,2.0,"With IDs 10 and 20, lookup 99 must return not found. An empty collection must also return not found.",,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,correct,demo.Q028.implementation.1,met,2.0,"Map<Long, Employee> index = new HashMap<>();
+for (Employee employee : employees) index.put(employee.getId(), employee);
+Employee result = index.get(targetId);
+if (result == null) System.out.println(""Employee not found"");
+else System.out.println(result);",,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,correct,demo.Q028.implementation.2,met,2.0,The shown null guard handles missing IDs before any result is used; no null employee is dereferenced.,,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,partial,demo.Q028.knowledge.1,met,1.0,"Use a HashMap<Long, Employee>: each unique stable employee ID maps to its employee.",,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,partial,demo.Q028.knowledge.2,unmet,1.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,partial,demo.Q028.analysis.1,met,1.0,"For many lookups, build the index once instead of scanning all employees on every query.",,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,partial,demo.Q028.analysis.2,unmet,1.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,partial,demo.Q028.testing.1,met,1.0,"With employee IDs 10 and 20, looking up 20 must return the employee whose ID is 20.",,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,partial,demo.Q028.testing.2,unmet,1.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,partial,demo.Q028.implementation.1,met,1.0,"Map<Long, Employee> index = new HashMap<>();
+for (Employee employee : employees) index.put(employee.getId(), employee);
+Employee result = index.get(targetId);
+System.out.println(result.getId());",,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,partial,demo.Q028.implementation.2,unmet,1.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,incorrect,demo.Q028.knowledge.1,unmet,0.0,"Store every employee at the same key 0. This keeps all employees and gives the requested employee for any ID. When get returns null, immediately call result.getId(). No tests are necessary.",,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,incorrect,demo.Q028.knowledge.2,unmet,0.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,incorrect,demo.Q028.analysis.1,unmet,0.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,incorrect,demo.Q028.analysis.2,unmet,0.0,"Store every employee at the same key 0. This keeps all employees and gives the requested employee for any ID. When get returns null, immediately call result.getId(). No tests are necessary.",,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,incorrect,demo.Q028.testing.1,unmet,0.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,incorrect,demo.Q028.testing.2,unmet,0.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,incorrect,demo.Q028.implementation.1,unmet,0.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,incorrect,demo.Q028.implementation.2,unmet,0.0,,,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,equivalent,demo.Q028.knowledge.1,met,2.0,"Use a HashMap<Long, Employee>: each unique stable employee ID maps to its employee.",,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,equivalent,demo.Q028.knowledge.2,met,2.0,"Index construction costs O(n) time and O(n) extra storage. HashMap lookup is expected O(1), not guaranteed worst-case O(1).",,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,equivalent,demo.Q028.analysis.1,met,2.0,"For many lookups, build the index once instead of scanning all employees on every query.",,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,equivalent,demo.Q028.analysis.2,met,2.0,"A missing key returns null and must be reported as not found; IDs are unique, so no duplicate replacement policy is needed here.",,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,equivalent,demo.Q028.testing.1,met,2.0,"With employee IDs 10 and 20, looking up 20 must return the employee whose ID is 20.",,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,equivalent,demo.Q028.testing.2,met,2.0,"With IDs 10 and 20, lookup 99 must return not found. An empty collection must also return not found.",,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,equivalent,demo.Q028.implementation.1,met,2.0,"Map<Long, Employee> index = new HashMap<>();
+for (Employee employee : employees) index.put(employee.getId(), employee);
+Employee result = index.get(targetId);
+if (result == null) System.out.println(""Employee not found"");
+else System.out.println(result);",,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,equivalent,demo.Q028.implementation.2,met,2.0,The shown null guard handles missing IDs before any result is used; no null employee is dereferenced.,,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,ambiguous,demo.Q028.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q028,1,rubric.demo.Q028.knowledge,1,ambiguous,demo.Q028.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,ambiguous,demo.Q028.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q028,1,rubric.demo.Q028.analysis,1,ambiguous,demo.Q028.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,ambiguous,demo.Q028.testing.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q028,1,rubric.demo.Q028.testing,1,ambiguous,demo.Q028.testing.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,ambiguous,demo.Q028.implementation.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q028,1,rubric.demo.Q028.implementation,1,ambiguous,demo.Q028.implementation.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,correct,demo.Q017.knowledge.1,met,2.0,Operands go directly to the output; the stack temporarily holds operators that still need to be emitted.,,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,correct,demo.Q017.knowledge.2,met,2.0,"Multiplication and division outrank addition and subtraction; equal-precedence operators are left-associative, so the existing <= comparison is appropriate.",,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,correct,demo.Q017.analysis.1,met,2.0,The loop finishes while operators may remain on the stack; returning immediately drops those pending operators.,,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,correct,demo.Q017.analysis.2,met,2.0,"For a+b, the current code returns ab instead of ab+. Each token is pushed and popped at most once, so the corrected algorithm takes O(n) time and O(n) space.",,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,correct,demo.Q017.testing.1,met,2.0,Test a+b -> ab+ and a+b*c -> abc*+.,,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,correct,demo.Q017.testing.2,met,2.0,Test (a+b)*c -> ab+c* and a-b-c -> ab-c-.,,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,correct,demo.Q017.implementation.1,met,2.0,"while (!ops.isEmpty()) {
+    out.append(ops.pop());
+}
+return out.toString();",,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,correct,demo.Q017.implementation.2,met,2.0,Replace the final return after the token loop with this patch. Keep the existing precedence and parenthesis handling; valid input guarantees balanced parentheses.,,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,partial,demo.Q017.knowledge.1,met,1.0,Operands go directly to the output; the stack temporarily holds operators that still need to be emitted.,,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,partial,demo.Q017.knowledge.2,unmet,1.0,,,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,partial,demo.Q017.analysis.1,met,1.0,The loop finishes while operators may remain on the stack; returning immediately drops those pending operators.,,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,partial,demo.Q017.analysis.2,unmet,1.0,,,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,partial,demo.Q017.testing.1,met,1.0,Test a+b -> ab+ and a+b*c -> abc*+.,,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,partial,demo.Q017.testing.2,unmet,1.0,,,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,partial,demo.Q017.implementation.1,met,1.0,"while (!ops.isEmpty()) {
+    out.append(ops.pop());
+}
+return out.toString();",,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,partial,demo.Q017.implementation.2,unmet,1.0,,,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,incorrect,demo.Q017.knowledge.1,unmet,0.0,"The output is already complete after the last operand, so discard the operator stack. Change <= to < because subtraction is right-associative. For a-b-c the correct postfix is abc--.",,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,incorrect,demo.Q017.knowledge.2,unmet,0.0,"The output is already complete after the last operand, so discard the operator stack. Change <= to < because subtraction is right-associative. For a-b-c the correct postfix is abc--.",,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,incorrect,demo.Q017.analysis.1,unmet,0.0,"The output is already complete after the last operand, so discard the operator stack. Change <= to < because subtraction is right-associative. For a-b-c the correct postfix is abc--.",,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,incorrect,demo.Q017.analysis.2,unmet,0.0,"The output is already complete after the last operand, so discard the operator stack. Change <= to < because subtraction is right-associative. For a-b-c the correct postfix is abc--.",,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,incorrect,demo.Q017.testing.1,unmet,0.0,,,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,incorrect,demo.Q017.testing.2,unmet,0.0,"The output is already complete after the last operand, so discard the operator stack. Change <= to < because subtraction is right-associative. For a-b-c the correct postfix is abc--.",,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,incorrect,demo.Q017.implementation.1,unmet,0.0,,,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,incorrect,demo.Q017.implementation.2,unmet,0.0,,,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,equivalent,demo.Q017.knowledge.1,met,2.0,Operands go directly to the output; the stack temporarily holds operators that still need to be emitted.,,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,equivalent,demo.Q017.knowledge.2,met,2.0,"Multiplication and division outrank addition and subtraction; equal-precedence operators are left-associative, so the existing <= comparison is appropriate.",,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,equivalent,demo.Q017.analysis.1,met,2.0,The loop finishes while operators may remain on the stack; returning immediately drops those pending operators.,,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,equivalent,demo.Q017.analysis.2,met,2.0,"For a+b, the current code returns ab instead of ab+. Each token is pushed and popped at most once, so the corrected algorithm takes O(n) time and O(n) space.",,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,equivalent,demo.Q017.testing.1,met,2.0,Test a+b -> ab+ and a+b*c -> abc*+.,,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,equivalent,demo.Q017.testing.2,met,2.0,Test (a+b)*c -> ab+c* and a-b-c -> ab-c-.,,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,equivalent,demo.Q017.implementation.1,met,2.0,"while (!ops.isEmpty()) {
+    out.append(ops.pop());
+}
+return out.toString();",,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,equivalent,demo.Q017.implementation.2,met,2.0,Replace the final return after the token loop with this patch. Keep the existing precedence and parenthesis handling; valid input guarantees balanced parentheses.,,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,ambiguous,demo.Q017.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q017,1,rubric.demo.Q017.knowledge,1,ambiguous,demo.Q017.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,ambiguous,demo.Q017.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q017,1,rubric.demo.Q017.analysis,1,ambiguous,demo.Q017.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,ambiguous,demo.Q017.testing.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q017,1,rubric.demo.Q017.testing,1,ambiguous,demo.Q017.testing.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,ambiguous,demo.Q017.implementation.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q017,1,rubric.demo.Q017.implementation,1,ambiguous,demo.Q017.implementation.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,correct,demo.Q018.knowledge.1,met,2.0,"Counting Sort records each value's frequency and reconstructs ascending values, repeating each value by its frequency.",,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,correct,demo.Q018.knowledge.2,met,2.0,"With k=max-min+1, this implementation takes O(n+k) time and O(n+k) total extra storage including the returned array.",,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,correct,demo.Q018.analysis.1,met,2.0,"On empty input, max().getAsInt() fails. Indexing counts by a negative value also fails; offsets from min are required.",,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,correct,demo.Q018.analysis.2,met,2.0,"Compute (long)max-min+1 before allocating; reject a width above 1,000,000 so integer overflow and excessive allocation cannot bypass the bound.",,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,correct,demo.Q018.testing.1,met,2.0,"Test [] -> []; [2,-1,2,-1,0] -> [-1,-1,0,2,2].",,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,correct,demo.Q018.testing.2,met,2.0,"[0,999999] must be accepted; [0,1000000] must be rejected. [Integer.MIN_VALUE,Integer.MAX_VALUE] must be rejected without overflow or a large allocation.",,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,correct,demo.Q018.implementation.1,met,2.0,"static int[] countingSort(int[] values) {
+    if (values.length == 0) return new int[0];
+    int min = values[0], max = values[0];
+    for (int value : values) { min = Math.min(min, value); max = Math.max(max, value); }
+    long width = (long) max - min + 1;
+    if (width > 1_000_000L) throw new IllegalArgumentException(""Range too wide"");
+    int[] counts = new int[(int) width];
+    for (int value : values) counts[(int) ((long) value - min)]++;
+    int[] result = new int[values.length];
+    int index = 0;
+    for (int offset = 0; offset < counts.length; offset++) {
+        for (int repeat = 0; repeat < counts[offset]; repeat++) result[index++] = min + offset;
+    }
+    return result;
+}",,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,correct,demo.Q018.implementation.2,met,2.0,"In the shown code, width is long, its limit is checked before new int[(int)width], and value-min uses long arithmetic before casting.",,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,partial,demo.Q018.knowledge.1,met,1.0,"Counting Sort records each value's frequency and reconstructs ascending values, repeating each value by its frequency.",,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,partial,demo.Q018.knowledge.2,unmet,1.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,partial,demo.Q018.analysis.1,met,1.0,"On empty input, max().getAsInt() fails. Indexing counts by a negative value also fails; offsets from min are required.",,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,partial,demo.Q018.analysis.2,unmet,1.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,partial,demo.Q018.testing.1,met,1.0,"Test [] -> []; [2,-1,2,-1,0] -> [-1,-1,0,2,2].",,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,partial,demo.Q018.testing.2,unmet,1.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,partial,demo.Q018.implementation.1,met,1.0,"static int[] countingSort(int[] values) {
+    if (values.length == 0) return new int[0];
+    int min = Arrays.stream(values).min().getAsInt();
+    int max = Arrays.stream(values).max().getAsInt();
+    int[] counts = new int[max - min + 1];
+    for (int value : values) counts[value - min]++;
+    int[] result = new int[values.length];
+    int pos = 0;
+    for (int i = 0; i < counts.length; i++)
+        for (int j = 0; j < counts[i]; j++) result[pos++] = min + i;
+    return result;
+}",,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,partial,demo.Q018.implementation.2,unmet,1.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,incorrect,demo.Q018.knowledge.1,unmet,0.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,incorrect,demo.Q018.knowledge.2,unmet,0.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,incorrect,demo.Q018.analysis.1,unmet,0.0,"Allocate count[max+1] for every array and index directly by each value. Negative values and empty input need no special handling. Compute max-min+1 in int even for extreme values, and ignore the allocation limit.",,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,incorrect,demo.Q018.analysis.2,unmet,0.0,"Allocate count[max+1] for every array and index directly by each value. Negative values and empty input need no special handling. Compute max-min+1 in int even for extreme values, and ignore the allocation limit.",,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,incorrect,demo.Q018.testing.1,unmet,0.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,incorrect,demo.Q018.testing.2,unmet,0.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,incorrect,demo.Q018.implementation.1,unmet,0.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,incorrect,demo.Q018.implementation.2,unmet,0.0,,,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,equivalent,demo.Q018.knowledge.1,met,2.0,"Counting Sort records each value's frequency and reconstructs ascending values, repeating each value by its frequency.",,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,equivalent,demo.Q018.knowledge.2,met,2.0,"With k=max-min+1, this implementation takes O(n+k) time and O(n+k) total extra storage including the returned array.",,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,equivalent,demo.Q018.analysis.1,met,2.0,"On empty input, max().getAsInt() fails. Indexing counts by a negative value also fails; offsets from min are required.",,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,equivalent,demo.Q018.analysis.2,met,2.0,"Compute (long)max-min+1 before allocating; reject a width above 1,000,000 so integer overflow and excessive allocation cannot bypass the bound.",,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,equivalent,demo.Q018.testing.1,met,2.0,"Test [] -> []; [2,-1,2,-1,0] -> [-1,-1,0,2,2].",,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,equivalent,demo.Q018.testing.2,met,2.0,"[0,999999] must be accepted; [0,1000000] must be rejected. [Integer.MIN_VALUE,Integer.MAX_VALUE] must be rejected without overflow or a large allocation.",,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,equivalent,demo.Q018.implementation.1,met,2.0,"static int[] countingSort(int[] values) {
+    if (values.length == 0) return new int[0];
+    int min = values[0], max = values[0];
+    for (int value : values) { min = Math.min(min, value); max = Math.max(max, value); }
+    long width = (long) max - min + 1;
+    if (width > 1_000_000L) throw new IllegalArgumentException(""Range too wide"");
+    int[] counts = new int[(int) width];
+    for (int value : values) counts[(int) ((long) value - min)]++;
+    int[] result = new int[values.length];
+    int index = 0;
+    for (int offset = 0; offset < counts.length; offset++) {
+        for (int repeat = 0; repeat < counts[offset]; repeat++) result[index++] = min + offset;
+    }
+    return result;
+}",,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,equivalent,demo.Q018.implementation.2,met,2.0,"In the shown code, width is long, its limit is checked before new int[(int)width], and value-min uses long arithmetic before casting.",,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,ambiguous,demo.Q018.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q018,1,rubric.demo.Q018.knowledge,1,ambiguous,demo.Q018.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,ambiguous,demo.Q018.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q018,1,rubric.demo.Q018.analysis,1,ambiguous,demo.Q018.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,ambiguous,demo.Q018.testing.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q018,1,rubric.demo.Q018.testing,1,ambiguous,demo.Q018.testing.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,ambiguous,demo.Q018.implementation.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q018,1,rubric.demo.Q018.implementation,1,ambiguous,demo.Q018.implementation.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,correct,demo.Q002.knowledge.1,met,2.0,The JVM executes Java bytecode. The runtime environment includes the VM and libraries needed to run applications.,,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,correct,demo.Q002.knowledge.2,met,2.0,The JDK adds development tools such as javac to runtime capabilities. A separate JRE installation is not a universal requirement in modern Java distributions.,,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,partial,demo.Q002.knowledge.1,met,1.0,The JVM executes Java bytecode. The runtime environment includes the VM and libraries needed to run applications.,,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,partial,demo.Q002.knowledge.2,unmet,1.0,,,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,incorrect,demo.Q002.knowledge.1,unmet,0.0,The JVM compiles Java source and the JDK only displays programs. A JRE contains javac and is required as a separate installation for every modern JDK.,,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,incorrect,demo.Q002.knowledge.2,unmet,0.0,The JVM compiles Java source and the JDK only displays programs. A JRE contains javac and is required as a separate installation for every modern JDK.,,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,equivalent,demo.Q002.knowledge.1,met,2.0,The JVM executes Java bytecode. The runtime environment includes the VM and libraries needed to run applications.,,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,equivalent,demo.Q002.knowledge.2,met,2.0,The JDK adds development tools such as javac to runtime capabilities. A separate JRE installation is not a universal requirement in modern Java distributions.,,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,ambiguous,demo.Q002.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q002,1,rubric.demo.Q002.knowledge,1,ambiguous,demo.Q002.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,correct,demo.Q005.knowledge.1,met,2.0,"For primitives, == compares values. For references, == checks whether they refer to the same object.",,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,correct,demo.Q005.knowledge.2,met,2.0,String.equals compares character content. Classes can override equals for logical equality; Object.equals otherwise uses identity.,,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,correct,demo.Q005.analysis.1,met,2.0,"For String a=new String(""x"") and b=new String(""x""), a==b is false but a.equals(b) is true.",,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,correct,demo.Q005.analysis.2,met,2.0,Two interned literals may share a reference; their == result does not mean that == compares string contents.,,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,partial,demo.Q005.knowledge.1,met,1.0,"For primitives, == compares values. For references, == checks whether they refer to the same object.",,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,partial,demo.Q005.knowledge.2,unmet,1.0,,,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,partial,demo.Q005.analysis.1,met,1.0,"For String a=new String(""x"") and b=new String(""x""), a==b is false but a.equals(b) is true.",,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,partial,demo.Q005.analysis.2,unmet,1.0,,,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,incorrect,demo.Q005.knowledge.1,unmet,0.0,"For objects, == always compares all fields, while String.equals compares memory addresses. Two new String objects with the same text must therefore be ==.",,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,incorrect,demo.Q005.knowledge.2,unmet,0.0,"For objects, == always compares all fields, while String.equals compares memory addresses. Two new String objects with the same text must therefore be ==.",,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,incorrect,demo.Q005.analysis.1,unmet,0.0,"For objects, == always compares all fields, while String.equals compares memory addresses. Two new String objects with the same text must therefore be ==.",,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,incorrect,demo.Q005.analysis.2,unmet,0.0,,,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,equivalent,demo.Q005.knowledge.1,met,2.0,"For primitives, == compares values. For references, == checks whether they refer to the same object.",,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,equivalent,demo.Q005.knowledge.2,met,2.0,String.equals compares character content. Classes can override equals for logical equality; Object.equals otherwise uses identity.,,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,equivalent,demo.Q005.analysis.1,met,2.0,"For String a=new String(""x"") and b=new String(""x""), a==b is false but a.equals(b) is true.",,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,equivalent,demo.Q005.analysis.2,met,2.0,Two interned literals may share a reference; their == result does not mean that == compares string contents.,,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,ambiguous,demo.Q005.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q005,1,rubric.demo.Q005.knowledge,1,ambiguous,demo.Q005.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,ambiguous,demo.Q005.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q005,1,rubric.demo.Q005.analysis,1,ambiguous,demo.Q005.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,correct,demo.Q007.knowledge.1,met,2.0,A String object's content stays fixed after construction; reassigning a variable only changes which object it references.,,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,correct,demo.Q007.knowledge.2,met,2.0,Immutable contents allow safe sharing and stable hashes and make interning practical; other mutable application state still needs synchronization.,,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,correct,demo.Q007.analysis.1,met,2.0,Calling concat without assigning its result leaves the original text unchanged because concat returns a new String.,,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,correct,demo.Q007.analysis.2,met,2.0,"For repeated single-thread concatenation, use StringBuilder to accumulate changes, then toString; this avoids repeatedly constructing intermediate immutable strings.",,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,partial,demo.Q007.knowledge.1,met,1.0,A String object's content stays fixed after construction; reassigning a variable only changes which object it references.,,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,partial,demo.Q007.knowledge.2,unmet,1.0,,,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,partial,demo.Q007.analysis.1,met,1.0,Calling concat without assigning its result leaves the original text unchanged because concat returns a new String.,,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,partial,demo.Q007.analysis.2,unmet,1.0,,,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,incorrect,demo.Q007.knowledge.1,unmet,0.0,concat changes the original String object even if its result is ignored. String is mutable and all programs using it are automatically thread-safe. Repeated concatenation never creates intermediate objects.,,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,incorrect,demo.Q007.knowledge.2,unmet,0.0,concat changes the original String object even if its result is ignored. String is mutable and all programs using it are automatically thread-safe. Repeated concatenation never creates intermediate objects.,,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,incorrect,demo.Q007.analysis.1,unmet,0.0,concat changes the original String object even if its result is ignored. String is mutable and all programs using it are automatically thread-safe. Repeated concatenation never creates intermediate objects.,,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,incorrect,demo.Q007.analysis.2,unmet,0.0,concat changes the original String object even if its result is ignored. String is mutable and all programs using it are automatically thread-safe. Repeated concatenation never creates intermediate objects.,,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,equivalent,demo.Q007.knowledge.1,met,2.0,A String object's content stays fixed after construction; reassigning a variable only changes which object it references.,,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,equivalent,demo.Q007.knowledge.2,met,2.0,Immutable contents allow safe sharing and stable hashes and make interning practical; other mutable application state still needs synchronization.,,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,equivalent,demo.Q007.analysis.1,met,2.0,Calling concat without assigning its result leaves the original text unchanged because concat returns a new String.,,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,equivalent,demo.Q007.analysis.2,met,2.0,"For repeated single-thread concatenation, use StringBuilder to accumulate changes, then toString; this avoids repeatedly constructing intermediate immutable strings.",,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,ambiguous,demo.Q007.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q007,1,rubric.demo.Q007.knowledge,1,ambiguous,demo.Q007.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,ambiguous,demo.Q007.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q007,1,rubric.demo.Q007.analysis,1,ambiguous,demo.Q007.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,correct,demo.Q010.knowledge.1,met,2.0,"Compare neighboring elements and swap out-of-order pairs, repeating passes over the unsorted prefix.",,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,correct,demo.Q010.knowledge.2,met,2.0,"Worst-case time is O(n^2) and auxiliary space is O(1). With a no-swap early-exit flag, an already sorted array takes O(n).",,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,correct,demo.Q010.analysis.1,met,2.0,"Each comparison moves the larger adjacent value rightward, so the largest value in the unsorted prefix reaches its final right boundary after a pass.",,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,correct,demo.Q010.analysis.2,met,2.0,"Exclude the completed suffix from later passes. If a complete pass makes no swaps, every adjacent pair is ordered and the array is sorted.",,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,correct,demo.Q010.testing.1,met,2.0,"Test [3,1,2] -> [1,2,3].",,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,correct,demo.Q010.testing.2,met,2.0,"Test [] -> [], [5] -> [5], and [2,-1,2] -> [-1,2,2].",,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,partial,demo.Q010.knowledge.1,met,1.0,"Compare neighboring elements and swap out-of-order pairs, repeating passes over the unsorted prefix.",,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,partial,demo.Q010.knowledge.2,unmet,1.0,,,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,partial,demo.Q010.analysis.1,met,1.0,"Each comparison moves the larger adjacent value rightward, so the largest value in the unsorted prefix reaches its final right boundary after a pass.",,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,partial,demo.Q010.analysis.2,unmet,1.0,,,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,partial,demo.Q010.testing.1,met,1.0,"Test [3,1,2] -> [1,2,3].",,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,partial,demo.Q010.testing.2,unmet,1.0,,,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,incorrect,demo.Q010.knowledge.1,unmet,0.0,"One comparison sorts any array. Bubble Sort always runs in O(log n), removes duplicates, and changes [2,2] to [2].",,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,incorrect,demo.Q010.knowledge.2,unmet,0.0,"One comparison sorts any array. Bubble Sort always runs in O(log n), removes duplicates, and changes [2,2] to [2].",,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,incorrect,demo.Q010.analysis.1,unmet,0.0,,,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,incorrect,demo.Q010.analysis.2,unmet,0.0,,,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,incorrect,demo.Q010.testing.1,unmet,0.0,,,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,incorrect,demo.Q010.testing.2,unmet,0.0,,,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,equivalent,demo.Q010.knowledge.1,met,2.0,"Compare neighboring elements and swap out-of-order pairs, repeating passes over the unsorted prefix.",,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,equivalent,demo.Q010.knowledge.2,met,2.0,"Worst-case time is O(n^2) and auxiliary space is O(1). With a no-swap early-exit flag, an already sorted array takes O(n).",,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,equivalent,demo.Q010.analysis.1,met,2.0,"Each comparison moves the larger adjacent value rightward, so the largest value in the unsorted prefix reaches its final right boundary after a pass.",,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,equivalent,demo.Q010.analysis.2,met,2.0,"Exclude the completed suffix from later passes. If a complete pass makes no swaps, every adjacent pair is ordered and the array is sorted.",,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,equivalent,demo.Q010.testing.1,met,2.0,"Test [3,1,2] -> [1,2,3].",,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,equivalent,demo.Q010.testing.2,met,2.0,"Test [] -> [], [5] -> [5], and [2,-1,2] -> [-1,2,2].",,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,ambiguous,demo.Q010.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q010,1,rubric.demo.Q010.knowledge,1,ambiguous,demo.Q010.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,ambiguous,demo.Q010.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q010,1,rubric.demo.Q010.analysis,1,ambiguous,demo.Q010.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,ambiguous,demo.Q010.testing.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q010,1,rubric.demo.Q010.testing,1,ambiguous,demo.Q010.testing.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,correct,demo.Q022.knowledge.1,met,2.0,List is an ordered sequence that can contain duplicates; Set holds unique elements; Map associates unique keys with values.,,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,correct,demo.Q022.knowledge.2,met,2.0,Set does not universally mean sorted and Map does not universally preserve insertion order; ordering depends on the implementation.,,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,correct,demo.Q022.analysis.1,met,2.0,Use List for ordered events that may repeat and Set for tracking distinct user IDs or membership.,,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,correct,demo.Q022.analysis.2,met,2.0,"Use Map for employee lookup by ID. Reusing a key updates its mapping, while different keys may map to equal values.",,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,partial,demo.Q022.knowledge.1,met,1.0,List is an ordered sequence that can contain duplicates; Set holds unique elements; Map associates unique keys with values.,,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,partial,demo.Q022.knowledge.2,unmet,1.0,,,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,partial,demo.Q022.analysis.1,met,1.0,Use List for ordered events that may repeat and Set for tracking distinct user IDs or membership.,,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,partial,demo.Q022.analysis.2,unmet,1.0,,,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,incorrect,demo.Q022.knowledge.1,unmet,0.0,"Every Set preserves duplicates and is automatically sorted. Map allows separate entries with the same key, and List cannot contain repeated values.",,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,incorrect,demo.Q022.knowledge.2,unmet,0.0,"Every Set preserves duplicates and is automatically sorted. Map allows separate entries with the same key, and List cannot contain repeated values.",,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,incorrect,demo.Q022.analysis.1,unmet,0.0,,,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,incorrect,demo.Q022.analysis.2,unmet,0.0,"Every Set preserves duplicates and is automatically sorted. Map allows separate entries with the same key, and List cannot contain repeated values.",,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,equivalent,demo.Q022.knowledge.1,met,2.0,List is an ordered sequence that can contain duplicates; Set holds unique elements; Map associates unique keys with values.,,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,equivalent,demo.Q022.knowledge.2,met,2.0,Set does not universally mean sorted and Map does not universally preserve insertion order; ordering depends on the implementation.,,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,equivalent,demo.Q022.analysis.1,met,2.0,Use List for ordered events that may repeat and Set for tracking distinct user IDs or membership.,,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,equivalent,demo.Q022.analysis.2,met,2.0,"Use Map for employee lookup by ID. Reusing a key updates its mapping, while different keys may map to equal values.",,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,ambiguous,demo.Q022.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q022,1,rubric.demo.Q022.knowledge,1,ambiguous,demo.Q022.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,ambiguous,demo.Q022.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q022,1,rubric.demo.Q022.analysis,1,ambiguous,demo.Q022.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,correct,demo.Q085.knowledge.1,met,2.0,The unit test targets service behavior and replaces the repository dependency so it does not depend on a real database.,,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,correct,demo.Q085.knowledge.2,met,2.0,A mock or fake returns controlled data or errors; a separate integration test checks the actual repository/database interaction.,,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,correct,demo.Q085.analysis.1,met,2.0,"Inject the test double, arrange repository responses, call the service, then assert its returned value or expected exception.",,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,correct,demo.Q085.analysis.2,met,2.0,Verify meaningful effects such as one save for valid input and no save for invalid input; avoid coupling tests to every internal call.,,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,correct,demo.Q085.testing.1,met,2.0,"For findUser(7), a repository returning user 7 must produce that user; a missing record must produce the service's documented not-found result.",,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,correct,demo.Q085.testing.2,met,2.0,An invalid ID must be rejected before a repository call. A repository failure must produce the documented service error and must not report success.,,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,partial,demo.Q085.knowledge.1,met,1.0,The unit test targets service behavior and replaces the repository dependency so it does not depend on a real database.,,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,partial,demo.Q085.knowledge.2,unmet,1.0,,,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,partial,demo.Q085.analysis.1,met,1.0,"Inject the test double, arrange repository responses, call the service, then assert its returned value or expected exception.",,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,partial,demo.Q085.analysis.2,unmet,1.0,,,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,partial,demo.Q085.testing.1,met,1.0,"For findUser(7), a repository returning user 7 must produce that user; a missing record must produce the service's documented not-found result.",,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,partial,demo.Q085.testing.2,unmet,1.0,,,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,incorrect,demo.Q085.knowledge.1,unmet,0.0,Every service unit test must use the production database. Assert only that the method ran; ignore missing records and repository errors and always report success.,,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,incorrect,demo.Q085.knowledge.2,unmet,0.0,Every service unit test must use the production database. Assert only that the method ran; ignore missing records and repository errors and always report success.,,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,incorrect,demo.Q085.analysis.1,unmet,0.0,Every service unit test must use the production database. Assert only that the method ran; ignore missing records and repository errors and always report success.,,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,incorrect,demo.Q085.analysis.2,unmet,0.0,,,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,incorrect,demo.Q085.testing.1,unmet,0.0,,,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,incorrect,demo.Q085.testing.2,unmet,0.0,Every service unit test must use the production database. Assert only that the method ran; ignore missing records and repository errors and always report success.,,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,equivalent,demo.Q085.knowledge.1,met,2.0,The unit test targets service behavior and replaces the repository dependency so it does not depend on a real database.,,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,equivalent,demo.Q085.knowledge.2,met,2.0,A mock or fake returns controlled data or errors; a separate integration test checks the actual repository/database interaction.,,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,equivalent,demo.Q085.analysis.1,met,2.0,"Inject the test double, arrange repository responses, call the service, then assert its returned value or expected exception.",,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,equivalent,demo.Q085.analysis.2,met,2.0,Verify meaningful effects such as one save for valid input and no save for invalid input; avoid coupling tests to every internal call.,,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,equivalent,demo.Q085.testing.1,met,2.0,"For findUser(7), a repository returning user 7 must produce that user; a missing record must produce the service's documented not-found result.",,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,equivalent,demo.Q085.testing.2,met,2.0,An invalid ID must be rejected before a repository call. A repository failure must produce the documented service error and must not report success.,,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,ambiguous,demo.Q085.knowledge.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q085,1,rubric.demo.Q085.knowledge,1,ambiguous,demo.Q085.knowledge.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,ambiguous,demo.Q085.analysis.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q085,1,rubric.demo.Q085.analysis,1,ambiguous,demo.Q085.analysis.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,ambiguous,demo.Q085.testing.1,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
+demo.Q085,1,rubric.demo.Q085.testing,1,ambiguous,demo.Q085.testing.2,insufficientEvidence,,"My explanation, implementation and test results are in the attachment. The attachment is not included here.",,,,,
