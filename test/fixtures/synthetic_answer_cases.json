@@ -464,7 +464,7 @@
       "part": "D - Algorithm Explanation",
       "role": "backend_developer",
       "level": "intern_fresher",
-      "prompt": "Cho mảng số nguyên đã sắp xếp tăng dần và target. Hãy mô tả/cài đặt phiên bản lặp của Binary Search trả về chỉ số nếu tìm thấy, -1 nếu không có. Giải thích bất biến vòng lặp, độ phức tạp và cách kiểm thử biên.",
+      "prompt": "Viết hàm Java lặp `static int binarySearch(int[] values, int target)` cho mảng số nguyên tăng dần; trả về một chỉ số hợp lệ nếu tìm thấy target và -1 nếu không có. Giải thích bất biến vòng lặp, cách cập nhật biên, độ phức tạp và test biên. Mảng rỗng là đầu vào hợp lệ; nếu có nhiều phần tử bằng target thì trả về chỉ số của một phần tử bất kỳ.",
       "annotation_status": "unscored_input_fixture",
       "expected_evaluation": null,
       "answer_cases": [
@@ -474,7 +474,7 @@
           "classification": "technical_answer_attempt_unreviewed",
           "classification_reason": "Substantive domain answer supplied for testing; not a gold label.",
           "scoreable": false,
-          "answer": "Vì mảng tăng dần, Binary Search giữ đoạn khả dĩ [left,right]. Mỗi vòng tính mid; nếu a[mid] nhỏ hơn target thì left=mid+1, nếu lớn hơn thì right=mid-1, bằng nhau trả mid. Khi left>right target không tồn tại nên trả -1. Mỗi vòng giảm đoạn khoảng một nửa: O(log n) thời gian, O(1) bộ nhớ bổ sung dạng lặp. Test [1,3,5], target 3 -> 1; target 2 -> -1; mảng rỗng -> -1."
+          "answer": "Vì mảng đã sắp xếp tăng dần, đoạn `[left, right]` luôn chứa mọi vị trí còn có thể có target. Mỗi vòng lấy `mid = left + (right - left) / 2` để tránh tràn khi cộng chỉ số. Nếu `values[mid] < target` thì loại nửa trái bằng `left = mid + 1`; nếu lớn hơn thì `right = mid - 1`; nếu bằng thì trả `mid`. Khi `left > right`, không còn vị trí khả dĩ nên trả `-1`.\n\n```java\nstatic int binarySearch(int[] values, int target) {\n    int left = 0;\n    int right = values.length - 1;\n    while (left <= right) {\n        int mid = left + (right - left) / 2;\n        if (values[mid] == target) return mid;\n        if (values[mid] < target) left = mid + 1;\n        else right = mid - 1;\n    }\n    return -1;\n}\n```\n\nMỗi vòng giảm khoảng tìm kiếm một nửa nên thời gian `O(log n)`; bản lặp dùng `O(1)` bộ nhớ phụ. Test: `[1,3,5]`, target `1` -> `0`; target `5` -> `2`; target `3` -> `1`; target `2` -> `-1`; `[7]`, target `7` -> `0`; `[7]`, target `3` -> `-1`; mảng `[]` -> `-1`."
         },
         {
           "case_id": "partial_attempt",
@@ -482,7 +482,7 @@
           "classification": "substantive_partial_answer_unreviewed",
           "classification_reason": "Contains a technical point but omits rubric-relevant explanation or tests.",
           "scoreable": false,
-          "answer": "Dùng binary search trên mảng đã sắp xếp; so target với phần tử giữa rồi bỏ nửa không thể chứa kết quả. Em nhớ độ phức tạp là O(log n), nhưng chưa trình bày rõ cập nhật biên, trường hợp không có và test."
+          "answer": "Dùng binary search trên mảng đã sắp xếp; so target với phần tử giữa rồi bỏ nửa không thể chứa kết quả. Em nhớ độ phức tạp là O(log n), nhưng chưa trình bày rõ cập nhật biên, trường hợp không tìm thấy và test."
         },
         {
           "case_id": "misconception_attempt",
@@ -490,7 +490,7 @@
           "classification": "generic_misconception",
           "classification_reason": "Contains an explicit technical misconception for error-detection testing.",
           "scoreable": false,
-          "answer": "Binary Search dùng được trên mọi mảng dù chưa sắp xếp; chỉ cần tìm ở nửa trái trước. Dùng left=mid và right=mid thì chắc chắn kết thúc, chạy O(1) và không cần trường hợp target không có."
+          "answer": "Binary Search dùng được trên mọi mảng dù chưa sắp xếp; chỉ cần tìm nửa trái trước. Dùng left = mid và right = mid thì chắc chắn kết thúc, chạy O(1) và không cần trường hợp target không tồn tại."
         },
         {
           "case_id": "missing_context",
@@ -528,7 +528,7 @@
           "classification": "technical_answer_attempt_unreviewed",
           "classification_reason": "Substantive domain answer supplied for testing; not a gold label.",
           "scoreable": false,
-          "answer": "Bubble Sort lặp qua các cặp liền kề và đổi chỗ khi sai thứ tự. Sau mỗi lượt, phần tử lớn nhất trong prefix chưa sắp xếp được đẩy đến cuối vùng đó; lượt kế tiếp bỏ qua phần đã cố định. Dừng sớm nếu một lượt không có swap. Thời gian trung bình/xấu O(n^2), tốt nhất O(n) khi đã sắp xếp với cờ swap, bộ nhớ phụ O(1). Test [] -> [], [4] -> [4], [3,1,2] -> [1,2,3], [2,2,1] -> [1,2,2]."
+          "answer": "Bubble Sort so sánh các cặp kề nhau và đổi chỗ nếu sai thứ tự. Sau mỗi lượt quét vùng chưa sắp xếp, phần tử lớn nhất của vùng đó được đẩy đến cuối; lượt kế tiếp bỏ qua phần đã cố định. Nếu một lượt không có swap thì có thể dừng sớm. Trung bình và xấu nhất `O(n^2)`, tốt nhất `O(n)` với dừng sớm, bộ nhớ phụ `O(1)`. Test: `[] -> []`; `[4] -> [4]`; `[3,1,2] -> [1,2,3]`; mảng đảo ngược `[3,2,1] -> [1,2,3]`; có phần tử trùng `[2,2,1] -> [1,2,2]`."
         },
         {
           "case_id": "partial_attempt",
@@ -536,7 +536,7 @@
           "classification": "substantive_partial_answer_unreviewed",
           "classification_reason": "Contains a technical point but omits rubric-relevant explanation or tests.",
           "scoreable": false,
-          "answer": "Bubble Sort so sánh phần tử kế nhau và đổi chỗ nếu phần tử trước lớn hơn. Cách này sắp xếp tăng dần nhưng thường O(n^2); em chưa giải thích vì sao mỗi lượt cố định phần tử lớn nhất hoặc test rỗng/trùng."
+          "answer": "Bubble Sort so sánh phần tử kế nhau và đổi chỗ nếu phần tử trước lớn hơn. Cách này sắp xếp tăng dần nhưng thường O(n^2); em chưa giải thích vì sao mỗi lượt cố định phần tử lớn nhất hoặc test mảng rỗng và phần tử trùng."
         },
         {
           "case_id": "misconception_attempt",
@@ -896,7 +896,7 @@
       "part": "E - AI Code Review",
       "role": "backend_developer",
       "level": "intern_fresher",
-      "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển biểu thức infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy phát hiện lỗi, sửa và đề xuất test cho biểu thức có toán tử và ngoặc.",
+      "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở, không phải bản ghi AI thật. Hãy tìm lỗi, đề xuất sửa và nêu test. Hợp đồng đầu vào: biểu thức luôn hợp lệ, ngoặc cân bằng, không có khoảng trắng; mỗi toán hạng là một chữ cái hoặc chữ số; toán tử nhị phân chỉ gồm +, -, *, /; * và / ưu tiên cao hơn + và -; các toán tử cùng mức ưu tiên kết hợp từ trái sang phải.",
       "annotation_status": "unscored_input_fixture",
       "expected_evaluation": null,
       "answer_cases": [
@@ -906,7 +906,7 @@
           "classification": "technical_answer_attempt_unreviewed",
           "classification_reason": "Substantive domain answer supplied for testing; not a gold label.",
           "scoreable": false,
-          "answer": "The snippet never drains the operator stack after the scan, so a+b produces ab rather than ab+. Pop the pending operators in LIFO order at the end; keep the established precedence and parentheses rules. Tests: a+b -> ab+, a+b*c -> abc*+, (a+b)*c -> ab+c*."
+          "answer": "Lỗi là vòng lặp kết thúc rồi trả `out` ngay, bỏ các toán tử còn lại trong stack; với `a+b` snippet trả `ab` thay vì `ab+`. Sau khi quét biểu thức hợp lệ, pop từng toán tử còn lại theo LIFO vào output; không đưa dấu ngoặc vào postfix. Trong hợp đồng đã nêu, `*`/`/` ưu tiên cao hơn `+`/`-`, còn cùng mức ưu tiên kết hợp trái. Test: `a+b -> ab+`; `a+b*c -> abc*+`; `(a+b)*c -> ab+c*`; `a-b-c -> ab-c-`. Các test kiểm tra xả stack, precedence, ngoặc và kết hợp trái."
         },
         {
           "case_id": "partial_attempt",
@@ -914,7 +914,7 @@
           "classification": "substantive_partial_answer_unreviewed",
           "classification_reason": "Contains a technical point but omits rubric-relevant explanation or tests.",
           "scoreable": false,
-          "answer": "I see that operators remain on the stack at the end. The method needs a final stack-processing step, but I have not explained the pop order or tested precedence and parentheses."
+          "answer": "Em thấy toán tử vẫn còn trong stack khi kết thúc vòng lặp. Cần xử lý stack sau khi quét, nhưng em chưa nêu thứ tự pop, precedence hay kết quả kiểm thử."
         },
         {
           "case_id": "misconception_attempt",
@@ -922,7 +922,7 @@
           "classification": "generic_misconception",
           "classification_reason": "Contains an explicit technical misconception for error-detection testing.",
           "scoreable": false,
-          "answer": "Code đúng vì toán tử đã được thêm vào output ngay khi đọc. Với `a+b` kết quả `a+b`; không cần stack hoặc kiểm tra ngoặc."
+          "answer": "Code đúng vì toán tử đã được thêm vào output ngay khi đọc. Với a+b kết quả là a+b; không cần stack hoặc kiểm tra ngoặc."
         },
         {
           "case_id": "missing_context",
@@ -951,7 +951,7 @@
       "part": "E - AI Code Review",
       "role": "backend_developer",
       "level": "intern_fresher",
-      "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng số nguyên, nhưng hợp đồng yêu cầu xử lý số âm, phần tử trùng và mảng rỗng. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy chỉ ra lỗi, sửa và thiết kế test độc lập.",
+      "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng int trong Java. Hãy review code để xử lý mảng rỗng, số âm và phần tử trùng. Khi range = max - min + 1 vượt quá 1.000.000, hàm phải từ chối rõ ràng thay vì cấp phát mảng lớn; tính range an toàn bằng long trước khi cấp phát. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở, không phải bản ghi AI thật. Hãy chỉ ra lỗi, đề xuất sửa và thiết kế test độc lập.",
       "annotation_status": "unscored_input_fixture",
       "expected_evaluation": null,
       "answer_cases": [
@@ -961,7 +961,7 @@
           "classification": "technical_answer_attempt_unreviewed",
           "classification_reason": "Substantive domain answer supplied for testing; not a gold label.",
           "scoreable": false,
-          "answer": "Có hai lỗi: mảng rỗng làm `max().getAsInt()` ném NoSuchElementException; số âm tạo index âm nên lỗi ngoài phạm vi. Sửa bằng trả ngay mảng rỗng, lấy min/max rồi cấp count có độ dài max-min+1; đếm ở vị trí value-min và khôi phục giá trị bằng index+min. Test [] -> []; [-3,2,-3,0] -> [-3,-3,0,2]; [4,4] -> [4,4]. Cần kiểm tra range không tràn số hoặc quá lớn trước khi cấp phát."
+          "answer": "Có hai lỗi theo hợp đồng: mảng rỗng làm `max().getAsInt()` ném `NoSuchElementException`; số âm tạo chỉ số âm khi dùng trực tiếp `value`. Trả mảng rỗng trước, nếu không thì lấy `min` và `max`. Tính `long width = (long) max - min + 1` trước khi cấp phát; nếu width lớn hơn `1_000_000` thì ném `IllegalArgumentException`. Cấp `count[(int) width]`, đếm tại `value - min`, rồi khôi phục các giá trị từ `index + min`; cách này giữ nguyên số lần xuất hiện. Test: `[] -> []`; `[-3,2,-3,0] -> [-3,-3,0,2]`; `[4,4] -> [4,4]`; range vượt ngưỡng phải bị từ chối, không cấp phát mảng count lớn."
         },
         {
           "case_id": "partial_attempt",
@@ -969,7 +969,7 @@
           "classification": "substantive_partial_answer_unreviewed",
           "classification_reason": "Contains a technical point but omits rubric-relevant explanation or tests.",
           "scoreable": false,
-          "answer": "Đoạn code lỗi với số âm vì dùng trực tiếp value làm chỉ số mảng. Có thể trừ min khi đếm, nhưng em chưa xử lý mảng rỗng và chưa nêu cách khôi phục giá trị/test."
+          "answer": "Đoạn code lỗi với số âm vì dùng trực tiếp value làm chỉ số mảng. Có thể trừ min khi đếm, nhưng em chưa xử lý mảng rỗng và chưa nêu cách khôi phục giá trị hay test."
         },
         {
           "case_id": "misconception_attempt",
@@ -977,7 +977,7 @@
           "classification": "generic_misconception",
           "classification_reason": "Contains an explicit technical misconception for error-detection testing.",
           "scoreable": false,
-          "answer": "Counting Sort tự xử lý số âm và mảng rỗng; `max().getAsInt()` trả 0 nếu không có phần tử. Mảng count có kích thước max là đủ vì index max không cần lưu."
+          "answer": "Counting Sort tự xử lý số âm và mảng rỗng; max().getAsInt() trả 0 nếu không có phần tử. Mảng count có kích thước max là đủ vì index max không cần lưu."
         },
         {
           "case_id": "missing_context",
@@ -985,7 +985,7 @@
           "classification": "missing_external_context",
           "classification_reason": "Refers to absent external material; evidence cannot be inspected.",
           "scoreable": false,
-          "answer": "Em đã kiểm tra trường hợp số âm bằng test trong repository riêng, đường dẫn và expected output không được cung cấp."
+          "answer": "Em đã kiểm tra trường hợp số âm bằng test trong repository riêng, nhưng đường dẫn và expected output không được cung cấp."
         },
         {
           "case_id": "off_topic_attempt",
@@ -1286,7 +1286,7 @@
           "classification": "structured_non_answer",
           "classification_reason": "Response outline/meta-answer; does not provide requested technical facts or solve the case.",
           "scoreable": false,
-          "answer": "Em sẽ trả lời câu hỏi: HashMap hoạt động như thế nào? Vai trò của hashCode() và equals() trong HashMap là gì?\n\nTrước hết em nêu khái niệm/cách tiếp cận chính, sau đó giải thích lý do và liên hệ với một tình huống Backend Java. Nếu có nhiều lựa chọn, em sẽ nói rõ ưu nhược điểm và điều kiện áp dụng. Cuối cùng em kiểm tra lại các trường hợp biên để chắc rằng giải pháp đáp ứng yêu cầu."
+          "answer": "HashMap lấy `hashCode()` của key để chọn bucket; nếu nhiều key cùng bucket, nó dùng `equals()` để phân biệt. Va chạm hash không có nghĩa hai key bằng nhau. Với key tự định nghĩa cần so sánh theo giá trị, phải override `equals(Object)` và `hashCode()` nhất quán: hai object bằng nhau phải có cùng hash code. `equals(UserKey)` chỉ overload, không override; nếu không override `equals(Object)`, HashMap dùng equality mặc định theo identity. Trung bình thao tác gần `O(1)`, nhưng còn phụ thuộc phân bố hash và resize.\n\nTest: tạo hai `UserKey` khác instance cùng id; sau khi cài value equality, chúng bằng nhau, có cùng hash code và `map.get(key2)` trả value lưu với `key1`. Với id khác nhau, chúng không bằng nhau."
         },
         {
           "case_id": "partial_attempt",
@@ -1294,7 +1294,7 @@
           "classification": "topic_echo_non_answer",
           "classification_reason": "Repeats the topic and says detail is missing, without a scorable technical claim.",
           "scoreable": false,
-          "answer": "Em nghĩ nội dung chính liên quan đến câu hỏi này là HashMap hoạt động như thế nào? Vai trò của hashCode() và equals() trong HashMap là gì và thường được dùng trong ứng dụng. Em chưa giải thích rõ cơ chế hoạt động hay trường hợp ngoại lệ."
+          "answer": "`hashCode()` giúp HashMap chọn bucket, còn `equals()` phân biệt key khi có va chạm. Với key tự định nghĩa em biết cần override hai phương thức, nhưng chưa giải thích điều kiện chúng phải nhất quán hoặc hành vi khi không override `equals(Object)`."
         },
         {
           "case_id": "misconception_attempt",
@@ -1302,7 +1302,7 @@
           "classification": "generic_misconception",
           "classification_reason": "Unsupported blanket claim that Java/Spring/database handles all concerns; no criterion-specific knowledge.",
           "scoreable": false,
-          "answer": "Theo em, với câu hỏi 'HashMap hoạt động như thế nào? Vai trò của hashCode() và equals() trong HashMap là gì?', chỉ cần chọn cách làm đơn giản nhất là đủ; Java/Spring/Database sẽ tự xử lý mọi vấn đề về hiệu năng, lỗi và dữ liệu đồng thời nên không cần kiểm tra thêm."
+          "answer": "HashMap chỉ so sánh `hashCode()` nên hai key cùng hash luôn được coi là bằng nhau. Khai báo `equals(UserKey)` cũng đã override `Object.equals(Object)`, vì vậy không cần viết `hashCode()`."
         },
         {
           "case_id": "missing_context",
@@ -1310,7 +1310,7 @@
           "classification": "missing_external_context",
           "classification_reason": "Relies on an attachment that is not included, so claimed evidence cannot be inspected.",
           "scoreable": false,
-          "answer": "Em đã giải thích đầy đủ và đưa ví dụ chạy được trong tệp đính kèm."
+          "answer": "Phần giải thích vai trò `hashCode()`/`equals()` và ví dụ lookup nằm trong tệp đính kèm, nhưng tệp không được gửi nên chưa thể kiểm tra."
         },
         {
           "case_id": "off_topic_attempt",
@@ -1318,7 +1318,7 @@
           "classification": "off_topic",
           "classification_reason": "Discusses personal preferences and does not address the technical question.",
           "scoreable": false,
-          "answer": "Em thích làm việc nhóm và luôn cố gắng hoàn thành công việc đúng hạn. Ngoài giờ học em thường đọc sách và nghe nhạc."
+          "answer": "Em thích làm việc nhóm và thường hoàn thành công việc đúng hạn. Ngoài giờ học em đọc sách và nghe nhạc."
         }
       ]
     },

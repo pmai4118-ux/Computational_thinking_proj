@@ -101,9 +101,9 @@
     "example_only": false,
     "id": "source.c04.binary_search",
     "title": "TheAlgorithms/Java — Binary Search implementation",
-    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/searches/BinarySearch.java",
+    "url": "https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/src/main/java/com/thealgorithms/searches/BinarySearch.java",
     "file_path": "src/main/java/com/thealgorithms/searches/BinarySearch.java",
-    "revision": "master (accessed 2026-11-11)",
+    "revision": "b2af1db6dcae46521e97a6331eae8cea61933080",
     "authors": [
       "Varun Upadhyay",
       "Podshivalov Nikita"
@@ -116,7 +116,7 @@
     },
     "license": {
       "spdx_id": "MIT",
-      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "url": "https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/LICENSE",
       "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
       "status": "repository_license_verified_file_notice_review_pending"
     }
@@ -126,9 +126,9 @@
     "example_only": false,
     "id": "source.c04.bubble_sort",
     "title": "TheAlgorithms/Java — Bubble Sort implementation",
-    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/sorts/BubbleSort.java",
+    "url": "https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/src/main/java/com/thealgorithms/sorts/BubbleSort.java",
     "file_path": "src/main/java/com/thealgorithms/sorts/BubbleSort.java",
-    "revision": "master (accessed 2026-11-11)",
+    "revision": "b2af1db6dcae46521e97a6331eae8cea61933080",
     "authors": [
       "Varun Upadhyay",
       "Podshivalov Nikita"
@@ -141,7 +141,7 @@
     },
     "license": {
       "spdx_id": "MIT",
-      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "url": "https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/LICENSE",
       "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
       "status": "repository_license_verified_file_notice_review_pending"
     }
@@ -151,9 +151,9 @@
     "example_only": false,
     "id": "source.c05.infix_to_postfix_review",
     "title": "TheAlgorithms/Java — Infix-to-postfix implementation",
-    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/stacks/InfixToPostfix.java",
+    "url": "https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/src/main/java/com/thealgorithms/stacks/InfixToPostfix.java",
     "file_path": "src/main/java/com/thealgorithms/stacks/InfixToPostfix.java",
-    "revision": "master (accessed 2026-11-11)",
+    "revision": "b2af1db6dcae46521e97a6331eae8cea61933080",
     "authors": [
       "TheAlgorithms contributors; see source file for credited authors"
     ],
@@ -165,7 +165,7 @@
     },
     "license": {
       "spdx_id": "MIT",
-      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "url": "https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/LICENSE",
       "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
       "status": "repository_license_verified_file_notice_review_pending"
     }
@@ -175,9 +175,9 @@
     "example_only": false,
     "id": "source.c05.counting_sort_review",
     "title": "TheAlgorithms/Java — Counting Sort implementation",
-    "url": "https://github.com/TheAlgorithms/Java/blob/master/src/main/java/com/thealgorithms/sorts/CountingSort.java",
+    "url": "https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/src/main/java/com/thealgorithms/sorts/CountingSort.java",
     "file_path": "src/main/java/com/thealgorithms/sorts/CountingSort.java",
-    "revision": "master (accessed 2026-11-11)",
+    "revision": "b2af1db6dcae46521e97a6331eae8cea61933080",
     "authors": [
       "TheAlgorithms contributors; see source file for credited authors"
     ],
@@ -189,7 +189,7 @@
     },
     "license": {
       "spdx_id": "MIT",
-      "url": "https://github.com/TheAlgorithms/Java/blob/master/LICENSE",
+      "url": "https://github.com/TheAlgorithms/Java/blob/b2af1db6dcae46521e97a6331eae8cea61933080/LICENSE",
       "required_notice": "Copyright (c) 2021 The Algorithms. Licensed under the MIT License.",
       "status": "repository_license_verified_file_notice_review_pending"
     }

@@ -1,1 +1,1 @@
-Bản sửa equals/hashCode đã nằm trong tệp đính kèm review.java; nội dung và test không có ở đây.
+Em để phần sửa equals/hashCode và test trong file review.java đính kèm, nhưng file không được gửi. Vì vậy không có nội dung để kiểm tra.

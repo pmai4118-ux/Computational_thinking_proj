@@ -95,7 +95,7 @@
     "difficulty": "Medium",
     "role": "backend_developer",
     "level": "intern_fresher",
-    "prompt": "Cho mảng số nguyên đã sắp xếp tăng dần và target. Hãy mô tả/cài đặt phiên bản lặp của Binary Search trả về chỉ số nếu tìm thấy, -1 nếu không có. Giải thích bất biến vòng lặp, độ phức tạp và cách kiểm thử biên.",
+    "prompt": "Viết hàm Java lặp `static int binarySearch(int[] values, int target)` cho mảng số nguyên tăng dần; trả về một chỉ số hợp lệ nếu tìm thấy target và -1 nếu không có. Giải thích bất biến vòng lặp, cách cập nhật biên, độ phức tạp và test biên. Mảng rỗng là đầu vào hợp lệ; nếu có nhiều phần tử bằng target thì trả về chỉ số của một phần tử bất kỳ.",
     "target_skills": [
       "algorithm.binary_search",
       "algorithm.correctness",
@@ -193,7 +193,7 @@
     "difficulty": "Medium",
     "role": "backend_developer",
     "level": "intern_fresher",
-    "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển biểu thức infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy phát hiện lỗi, sửa và đề xuất test cho biểu thức có toán tử và ngoặc.",
+    "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở, không phải bản ghi AI thật. Hãy tìm lỗi, đề xuất sửa và nêu test. Hợp đồng đầu vào: biểu thức luôn hợp lệ, ngoặc cân bằng, không có khoảng trắng; mỗi toán hạng là một chữ cái hoặc chữ số; toán tử nhị phân chỉ gồm +, -, *, /; * và / ưu tiên cao hơn + và -; các toán tử cùng mức ưu tiên kết hợp từ trái sang phải.",
     "target_skills": [
       "backend.code_review",
       "java.stack",
@@ -210,7 +210,7 @@
     "difficulty": "Medium",
     "role": "backend_developer",
     "level": "intern_fresher",
-    "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng số nguyên, nhưng hợp đồng yêu cầu xử lý số âm, phần tử trùng và mảng rỗng. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy chỉ ra lỗi, sửa và thiết kế test độc lập.",
+    "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng int trong Java. Hãy review code để xử lý mảng rỗng, số âm và phần tử trùng. Khi range = max - min + 1 vượt quá 1.000.000, hàm phải từ chối rõ ràng thay vì cấp phát mảng lớn; tính range an toàn bằng long trước khi cấp phát. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở, không phải bản ghi AI thật. Hãy chỉ ra lỗi, đề xuất sửa và thiết kế test độc lập.",
     "target_skills": [
       "backend.code_review",
       "algorithm.counting_sort",

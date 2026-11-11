@@ -1,1 +1,1 @@
-Code đúng vì HashMap tự gọi equals(UserKey) và tự sinh hashCode từ các field. `==` so sánh hai String có cùng nội dung. Không cần sửa hoặc kiểm thử.
+Code đúng: HashMap gọi overload `equals(UserKey)` và tự tạo hashCode từ các field. `==` so sánh nội dung String nên hai UserKey khác instance nhưng cùng id vẫn bằng nhau. Không cần sửa hay kiểm thử.

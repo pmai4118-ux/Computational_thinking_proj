@@ -2,8 +2,8 @@
   {
     "schema_version": "question-record/0.1-proposal",
     "example_only": false,
-    "id": "question.c05.ai_hashmap_key.v2",
-    "version": 2,
+    "id": "question.c05.ai_hashmap_key.v3",
+    "version": 3,
     "category": "ai_code_critique",
     "language": "vi",
     "role": "backend_developer",
@@ -13,7 +13,7 @@
       "ai.independent_code_verification"
     ],
     "source_id": "source.c05.ai_code_critique_java_hashmap",
-    "prompt": "Bạn đang review gợi ý code Java cho key dùng trong HashMap. Hãy tìm lỗi trong equals/hashCode, sửa theo hợp đồng Java và nêu các test độc lập. Câu hỏi dựa trên: HashMap hoạt động như thế nào? Vai trò của hashCode() và equals() trong HashMap là gì?",
+    "prompt": "Bạn đang review code Java dùng `UserKey` làm key trong `HashMap`. Hợp đồng yêu cầu hai instance khác nhau có cùng `id` được xem là bằng nhau. Hãy giải thích code hiện tại được `HashMap` xử lý thế nào, tìm lỗi so với hợp đồng, sửa `equals`/`hashCode` và nêu test độc lập. Câu hỏi liên quan đến vai trò của `hashCode()` và `equals()` trong HashMap.",
     "code": "final class UserKey {\n    private final String id;\n    UserKey(String id) { this.id = id; }\n    public boolean equals(UserKey other) {\n        return this.id == other.id;\n    }\n}\n// Used as a key in HashMap<UserKey, String>.",
     "code_language": "java",
     "constraints": [
@@ -27,15 +27,16 @@
       "translator_id": "team.phuc"
     },
     "rubric": {
-      "id": "rubric.c05.v2",
-      "version": 1,
+      "id": "rubric.c05.v3",
+      "version": 2,
       "criteria": [
         {
           "id": "c05.bugs",
           "label": "Phát hiện lỗi theo yêu cầu",
           "expected_evidence": [
-            "equals(UserKey) không override equals(Object).",
-            "So sánh String bằng == so object identity; thiếu hashCode nhất quán."
+            "`equals(UserKey)` overloads rather than overrides `equals(Object)`, so HashMap uses inherited identity equality/hashCode for this class.",
+            "`this.id == other.id` compares String references, not String contents.",
+            "These facts fail the stated value-equality requirement; inherited Object methods are not inconsistent with each other. A value-equality implementation must override hashCode consistently with equals."
           ],
           "levels": [
             {
@@ -44,11 +45,11 @@
             },
             {
               "score": 1,
-              "description": "Phát hiện đúng một lỗi chính."
+              "description": "Finds one key defect accurately (overload vs override, String identity comparison, or resulting HashMap identity behavior)."
             },
             {
               "score": 2,
-              "description": "Phát hiện đúng cả sai chữ ký/so sánh String và vi phạm hợp đồng equals/hashCode."
+              "description": "Finds both code defects and explains current identity behavior versus the value-equality requirement; does not falsely call inherited Object methods inconsistent."
             }
           ],
           "equivalent_answers": "Chấp nhận diễn đạt tương đương về override signature, value equality và contract hashCode."
@@ -57,8 +58,8 @@
           "id": "c05.fix",
           "label": "Sửa đúng cả hai hành vi",
           "expected_evidence": [
-            "Override equals(Object), xử lý cùng tham chiếu/type/null phù hợp.",
-            "Dùng Objects.equals cho id và override hashCode từ cùng field."
+            "Override equals(Object), handling same reference, type and null appropriately.",
+            "Compare id values with Objects.equals (or equivalent) and override hashCode using the same field."
           ],
           "levels": [
             {
@@ -71,7 +72,7 @@
             },
             {
               "score": 2,
-              "description": "Cài equals/hashCode nhất quán theo id."
+              "description": "Implements value equality by id and a consistent hashCode based on id."
             }
           ],
           "equivalent_answers": "Chấp nhận pattern Java tương đương, kể cả record nếu tương thích yêu cầu."
@@ -80,8 +81,8 @@
           "id": "c05.independent_tests",
           "label": "Kiểm chứng độc lập với gợi ý",
           "expected_evidence": [
-            "Hai instance khác nhau cùng id lookup được cùng entry.",
-            "Hai id khác nhau không bằng nhau; kiểm tra hashCode/equality contract."
+            "Two distinct UserKey instances with equal id are equal and lookup by the second retrieves the first entry after the fix.",
+            "Different ids are unequal; assert equal keys have equal hash codes and exercise the equals(Object) override."
           ],
           "levels": [
             {
@@ -129,8 +130,8 @@
   {
     "schema_version": "question-record/0.1-proposal",
     "example_only": false,
-    "id": "question.c05.infix_postfix_review.v1",
-    "version": 1,
+    "id": "question.c05.infix_postfix_review.v2",
+    "version": 2,
     "category": "ai_code_critique",
     "language": "vi",
     "role": "backend_developer",
@@ -141,24 +142,27 @@
       "testing.boundary_cases"
     ],
     "source_id": "source.c05.infix_to_postfix_review",
-    "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển biểu thức infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy phát hiện lỗi, sửa và đề xuất test cho biểu thức có toán tử và ngoặc.",
+    "prompt": "Giả sử trợ lý AI đề xuất hàm Java chuyển infix sang postfix như snippet. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở, không phải bản ghi AI thật. Hãy tìm lỗi, đề xuất sửa và nêu test. Hợp đồng đầu vào: biểu thức luôn hợp lệ, ngoặc cân bằng, không có khoảng trắng; mỗi toán hạng là một chữ cái hoặc chữ số; toán tử nhị phân chỉ gồm +, -, *, /; * và / ưu tiên cao hơn + và -; các toán tử cùng mức ưu tiên kết hợp từ trái sang phải.",
     "code": "import java.util.ArrayDeque;\nimport java.util.Deque;\n\nfinal class InfixConverter {\n    static int precedence(char op) {\n        return (op == '+' || op == '-') ? 1 : 2;\n    }\n    static String toPostfix(String expression) {\n        StringBuilder out = new StringBuilder();\n        Deque<Character> ops = new ArrayDeque<>();\n        for (char token : expression.toCharArray()) {\n            if (Character.isLetterOrDigit(token)) out.append(token);\n            else if (token == '(') ops.push(token);\n            else if (token == ')') {\n                while (ops.peek() != '(') out.append(ops.pop());\n                ops.pop();\n            } else {\n                while (!ops.isEmpty() && ops.peek() != '(' && precedence(token) <= precedence(ops.peek())) out.append(ops.pop());\n                ops.push(token);\n            }\n        }\n        return out.toString(); // defect: pending operators are discarded\n    }\n}",
     "code_language": "java",
     "constraints": [
-      "Java; các giả định và hợp đồng của đề cần được nêu rõ."
+      "Java; operands are single alphanumeric characters.",
+      "Only binary +, -, *, / are supported; * and / outrank + and -; equal-precedence operators are left-associative.",
+      "Input is a valid expression with balanced parentheses and no whitespace."
     ],
     "adaptation": {
       "kind": "adapted_open_source_exercise",
       "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật.",
       "change_history": [
         "Translated/adapted question and constraints for backend fresher practice.",
-        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
+        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors.",
+        "Content review revision defines the supported expression grammar and aligns rubric evidence and examples with that contract."
       ],
       "translator_id": "team.phuc"
     },
     "rubric": {
-      "id": "rubric.c05.infix_postfix_review.v1",
-      "version": 1,
+      "id": "rubric.c05.infix_postfix_review.v2",
+      "version": 2,
       "criteria": [
         {
           "id": "c05.infix_bug",
@@ -188,7 +192,7 @@
           "label": "Propose a valid fix",
           "expected_evidence": [
             "Pop remaining operators in LIFO order after scanning.",
-            "Do not emit unmatched opening parentheses; respect the declared precedence contract."
+            "Do not emit parentheses; preserve the declared precedence and left-associativity for the supported grammar."
           ],
           "levels": [
             {
@@ -197,11 +201,11 @@
             },
             {
               "score": 1,
-              "description": "Đáp ứng một phần: Mentions a fix but misses stack order or precedence."
+              "description": "Mentions draining the stack but omits LIFO order or mishandles the declared precedence/associativity."
             },
             {
               "score": 2,
-              "description": "Đáp ứng đầy đủ: Drains operators correctly and respects precedence/parentheses."
+              "description": "Drains remaining operators in LIFO order and preserves precedence/left-associativity under the stated valid-input grammar."
             }
           ],
           "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
@@ -210,7 +214,8 @@
           "id": "c05.infix_tests",
           "label": "Independent tests",
           "expected_evidence": [
-            "a+b -> ab+; a+b*c -> abc*+; (a+b)*c -> ab+c*."
+            "a+b -> ab+; a+b*c -> abc*+; (a+b)*c -> ab+c*; a-b-c -> ab-c-.",
+            "Tests show operator draining, precedence, parentheses, and left associativity with expected outputs."
           ],
           "levels": [
             {
@@ -223,7 +228,7 @@
             },
             {
               "score": 2,
-              "description": "Đáp ứng đầy đủ: Checks operator drain, precedence, and parentheses with outputs."
+              "description": "Checks operator draining, precedence, parentheses and left associativity with correct outputs."
             }
           ],
           "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
@@ -257,8 +262,8 @@
   {
     "schema_version": "question-record/0.1-proposal",
     "example_only": false,
-    "id": "question.c05.counting_sort_review.v1",
-    "version": 1,
+    "id": "question.c05.counting_sort_review.v2",
+    "version": 2,
     "category": "ai_code_critique",
     "language": "vi",
     "role": "backend_developer",
@@ -269,24 +274,26 @@
       "testing.boundary_cases"
     ],
     "source_id": "source.c05.counting_sort_review",
-    "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng số nguyên, nhưng hợp đồng yêu cầu xử lý số âm, phần tử trùng và mảng rỗng. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở để luyện review, không phải bản ghi AI thật. Hãy chỉ ra lỗi, sửa và thiết kế test độc lập.",
+    "prompt": "Giả sử trợ lý AI đề xuất Counting Sort cho mảng int trong Java. Hãy review code để xử lý mảng rỗng, số âm và phần tử trùng. Khi range = max - min + 1 vượt quá 1.000.000, hàm phải từ chối rõ ràng thay vì cấp phát mảng lớn; tính range an toàn bằng long trước khi cấp phát. Đây là fixture mô phỏng do nhóm biên soạn từ mã nguồn mở, không phải bản ghi AI thật. Hãy chỉ ra lỗi, đề xuất sửa và thiết kế test độc lập.",
     "code": "import java.util.Arrays;\n\nfinal class CountingSortSuggestion {\n    static int[] countingSort(int[] values) {\n        int max = Arrays.stream(values).max().getAsInt();\n        int[] count = new int[max + 1];\n        for (int value : values) count[value]++;\n        int[] out = new int[values.length];\n        int index = 0;\n        for (int value = 0; value < count.length; value++)\n            while (count[value]-- > 0) out[index++] = value;\n        return out;\n    }\n}",
     "code_language": "java",
     "constraints": [
-      "Java; các giả định và hợp đồng của đề cần được nêu rõ."
+      "Java int input; preserve duplicates and support negative values and empty arrays.",
+      "If max - min + 1 exceeds 1,000,000, fail explicitly; calculate the width in long before allocation."
     ],
     "adaptation": {
       "kind": "adapted_open_source_exercise",
       "summary": "Câu hỏi và đoạn mã đã được nhóm diễn đạt/chỉnh sửa làm fixture học tập từ file nguồn MIT; không khẳng định snippet review là AI output thật.",
       "change_history": [
         "Translated/adapted question and constraints for backend fresher practice.",
-        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors."
+        "Review snippets include deliberately introduced defects authored by the project team; defects are not attributed to upstream authors.",
+        "Content review revision defines and tests an allocation limit for safe range-based counting."
       ],
       "translator_id": "team.phuc"
     },
     "rubric": {
-      "id": "rubric.c05.counting_sort_review.v1",
-      "version": 1,
+      "id": "rubric.c05.counting_sort_review.v2",
+      "version": 2,
       "criteria": [
         {
           "id": "c05.counting_bug",
@@ -315,8 +322,9 @@
           "id": "c05.counting_fix",
           "label": "Repair to contract",
           "expected_evidence": [
-            "Return empty result for empty input.",
-            "Use min/max range and offset value-min when counting and reconstructing."
+            "Return an empty result for empty input.",
+            "Use min/max and a consistent value-min offset for counting/reconstruction.",
+            "Compute width in long and reject a width greater than 1,000,000 before allocation."
           ],
           "levels": [
             {
@@ -325,11 +333,11 @@
             },
             {
               "score": 1,
-              "description": "Đáp ứng một phần: Fixes one defect only or offset is inconsistent."
+              "description": "Fixes empty or negative input but misses a consistent offset or safe range limit."
             },
             {
               "score": 2,
-              "description": "Đáp ứng đầy đủ: Handles empty and negative values with consistent offset and output."
+              "description": "Handles empty/negative inputs with a consistent offset and checks the range limit safely before allocation."
             }
           ],
           "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
@@ -338,7 +346,8 @@
           "id": "c05.counting_tests",
           "label": "Independent tests",
           "expected_evidence": [
-            "[] -> []; [-3,2,-3,0] -> [-3,-3,0,2]; duplicates preserved."
+            "[] -> []; [-3,2,-3,0] -> [-3,-3,0,2]; duplicates preserved.",
+            "Include or describe rejection when range width exceeds 1,000,000."
           ],
           "levels": [
             {
@@ -351,7 +360,7 @@
             },
             {
               "score": 2,
-              "description": "Đáp ứng đầy đủ: Tests empty, negative, duplicate and expected ordering."
+              "description": "Tests empty, negative, duplicate values with expected sorted output, and oversized-range rejection."
             }
           ],
           "equivalent_answers": "Chấp nhận cách diễn đạt hoặc cài đặt tương đương nếu thỏa hợp đồng và có căn cứ."
