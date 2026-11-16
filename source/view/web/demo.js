@@ -46,8 +46,31 @@ class DemoPage {
     const response = await fetch(url, options);
     const result = await response.json();
     if (!response.ok) {
-      const messages = {providerConfig: 'Chưa cấu hình AI. Bạn vẫn có thể tải bài mẫu và xem kết quả ghi sẵn.', providerQuota: 'Đã hết hạn mức AI. Bài được giữ lại; hãy thử lại sau hoặc xem bản ghi.', providerBilling: 'Tài khoản AI chưa có hạn mức khả dụng. Kiểm tra tài khoản hoặc xem bản ghi.', providerTimeout: 'AI phản hồi quá lâu. Bài được giữ lại, bạn có thể thử lại.', invalidEvidence: 'AI trả bằng chứng chưa hợp lệ. Chưa tạo điểm; bài của bạn vẫn được giữ.', versionMismatch: 'Câu hỏi hoặc rubric đã thay đổi. Tải lại trang để nhận phiên bản mới; bản nháp vẫn được giữ.', exampleChanged: 'Bản ghi chỉ áp dụng cho nguyên văn bài mẫu.', recordingMismatch: 'Bản ghi không khớp phiên bản câu hỏi. Hãy kiểm tra bộ dữ liệu.', answerConflict: 'Lần nộp này đã gắn với nội dung khác. Sửa bài để tạo phiên bản mới.', contentUnapproved: 'Nội dung chưa hoàn tất duyệt độc lập.', questionBankInvalid: 'Không đọc được bộ câu hỏi. Kiểm tra file dữ liệu.'};
-      throw new Error(messages[result.code] || 'Không hoàn tất đánh giá. Nội dung bài vẫn được giữ; kiểm tra cấu hình hoặc thử lại.');
+      const messages = {
+        providerConfig: 'Chưa cấu hình AI. Bạn vẫn có thể xem kết quả ghi sẵn.',
+        providerQuota: 'Đã hết hạn mức AI. Bài được giữ lại, hãy thử lại sau.',
+        providerBilling: 'Tài khoản AI chưa có hạn mức khả dụng. Kiểm tra thanh toán của project.',
+        providerTimeout: 'AI phản hồi quá lâu. Bài được giữ lại, bạn có thể thử lại.',
+        providerNetwork: 'Backend chưa kết nối được với dịch vụ AI. Kiểm tra mạng rồi gửi lại.',
+        providerHttp: 'Dịch vụ AI trả lỗi khi xử lý yêu cầu. Bài làm vẫn được giữ.',
+        providerIncomplete: 'AI chưa trả đủ kết quả để chấm. Bài làm vẫn được giữ.',
+        providerRefusal: 'Dịch vụ AI từ chối yêu cầu. Bài làm vẫn được giữ.',
+        providerOutput: 'Kết quả AI không đúng định dạng đánh giá. Bài làm vẫn được giữ.',
+        providerSchema: 'Dịch vụ AI không chấp nhận cấu trúc yêu cầu. Bài làm vẫn được giữ.',
+        invalidEvidence: 'AI trả bằng chứng chưa hợp lệ. Chưa tạo điểm. Bài làm vẫn được giữ.',
+        invalidInput: 'Dữ liệu gửi lên không đúng định dạng. Kiểm tra bài làm và tải lại câu hỏi.',
+        invalidOrigin: 'Mở giao diện qua đúng địa chỉ của server demo rồi thử lại.',
+        versionMismatch: 'Câu hỏi hoặc rubric đã thay đổi. Tải lại trang để nhận phiên bản mới.',
+        exampleChanged: 'Bản ghi chỉ áp dụng cho nguyên văn bài mẫu.',
+        recordingMismatch: 'Bản ghi không khớp phiên bản câu hỏi. Hãy kiểm tra bộ dữ liệu.',
+        answerConflict: 'Lần nộp này đã gắn với nội dung khác. Sửa bài để tạo phiên bản mới.',
+        contentUnapproved: 'Nội dung chưa hoàn tất duyệt độc lập.',
+        questionBankInvalid: 'Không đọc được bộ câu hỏi. Kiểm tra file dữ liệu.',
+        storageUnavailable: 'Backend chưa truy cập được nơi lưu bài. Kiểm tra bộ nhớ lưu trữ rồi thử lại.',
+      };
+      const code = typeof result.code === 'string' && /^[a-zA-Z0-9]+$/.test(result.code) ? result.code : 'requestFailed';
+      const message = Object.hasOwn(messages, code) ? messages[code] : 'Không hoàn tất đánh giá. Nội dung bài vẫn được giữ.';
+      throw new Error(`${message} [${code}, HTTP ${response.status}]`);
     }
     return result;
   }
@@ -57,7 +80,9 @@ class DemoPage {
       const [questions, runtime] = await Promise.all([this.request('/api/questions'), this.request('/api/status')]);
       this.questions = questions;
       this.liveConfigured = runtime.liveEvaluationConfigured;
-      this.element('live-status').textContent = this.liveConfigured ? `Đã có cấu hình ${runtime.providerName}; kết nối và hạn mức sẽ được kiểm tra khi gửi bài.` : 'Chưa cấu hình AI. Bài mẫu và kết quả ghi sẵn vẫn dùng được, không cần key.';
+      this.element('live-status').textContent = this.liveConfigured
+        ? `Đã có cấu hình ${runtime.providerName} (${runtime.modelName}); kết nối và hạn mức sẽ được kiểm tra khi gửi bài.`
+        : 'Chưa cấu hình AI. Bài mẫu và kết quả ghi sẵn vẫn dùng được, không cần key.';
       this.element('question-select').replaceChildren(...questions.map(question => {
         const option = this.makeElement('option', `${question.questionId.replace('demo.', '')} · ${question.title}`);
         option.value = question.questionId;

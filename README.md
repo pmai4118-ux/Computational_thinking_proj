@@ -51,6 +51,11 @@ Repeating the same saved input snapshot returns its completed report, including
 its original provider and model. Passing `--answerFile` creates a new answer ID;
 use the same saved input JSON to retry an existing answer.
 
+### 82-Case Rubric Testing & Interactive Presentation
+- **Testing Guide & Local Run Commands:** [HUONG_DAN_CHAY_TEST_LOCAL.md](HUONG_DAN_CHAY_TEST_LOCAL.md)
+- **Interactive Presentation HTML (3 Tabs, Academic Blue Theme):** [presentation-10-cau-test.html](test/testing_DesignAlgorithm/testing-rubric-10-cau/presentation-10-cau-test.html)
+- **Test Dataset, Scripts & Comparative Benchmarks:** [test/testing_DesignAlgorithm/testing-rubric-10-cau/](test/testing_DesignAlgorithm/testing-rubric-10-cau/)
+
 ## Python development setup
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and run these

@@ -6,8 +6,11 @@ and translates domain errors into structured DTO envelopes.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import ValidationError
 
+from source.Control.evaluationSchemas import EvaluationFailure, EvaluationRequest, EvaluationResponse
 from source.Control.schemas import (
     ErrorEnvelopeDTO,
     EvaluateSubmissionRequestDTO,
@@ -19,9 +22,10 @@ from source.Control.schemas import (
 )
 from source.Model.evaluation import CompleteEvaluationReport
 from source.Model.ids import AnswerId, AnswerRef
+from source.service.evaluationPipelineService import EvaluationPipelineService
 from source.service.evaluationService import EvaluationService
 from source.service.evaluationErrors import EvaluationError, malformed_input_error
-from source.service.questionBankService import QuestionBankService
+from source.service.evaluationQuestionAdapter import EvaluationQuestionAdapter
 
 
 class EvaluationPipelineController:
@@ -29,8 +33,8 @@ class EvaluationPipelineController:
 
     def __init__(
         self,
-        evaluation_service: EvaluationService,
-        question_bank_service: QuestionBankService,
+        evaluation_service: EvaluationPipelineService,
+        question_bank_service: EvaluationQuestionAdapter,
     ) -> None:
         self._evaluation_service = evaluation_service
         self._question_bank_service = question_bank_service
@@ -146,3 +150,29 @@ class EvaluationPipelineController:
                 for fb in report.feedback_items
             ],
         )
+
+
+class EvaluationController:
+    def __init__(self, service: EvaluationService):
+        self.service = service
+
+    def submitAnswer(self, requestData: Mapping[str, object]) -> EvaluationResponse:
+        try:
+            request = EvaluationRequest.model_validate(requestData)
+            report, outputPath = self.service.evaluateFiles(
+                request.inputPath, request.providerName, request.recordingPath,
+                request.answerPath, request.outputPath,
+            )
+            return EvaluationResponse(report=report, outputPath=outputPath)
+        except EvaluationError as error:
+            failure = EvaluationFailure(code=error.code, message=error.message, retryable=error.retryable)
+        except ValidationError as error:
+            fields = tuple(".".join(str(part) for part in issue["loc"]) for issue in error.errors(include_input=False))
+            failure = EvaluationFailure(code="invalidInput", message="Invalid request structure or values.", fields=fields)
+        except FileExistsError:
+            failure = EvaluationFailure(code="outputExists", message="The report already exists. Choose a new path to preserve it.")
+        except UnicodeError:
+            failure = EvaluationFailure(code="invalidEncoding", message="The input file must use UTF-8 encoding.")
+        except OSError:
+            failure = EvaluationFailure(code="fileError", message="Cannot read or write the UTF-8 file. Check its path, permissions, and size.")
+        return EvaluationResponse(error=failure)

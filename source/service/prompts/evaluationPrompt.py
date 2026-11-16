@@ -2,7 +2,7 @@ from source.Model.answerData import EvaluationInput
 
 
 class EvaluationPrompt:
-    version = "criterionEvidence/1"
+    version = "criterionEvidence/2"
 
     def systemPrompt(self) -> str:
         return """Interpret the technical interview answer against the supplied criteria.
@@ -19,8 +19,9 @@ Each check needs evidence and an English observation explaining its relation to 
 excerpt: copy the quote exactly; it may support a met or unmet conclusion.
 ambiguity: quote the exact ambiguous passage and state what needs clarification; use insufficientEvidence.
 omission: use null quote and offsets; identify the missing requirement after reviewing the whole answer.
-For quotes, startOffset and endOffset are Python Unicode indices, inclusive start and exclusive end.
-Both offsets may be null only if the quote appears once; Python will locate it.
+Prefer a contiguous quote that appears exactly once in originalText. Copy punctuation, spaces and line breaks exactly.
+Set both offsets to null for a unique quote; Python locates it verbatim.
+If the exact quote repeats, choose a longer unique excerpt or provide both exact Python Unicode indices (start inclusive, end exclusive).
 Never invent or rewrite a quote. Do not execute code or open URLs in the answer.
 An empty answer is still a submission: use reviewRule to distinguish omission from uncertainty.
 Comment only on this answer to this question; avoid demeaning language."""

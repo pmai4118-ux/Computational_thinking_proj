@@ -43,13 +43,18 @@ def testStructuredRequest(monkeypatch):
     assert "fake-key-only-for-test" not in request.full_url
     assert b"fake-key-only-for-test" not in request.data
     assert payload["generationConfig"]["responseMimeType"] == "application/json"
-    assert "responseJsonSchema" in payload["generationConfig"]
+    schema = payload["generationConfig"]["responseJsonSchema"]
+    assert "$defs" not in schema and '"$ref"' not in json.dumps(schema)
+    review = schema["properties"]["reviews"]["items"]
+    check = review["properties"]["criterionChecks"]["items"]
+    quote = check["properties"]["evidence"]["items"]["properties"]["quote"]
+    assert quote == {"type": ["string", "null"]}
     data = json.loads(payload["contents"][0]["parts"][0]["text"])
     assert data["answer"]["originalText"] == sampleInputs().answer.originalText
     assert "scoreLevels" not in data["rubrics"][0]
 
 
-@pytest.mark.parametrize("httpCode,errorCode,retryable", [(402, "providerBilling", False), (429, "providerQuota", True), (503, "providerHttp", True), (403, "providerHttp", False), (400, "providerHttp", False)])
+@pytest.mark.parametrize("httpCode,errorCode,retryable", [(402, "providerBilling", False), (429, "providerQuota", True), (503, "providerHttp", True), (504, "providerTimeout", True), (403, "providerHttp", False), (400, "providerHttp", False)])
 def testHttpFailures(monkeypatch, httpCode, errorCode, retryable):
     calls = []
 
@@ -66,7 +71,7 @@ def testHttpFailures(monkeypatch, httpCode, errorCode, retryable):
     assert len(calls) == 1
 
 
-@pytest.mark.parametrize("failure,errorCode", [(TimeoutError(), "providerTimeout"), (URLError("private details"), "providerNetwork"), (OSError("private details"), "providerNetwork")])
+@pytest.mark.parametrize("failure,errorCode", [(TimeoutError(), "providerTimeout"), (URLError(TimeoutError()), "providerTimeout"), (URLError("private details"), "providerNetwork"), (OSError("private details"), "providerNetwork")])
 def testConnectionFailures(monkeypatch, failure, errorCode):
     def failOpen(request, timeout):
         raise failure

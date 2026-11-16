@@ -1,7 +1,7 @@
 import json
+import math
 import os
 import re
-import socket
 from dataclasses import dataclass, field
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -35,12 +35,13 @@ class GeminiSettings:
 
 class GeminiInterpreter:
     providerName = "gemini"
+    maxTimeoutSeconds = 300
 
     def __init__(self, apiKey: str, modelName: str, timeoutSeconds: float = 45, prompt: EvaluationPrompt | None = None):
         if not apiKey.strip() or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,119}", modelName):
             raise EvaluationError("providerConfig", "Provide a valid GEMINI_API_KEY and GEMINI_MODEL without the models/ prefix.")
-        if isinstance(timeoutSeconds, bool) or not 1 <= timeoutSeconds <= 120:
-            raise EvaluationError("providerConfig", "Timeout must be between 1 and 120 seconds.")
+        if isinstance(timeoutSeconds, bool) or not 1 <= timeoutSeconds <= self.maxTimeoutSeconds:
+            raise EvaluationError("providerConfig", f"Timeout must be between 1 and {self.maxTimeoutSeconds} seconds.")
         self.apiKey = apiKey
         self.modelName = modelName
         self.timeoutSeconds = timeoutSeconds
@@ -52,10 +53,9 @@ class GeminiInterpreter:
             "systemInstruction": {"parts": [{"text": self.prompt.systemPrompt()}]},
             "contents": [{"role": "user", "parts": [{"text": json.dumps(self.prompt.promptPayload(inputs), ensure_ascii=False)}]}],
             "generationConfig": {
-                "candidateCount": 1,
                 "maxOutputTokens": 16384,
                 "responseMimeType": "application/json",
-                "responseJsonSchema": Interpretation.model_json_schema(),
+                "responseJsonSchema": self.responseSchema(),
             },
         }
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -64,9 +64,39 @@ class GeminiInterpreter:
         return Request(
             f"https://generativelanguage.googleapis.com/v1beta/models/{self.modelName}:generateContent",
             data=body,
-            headers={"Content-Type": "application/json", "x-goog-api-key": self.apiKey},
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": self.apiKey,
+                "X-Server-Timeout": str(math.ceil(self.timeoutSeconds)),
+            },
             method="POST",
         )
+
+    @staticmethod
+    def responseSchema() -> dict:
+        schema = Interpretation.model_json_schema()
+        definitions = schema.get("$defs", {})
+
+        def inline(node: dict) -> dict:
+            if "$ref" in node:
+                return inline(definitions[node["$ref"].removeprefix("#/$defs/")])
+            if "anyOf" in node:
+                options = [inline(item) for item in node["anyOf"]]
+                nonNull = [item for item in options if item.get("type") != "null"]
+                if len(options) == 2 and len(nonNull) == 1 and isinstance(nonNull[0].get("type"), str):
+                    value = nonNull[0]
+                    return {**value, "type": [value["type"], "null"]}
+                return {"anyOf": options}
+            result = {key: node[key] for key in ("type", "enum", "required") if key in node}
+            if "properties" in node:
+                result["properties"] = {name: inline(item) for name, item in node["properties"].items()}
+            if "items" in node:
+                result["items"] = inline(node["items"])
+            return result
+
+        # Use the provider's compact schema dialect. The full constraints still
+        # run locally in Interpretation.model_validate_json and EvidenceReview.
+        return inline(schema)
 
     def interpret(self, inputs: EvaluationInput) -> Interpretation:
         request = self.buildRequest(inputs)
@@ -75,9 +105,11 @@ class GeminiInterpreter:
                 rawBody = response.read(1000001)
             if len(rawBody) > 1000000:
                 raise EvaluationError("providerOutput", "The AI response exceeds 1 MB.")
-            return self.parseResponse(rawBody)
+            return self.resolveUniqueQuotes(self.parseResponse(rawBody), inputs.answer.originalText)
         except HTTPError as error:
             error.close()
+            if error.code in (408, 504):
+                raise self.timeoutError() from error
             if error.code == 402:
                 raise EvaluationError(
                     "providerBilling",
@@ -85,14 +117,38 @@ class GeminiInterpreter:
                 ) from error
             if error.code == 429:
                 raise EvaluationError("providerQuota", "The AI service rate limit was reached; no score was created.", True) from error
-            retryable = error.code >= 500 or error.code == 408
+            retryable = error.code >= 500
             raise EvaluationError("providerHttp", f"The AI service returned HTTP {error.code}; check the model and configuration or retry.", retryable) from error
-        except (TimeoutError, socket.timeout) as error:
-            raise EvaluationError("providerTimeout", "The AI service timed out; the original answer remains unchanged.", True) from error
+        except TimeoutError as error:
+            raise self.timeoutError() from error
         except URLError as error:
+            if isinstance(error.reason, TimeoutError):
+                raise self.timeoutError() from error
             raise EvaluationError("providerNetwork", "Cannot reach the AI service; no score was created.", True) from error
         except OSError as error:
             raise EvaluationError("providerNetwork", "The AI service connection was interrupted; no score was created.", True) from error
+
+    @staticmethod
+    def timeoutError() -> EvaluationError:
+        return EvaluationError("providerTimeout", "The AI service timed out; the original answer remains unchanged.", True)
+
+    @staticmethod
+    def resolveUniqueQuotes(interpretation: Interpretation, originalText: str) -> Interpretation:
+        reviews = []
+        for review in interpretation.reviews:
+            checks = []
+            for check in review.criterionChecks:
+                items = []
+                for evidence in check.evidence:
+                    quote = evidence.quote
+                    if evidence.type != "omission" and quote:
+                        start = originalText.find(quote)
+                        if start >= 0 and originalText.find(quote, start + 1) == -1:
+                            evidence = evidence.model_copy(update={"startOffset": start, "endOffset": start + len(quote)})
+                    items.append(evidence)
+                checks.append(check.model_copy(update={"evidence": tuple(items)}))
+            reviews.append(review.model_copy(update={"criterionChecks": tuple(checks)}))
+        return interpretation.model_copy(update={"reviews": tuple(reviews)})
 
     def parseResponse(self, rawBody: bytes) -> Interpretation:
         try:

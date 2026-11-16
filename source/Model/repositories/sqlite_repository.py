@@ -21,6 +21,7 @@ from source.Model.evaluation import (
     VerifiedCriterionCheck,
     VerifiedEvidence,
 )
+from source.Model.evaluationErrors import EvaluationError
 from source.Model.ids import (
     AnswerId,
     AnswerRef,
@@ -39,7 +40,6 @@ from source.Model.question import (
     ExecutableScoreLevel,
 )
 from source.Model.repositories.interfaces import EvaluationRepository, SessionRepository
-from source.service.evaluationErrors import storage_failure_error
 
 SCHEMA_SQL_PATH = Path(__file__).resolve().parent / "schema.sql"
 
@@ -65,7 +65,7 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
             with self._connect() as conn:
                 conn.executescript(ddl)
         except (OSError, sqlite3.Error) as exc:
-            raise storage_failure_error(
+            raise EvaluationError.storage_failure(
                 f"Không thể khởi tạo cơ sở dữ liệu SQLite: {exc}"
             ) from exc
 
@@ -108,7 +108,7 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
                 )
             return session
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi lưu phiên luyện tập mới: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi lưu phiên luyện tập mới: {exc}") from exc
 
     def get_session(self, session_id: SessionId) -> InterviewSession | None:
         """Read an InterviewSession by ID."""
@@ -119,7 +119,7 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
                     (str(session_id),),
                 ).fetchone()
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi đọc phiên luyện tập: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi đọc phiên luyện tập: {exc}") from exc
 
         if row is None:
             return None
@@ -175,12 +175,12 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
                     ),
                 )
                 if cursor.rowcount == 0:
-                    raise storage_failure_error(
+                    raise EvaluationError.storage_failure(
                         f"Không tìm thấy phiên '{session.id}' để cập nhật."
                     )
             return session
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi cập nhật phiên luyện tập: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi cập nhật phiên luyện tập: {exc}") from exc
 
     def save_answer(self, answer: Answer) -> Answer:
         """
@@ -231,11 +231,11 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
                     ).fetchone()
                     if row is not None:
                         return self._row_to_answer(row)
-            raise storage_failure_error(
+            raise EvaluationError.storage_failure(
                 f"Bản ghi câu trả lời '{answer.id}' (revision {answer.revision}) đã tồn tại."
             )
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi lưu câu trả lời vào SQLite: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi lưu câu trả lời vào SQLite: {exc}") from exc
 
     def get_answer(
         self,
@@ -264,7 +264,7 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
                         (str(answer_id),),
                     ).fetchone()
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi đọc câu trả lời từ SQLite: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi đọc câu trả lời từ SQLite: {exc}") from exc
 
         return self._row_to_answer(row) if row is not None else None
 
@@ -296,7 +296,7 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
                     (input_digest,),
                 ).fetchone()
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi tra cứu báo cáo theo input_digest: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi tra cứu báo cáo theo input_digest: {exc}") from exc
 
         if row is None:
             return None
@@ -316,7 +316,7 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
                     (str(answer_ref.id), answer_ref.revision),
                 ).fetchone()
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi tra cứu báo cáo theo answer_ref: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi tra cứu báo cáo theo answer_ref: {exc}") from exc
 
         if row is None:
             return None
@@ -331,7 +331,7 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
                     (str(evaluation_id),),
                 ).fetchone()
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi tra cứu báo cáo theo evaluation_id: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi tra cứu báo cáo theo evaluation_id: {exc}") from exc
 
         if row is None:
             return None
@@ -372,11 +372,11 @@ class SQLiteRepository(EvaluationRepository, SessionRepository):
             existing = self.find_by_input_digest(report.input_digest)
             if existing is not None:
                 return existing
-            raise storage_failure_error(
+            raise EvaluationError.storage_failure(
                 f"Báo cáo đánh giá '{report.evaluation_id}' bị xung đột khóa khi lưu."
             )
         except sqlite3.Error as exc:
-            raise storage_failure_error(f"Lỗi lưu báo cáo đánh giá vào SQLite: {exc}") from exc
+            raise EvaluationError.storage_failure(f"Lỗi lưu báo cáo đánh giá vào SQLite: {exc}") from exc
 
     @staticmethod
     def _deserialize_report(raw_json: str) -> CompleteEvaluationReport:

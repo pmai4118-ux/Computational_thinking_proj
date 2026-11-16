@@ -1,0 +1,250 @@
+﻿caseId,questionId,questionTitle,questionVersion,caseType,answerText,expectedKnowledge,expectedAnalysis,expectedTesting,expectedImplementation,expectedCriteria,actualCriteria,actualScores,modelName,promptVersion,passFail,notes
+A-Q002-Dung-01,demo.Q002,"JDK, JRE và JVM",1,Dung,"JVM thực thi bytecode Java. JRE chứa JVM và các thư viện cần để ứng dụng chạy.
+
+JDK cung cấp môi trường chạy và các công cụ phát triển như javac. Dùng JDK không bắt buộc cài thêm một bản JRE riêng.",2,,,,demo.Q002.knowledge.1=met | demo.Q002.knowledge.2=met,,,,,,
+A-Q002-SaiNua-01,demo.Q002,"JDK, JRE và JVM",1,SaiNua,"JVM chạy bytecode, còn JRE gồm JVM và các thư viện hỗ trợ.
+
+JDK chỉ có công cụ như javac; lúc nào cũng phải cài JRE riêng để chạy ứng dụng.",1,,,,demo.Q002.knowledge.1=met | demo.Q002.knowledge.2=unmet,,,,,,
+A-Q002-Null-01,demo.Q002,"JDK, JRE và JVM",1,Null,"Em giải thích vai trò của JDK, JRE và JVM trong sơ đồ chưa gửi; ở đây em chỉ ghi tên ba thành phần.",null,,,,demo.Q002.knowledge.1=insufficientEvidence | demo.Q002.knowledge.2=insufficientEvidence,,,,,,
+A-Q005-Dung-01,demo.Q005,So sánh == và equals,1,Dung,"Với kiểu nguyên thủy như int, == so giá trị; với tham chiếu, == kiểm tra có cùng trỏ một đối tượng hay không.
+
+Lớp có thể override equals để so bằng nhau về logic. String.equals so nội dung ký tự; Object.equals mặc định so danh tính.
+
+Tạo a và b bằng hai lần new String(""x"") thì a == b là false vì khác đối tượng; a.equals(b) là true vì cùng nội dung.
+
+Hai literal ""x"" có thể dùng cùng đối tượng trong string pool, nên == có thể là true do cùng tham chiếu, không phải do so nội dung.",2,2,,,demo.Q005.knowledge.1=met | demo.Q005.knowledge.2=met | demo.Q005.analysis.1=met | demo.Q005.analysis.2=met,,,,,,
+A-Q005-SaiNua-01,demo.Q005,So sánh == và equals,1,SaiNua,"Với int, == so sánh giá trị; với biến tham chiếu, == kiểm tra cùng đối tượng.
+
+Hai lần new String(""hi"") tạo hai đối tượng khác nhau, nên == trả false còn equals trả true.",1,1,,,demo.Q005.knowledge.1=met | demo.Q005.knowledge.2=unmet | demo.Q005.analysis.1=met | demo.Q005.analysis.2=unmet,,,,,,
+A-Q005-Null-01,demo.Q005,So sánh == và equals,1,Null,Em đã điền kết quả == và equals cho từng cặp đối tượng trong bảng so sánh chưa gửi; bài này chưa có các cặp giá trị hay kết quả em đã ghi.,null,null,,,demo.Q005.knowledge.1=insufficientEvidence | demo.Q005.knowledge.2=insufficientEvidence | demo.Q005.analysis.1=insufficientEvidence | demo.Q005.analysis.2=insufficientEvidence,,,,,,
+A-Q007-Dung-01,demo.Q007,Tính bất biến của String,1,Dung,"Nội dung một đối tượng String không đổi sau khi tạo. Gán lại biến chỉ làm nó trỏ sang String khác.
+
+Nhiều nơi có thể dùng chung một String mà không lo bên khác thay đổi nội dung đã chia sẻ.
+
+first in ""Java"", second in ""Java Backend"": concat với hậu tố trong đề trả String mới, không sửa chuỗi gốc.
+
+Khi nối lặp trong một luồng, append vào StringBuilder rồi toString ở cuối để tránh tạo nhiều String trung gian.",2,2,,,demo.Q007.knowledge.1=met | demo.Q007.knowledge.2=met | demo.Q007.analysis.1=met | demo.Q007.analysis.2=met,,,,,,
+A-Q007-SaiNua-01,demo.Q007,Tính bất biến của String,1,SaiNua,"Nội dung String cố định sau khi tạo; gán lại first chỉ đổi đối tượng được tham chiếu.
+
+first vẫn là ""Java"", second là ""Java Backend"". concat tạo chuỗi mới và giữ nguyên chuỗi gốc.
+
+Trong vòng lặp một luồng, dùng + vì Java sửa trực tiếp String hiện có, không sinh chuỗi trung gian.",1,1,,,demo.Q007.knowledge.1=met | demo.Q007.knowledge.2=unmet | demo.Q007.analysis.1=met | demo.Q007.analysis.2=unmet,,,,,,
+A-Q007-Null-01,demo.Q007,Tính bất biến của String,1,Null,"Em ghi kết quả concat, lợi ích của bất biến và cách nối lặp trong bảng ở ghi chú chưa gửi; không có các kết luận đó trong bài nộp này.",null,null,,,demo.Q007.knowledge.1=insufficientEvidence | demo.Q007.knowledge.2=insufficientEvidence | demo.Q007.analysis.1=insufficientEvidence | demo.Q007.analysis.2=insufficientEvidence,,,,,,
+A-Q010-Dung-01,demo.Q010,Giải thích Bubble Sort,1,Dung,"Quét nhiều lượt từ trái sang phải qua các cặp kề. Nếu bên trái lớn hơn bên phải thì đổi chỗ.
+
+Xấu nhất O(n²) thời gian và O(1) bộ nhớ phụ. Tốt nhất O(n) khi có cờ dừng sau lượt không đổi chỗ.
+
+Số lớn nhất còn lại gặp từng phần tử bên phải và luôn đi tiếp sang phải sau phép so, đến cuối vùng đang xét.
+
+Bỏ vị trí vừa chốt ở cuối khỏi lượt sau. Nếu cả lượt không đổi chỗ thì mọi cặp kề trong vùng đều đúng thứ tự, có thể dừng.
+
+[4, 1, 3, 2] cho [1, 2, 3, 4].
+
+[] cho []; [6] cho [6]; [4, -2, 4] cho [-2, 4, 4].",2,2,2,,demo.Q010.knowledge.1=met | demo.Q010.knowledge.2=met | demo.Q010.analysis.1=met | demo.Q010.analysis.2=met | demo.Q010.testing.1=met | demo.Q010.testing.2=met,,,,,,
+A-Q010-SaiNua-01,demo.Q010,Giải thích Bubble Sort,1,SaiNua,"So sánh các cặp kề và đổi chỗ nếu bên trái lớn hơn, rồi tiếp tục các lượt quét.
+
+Em tính thời gian xấu nhất là O(n log n).
+
+Trong một lượt quét từ trái sang phải, số lớn nhất gặp lần lượt mọi số phía sau và tới cuối vùng.
+
+Lượt sau em vẫn quét cả đoạn đuôi đã chốt; em không xét dừng khi cả lượt không đổi chỗ.
+
+[9, 1, 4] phải ra [1, 4, 9].",1,1,1,,demo.Q010.knowledge.1=met | demo.Q010.knowledge.2=unmet | demo.Q010.analysis.1=met | demo.Q010.analysis.2=unmet | demo.Q010.testing.1=met | demo.Q010.testing.2=unmet,,,,,,
+A-Q010-Null-01,demo.Q010,Giải thích Bubble Sort,1,Null,"Em mô phỏng các lượt đổi chỗ, chi phí và kết quả của các mảng biên trong bảng trên giấy chưa nộp; phần chữ này chỉ tham chiếu bảng.",null,null,null,,demo.Q010.knowledge.1=insufficientEvidence | demo.Q010.knowledge.2=insufficientEvidence | demo.Q010.analysis.1=insufficientEvidence | demo.Q010.analysis.2=insufficientEvidence | demo.Q010.testing.1=insufficientEvidence | demo.Q010.testing.2=insufficientEvidence,,,,,,
+A-Q022-Dung-01,demo.Q022,"Chọn List, Set hay Map",1,Dung,"List là dãy có thứ tự và cho trùng, Set lưu phần tử duy nhất, Map ghép khóa duy nhất với giá trị.
+
+Thứ tự duyệt tùy triển khai: TreeSet sắp thứ tự, HashSet không cam kết; LinkedHashMap có thể giữ thứ tự chèn còn HashMap không cam kết.
+
+Dùng List cho lượt nghe nhạc theo thứ tự, có thể lặp bài; dùng Set để kiểm tra mã ưu đãi nào đã được dùng.
+
+Dùng Map tra giá theo mã món. Ghi lại cùng mã cập nhật giá món đó; hai mã khác nhau vẫn có thể cùng giá.",2,2,,,demo.Q022.knowledge.1=met | demo.Q022.knowledge.2=met | demo.Q022.analysis.1=met | demo.Q022.analysis.2=met,,,,,,
+A-Q022-SaiNua-01,demo.Q022,"Chọn List, Set hay Map",1,SaiNua,"List có thứ tự và cho trùng, Set giữ phần tử duy nhất, Map liên kết khóa với giá trị.
+
+Em cho rằng mọi Set đều sắp xếp tăng dần và mọi Map đều giữ thứ tự chèn.
+
+Dùng List cho dòng nhấp chuột, kể cả bấm lặp; dùng Set cho tập ID đã nhận phiếu.
+
+Nếu tra số phòng theo mã bằng Map thì hai mã không được có giá trị trùng nhau.",1,1,,,demo.Q022.knowledge.1=met | demo.Q022.knowledge.2=unmet | demo.Q022.analysis.1=met | demo.Q022.analysis.2=unmet,,,,,,
+A-Q022-Null-01,demo.Q022,"Chọn List, Set hay Map",1,Null,"Em đã điền đặc điểm, ví dụ chọn cấu trúc và quy tắc thứ tự của List, Set, Map vào một bảng chưa nộp; bài này chỉ nhắc đến bảng.",null,null,,,demo.Q022.knowledge.1=insufficientEvidence | demo.Q022.knowledge.2=insufficientEvidence | demo.Q022.analysis.1=insufficientEvidence | demo.Q022.analysis.2=insufficientEvidence,,,,,,
+A-Q085-Dung-01,demo.Q085,Unit test Service có Repository,1,Dung,"Kiểm thử logic UserService bằng cách thay phụ thuộc Repository để chạy độc lập với cơ sở dữ liệu thật.
+
+Mock hoặc fake cho phép đặt sẵn dữ liệu trả về hay lỗi. Integration test riêng mới kiểm tra Repository kết nối và truy vấn DB thật.
+
+Inject mock vào Service, sắp đặt phản hồi cho từng ID, gọi findUser rồi assert giá trị hoặc lỗi theo hợp đồng.
+
+Với nghiệp vụ lưu, xác minh đúng bản ghi được lưu khi hợp lệ và không lưu khi sai; không verify mọi lời gọi nội bộ.
+
+findUser(7) trả người dùng ID 7 nếu có bản ghi, hoặc trả not-found nếu repo không có bản ghi.
+
+ID 0 phải bị từ chối trước khi gọi repo. Nếu repo ném lỗi truy cập thì Service phải báo lỗi theo hợp đồng và không báo thành công.",2,2,2,,demo.Q085.knowledge.1=met | demo.Q085.knowledge.2=met | demo.Q085.analysis.1=met | demo.Q085.analysis.2=met | demo.Q085.testing.1=met | demo.Q085.testing.2=met,,,,,,
+A-Q085-SaiNua-01,demo.Q085,Unit test Service có Repository,1,SaiNua,"Kiểm thử logic UserService mà không kết nối Repository thật hay database thật.
+
+Inject repo giả, đặt phản hồi cho ID 12, gọi findUser và assert kết quả hay ngoại lệ theo hợp đồng.
+
+Em sẽ verify cả thứ tự của những lời gọi nội bộ không ảnh hưởng kết quả.
+
+Có bản ghi 12 thì findUser(12) trả người dùng 12; không có thì trả not-found.",1,1,1,,demo.Q085.knowledge.1=met | demo.Q085.knowledge.2=unmet | demo.Q085.analysis.1=met | demo.Q085.analysis.2=unmet | demo.Q085.testing.1=met | demo.Q085.testing.2=unmet,,,,,,
+A-Q085-Null-01,demo.Q085,Unit test Service có Repository,1,Null,"Em đã lập bảng cách thay Repository, cách tổ chức bài kiểm thử và từng kết quả kỳ vọng ở tài liệu chưa gửi. Bài này chỉ nói tới bảng.",null,null,null,,demo.Q085.knowledge.1=insufficientEvidence | demo.Q085.knowledge.2=insufficientEvidence | demo.Q085.analysis.1=insufficientEvidence | demo.Q085.analysis.2=insufficientEvidence | demo.Q085.testing.1=insufficientEvidence | demo.Q085.testing.2=insufficientEvidence,,,,,,
+A-Q009-Dung-01,demo.Q009,Tìm kiếm nhị phân,1,Dung,"Do mảng tăng dần, nếu giá trị giữa nhỏ hơn target thì mọi vị trí từ low đến mid cũng nhỏ hơn; nếu lớn hơn thì loại từ mid đến high. Khoảng ứng viên xấp xỉ giảm một nửa.
+
+Bản lặp có thời gian xấu nhất O(log n), bộ nhớ phụ O(1).
+
+Bất biến: nếu còn chỉ số khớp, nó nằm trong khoảng đóng [low, high].
+
+Tính mid = low + (high - low) / 2 để tránh tràn tổng. Đặt low = mid + 1 nếu giá trị giữa nhỏ hơn target, ngược lại đặt high = mid - 1. Dừng khi low > high.
+
+[2, 4, 9] tìm 4 trả 1, tìm 5 trả -1.
+
+[] tìm 4 trả -1; [4] tìm 4 trả 0; [4, 4] tìm 4 trả 0 hoặc 1 đều đúng.
+
+static int binarySearch(int[] values, int target) {
+    int low = 0, high = values.length - 1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (values[mid] == target) return mid;
+        if (values[mid] < target) low = mid + 1;
+        else high = mid - 1;
+    }
+    return -1;
+}
+
+Hàm trả -1 sau vòng lặp nếu vắng target; mảng rỗng đặt high = -1 nên không đọc mảng.",2,2,2,2,demo.Q009.knowledge.1=met | demo.Q009.knowledge.2=met | demo.Q009.analysis.1=met | demo.Q009.analysis.2=met | demo.Q009.testing.1=met | demo.Q009.testing.2=met | demo.Q009.implementation.1=met | demo.Q009.implementation.2=met,,,,,,
+A-Q009-SaiNua-01,demo.Q009,Tìm kiếm nhị phân,1,SaiNua,"Mảng tăng dần cho phép dùng phần tử giữa để loại nửa khoảng có giá trị đều dưới hoặc trên target.
+
+Em tính bản lặp này tốn O(n) thời gian xấu nhất.
+
+Nếu còn vị trí khớp thì nó nằm trong khoảng đóng [low, high].
+
+[1, 3, 8] tìm 3 trả 1; tìm 2 trả -1.
+
+int low = 0, high = values.length - 1;
+while (low <= high) {
+    int mid = (low + high) / 2;
+    if (values[mid] == target) return mid;
+    if (values[mid] < target) low = mid + 1;
+    else high = mid - 1;
+}
+
+Em chưa thêm lệnh trả -1 sau vòng lặp.",1,1,1,1,demo.Q009.knowledge.1=met | demo.Q009.knowledge.2=unmet | demo.Q009.analysis.1=met | demo.Q009.analysis.2=unmet | demo.Q009.testing.1=met | demo.Q009.testing.2=unmet | demo.Q009.implementation.1=met | demo.Q009.implementation.2=unmet,,,,,,
+A-Q009-Null-01,demo.Q009,Tìm kiếm nhị phân,1,Null,"Em ghi bất biến, mã Java và các ca kiểm thử vào tệp chưa đính kèm. Phần nộp này chưa có mã hay kết quả trong tệp.",null,null,null,null,demo.Q009.knowledge.1=insufficientEvidence | demo.Q009.knowledge.2=insufficientEvidence | demo.Q009.analysis.1=insufficientEvidence | demo.Q009.analysis.2=insufficientEvidence | demo.Q009.testing.1=insufficientEvidence | demo.Q009.testing.2=insufficientEvidence | demo.Q009.implementation.1=insufficientEvidence | demo.Q009.implementation.2=insufficientEvidence,,,,,,
+A-Q028-Dung-01,demo.Q028,Tra cứu nhân viên theo ID,1,Dung,"Dùng HashMap<Long, Employee> ánh xạ mỗi ID duy nhất, ổn định tới đối tượng Employee tương ứng.
+
+Dựng chỉ mục O(n) thời gian, O(n) bộ nhớ thêm. Tra cứu kỳ vọng O(1) và không bảo đảm O(1) ở trường hợp xấu nhất.
+
+Dựng một lần dùng cho nhiều truy vấn, tránh quét O(n) qua danh sách với từng ID.
+
+Với chỉ mục chứa các Employee thật, get trả null cho ID vắng và chương trình báo không tìm thấy. ID duy nhất nên không cần chính sách giải quyết trùng khóa.
+
+Nếu có (12, An) và (30, Bình), tìm 30 phải trả Bình.
+
+Tìm 99 trên tập này hoặc tìm 12 trên danh sách rỗng đều phải báo không thấy.
+
+Map<Long, Employee> index = new HashMap<>();
+for (Employee employee : employees) index.put(employee.getId(), employee);
+Employee result = index.get(targetId);
+if (result == null) System.out.println(""Employee not found"");
+else System.out.println(result);
+
+Nhánh result == null báo không tìm thấy trước mọi thao tác với kết quả.",2,2,2,2,demo.Q028.knowledge.1=met | demo.Q028.knowledge.2=met | demo.Q028.analysis.1=met | demo.Q028.analysis.2=met | demo.Q028.testing.1=met | demo.Q028.testing.2=met | demo.Q028.implementation.1=met | demo.Q028.implementation.2=met,,,,,,
+A-Q028-SaiNua-01,demo.Q028,Tra cứu nhân viên theo ID,1,SaiNua,"Dùng HashMap với ID nhân viên làm khóa duy nhất, Employee làm giá trị.
+
+Em tính dựng chỉ mục O(1) và tra luôn O(1), cả xấu nhất.
+
+Dựng bảng một lần để tránh quét lại 10.000 nhân viên cho từng lượt.
+
+Nếu ID vắng, em vẫn gọi getId trên kết quả trả về và không có nhánh not-found.
+
+Nếu ID 7 là An, tra 7 phải trả An.
+
+Map<Long, Employee> index = new HashMap<>();
+for (Employee employee : employees) index.put(employee.getId(), employee);
+Employee result = index.get(targetId);
+System.out.println(result.getId());
+
+Đoạn trên gọi result.getId kể cả khi get trả null.",1,1,1,1,demo.Q028.knowledge.1=met | demo.Q028.knowledge.2=unmet | demo.Q028.analysis.1=met | demo.Q028.analysis.2=unmet | demo.Q028.testing.1=met | demo.Q028.testing.2=unmet | demo.Q028.implementation.1=met | demo.Q028.implementation.2=unmet,,,,,,
+A-Q028-Null-01,demo.Q028,Tra cứu nhân viên theo ID,1,Null,"Cấu trúc chỉ mục, chi phí, ví dụ tìm ID và mã xử lý khi không thấy đều nằm trong tệp chưa gửi. Bản nộp hiện chưa chứa nội dung tệp.",null,null,null,null,demo.Q028.knowledge.1=insufficientEvidence | demo.Q028.knowledge.2=insufficientEvidence | demo.Q028.analysis.1=insufficientEvidence | demo.Q028.analysis.2=insufficientEvidence | demo.Q028.testing.1=insufficientEvidence | demo.Q028.testing.2=insufficientEvidence | demo.Q028.implementation.1=insufficientEvidence | demo.Q028.implementation.2=insufficientEvidence,,,,,,
+A-Q017-Dung-01,demo.Q017,Sửa bộ chuyển infix sang postfix,1,Dung,"Toán hạng được xuất ngay. Stack giữ toán tử chờ, rồi toán tử được lấy khỏi stack để thêm vào đầu ra cùng các toán hạng.
+
+Nhân/chia ưu tiên hơn cộng/trừ. Hai toán tử cùng mức kết hợp trái nên điều kiện <= cho phép phát toán tử đang chờ trước.
+
+Hàm return ngay khi hết token, bỏ sót các toán tử còn trong stack.
+
+a+b đưa a và b vào đầu ra nhưng dấu + còn trên stack nên bản cũ trả ab. Mỗi token được xử lý và vào/ra stack tối đa một lần, thời gian O(n).
+
+a+b → ab+; a+b*c → abc*+.
+
+(a+b)*c → ab+c*; a-b-c → ab-c-.
+
+while (!ops.isEmpty()) {
+    out.append(ops.pop());
+}
+return out.toString();
+
+Đặt đoạn drain sau vòng lặp token, thay return cũ. Giữ nguyên xử lý ưu tiên và ngoặc.",2,2,2,2,demo.Q017.knowledge.1=met | demo.Q017.knowledge.2=met | demo.Q017.analysis.1=met | demo.Q017.analysis.2=met | demo.Q017.testing.1=met | demo.Q017.testing.2=met | demo.Q017.implementation.1=met | demo.Q017.implementation.2=met,,,,,,
+A-Q017-SaiNua-01,demo.Q017,Sửa bộ chuyển infix sang postfix,1,SaiNua,"Toán hạng vào đầu ra trước; stack giữ toán tử để phát sau vào cùng đầu ra.
+
+Em cho rằng khi cùng mức ưu tiên thì toán tử kết hợp từ phải sang trái.
+
+Lỗi là return khi còn toán tử đang chờ trong stack.
+
+a+b → ab+ và a+b*c → abc*+.
+
+while (!ops.isEmpty()) {
+    out.append(ops.pop());
+}
+return out.toString();",1,1,1,1,demo.Q017.knowledge.1=met | demo.Q017.knowledge.2=unmet | demo.Q017.analysis.1=met | demo.Q017.analysis.2=unmet | demo.Q017.testing.1=met | demo.Q017.testing.2=unmet | demo.Q017.implementation.1=met | demo.Q017.implementation.2=unmet,,,,,,
+A-Q017-Null-01,demo.Q017,Sửa bộ chuyển infix sang postfix,1,Null,"Truy vết stack, vị trí bản sửa Java và các đầu ra mẫu nằm trong bản nháp chưa gửi; phần nộp này không ghi lại các kết luận đó.",null,null,null,null,demo.Q017.knowledge.1=insufficientEvidence | demo.Q017.knowledge.2=insufficientEvidence | demo.Q017.analysis.1=insufficientEvidence | demo.Q017.analysis.2=insufficientEvidence | demo.Q017.testing.1=insufficientEvidence | demo.Q017.testing.2=insufficientEvidence | demo.Q017.implementation.1=insufficientEvidence | demo.Q017.implementation.2=insufficientEvidence,,,,,,
+A-Q018-Dung-01,demo.Q018,Sửa Counting Sort,1,Dung,"Đếm tần suất rồi duyệt giá trị tăng dần. Ghi ra mỗi giá trị đúng số lần đếm được nên giữ phần tử trùng.
+
+Đặt k = max - min + 1. Thời gian O(n+k) và bộ nhớ O(n+k) tính cả bảng đếm k ô và mảng trả về n ô.
+
+max().getAsInt() lỗi khi đầu vào rỗng. Dùng trực tiếp giá trị âm làm chỉ số count cũng lỗi.
+
+Tính (long) max - min + 1 trước cấp phát; từ chối khi vượt 1.000.000 để tránh tràn int hoặc cấp phát quá lớn.
+
+[] → []; [3, -1, 3, 0, -1] → [-1, -1, 0, 3, 3].
+
+[-1, 999998] có range đúng 1.000.000, chấp nhận và trả [-1, 999998]. [-1, 999999] và [Integer.MIN_VALUE, Integer.MAX_VALUE] phải bị từ chối.
+
+static int[] countingSort(int[] values) {
+    if (values.length == 0) return new int[0];
+    int min = values[0], max = values[0];
+    for (int value : values) { min = Math.min(min, value); max = Math.max(max, value); }
+    long width = (long) max - min + 1;
+    if (width > 1_000_000L) throw new IllegalArgumentException(""Range too wide"");
+    int[] counts = new int[(int) width];
+    for (int value : values) counts[(int) ((long) value - min)]++;
+    int[] result = new int[values.length];
+    int index = 0;
+    for (int offset = 0; offset < counts.length; offset++) {
+        for (int repeat = 0; repeat < counts[offset]; repeat++) result[index++] = min + offset;
+    }
+    return result;
+}
+
+Mã ép kiểu trước phép trừ và kiểm tra giới hạn trước lệnh cấp phát counts.",2,2,2,2,demo.Q018.knowledge.1=met | demo.Q018.knowledge.2=met | demo.Q018.analysis.1=met | demo.Q018.analysis.2=met | demo.Q018.testing.1=met | demo.Q018.testing.2=met | demo.Q018.implementation.1=met | demo.Q018.implementation.2=met,,,,,,
+A-Q018-SaiNua-01,demo.Q018,Sửa Counting Sort,1,SaiNua,"Đếm tần suất rồi chép theo thứ tự tăng, mỗi giá trị chép đúng số lần để giữ cả bản trùng.
+
+Em cho rằng thời gian và bộ nhớ đều luôn O(n), không phụ thuộc miền giá trị.
+
+max().getAsInt() lỗi khi rỗng, còn số âm không dùng được làm chỉ số trực tiếp.
+
+Tính hiệu bằng int và cấp phát luôn, không cần giới hạn 1.000.000.
+
+[] trả []; [2, -3, 2] trả [-3, 2, 2].
+
+static int[] countingSort(int[] values) {
+    if (values.length == 0) return new int[0];
+    int min = Arrays.stream(values).min().getAsInt();
+    int max = Arrays.stream(values).max().getAsInt();
+    int[] counts = new int[max - min + 1];
+    for (int value : values) counts[value - min]++;
+    int[] result = new int[values.length];
+    int pos = 0;
+    for (int i = 0; i < counts.length; i++)
+        for (int j = 0; j < counts[i]; j++) result[pos++] = min + i;
+    return result;
+}
+
+Đoạn này chưa dùng long và cấp phát trước khi kiểm tra giới hạn.",1,1,1,1,demo.Q018.knowledge.1=met | demo.Q018.knowledge.2=unmet | demo.Q018.analysis.1=met | demo.Q018.analysis.2=unmet | demo.Q018.testing.1=met | demo.Q018.testing.2=unmet | demo.Q018.implementation.1=met | demo.Q018.implementation.2=unmet,,,,,,
+A-Q018-Null-01,demo.Q018,Sửa Counting Sort,1,Null,"Em ghi cách tính range, bản sửa cho số âm và ca kiểm thử vào phiếu chưa nộp; bài này chỉ nhắc tới phiếu.",null,null,null,null,demo.Q018.knowledge.1=insufficientEvidence | demo.Q018.knowledge.2=insufficientEvidence | demo.Q018.analysis.1=insufficientEvidence | demo.Q018.analysis.2=insufficientEvidence | demo.Q018.testing.1=insufficientEvidence | demo.Q018.testing.2=insufficientEvidence | demo.Q018.implementation.1=insufficientEvidence | demo.Q018.implementation.2=insufficientEvidence,,,,,,

@@ -77,6 +77,11 @@ Có thể dùng biến môi trường `GEMINI_API_KEY`, `GEMINI_MODEL`, `EVALUAT
 thay file. Biến môi trường ưu tiên hơn file. Ứng dụng không tự đọc file `.env`.
 Không ghi key vào câu trả lời, JSON gửi từ web, tài liệu hay commit.
 
+`EVALUATION_TIMEOUT` dùng đơn vị giây và nhận giá trị từ 1 đến 300. Nếu Gemini
+phản hồi quá lâu khi chấm bài, có thể đặt `"EVALUATION_TIMEOUT": "300"` trong
+`secrets/demo-gemini.json` rồi khởi động lại server. Backend dùng giá trị này
+khi chờ phản hồi và gửi cùng yêu cầu bằng header `X-Server-Timeout`.
+
 Mặc định `gemini-2.5-flash-lite`, timeout 60 giây. Theo
 [bảng giá Google](https://aistudio.google.com/docs/pricing), model này có Free Tier
 cho tài khoản đủ điều kiện; quota và quyền truy cập phụ thuộc tài khoản.
