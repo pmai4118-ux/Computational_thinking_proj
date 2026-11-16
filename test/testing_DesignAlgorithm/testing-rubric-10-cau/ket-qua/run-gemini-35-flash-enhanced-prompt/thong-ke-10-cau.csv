@@ -1,0 +1,11 @@
+﻿questionId,questionTitle,totalCases,executedCases,reportedCases,errorCases,unexecutedCases,criteriaMatched,criteriaMatchRate,rubricScoreMatched,rubricScoreMatchRate,rulesScoreCorrect,rulesScoreCorrectRate
+demo.Q009,Tìm kiếm nhị phân,3,3,3,0,0,23/24,95.8%,11/12,91.7%,12/12,100.0%
+demo.Q028,Tra cứu nhân viên theo ID,3,3,3,0,0,24/24,100.0%,12/12,100.0%,12/12,100.0%
+demo.Q017,Sửa bộ chuyển infix sang postfix,3,3,2,1,0,16/16,100.0%,8/8,100.0%,8/8,100.0%
+demo.Q018,Sửa Counting Sort,3,3,3,0,0,24/24,100.0%,12/12,100.0%,12/12,100.0%
+demo.Q002,"JDK, JRE và JVM",14,14,13,1,0,26/26,100.0%,13/13,100.0%,13/13,100.0%
+demo.Q005,So sánh == và equals,3,3,2,1,0,7/8,87.5%,3/4,75.0%,4/4,100.0%
+demo.Q007,Tính bất biến của String,14,14,13,1,0,52/52,100.0%,26/26,100.0%,26/26,100.0%
+demo.Q010,Giải thích Bubble Sort,13,13,11,2,0,66/66,100.0%,33/33,100.0%,33/33,100.0%
+demo.Q022,"Chọn List, Set hay Map",13,13,13,0,0,52/52,100.0%,26/26,100.0%,26/26,100.0%
+demo.Q085,Unit test Service có Repository,13,13,12,1,0,70/72,97.2%,34/36,94.4%,36/36,100.0%

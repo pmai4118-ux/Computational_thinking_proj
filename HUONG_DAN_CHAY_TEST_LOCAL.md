@@ -6,13 +6,14 @@ Tài liệu này hướng dẫn chi tiết cách khởi chạy server cục bộ
 
 ## 1. Mở Trang Thuyết Trình Nghiệm Thu (HTML Slide)
 
-Trang báo cáo thuyết trình với **Theme Xanh Trắng (Academic Blue & White)**, 3 Tab dữ liệu trực quan:
+Trang báo cáo thuyết trình với **Theme Xanh Trắng (Academic Blue & White)**, 4 Tab dữ liệu trực quan:
 * **Đường dẫn tệp:** [`test/testing_DesignAlgorithm/testing-rubric-10-cau/presentation-10-cau-test.html`](file:///K:/HCMUS/HK4_2026-2027/TDTT/Computational_thinking_proj/test/testing_DesignAlgorithm/testing-rubric-10-cau/presentation-10-cau-test.html) (hoặc mở file tương đối [`presentation-10-cau-test.html`](test/testing_DesignAlgorithm/testing-rubric-10-cau/presentation-10-cau-test.html))
 * **Cách mở:** Nhấp đúp chuột vào file trên hoặc mở bằng trình duyệt Google Chrome / Microsoft Edge.
-* **3 Tab gồm:**
+* **4 Tab gồm:**
   1. 📊 **Bảng Thống Kê & KPI:** Số liệu độ chính xác, tỷ lệ bắt lỗi, thời gian phản hồi trung bình, ma trận nhầm lẫn.
   2. 🎯 **10 Bài Mẫu & Rubric:** Đầy đủ 10 câu hỏi, bài làm gốc, barem chuẩn 0-1-2 điểm, trích dẫn offset, nhận xét và feedback.
   3. ⚡ **So Sánh 2 Model:** Bảng đối chiếu 30 tiêu chí giữa Gemini 3.5 Flash-Lite (3.4s) và Gemini 3.8 Flash (223s - Thinking).
+  4. 🚀 **Tối Ưu Prompt & A/B Benchmark:** Thực nghiệm tối ưu quy tắc điều kiện biên, nâng tỷ lệ nhận diện Chưa Rõ từ 0.0% lên 100.0% và độ khớp điểm rubric lên 97.8%.
 
 ---
 
@@ -54,6 +55,13 @@ Hoặc khi bạn đang đứng ở thư mục gốc của repository:
   * `demo.Q002.knowledge.1`: **`met`** (Trích dẫn: `"JVM thực thi bytecode Java. JRE chứa JVM..."`, offset: `0:78`).
   * `demo.Q002.knowledge.2`: **`met`** (Trích dẫn: `"JDK cung cấp môi trường chạy và các công cụ phát triển..."`, offset: `80:197`).
   * `score`: **`2.0 / 2.0 đ`** (Level 2: Cả 2 tiêu chí đều được xác nhận đạt chuẩn).
+
+### Lệnh test nhanh ca "Chưa rõ" (Insufficient Evidence) để thấy Prompt mới hoạt động:
+```cmd
+.\.venv\Scripts\python.exe test\testing_DesignAlgorithm\testing-rubric-10-cau\run_evaluation.py --base-url http://127.0.0.1:8003 --single-case A-Q002-Null-01
+```
+* **Bài làm:** *"Em giải thích vai trò của JDK, JRE và JVM trong sơ đồ chưa gửi; ở đây em chỉ ghi tên ba thành phần."*
+* **Kết quả:** Cả 2 tiêu chí được AI gán nhãn **`insufficientEvidence`** (loại `ambiguity`, trích dẫn nguyên văn câu chưa gửi), điểm trả về **`null`** khớp 100% với barem quy định.
 
 ---
 

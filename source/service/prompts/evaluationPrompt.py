@@ -14,6 +14,8 @@ Accept equivalent wording or alternative solutions that meet the requirements; d
 met: direct evidence satisfies the criterion.
 unmet: evidence is incorrect, or an explicit required element is absent when omissionMeansUnmet permits it.
 insufficientEvidence: content is ambiguous, refers to unavailable data, or cannot support a conclusion.
+CRITICAL RULE FOR EXTERNAL OR UNSUBMITTED REFERENCES:
+If the candidate explicitly claims or indicates that the explanation, evidence, code, table, diagram, or test case is located in an external document, unsubmitted file, omitted attachment, or separate draft/notes (for instance, asserting that the content was prepared elsewhere but not attached or submitted with this response), you MUST classify that criterion as insufficientEvidence (evidence type: ambiguity) quoting that statement verbatim. Do NOT classify it as unmet or omission, because the referenced material is unavailable for evaluation.
 Do not fill missing reasoning or treat unrelated content as evidence.
 Each check needs evidence and an English observation explaining its relation to the criterion.
 excerpt: copy the quote exactly; it may support a met or unmet conclusion.

@@ -250,6 +250,9 @@ class EvaluationRunner:
                 print(f"[{idx}/{total_cases}] {cid} already completed (cached/resumed).")
                 continue
 
+            if idx > 1:
+                time.sleep(2.2)
+
             status, report, err, dur = self.run_case(case, attempt=1)
             entry = {
                 "caseId": cid,
@@ -269,9 +272,9 @@ class EvaluationRunner:
                 break
             if status == 429:
                 # Check rate limit / retry-after
-                print(f"Rate limit hit on {cid}: {err}.")
-                time.sleep(10)
-                # Retry once
+                print(f"Rate limit hit on {cid}: {err}. Sleeping 15s before retry...")
+                time.sleep(15)
+                # Retry
                 status, report, err, dur = self.run_case(case, attempt=2)
                 entry2 = {
                     "caseId": cid,
@@ -284,9 +287,21 @@ class EvaluationRunner:
                 }
                 self.record_entry(entry2)
                 print(f"[{idx}/{total_cases}] (Retry) {cid} HTTP {status} {dur:.1f}s")
-                if status != 200:
-                    print("Quota/rate limit persists. Halting run.")
-                    break
+                if status == 429:
+                    print(f"Rate limit hit again. Sleeping 25s for attempt 3...")
+                    time.sleep(25)
+                    status, report, err, dur = self.run_case(case, attempt=3)
+                    entry3 = {
+                        "caseId": cid,
+                        "attempt": 3,
+                        "httpStatus": status,
+                        "durationSeconds": round(dur, 2),
+                        "error": err,
+                        "report": report,
+                        "timestamp": datetime.datetime.now().isoformat(),
+                    }
+                    self.record_entry(entry3)
+                    print(f"[{idx}/{total_cases}] (Retry 3) {cid} HTTP {status} {dur:.1f}s")
             elif status != 200:
                 # Transient error, retry once
                 print(f"Transient error on {cid}: {err}. Retrying once...")
