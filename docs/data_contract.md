@@ -406,6 +406,12 @@ snapshot under the same identity is rejected. Results are atomic full reports.
 The completed-result key includes input hash plus provider/model/prompt; recorded
 interpretations also contribute to the key. This intentionally differs from the
 older CLI's input-only cache: a recorded preview must not replace a live call.
+The three web report responses add a `scoreExplanations` map keyed by rubric ID.
+It shows the lowest and highest scores supported by the recorded checks and the
+next level's missing mandatory criteria and any additional criteria needed beyond
+them. The controller derives this view from the stored rubric and validated
+checks on every read, so earlier reports share the same explanation. The stored
+report and CLI payload retain the existing schema.
 The `EvaluationInput.inputDigest()` definition itself is unchanged.
 
 `DemoService` serializes work within one process and checks cache after obtaining

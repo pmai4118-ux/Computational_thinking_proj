@@ -101,6 +101,15 @@ def testRejectsProviderScore():
         GeminiInterpreter("test-key", "configured-model").parseResponse(json.dumps(response).encode())
 
 
+def testRejectsDuplicateCriterionStatus():
+    response = sampleResponse()
+    part = response["candidates"][0]["content"]["parts"][0]
+    part["text"] = part["text"].replace('"status":"met"', '"status":"unmet","status":"met"', 1)
+    with pytest.raises(EvaluationError) as caught:
+        GeminiInterpreter("test-key", "configured-model").parseResponse(json.dumps(response).encode())
+    assert caught.value.code == "providerOutput"
+
+
 def testMissingConfiguration(monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_MODEL", raising=False)

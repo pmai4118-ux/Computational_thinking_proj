@@ -78,6 +78,13 @@ class DemoService:
         self.evaluator.validateResults(AnswerEvaluation(inputs=report.inputs, results=report.results, feedbackItems=report.feedbackItems))
         return report
 
+    def explainReport(self, report: EvaluationReport) -> dict:
+        rubrics = {rubric.rubricId: rubric for rubric in report.inputs.rubrics}
+        return {
+            result.rubricId: self.evaluator.rubricRules.explainScore(rubrics[result.rubricId], result.criterionChecks)
+            for result in report.results
+        }
+
     def processAnswer(self, inputs: EvaluationInput, interpreter) -> EvaluationReport:
         identity = [interpreter.providerName, interpreter.modelName, interpreter.promptVersion]
         if interpreter.providerName == "recorded":

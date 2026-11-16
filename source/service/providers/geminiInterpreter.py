@@ -94,6 +94,15 @@ class GeminiInterpreter:
         except OSError as error:
             raise EvaluationError("providerNetwork", "The AI service connection was interrupted; no score was created.", True) from error
 
+    @staticmethod
+    def _uniqueJsonObject(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        data = {}
+        for key, value in pairs:
+            if key in data:
+                raise ValueError("Duplicate field in interpretation JSON.")
+            data[key] = value
+        return data
+
     def parseResponse(self, rawBody: bytes) -> Interpretation:
         try:
             response = json.loads(rawBody)
@@ -104,6 +113,6 @@ class GeminiInterpreter:
                 raise EvaluationError("providerIncomplete", "The AI service did not return one complete result; no score was created.")
             parts = candidates[0]["content"]["parts"]
             content = "".join(part["text"] for part in parts if "text" in part and not part.get("thought", False))
-            return Interpretation.model_validate_json(content)
+            return Interpretation.model_validate(json.loads(content, object_pairs_hook=self._uniqueJsonObject))
         except (ValueError, KeyError, TypeError, AttributeError, ValidationError) as error:
             raise EvaluationError("providerOutput", "The AI response JSON is invalid; no score was created.") from error

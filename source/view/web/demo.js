@@ -176,6 +176,35 @@ class DemoPage {
     finally { this.busy = false; this.refreshControls(); }
   }
 
+  renderScoreExplanation(rubric, result, explanation) {
+    if (!explanation) return this.makeElement('p', result.reason);
+    const section = this.makeElement('div');
+    const descriptions = new Map(rubric.criteria.map(criterion => [criterion.criterionId, criterion.description]));
+    const met = result.criterionChecks.filter(check => check.status === 'met');
+    const achieved = met.map(check => descriptions.get(check.criterionId)).join(', ');
+    const summary = achieved
+      ? `Đã đạt ${met.length}/${rubric.criteria.length} tiêu chí — ${achieved}.`
+      : 'Chưa có tiêu chí nào được xác nhận đạt.';
+    section.append(this.makeElement('p', summary));
+    if (result.score === null) {
+      section.append(this.makeElement('p', `Phần chưa rõ có thể làm thay đổi kết quả. Mức thấp nhất là ${explanation.minimumPossibleScore}, mức cao nhất là ${explanation.maximumPossibleScore}.`));
+    }
+    const nextLevel = explanation.nextLevel;
+    if (nextLevel) {
+      const required = nextLevel.missingRequiredCriterionIds.map(id => descriptions.get(id));
+      const requirements = required.length ? [`chứng minh ${required.join(', ')}`] : [];
+      if (nextLevel.additionalCriteriaNeeded) {
+        const other = required.length ? ' khác' : '';
+        const candidates = result.criterionChecks
+          .filter(check => check.status !== 'met' && !nextLevel.missingRequiredCriterionIds.includes(check.criterionId))
+          .map(check => descriptions.get(check.criterionId));
+        requirements.push(`đạt thêm ${nextLevel.additionalCriteriaNeeded} tiêu chí${other} trong số: ${candidates.join(', ')}`);
+      }
+      section.append(this.makeElement('p', `Để đạt ${nextLevel.score} điểm, cần ${requirements.join(' và ')}.`));
+    }
+    return section;
+  }
+
   renderReport(report) {
     const container = this.element('report-content');
     container.replaceChildren();
@@ -195,11 +224,13 @@ class DemoPage {
       const result = report.results.find(item => item.rubricId === rubric.rubricId);
       const scoreText = result.score === null ? 'Chưa đủ căn cứ' : `${result.score} / ${Math.max(...rubric.scoreLevels.map(level => level.value))}`;
       heading.append(this.makeElement('span', scoreText, `score${result.score === null ? ' ungraded' : ''}`));
-      block.append(heading, this.makeElement('p', result.reason));
+      block.append(heading, this.renderScoreExplanation(rubric, result, report.scoreExplanations?.[rubric.rubricId]));
       result.criterionChecks.forEach(check => {
         const criterion = rubric.criteria.find(item => item.criterionId === check.criterionId);
         const details = this.makeElement('details', undefined, 'criterion');
+        details.open = check.status !== 'met';
         details.append(this.makeElement('summary', `${criterion.description} — ${this.statusLabels[check.status]}`));
+        details.append(this.makeElement('p', `Điều kiện chấm — ${criterion.acceptanceRule}`));
         check.evidence.forEach(evidence => {
           const evidenceBlock = this.makeElement('div', undefined, 'evidence');
           if (evidence.quote) evidenceBlock.append(this.makeElement('blockquote', evidence.quote));

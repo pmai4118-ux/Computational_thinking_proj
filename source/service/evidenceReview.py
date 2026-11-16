@@ -66,9 +66,15 @@ class EvidenceReview:
             if len(set(checkIds)) != len(checkIds) or set(checkIds) != {item.criterionId for item in rubric.criteria}:
                 self.invalidEvidence(f"Rubric {rubric.rubricId} needs exactly one check per criterion.")
             checkMap = {item.criterionId: item for item in review.criterionChecks}
-            checks = tuple(
-                self.validateCheck(checkMap[item.criterionId], item, inputs.answer.originalText)
-                for item in rubric.criteria
-            )
-            checkedReviews.append(review.model_copy(update={"criterionChecks": checks}))
+            checks = []
+            for criterion in rubric.criteria:
+                try:
+                    checks.append(self.validateCheck(checkMap[criterion.criterionId], criterion, inputs.answer.originalText))
+                except EvaluationError as error:
+                    raise EvaluationError(
+                        error.code,
+                        f"Criterion {criterion.criterionId} in rubric {rubric.rubricId}: {error.message}",
+                        error.retryable,
+                    ) from error
+            checkedReviews.append(review.model_copy(update={"criterionChecks": tuple(checks)}))
         return Interpretation(reviews=tuple(checkedReviews))

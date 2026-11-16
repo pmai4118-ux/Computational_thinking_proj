@@ -1,11 +1,12 @@
 import json
-from itertools import product
+from itertools import combinations, product
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from source.main import Application
+from source.Control.demoSchemas import PreviewRequest
 from source.Model.answerData import EvaluationInput
 from source.Model.evaluationData import CriterionCheck, Interpretation, RecordedReview
 from source.service.evaluationErrors import EvaluationError
@@ -102,6 +103,89 @@ def testCountThresholds(inputs):
     assert rubricRules.scoreChecks(changed.rubrics[0], checks)[0] == 1
 
 
+def testLevelValidationMatchesExhaustiveScoring(inputs):
+    template = inputs.rubrics[0]
+    criteria = (*template.criteria, template.criteria[0].model_copy(update={"criterionId": "edgeCases"}))
+    criterionIds = [item.criterionId for item in criteria]
+    subsets = [group for size in range(len(criteria) + 1) for group in combinations(criterionIds, size)]
+    gates = list(product(subsets, range(len(criteria) + 1)))
+    for (midRequired, midCount), (highRequired, highCount) in product(gates, repeat=2):
+        baseline, mid, high = template.scoreLevels
+        levels = (
+            baseline,
+            mid.model_copy(update={"requiredMet": midRequired, "minimumMet": midCount}),
+            high.model_copy(update={"requiredMet": highRequired, "minimumMet": highCount}),
+        )
+        rubric = template.model_copy(update={"criteria": criteria, "scoreLevels": levels})
+        reachedValues = {rubricRules.findLevel(rubric, set(group)).value for group in subsets}
+        if reachedValues == {baseline.value, mid.value, high.value}:
+            rubricRules.validateLevels(rubric)
+        else:
+            with pytest.raises(EvaluationError, match="cannot be reached"):
+                rubricRules.validateLevels(rubric)
+
+
+@pytest.mark.parametrize("case,low,high,missing,extra", [
+    ("correct", 2, 2, None, None),
+    ("partial", 1, 1, ["demo.Q009.knowledge.2"], 0),
+    ("incorrect", 0, 0, [], 1),
+    ("ambiguous", 0, 2, [], 1),
+])
+def testQuestionPreviewExplainsScoreAndExportsSameDetails(tmp_path, case, low, high, missing, extra):
+    app = Application.createDemoApp(databasePath=tmp_path / "demo.sqlite3")
+    controller = next(route.endpoint.__self__.controller for route in app.routes if route.path == "/api/preview")
+    question = controller.getQuestionDetails("demo.Q009")
+    sample = controller.getExampleData(case, question["questionId"])
+    report = controller.previewAnswer(PreviewRequest(
+        questionId=question["questionId"],
+        questionVersion=question["version"],
+        rubricVersions={rubric["rubricId"]: rubric["version"] for rubric in question["rubrics"]},
+        answerText=sample["answerText"],
+        caseName=case,
+    ))
+    explanation = report["scoreExplanations"]["rubric.demo.Q009.knowledge"]
+    assert explanation["minimumPossibleScore"] == low
+    assert explanation["maximumPossibleScore"] == high
+    expectedNext = None if missing is None else {
+        "score": low + 1,
+        "missingRequiredCriterionIds": missing,
+        "additionalCriteriaNeeded": extra,
+    }
+    assert explanation["nextLevel"] == expectedNext
+    identity = ("inputHash", "providerName", "modelName", "promptVersion")
+    assert controller.getReport(*(report[key] for key in identity)) == report
+
+
+def testConciseKnowledgeAnswerCanEarnFullMarks():
+    catalog = json.loads((examplePath.parents[1] / "data" / "questionBank" / "catalog.json").read_text(encoding="utf-8"))
+    template = next(item["template"] for item in catalog["questions"] if item["questionId"] == "demo.Q009")
+    template["rubrics"] = [next(rubric for rubric in template["rubrics"] if rubric["competency"] == "Knowledge")]
+    sentence = "Mảng đã sắp xếp nên mỗi bước bỏ nửa khoảng tìm; thời gian tệ nhất O(log n), bộ nhớ phụ O(1)."
+    template["answer"]["originalText"] = sentence
+    inputs = EvaluationInput.model_validate(template)
+    rubric = inputs.rubrics[0]
+    checkObservations = {
+        "demo.Q009.knowledge.1": "Giải thích mảng có thứ tự giúp bỏ nửa khoảng tìm.",
+        "demo.Q009.knowledge.2": "Nêu cả thời gian tệ nhất O(log n) và bộ nhớ phụ O(1).",
+    }
+    interpretation = Interpretation.model_validate({"reviews": [{
+        "rubricId": rubric.rubricId,
+        "criterionChecks": [{
+            "criterionId": criterion.criterionId,
+            "status": "met",
+            "evidence": [{
+                "type": "excerpt", "quote": sentence, "location": "originalText",
+                "observation": checkObservations[criterion.criterionId], "startOffset": None, "endOffset": None,
+            }],
+        } for criterion in rubric.criteria],
+    }]})
+    report = evaluator.assessAnswer(inputs, RecordedInterpreter(RecordedReview(
+        inputHash=inputs.inputDigest(), interpretation=interpretation,
+    )))
+    assert report.results[0].score == 2
+    assert rubricRules.explainScore(rubric, report.results[0].criterionChecks)["nextLevel"] is None
+
+
 @pytest.mark.parametrize("change", ("answerLink", "rubricLink", "duplicateRubric", "duplicateCriterion", "unknownGate", "unreachableLevel", "unorderedScores", "missingBaseline", "largeThreshold"))
 def testInvalidRubrics(inputs, change):
     data = inputs.model_dump(mode="json")
@@ -156,8 +240,12 @@ def testInvalidInterpretations(inputs, recording, change):
         evidence["type"] = "omission"
     elif change == "ambiguousMet":
         evidence["type"] = "ambiguity"
-    with pytest.raises(EvaluationError):
+    with pytest.raises(EvaluationError) as caught:
         evidenceReview.validateInterpretation(inputs, Interpretation.model_validate(data))
+    assert caught.value.code == "invalidEvidence"
+    if change == "fakeQuote":
+        assert checks[0]["criterionId"] in caught.value.message
+        assert evidence["quote"] not in caught.value.message
 
 
 def testQuoteOffsets(inputs, recording):

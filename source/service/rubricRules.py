@@ -28,13 +28,16 @@ class RubricRules:
             self.requireUnique(list(level.requiredMet), "requiredMet")
             if not set(level.requiredMet) <= criterionIds or level.minimumMet > len(criterionIds):
                 raise EvaluationError("invalidRubric", "A score level references invalid criteria or thresholds.")
-        reachedValues = {
-            self.findLevel(rubric, set(group)).value
-            for size in range(len(criterionIds) + 1)
-            for group in combinations(sorted(criterionIds), size)
-        }
-        if reachedValues != set(values):
-            raise EvaluationError("invalidRubric", "A declared score level cannot be reached.")
+        for level in rubric.scoreLevels:
+            requiredIds = set(level.requiredMet)
+            extraCount = max(0, level.minimumMet - len(requiredIds))
+            optionalIds = sorted(criterionIds - requiredIds)
+            # Removing surplus criteria preserves this level's gates and cannot enable a higher level.
+            if not any(
+                self.findLevel(rubric, requiredIds.union(extraIds)).value == level.value
+                for extraIds in combinations(optionalIds, extraCount)
+            ):
+                raise EvaluationError("invalidRubric", f"Declared score level {level.value:g} cannot be reached.")
 
     def validateInputs(self, inputs: EvaluationInput) -> None:
         questionId = inputs.question.questionId
@@ -48,11 +51,32 @@ class RubricRules:
             self.requireUnique([item.criterionId for item in rubric.criteria], "criterionId")
             self.validateLevels(rubric)
 
-    def scoreChecks(self, rubric: Rubric, checks: tuple[CriterionCheck, ...]) -> tuple[float | None, str]:
+    def scoreBounds(self, rubric: Rubric, checks: tuple[CriterionCheck, ...]) -> tuple[set[str], set[str], ScoreLevel, ScoreLevel]:
         metIds = {item.criterionId for item in checks if item.status == "met"}
         unknownIds = {item.criterionId for item in checks if item.status == "insufficientEvidence"}
         lowerLevel = self.findLevel(rubric, metIds)
         upperLevel = self.findLevel(rubric, metIds | unknownIds)
+        return metIds, unknownIds, lowerLevel, upperLevel
+
+    def explainScore(self, rubric: Rubric, checks: tuple[CriterionCheck, ...]) -> dict:
+        metIds, _, lowerLevel, upperLevel = self.scoreBounds(rubric, checks)
+        nextLevel = next((level for level in rubric.scoreLevels if level.value > lowerLevel.value), None)
+        nextRequirement = None
+        if nextLevel is not None:
+            missingRequired = [criterionId for criterionId in nextLevel.requiredMet if criterionId not in metIds]
+            nextRequirement = {
+                "score": nextLevel.value,
+                "missingRequiredCriterionIds": missingRequired,
+                "additionalCriteriaNeeded": max(0, nextLevel.minimumMet - len(metIds) - len(missingRequired)),
+            }
+        return {
+            "minimumPossibleScore": lowerLevel.value,
+            "maximumPossibleScore": upperLevel.value,
+            "nextLevel": nextRequirement,
+        }
+
+    def scoreChecks(self, rubric: Rubric, checks: tuple[CriterionCheck, ...]) -> tuple[float | None, str]:
+        metIds, unknownIds, lowerLevel, upperLevel = self.scoreBounds(rubric, checks)
         if lowerLevel.value != upperLevel.value:
             reason = (
                 f"Insufficient evidence to select a level: possible values range from {lowerLevel.value:g} to "
