@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
+from source.Control.evaluationSchemas import EvaluationFailure, EvaluationRequest, EvaluationResponse
+from collections.abc import Mapping
+
 from source.Control.schemas import (
     ErrorEnvelopeDTO,
     EvaluateSubmissionRequestDTO,
@@ -51,7 +54,7 @@ class EvaluationPipelineController:
                 for err in exc.errors()
             }
             err_obj = malformed_input_error(
-                "Dữ liệu gửi lên không đúng định dạng yêu cầu.",
+                "D\u1eef li\u1ec7u g\u1eedi l\u00ean kh\u00f4ng \u0111\u00fang \u0111\u1ecbnh d\u1ea1ng y\u00eau c\u1ea7u.",
                 field_errors=field_errors,
             )
             return 400, ErrorEnvelopeDTO(**err_obj.to_envelope())
@@ -146,3 +149,34 @@ class EvaluationPipelineController:
                 for fb in report.feedback_items
             ],
         )
+
+
+class EvaluationController:
+    """Legacy/CLI controller for file-based answer evaluation (PoC mode)."""
+
+    def __init__(self, service: EvaluationService):
+        self.service = service
+
+    def submitAnswer(self, requestData: Mapping[str, object]) -> EvaluationResponse:
+        try:
+            request = EvaluationRequest.model_validate(requestData)
+            report, outputPath = self.service.evaluateFiles(
+                request.inputPath,
+                request.providerName,
+                request.recordingPath,
+                request.answerPath,
+                request.outputPath,
+            )
+            return EvaluationResponse(report=report, outputPath=outputPath)
+        except EvaluationError as error:
+            failure = EvaluationFailure(code=error.code, message=error.message, retryable=error.retryable)
+        except ValidationError as error:
+            fields = tuple(".".join(str(part) for part in issue["loc"]) for issue in error.errors(include_input=False))
+            failure = EvaluationFailure(code="invalidInput", message="Invalid request structure or values.", fields=fields)
+        except FileExistsError:
+            failure = EvaluationFailure(code="outputExists", message="The report already exists. Choose a new path to preserve it.")
+        except UnicodeError:
+            failure = EvaluationFailure(code="invalidEncoding", message="The input file must use UTF-8 encoding.")
+        except OSError:
+            failure = EvaluationFailure(code="fileError", message="Cannot read or write the UTF-8 file. Check its path, permissions, and size.")
+        return EvaluationResponse(error=failure)

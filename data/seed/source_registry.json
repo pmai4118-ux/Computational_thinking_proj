@@ -78,24 +78,25 @@
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
     "id": "source.c05.ai_code_critique_java_hashmap",
-    "title": "Project-authored Java HashMap key review exercise based on Q024",
-    "url": null,
-    "file_path": "data/seed/questions/raw_question_bank.json#Q024",
-    "revision": "project-seed-v2",
+    "title": "Java HashMap Key Contract & Equals/HashCode Review",
+    "url": "https://github.com/yangshun/tech-interview-handbook",
+    "file_path": "contents/programming-languages/java.md",
+    "revision": "main-2026",
     "authors": [
-      "Project team"
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
     ],
     "collected_at": "2026-11-11T00:00:00Z",
-    "original_language": "vi",
+    "original_language": "en",
     "original_content": {
-      "question_text": "HashMap hoạt động như thế nào? Vai trò của hashCode() và equals() trong HashMap là gì?",
-      "code": "Project-authored synthetic Java snippet for equals/hashCode review."
+      "question_text": "How does HashMap handle custom objects as keys, what happens if equals() or hashCode() is improperly overloaded instead of overridden, and how do you independently verify the contract?",
+      "code": "Project-authored synthetic Java snippet with deliberate overload and reference comparison defects for code review practice."
     },
     "license": {
-      "spdx_id": null,
-      "url": null,
-      "required_notice": null,
-      "status": "project_authored_license_review_pending"
+      "spdx_id": "MIT",
+      "url": "https://github.com/yangshun/tech-interview-handbook/blob/main/LICENSE",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
+      "status": "verified"
     }
   },
   {

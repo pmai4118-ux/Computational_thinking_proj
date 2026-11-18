@@ -20,7 +20,7 @@ from source.service.providers.interfaces import (
     ProposedRubricJudgment,
 )
 
-DEMO_MODE_MODEL_LABEL = "fixture-demo-mode (Dữ liệu minh họa)"
+DEMO_MODE_MODEL_LABEL = "fixture-demo-mode (D\u1eef li\u1ec7u minh h\u1ecda)"
 DEMO_PROMPT_VERSION = "fixture/1"
 
 
@@ -63,7 +63,7 @@ class FixtureProvider(EvidenceInterpreter):
             return self._load_recording_file(self._recording_file, expected_digest=digest)
 
         raise provider_unavailable_error(
-            f"Không tìm thấy bản ghi dữ liệu mẫu (fixture) cho câu trả lời '{answer_key}' "
+            f"Kh\xf4ng t\xecm th\u1ea5y b\u1ea3n ghi d\u1eef li\u1ec7u m\u1eabu (fixture) cho c\xe2u tr\u1ea3 l\u1eddi '{answer_key}' "
             f"(input_digest={digest[:12]}...).",
             retryable=False,
         )
@@ -78,57 +78,57 @@ class FixtureProvider(EvidenceInterpreter):
             raw_data = json.loads(path.read_text(encoding="utf-8"))
         except OSError as exc:
             raise provider_unavailable_error(
-                f"Không mở được tệp bản ghi mẫu '{path}': {exc}",
+                f"Kh\xf4ng m\u1edf \u0111\u01b0\u1ee3c t\u1ec7p b\u1ea3n ghi m\u1eabu '{path}': {exc}",
                 retryable=False,
             ) from exc
         except json.JSONDecodeError as exc:
             raise invalid_ai_output_error(
-                f"Tệp bản ghi mẫu '{path}' không phải JSON hợp lệ: {exc}"
+                f"T\u1ec7p b\u1ea3n ghi m\u1eabu '{path}' kh\xf4ng ph\u1ea3i JSON h\u1ee3p l\u1ec7: {exc}"
             ) from exc
 
         if not isinstance(raw_data, dict):
-            raise invalid_ai_output_error("Tệp bản ghi mẫu phải chứa một đối tượng JSON.")
+            raise invalid_ai_output_error("T\u1ec7p b\u1ea3n ghi m\u1eabu ph\u1ea3i ch\u1ee9a m\u1ed9t \u0111\u1ed1i t\u01b0\u1ee3ng JSON.")
 
         recorded_hash = raw_data.get("input_digest") or raw_data.get("inputHash")
         if isinstance(recorded_hash, str) and recorded_hash != expected_digest:
             raise invalid_ai_output_error(
-                "Bản ghi mẫu không khớp với nguyên văn câu hỏi, rubric hoặc câu trả lời hiện tại."
+                "B\u1ea3n ghi m\u1eabu kh\xf4ng kh\u1edbp v\u1edbi nguy\xean v\u0103n c\xe2u h\u1ecfi, rubric ho\u1eb7c c\xe2u tr\u1ea3 l\u1eddi hi\u1ec7n t\u1ea1i."
             )
 
         raw_rubrics = raw_data.get("rubric_judgments")
         if raw_rubrics is None:
             raw_rubrics = raw_data.get("rubricJudgments")
         if not isinstance(raw_rubrics, list):
-            raise invalid_ai_output_error("Bản ghi mẫu thiếu trường 'rubric_judgments'.")
+            raise invalid_ai_output_error("B\u1ea3n ghi m\u1eabu thi\u1ebfu tr\u01b0\u1eddng 'rubric_judgments'.")
 
         rubric_judgments: list[ProposedRubricJudgment] = []
         for r_item in raw_rubrics:
             if not isinstance(r_item, dict):
-                raise invalid_ai_output_error("Phần tử rubric trong bản ghi mẫu không hợp lệ.")
+                raise invalid_ai_output_error("Ph\u1ea7n t\u1eed rubric trong b\u1ea3n ghi m\u1eabu kh\xf4ng h\u1ee3p l\u1ec7.")
             rubric_id = r_item.get("rubric_id") or r_item.get("rubricId")
             raw_checks = r_item.get("criterion_checks") or r_item.get("criterionChecks")
             if not isinstance(rubric_id, str) or not isinstance(raw_checks, list):
-                raise invalid_ai_output_error("Cấu trúc rubric trong bản ghi mẫu không hợp lệ.")
+                raise invalid_ai_output_error("C\u1ea5u tr\xfac rubric trong b\u1ea3n ghi m\u1eabu kh\xf4ng h\u1ee3p l\u1ec7.")
 
             checks: list[ProposedCriterionJudgment] = []
             for c_item in raw_checks:
                 if not isinstance(c_item, dict):
-                    raise invalid_ai_output_error("Criterion check trong bản ghi mẫu không hợp lệ.")
+                    raise invalid_ai_output_error("Criterion check trong b\u1ea3n ghi m\u1eabu kh\xf4ng h\u1ee3p l\u1ec7.")
                 cid = c_item.get("criterion_id") or c_item.get("criterionId")
                 status = c_item.get("status")
                 raw_ev = c_item.get("evidence")
                 if not isinstance(cid, str) or not isinstance(status, str) or not isinstance(raw_ev, list):
-                    raise invalid_ai_output_error("Thiếu trường trong criterion check của bản ghi mẫu.")
+                    raise invalid_ai_output_error("Thi\u1ebfu tr\u01b0\u1eddng trong criterion check c\u1ee7a b\u1ea3n ghi m\u1eabu.")
 
                 ev_list: list[ProposedEvidenceItem] = []
                 for e_item in raw_ev:
                     if not isinstance(e_item, dict):
-                        raise invalid_ai_output_error("Bằng chứng trong bản ghi mẫu không hợp lệ.")
+                        raise invalid_ai_output_error("B\u1eb1ng ch\u1ee9ng trong b\u1ea3n ghi m\u1eabu kh\xf4ng h\u1ee3p l\u1ec7.")
                     ev_type = e_item.get("evidence_type") or e_item.get("type")
                     observation = e_item.get("observation")
                     location = e_item.get("location")
                     if not isinstance(ev_type, str) or not isinstance(observation, str) or not isinstance(location, str):
-                        raise invalid_ai_output_error("Bằng chứng trong bản ghi mẫu thiếu trường bắt buộc.")
+                        raise invalid_ai_output_error("B\u1eb1ng ch\u1ee9ng trong b\u1ea3n ghi m\u1eabu thi\u1ebfu tr\u01b0\u1eddng b\u1eaft bu\u1ed9c.")
                     ev_list.append(
                         ProposedEvidenceItem(
                             evidence_type=ev_type,

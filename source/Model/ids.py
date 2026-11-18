@@ -14,6 +14,8 @@ SessionId = NewType("SessionId", str)
 AnswerId = NewType("AnswerId", str)
 EvaluationId = NewType("EvaluationId", str)
 ExerciseId = NewType("ExerciseId", str)
+CuratorId = NewType("CuratorId", str)
+ReviewerId = NewType("ReviewerId", str)
 
 _RecordIdT = TypeVar("_RecordIdT")
 
@@ -26,13 +28,36 @@ class VersionedRef(Generic[_RecordIdT]):
     version: int
 
 
+@dataclass(frozen=True, slots=True)
+class QuestionRef(VersionedRef[QuestionId]):
+    """Reference one question version."""
+
+
+@dataclass(frozen=True, slots=True)
+class RubricRef(VersionedRef[RubricId]):
+    """Reference one rubric version."""
+
+
+@dataclass(frozen=True, slots=True)
+class AnswerRef:
+    """Reference one immutable revision of an answer."""
+
+    id: AnswerId
+    revision: int
+
+
 __all__ = [
     "AnswerId",
+    "AnswerRef",
     "CriterionId",
+    "CuratorId",
     "EvaluationId",
     "ExerciseId",
     "QuestionId",
+    "QuestionRef",
+    "ReviewerId",
     "RubricId",
+    "RubricRef",
     "SessionId",
     "SkillId",
     "SourceId",

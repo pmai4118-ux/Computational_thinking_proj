@@ -75,7 +75,7 @@ class GeminiProvider(EvidenceInterpreter):
             raw_text = self._config.prompt_path.read_text(encoding="utf-8").strip()
         except OSError as exc:
             raise provider_unavailable_error(
-                f"Không đọc được tệp prompt chỉ dẫn hệ thống: {exc}",
+                f"Kh\xf4ng \u0111\u1ecdc \u0111\u01b0\u1ee3c t\u1ec7p prompt ch\u1ec9 d\u1eabn h\u1ec7 th\u1ed1ng: {exc}",
                 retryable=False,
             ) from exc
 
@@ -129,9 +129,9 @@ class GeminiProvider(EvidenceInterpreter):
 
         return (
             f"{template_text}\n\n"
-            f"=== DỮ LIỆU CÂU HỎI VÀ TIÊU CHÍ RUBRIC ===\n"
+            f"=== D\u1eee LI\u1ec6U C\xc2U H\u1eceI V\xc0 TI\xcaU CH\xcd RUBRIC ===\n"
             f"{evaluation_context_json}\n\n"
-            f"=== BÀI LÀM CỦA ỨNG VIÊN (DỮ LIỆU KHÔNG TIN CẬY - CHỈ ĐỐI CHIẾU) ===\n"
+            f"=== B\xc0I L\xc0M C\u1ee6A \u1ee8NG VI\xcaN (D\u1eee LI\u1ec6U KH\xd4NG TIN C\u1eacY - CH\u1ec8 \u0110\u1ed0I CHI\u1ebeU) ===\n"
             f"<CANDIDATE_ANSWER_DATA>\n"
             f"{task_input.answer_text}\n"
             f"</CANDIDATE_ANSWER_DATA>\n"
@@ -218,8 +218,8 @@ class GeminiProvider(EvidenceInterpreter):
         api_key = self._config.api_key.strip() if self._config.api_key else ""
         if not api_key:
             raise provider_unavailable_error(
-                "Chưa cấu hình khóa GEMINI_API_KEY trên máy chủ. "
-                "Bài trả lời của bạn vẫn được giữ nguyên; vui lòng cấu hình khóa hoặc dùng chế độ mẫu.",
+                "Ch\u01b0a c\u1ea5u h\xecnh kh\xf3a GEMINI_API_KEY tr\xean m\xe1y ch\u1ee7. "
+                "B\xe0i tr\u1ea3 l\u1eddi c\u1ee7a b\u1ea1n v\u1eabn \u0111\u01b0\u1ee3c gi\u1eef nguy\xean; vui l\xf2ng c\u1ea5u h\xecnh kh\xf3a ho\u1eb7c d\xf9ng ch\u1ebf \u0111\u1ed9 m\u1eabu.",
                 retryable=False,
             )
 
@@ -293,35 +293,35 @@ class GeminiProvider(EvidenceInterpreter):
         except urllib_error.HTTPError as exc:
             if exc.code == 429:
                 raise provider_rate_limit_error(
-                    "Hệ thống AI đang vượt giới hạn tần suất gọi (Rate Limit 429). "
-                    "Câu trả lời đã được lưu, vui lòng thử lại sau ít giây."
+                    "H\u1ec7 th\u1ed1ng AI \u0111ang v\u01b0\u1ee3t gi\u1edbi h\u1ea1n t\u1ea7n su\u1ea5t g\u1ecdi (Rate Limit 429). "
+                    "C\xe2u tr\u1ea3 l\u1eddi \u0111\xe3 \u0111\u01b0\u1ee3c l\u01b0u, vui l\xf2ng th\u1eed l\u1ea1i sau \xedt gi\xe2y."
                 ) from exc
             if exc.code in {502, 503, 504}:
                 raise provider_timeout_error(
-                    f"Dịch vụ AI tạm thời quá tải (HTTP {exc.code}). Vui lòng thử lại."
+                    f"D\u1ecbch v\u1ee5 AI t\u1ea1m th\u1eddi qu\xe1 t\u1ea3i (HTTP {exc.code}). Vui l\xf2ng th\u1eed l\u1ea1i."
                 ) from exc
             if exc.code in {401, 403}:
                 raise provider_unavailable_error(
-                    "Khóa kết nối AI không hợp lệ hoặc không có quyền truy cập model đã chọn.",
+                    "Kh\xf3a k\u1ebft n\u1ed1i AI kh\xf4ng h\u1ee3p l\u1ec7 ho\u1eb7c kh\xf4ng c\xf3 quy\u1ec1n truy c\u1eadp model \u0111\xe3 ch\u1ecdn.",
                     retryable=False,
                 ) from exc
             raise provider_unavailable_error(
-                f"Yêu cầu đánh giá AI thất bại với mã HTTP {exc.code}.",
+                f"Y\xeau c\u1ea7u \u0111\xe1nh gi\xe1 AI th\u1ea5t b\u1ea1i v\u1edbi m\xe3 HTTP {exc.code}.",
                 retryable=False,
             ) from exc
         except TimeoutError as exc:
             raise provider_timeout_error(
-                "Yêu cầu đánh giá AI bị quá thời gian chờ (timeout). "
-                "Bài làm của bạn vẫn được giữ nguyên để thử lại."
+                "Y\xeau c\u1ea7u \u0111\xe1nh gi\xe1 AI b\u1ecb qu\xe1 th\u1eddi gian ch\u1edd (timeout). "
+                "B\xe0i l\xe0m c\u1ee7a b\u1ea1n v\u1eabn \u0111\u01b0\u1ee3c gi\u1eef nguy\xean \u0111\u1ec3 th\u1eed l\u1ea1i."
             ) from exc
         except urllib_error.URLError as exc:
             if isinstance(exc.reason, TimeoutError):
                 raise provider_timeout_error(
-                    "Yêu cầu đánh giá AI bị quá thời gian chờ (timeout). "
-                    "Bài làm của bạn vẫn được giữ nguyên để thử lại."
+                    "Y\xeau c\u1ea7u \u0111\xe1nh gi\xe1 AI b\u1ecb qu\xe1 th\u1eddi gian ch\u1edd (timeout). "
+                    "B\xe0i l\xe0m c\u1ee7a b\u1ea1n v\u1eabn \u0111\u01b0\u1ee3c gi\u1eef nguy\xean \u0111\u1ec3 th\u1eed l\u1ea1i."
                 ) from exc
             raise provider_unavailable_error(
-                "Không thể kết nối tới dịch vụ AI. Vui lòng kiểm tra kết nối mạng và thử lại.",
+                "Kh\xf4ng th\u1ec3 k\u1ebft n\u1ed1i t\u1edbi d\u1ecbch v\u1ee5 AI. Vui l\xf2ng ki\u1ec3m tra k\u1ebft n\u1ed1i m\u1ea1ng v\xe0 th\u1eed l\u1ea1i.",
                 retryable=True,
             ) from exc
 
@@ -329,11 +329,11 @@ class GeminiProvider(EvidenceInterpreter):
             parsed = json.loads(body_text)
         except json.JSONDecodeError as exc:
             raise invalid_ai_output_error(
-                "Phản hồi từ dịch vụ AI không phải JSON hợp lệ."
+                "Ph\u1ea3n h\u1ed3i t\u1eeb d\u1ecbch v\u1ee5 AI kh\xf4ng ph\u1ea3i JSON h\u1ee3p l\u1ec7."
             ) from exc
 
         if not isinstance(parsed, dict):
-            raise invalid_ai_output_error("Phản hồi gốc từ dịch vụ AI không phải đối tượng JSON.")
+            raise invalid_ai_output_error("Ph\u1ea3n h\u1ed3i g\u1ed1c t\u1eeb d\u1ecbch v\u1ee5 AI kh\xf4ng ph\u1ea3i \u0111\u1ed1i t\u01b0\u1ee3ng JSON.")
         return parsed
 
     def _parse_api_response(
@@ -345,28 +345,28 @@ class GeminiProvider(EvidenceInterpreter):
         candidates = raw_response.get("candidates")
         if not isinstance(candidates, list) or not candidates:
             raise invalid_ai_output_error(
-                "Dịch vụ AI không trả về phương án phân tích nào (candidates rỗng hoặc bị chặn)."
+                "D\u1ecbch v\u1ee5 AI kh\xf4ng tr\u1ea3 v\u1ec1 ph\u01b0\u01a1ng \xe1n ph\xe2n t\xedch n\xe0o (candidates r\u1ed7ng ho\u1eb7c b\u1ecb ch\u1eb7n)."
             )
 
         first_candidate = candidates[0]
         if not isinstance(first_candidate, dict):
-            raise invalid_ai_output_error("Cấu trúc candidate từ AI không hợp lệ.")
+            raise invalid_ai_output_error("C\u1ea5u tr\xfac candidate t\u1eeb AI kh\xf4ng h\u1ee3p l\u1ec7.")
 
         finish_reason = first_candidate.get("finishReason")
         if finish_reason in {"SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "RECITATION"}:
             raise invalid_ai_output_error(
-                f"Phản hồi của AI bị dừng sớm do bộ lọc ({finish_reason})."
+                f"Ph\u1ea3n h\u1ed3i c\u1ee7a AI b\u1ecb d\u1eebng s\u1edbm do b\u1ed9 l\u1ecdc ({finish_reason})."
             )
 
         content = first_candidate.get("content")
         parts = content.get("parts") if isinstance(content, dict) else None
         if not isinstance(parts, list) or not parts:
-            raise invalid_ai_output_error("Phản hồi của AI không chứa nội dung văn bản (parts rỗng).")
+            raise invalid_ai_output_error("Ph\u1ea3n h\u1ed3i c\u1ee7a AI kh\xf4ng ch\u1ee9a n\u1ed9i dung v\u0103n b\u1ea3n (parts r\u1ed7ng).")
 
         first_part = parts[0]
         raw_json_text = first_part.get("text") if isinstance(first_part, dict) else None
         if not isinstance(raw_json_text, str) or not raw_json_text.strip():
-            raise invalid_ai_output_error("Nội dung JSON trong phản hồi của AI bị trống.")
+            raise invalid_ai_output_error("N\u1ed9i dung JSON trong ph\u1ea3n h\u1ed3i c\u1ee7a AI b\u1ecb tr\u1ed1ng.")
 
         return self.parse_structured_json(raw_json_text, prompt_version=prompt_version)
 
@@ -380,42 +380,42 @@ class GeminiProvider(EvidenceInterpreter):
             payload = json.loads(raw_json_text)
         except json.JSONDecodeError as exc:
             raise invalid_ai_output_error(
-                f"AI trả về chuỗi JSON sai cú pháp: {exc}"
+                f"AI tr\u1ea3 v\u1ec1 chu\u1ed7i JSON sai c\xfa ph\xe1p: {exc}"
             ) from exc
 
         if not isinstance(payload, dict):
-            raise invalid_ai_output_error("Đầu ra của AI phải là một đối tượng JSON.")
+            raise invalid_ai_output_error("\u0110\u1ea7u ra c\u1ee7a AI ph\u1ea3i l\xe0 m\u1ed9t \u0111\u1ed1i t\u01b0\u1ee3ng JSON.")
 
         raw_rubrics = payload.get("rubric_judgments")
         if raw_rubrics is None:
             raw_rubrics = payload.get("rubricJudgments")
         if not isinstance(raw_rubrics, list):
             raise invalid_ai_output_error(
-                "Đầu ra của AI thiếu danh sách 'rubric_judgments'."
+                "\u0110\u1ea7u ra c\u1ee7a AI thi\u1ebfu danh s\xe1ch 'rubric_judgments'."
             )
 
         rubric_judgments: list[ProposedRubricJudgment] = []
         for r_item in raw_rubrics:
             if not isinstance(r_item, dict):
-                raise invalid_ai_output_error("Phần tử trong 'rubric_judgments' phải là object.")
+                raise invalid_ai_output_error("Ph\u1ea7n t\u1eed trong 'rubric_judgments' ph\u1ea3i l\xe0 object.")
 
             rubric_id = r_item.get("rubric_id") or r_item.get("rubricId")
             if not isinstance(rubric_id, str) or not rubric_id.strip():
-                raise invalid_ai_output_error("Mỗi rubric judgment phải có 'rubric_id' hợp lệ.")
+                raise invalid_ai_output_error("M\u1ed7i rubric judgment ph\u1ea3i c\xf3 'rubric_id' h\u1ee3p l\u1ec7.")
 
             raw_checks = r_item.get("criterion_checks")
             if raw_checks is None:
                 raw_checks = r_item.get("criterionChecks")
             if not isinstance(raw_checks, list):
                 raise invalid_ai_output_error(
-                    f"Rubric '{rubric_id}' thiếu danh sách 'criterion_checks'."
+                    f"Rubric '{rubric_id}' thi\u1ebfu danh s\xe1ch 'criterion_checks'."
                 )
 
             criterion_checks: list[ProposedCriterionJudgment] = []
             for c_item in raw_checks:
                 if not isinstance(c_item, dict):
                     raise invalid_ai_output_error(
-                        f"Phần tử criterion check trong rubric '{rubric_id}' phải là object."
+                        f"Ph\u1ea7n t\u1eed criterion check trong rubric '{rubric_id}' ph\u1ea3i l\xe0 object."
                     )
                 criterion_id = c_item.get("criterion_id") or c_item.get("criterionId")
                 status = c_item.get("status")
@@ -423,22 +423,22 @@ class GeminiProvider(EvidenceInterpreter):
 
                 if not isinstance(criterion_id, str) or not criterion_id.strip():
                     raise invalid_ai_output_error(
-                        f"Rubric '{rubric_id}' có criterion check thiếu 'criterion_id'."
+                        f"Rubric '{rubric_id}' c\xf3 criterion check thi\u1ebfu 'criterion_id'."
                     )
                 if not isinstance(status, str) or not status.strip():
                     raise invalid_ai_output_error(
-                        f"Tiêu chí '{criterion_id}' thiếu trường 'status'."
+                        f"Ti\xeau ch\xed '{criterion_id}' thi\u1ebfu tr\u01b0\u1eddng 'status'."
                     )
                 if not isinstance(raw_evidence, list):
                     raise invalid_ai_output_error(
-                        f"Tiêu chí '{criterion_id}' thiếu danh sách 'evidence'."
+                        f"Ti\xeau ch\xed '{criterion_id}' thi\u1ebfu danh s\xe1ch 'evidence'."
                     )
 
                 evidence_items: list[ProposedEvidenceItem] = []
                 for e_item in raw_evidence:
                     if not isinstance(e_item, dict):
                         raise invalid_ai_output_error(
-                            f"Bằng chứng của tiêu chí '{criterion_id}' phải là object."
+                            f"B\u1eb1ng ch\u1ee9ng c\u1ee7a ti\xeau ch\xed '{criterion_id}' ph\u1ea3i l\xe0 object."
                         )
                     ev_type = e_item.get("evidence_type") or e_item.get("type")
                     observation = e_item.get("observation")
@@ -457,7 +457,7 @@ class GeminiProvider(EvidenceInterpreter):
 
                     if not isinstance(ev_type, str) or not isinstance(observation, str) or not isinstance(location, str):
                         raise invalid_ai_output_error(
-                            f"Bằng chứng của tiêu chí '{criterion_id}' thiếu trường bắt buộc "
+                            f"B\u1eb1ng ch\u1ee9ng c\u1ee7a ti\xeau ch\xed '{criterion_id}' thi\u1ebfu tr\u01b0\u1eddng b\u1eaft bu\u1ed9c "
                             "('evidence_type', 'observation', 'location')."
                         )
 

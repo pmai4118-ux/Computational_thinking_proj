@@ -34,29 +34,29 @@ class ScoringService:
         field_errors: dict[str, str] = {}
 
         if not str(task_input.question_ref.id).strip():
-            field_errors["question_ref.id"] = "Mã câu hỏi không được để trống."
+            field_errors["question_ref.id"] = "M\xe3 c\xe2u h\u1ecfi kh\xf4ng \u0111\u01b0\u1ee3c \u0111\u1ec3 tr\u1ed1ng."
         if task_input.question_ref.version < 1:
-            field_errors["question_ref.version"] = "Phiên bản câu hỏi phải là số nguyên dương (>= 1)."
+            field_errors["question_ref.version"] = "Phi\xean b\u1ea3n c\xe2u h\u1ecfi ph\u1ea3i l\xe0 s\u1ed1 nguy\xean d\u01b0\u01a1ng (>= 1)."
         if not task_input.question_prompt or not task_input.question_prompt.strip():
-            field_errors["question_prompt"] = "Nội dung câu hỏi không được để trống."
+            field_errors["question_prompt"] = "N\u1ed9i dung c\xe2u h\u1ecfi kh\xf4ng \u0111\u01b0\u1ee3c \u0111\u1ec3 tr\u1ed1ng."
 
         if not str(task_input.answer_ref.id).strip():
-            field_errors["answer_ref.id"] = "Mã câu trả lời không được để trống."
+            field_errors["answer_ref.id"] = "M\xe3 c\xe2u tr\u1ea3 l\u1eddi kh\xf4ng \u0111\u01b0\u1ee3c \u0111\u1ec3 tr\u1ed1ng."
         if task_input.answer_ref.revision < 1:
-            field_errors["answer_ref.revision"] = "Phiên bản câu trả lời phải là số nguyên dương (>= 1)."
+            field_errors["answer_ref.revision"] = "Phi\xean b\u1ea3n c\xe2u tr\u1ea3 l\u1eddi ph\u1ea3i l\xe0 s\u1ed1 nguy\xean d\u01b0\u01a1ng (>= 1)."
         if not isinstance(task_input.answer_text, str) or not task_input.answer_text.strip():
-            field_errors["answer_text"] = "Nội dung câu trả lời không được để trống."
+            field_errors["answer_text"] = "N\u1ed9i dung c\xe2u tr\u1ea3 l\u1eddi kh\xf4ng \u0111\u01b0\u1ee3c \u0111\u1ec3 tr\u1ed1ng."
         elif len(task_input.answer_text) > MAX_ANSWER_LENGTH_CHARS:
             field_errors["answer_text"] = (
-                f"Câu trả lời vượt quá giới hạn {MAX_ANSWER_LENGTH_CHARS} ký tự."
+                f"C\xe2u tr\u1ea3 l\u1eddi v\u01b0\u1ee3t qu\xe1 gi\u1edbi h\u1ea1n {MAX_ANSWER_LENGTH_CHARS} k\xfd t\u1ef1."
             )
 
         if not task_input.rubrics:
-            field_errors["rubrics"] = "Cần ít nhất một rubric để đánh giá câu trả lời."
+            field_errors["rubrics"] = "C\u1ea7n \xedt nh\u1ea5t m\u1ed9t rubric \u0111\u1ec3 \u0111\xe1nh gi\xe1 c\xe2u tr\u1ea3 l\u1eddi."
 
         if field_errors:
             raise malformed_input_error(
-                "Dữ liệu đầu vào đánh giá không hợp lệ.",
+                "D\u1eef li\u1ec7u \u0111\u1ea7u v\xe0o \u0111\xe1nh gi\xe1 kh\xf4ng h\u1ee3p l\u1ec7.",
                 field_errors=field_errors,
             )
 
@@ -66,18 +66,18 @@ class ScoringService:
         for rubric in task_input.rubrics:
             rubric_id_str = str(rubric.id).strip()
             if not rubric_id_str:
-                raise malformed_input_error("Mã rubric không được để trống.")
+                raise malformed_input_error("M\xe3 rubric kh\xf4ng \u0111\u01b0\u1ee3c \u0111\u1ec3 tr\u1ed1ng.")
             if rubric_id_str in seen_rubric_ids:
-                raise malformed_input_error(f"Mã rubric bị trùng lặp: '{rubric_id_str}'.")
+                raise malformed_input_error(f"M\xe3 rubric b\u1ecb tr\xf9ng l\u1eb7p: '{rubric_id_str}'.")
             seen_rubric_ids.add(rubric_id_str)
 
             if rubric.version < 1:
                 raise malformed_input_error(
-                    f"Phiên bản của rubric '{rubric_id_str}' phải >= 1."
+                    f"Phi\xean b\u1ea3n c\u1ee7a rubric '{rubric_id_str}' ph\u1ea3i >= 1."
                 )
             if not rubric.competency or not rubric.competency.strip():
                 raise malformed_input_error(
-                    f"Tên năng lực (competency) của rubric '{rubric_id_str}' không được để trống."
+                    f"T\xean n\u0103ng l\u1ef1c (competency) c\u1ee7a rubric '{rubric_id_str}' kh\xf4ng \u0111\u01b0\u1ee3c \u0111\u1ec3 tr\u1ed1ng."
                 )
 
             self._validate_single_rubric(rubric, seen_criterion_ids_global)
@@ -99,7 +99,7 @@ class ScoringService:
         rubric_id_str = str(rubric.id)
         if not rubric.criteria:
             raise malformed_input_error(
-                f"Rubric '{rubric_id_str}' phải khai báo ít nhất một tiêu chí."
+                f"Rubric '{rubric_id_str}' ph\u1ea3i khai b\xe1o \xedt nh\u1ea5t m\u1ed9t ti\xeau ch\xed."
             )
 
         rubric_criterion_ids: set[CriterionId] = set()
@@ -107,26 +107,26 @@ class ScoringService:
             cid_str = str(criterion.id).strip()
             if not cid_str:
                 raise malformed_input_error(
-                    f"Rubric '{rubric_id_str}' có tiêu chí thiếu ID."
+                    f"Rubric '{rubric_id_str}' c\xf3 ti\xeau ch\xed thi\u1ebfu ID."
                 )
             if criterion.id in rubric_criterion_ids or cid_str in seen_criterion_ids_global:
                 raise malformed_input_error(
-                    f"Mã tiêu chí '{cid_str}' bị trùng lặp trong bộ rubric."
+                    f"M\xe3 ti\xeau ch\xed '{cid_str}' b\u1ecb tr\xf9ng l\u1eb7p trong b\u1ed9 rubric."
                 )
             if not criterion.label or not criterion.label.strip():
                 raise malformed_input_error(
-                    f"Tiêu chí '{cid_str}' thiếu nhãn mô tả (label)."
+                    f"Ti\xeau ch\xed '{cid_str}' thi\u1ebfu nh\xe3n m\xf4 t\u1ea3 (label)."
                 )
             if not criterion.acceptance_rule or not criterion.acceptance_rule.strip():
                 raise malformed_input_error(
-                    f"Tiêu chí '{cid_str}' thiếu quy tắc chấp nhận (acceptance_rule)."
+                    f"Ti\xeau ch\xed '{cid_str}' thi\u1ebfu quy t\u1eafc ch\u1ea5p nh\u1eadn (acceptance_rule)."
                 )
             rubric_criterion_ids.add(criterion.id)
             seen_criterion_ids_global.add(cid_str)
 
         if not rubric.score_levels:
             raise malformed_input_error(
-                f"Rubric '{rubric_id_str}' phải khai báo các mức điểm (score_levels)."
+                f"Rubric '{rubric_id_str}' ph\u1ea3i khai b\xe1o c\xe1c m\u1ee9c \u0111i\u1ec3m (score_levels)."
             )
 
         total_criteria = len(rubric.criteria)
@@ -135,49 +135,49 @@ class ScoringService:
         for level in rubric.score_levels:
             if level.value < 0:
                 raise malformed_input_error(
-                    f"Rubric '{rubric_id_str}' có mức điểm âm ({level.value}) không hợp lệ."
+                    f"Rubric '{rubric_id_str}' c\xf3 m\u1ee9c \u0111i\u1ec3m \xe2m ({level.value}) kh\xf4ng h\u1ee3p l\u1ec7."
                 )
             if previous_value is not None and level.value <= previous_value:
                 raise malformed_input_error(
-                    f"Các mức điểm trong rubric '{rubric_id_str}' phải tăng dần nghiêm ngặt "
-                    f"và không trùng lặp (gặp {level.value} sau {previous_value})."
+                    f"C\xe1c m\u1ee9c \u0111i\u1ec3m trong rubric '{rubric_id_str}' ph\u1ea3i t\u0103ng d\u1ea7n nghi\xeam ng\u1eb7t "
+                    f"v\xe0 kh\xf4ng tr\xf9ng l\u1eb7p (g\u1eb7p {level.value} sau {previous_value})."
                 )
             previous_value = level.value
 
             if not level.description or not level.description.strip():
                 raise malformed_input_error(
-                    f"Mức điểm {level.value} của rubric '{rubric_id_str}' thiếu description."
+                    f"M\u1ee9c \u0111i\u1ec3m {level.value} c\u1ee7a rubric '{rubric_id_str}' thi\u1ebfu description."
                 )
             if not level.condition or not level.condition.strip():
                 raise malformed_input_error(
-                    f"Mức điểm {level.value} của rubric '{rubric_id_str}' thiếu condition."
+                    f"M\u1ee9c \u0111i\u1ec3m {level.value} c\u1ee7a rubric '{rubric_id_str}' thi\u1ebfu condition."
                 )
 
             if level.minimum_met < 0 or level.minimum_met > total_criteria:
                 raise malformed_input_error(
-                    f"Mức điểm {level.value} của rubric '{rubric_id_str}' có minimum_met={level.minimum_met} "
-                    f"vượt ngoài phạm vi số tiêu chí (0..{total_criteria})."
+                    f"M\u1ee9c \u0111i\u1ec3m {level.value} c\u1ee7a rubric '{rubric_id_str}' c\xf3 minimum_met={level.minimum_met} "
+                    f"v\u01b0\u1ee3t ngo\xe0i ph\u1ea1m vi s\u1ed1 ti\xeau ch\xed (0..{total_criteria})."
                 )
 
             seen_req: set[CriterionId] = set()
             for req_cid in level.required_met:
                 if req_cid not in rubric_criterion_ids:
                     raise malformed_input_error(
-                        f"Mức điểm {level.value} của rubric '{rubric_id_str}' tham chiếu tới "
-                        f"tiêu chí không tồn tại '{req_cid}'."
+                        f"M\u1ee9c \u0111i\u1ec3m {level.value} c\u1ee7a rubric '{rubric_id_str}' tham chi\u1ebfu t\u1edbi "
+                        f"ti\xeau ch\xed kh\xf4ng t\u1ed3n t\u1ea1i '{req_cid}'."
                     )
                 if req_cid in seen_req:
                     raise malformed_input_error(
-                        f"Mức điểm {level.value} của rubric '{rubric_id_str}' lặp lại "
-                        f"tiêu chí bắt buộc '{req_cid}'."
+                        f"M\u1ee9c \u0111i\u1ec3m {level.value} c\u1ee7a rubric '{rubric_id_str}' l\u1eb7p l\u1ea1i "
+                        f"ti\xeau ch\xed b\u1eaft bu\u1ed9c '{req_cid}'."
                     )
                 seen_req.add(req_cid)
 
         base_level = rubric.score_levels[0]
         if base_level.required_met or base_level.minimum_met != 0:
             raise malformed_input_error(
-                f"Mức điểm cơ sở ({base_level.value}) của rubric '{rubric_id_str}' "
-                "phải có required_met rỗng và minimum_met = 0."
+                f"M\u1ee9c \u0111i\u1ec3m c\u01a1 s\u1edf ({base_level.value}) c\u1ee7a rubric '{rubric_id_str}' "
+                "ph\u1ea3i c\xf3 required_met r\u1ed7ng v\xe0 minimum_met = 0."
             )
 
         # Verify that every declared score level is reachable by at least one subset of criteria
@@ -201,7 +201,7 @@ class ScoringService:
 
             if needed_extra > len(remaining):
                 raise malformed_input_error(
-                    f"Mức điểm {target_level.value} của rubric '{rubric.id}' không thể đạt tới."
+                    f"M\u1ee9c \u0111i\u1ec3m {target_level.value} c\u1ee7a rubric '{rubric.id}' kh\xf4ng th\u1ec3 \u0111\u1ea1t t\u1edbi."
                 )
 
             # Check whether every higher level strictly dominates target_level on all subsets of size max(len(req_set), minimum_met)
@@ -218,8 +218,8 @@ class ScoringService:
 
             if is_shadowed:
                 raise malformed_input_error(
-                    f"Mức điểm {target_level.value} của rubric '{rubric.id}' bị che khuất hoàn toàn "
-                    "bởi một mức điểm cao hơn có điều kiện bằng hoặc yếu hơn."
+                    f"M\u1ee9c \u0111i\u1ec3m {target_level.value} c\u1ee7a rubric '{rubric.id}' b\u1ecb che khu\u1ea5t ho\xe0n to\xe0n "
+                    "b\u1edfi m\u1ed9t m\u1ee9c \u0111i\u1ec3m cao h\u01a1n c\xf3 \u0111i\u1ec1u ki\u1ec7n b\u1eb1ng ho\u1eb7c y\u1ebfu h\u01a1n."
                 )
 
     def find_highest_matching_level(
@@ -266,7 +266,7 @@ class ScoringService:
 
         if len(provided_ids) != len(expected_ids) or set(provided_ids) != expected_ids:
             raise malformed_input_error(
-                f"Danh sách kết quả tiêu chí của rubric '{rubric.id}' không khớp với cấu hình rubric."
+                f"Danh s\xe1ch k\u1ebft qu\u1ea3 ti\xeau ch\xed c\u1ee7a rubric '{rubric.id}' kh\xf4ng kh\u1edbp v\u1edbi c\u1ea5u h\xecnh rubric."
             )
 
         confirmed_met_ids: frozenset[CriterionId] = frozenset(
@@ -340,22 +340,22 @@ class ScoringService:
 
         if confirmed_level.value == possible_level.value:
             base_explanation = (
-                f"Chọn mức {confirmed_level.value} ({confirmed_level.description}) "
-                f"vì đã xác nhận đạt {confirmed_count}/{total_criteria} tiêu chí "
-                f"theo điều kiện: {confirmed_level.condition}."
+                f"Ch\u1ecdn m\u1ee9c {confirmed_level.value} ({confirmed_level.description}) "
+                f"v\xec \u0111\xe3 x\xe1c nh\u1eadn \u0111\u1ea1t {confirmed_count}/{total_criteria} ti\xeau ch\xed "
+                f"theo \u0111i\u1ec1u ki\u1ec7n: {confirmed_level.condition}."
             )
             if ordered_unresolved:
                 unresolved_str = ", ".join(ordered_unresolved)
                 return (
-                    f"{base_explanation} Tiêu chí chưa đủ căn cứ ({unresolved_str}) "
-                    f"không làm thay đổi mức điểm đã chốt ({confirmed_level.value})."
+                    f"{base_explanation} Ti\xeau ch\xed ch\u01b0a \u0111\u1ee7 c\u0103n c\u1ee9 ({unresolved_str}) "
+                    f"kh\xf4ng l\xe0m thay \u0111\u1ed5i m\u1ee9c \u0111i\u1ec3m \u0111\xe3 ch\u1ed1t ({confirmed_level.value})."
                 )
             return base_explanation
 
         unresolved_str = ", ".join(ordered_unresolved)
         return (
-            f"Chưa thể chốt điểm duy nhất cho '{rubric.competency}' (score = null): "
-            f"phần đã xác nhận đạt {confirmed_count}/{total_criteria} tiêu chí tương ứng mức "
-            f"{confirmed_level.value}, nhưng nếu làm rõ các tiêu chí chưa đủ căn cứ "
-            f"({unresolved_str}) thì bài làm có thể đạt mức {possible_level.value}."
+            f"Ch\u01b0a th\u1ec3 ch\u1ed1t \u0111i\u1ec3m duy nh\u1ea5t cho '{rubric.competency}' (score = null): "
+            f"ph\u1ea7n \u0111\xe3 x\xe1c nh\u1eadn \u0111\u1ea1t {confirmed_count}/{total_criteria} ti\xeau ch\xed t\u01b0\u01a1ng \u1ee9ng m\u1ee9c "
+            f"{confirmed_level.value}, nh\u01b0ng n\u1ebfu l\xe0m r\xf5 c\xe1c ti\xeau ch\xed ch\u01b0a \u0111\u1ee7 c\u0103n c\u1ee9 "
+            f"({unresolved_str}) th\xec b\xe0i l\xe0m c\xf3 th\u1ec3 \u0111\u1ea1t m\u1ee9c {possible_level.value}."
         )

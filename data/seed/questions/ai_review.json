@@ -9,6 +9,7 @@
     "role": "backend_developer",
     "level": "intern_fresher",
     "skill_ids": [
+      "skill.engineering.code_review_and_verification",
       "backend.code_review",
       "ai.independent_code_verification"
     ],

@@ -7,6 +7,11 @@ Task E09: End-to-end orchestration of interpretation -> validation -> scoring ->
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
+from uuid import uuid4
+
+from source.Model.answerData import Answer, EvaluationInput, Question, Rubric
+from source.Model.evaluationData import AnswerEvaluation, EvaluationReport, EvaluationResult, Interpretation, RubricReview
 
 from source.Model.evaluation import (
     CompleteEvaluationReport,
@@ -37,43 +42,43 @@ from source.service.providers.interfaces import (
 from source.service.scoringService import ScoringService
 
 
-def _normalize_criterion_status(raw_status: str) -> CriterionStatus:
-    """Normalize both snake_case and camelCase status strings into CriterionStatus."""
-    cleaned = raw_status.strip() if isinstance(raw_status, str) else ""
-    mapping = {
-        "met": CriterionStatus.MET,
-        "unmet": CriterionStatus.UNMET,
-        "insufficient_evidence": CriterionStatus.INSUFFICIENT_EVIDENCE,
-        "insufficientEvidence": CriterionStatus.INSUFFICIENT_EVIDENCE,
-    }
-    if cleaned not in mapping:
-        raise invalid_ai_output_error(
-            f"Trạng thái tiêu chí từ AI không hợp lệ: '{raw_status}'."
-        )
-    return mapping[cleaned]
-
-
-def _normalize_evidence_type(raw_type: str) -> EvidenceType:
-    """Normalize evidence type string into EvidenceType enum."""
-    cleaned = raw_type.strip().lower() if isinstance(raw_type, str) else ""
-    mapping = {
-        "quote": EvidenceType.QUOTE,
-        "ambiguous": EvidenceType.AMBIGUOUS,
-        "omission": EvidenceType.OMISSION,
-    }
-    if cleaned not in mapping:
-        raise invalid_ai_output_error(
-            f"Loại bằng chứng (evidence_type) từ AI không hợp lệ: '{raw_type}'."
-        )
-    return mapping[cleaned]
-
-
 class EvidenceValidator:
     """
     Algorithm 1 (Steps 4, 5, 6):
     Rule-based gatekeeper (R) that checks the AI interpreter's output against the
     submitted rubrics and the candidate's exact original answer text before scoring.
     """
+
+    @staticmethod
+    def _normalize_criterion_status(raw_status: str) -> CriterionStatus:
+        """Normalize both snake_case and camelCase status strings into CriterionStatus."""
+        cleaned = raw_status.strip() if isinstance(raw_status, str) else ""
+        mapping = {
+            "met": CriterionStatus.MET,
+            "unmet": CriterionStatus.UNMET,
+            "insufficient_evidence": CriterionStatus.INSUFFICIENT_EVIDENCE,
+            "insufficientEvidence": CriterionStatus.INSUFFICIENT_EVIDENCE,
+        }
+        if cleaned not in mapping:
+            raise invalid_ai_output_error(
+                f"Tr\u1ea1ng th\u00e1i ti\u00eau ch\u00ed t\u1eeb AI kh\u00f4ng h\u1ee3p l\u1ec7: '{raw_status}'."
+            )
+        return mapping[cleaned]
+
+    @staticmethod
+    def _normalize_evidence_type(raw_type: str) -> EvidenceType:
+        """Normalize evidence type string into EvidenceType enum."""
+        cleaned = raw_type.strip().lower() if isinstance(raw_type, str) else ""
+        mapping = {
+            "quote": EvidenceType.QUOTE,
+            "ambiguous": EvidenceType.AMBIGUOUS,
+            "omission": EvidenceType.OMISSION,
+        }
+        if cleaned not in mapping:
+            raise invalid_ai_output_error(
+                f"Lo\u1ea1i b\u1eb1ng ch\u1ee9ng (evidence_type) t\u1eeb AI kh\u00f4ng h\u1ee3p l\u1ec7: '{raw_type}'."
+            )
+        return mapping[cleaned]
 
     def validate_interpretation(
         self,
@@ -89,11 +94,11 @@ class EvidenceValidator:
         Raises EvaluationError(code='INVALID_AI_OUTPUT') if any check fails.
         """
         if not raw_output.provider_name or not raw_output.provider_name.strip():
-            raise invalid_ai_output_error("Kết quả AI thiếu tên provider (provider_name).")
+            raise invalid_ai_output_error("K\u1ebft qu\u1ea3 AI thi\u1ebfu t\xean provider (provider_name).")
         if not raw_output.model_name or not raw_output.model_name.strip():
-            raise invalid_ai_output_error("Kết quả AI thiếu tên model (model_name).")
+            raise invalid_ai_output_error("K\u1ebft qu\u1ea3 AI thi\u1ebfu t\xean model (model_name).")
         if not raw_output.prompt_version or not raw_output.prompt_version.strip():
-            raise invalid_ai_output_error("Kết quả AI thiếu phiên bản prompt (prompt_version).")
+            raise invalid_ai_output_error("K\u1ebft qu\u1ea3 AI thi\u1ebfu phi\xean b\u1ea3n prompt (prompt_version).")
 
         expected_rubrics: dict[RubricId, CompetencyRubric] = {
             rubric.id: rubric for rubric in task_input.rubrics
@@ -105,11 +110,11 @@ class EvidenceValidator:
             rid = rubric_judgment.rubric_id
             if rid not in expected_rubrics:
                 raise invalid_ai_output_error(
-                    f"AI trả về mã rubric không tồn tại trong đề bài: '{rid}'."
+                    f"AI tr\u1ea3 v\u1ec1 m\xe3 rubric kh\xf4ng t\u1ed3n t\u1ea1i trong \u0111\u1ec1 b\xe0i: '{rid}'."
                 )
             if rid in seen_rubric_ids:
                 raise invalid_ai_output_error(
-                    f"AI trả về kết quả bị trùng lặp cho rubric: '{rid}'."
+                    f"AI tr\u1ea3 v\u1ec1 k\u1ebft qu\u1ea3 b\u1ecb tr\xf9ng l\u1eb7p cho rubric: '{rid}'."
                 )
             seen_rubric_ids.add(rid)
 
@@ -128,7 +133,7 @@ class EvidenceValidator:
         ]
         if missing_rubrics:
             raise invalid_ai_output_error(
-                f"AI bỏ sót kết quả của các rubric: {', '.join(missing_rubrics)}."
+                f"AI b\u1ecf s\xf3t k\u1ebft qu\u1ea3 c\u1ee7a c\xe1c rubric: {', '.join(missing_rubrics)}."
             )
 
         return verified_by_rubric
@@ -151,11 +156,11 @@ class EvidenceValidator:
             cid = proposed.criterion_id
             if cid not in expected_criteria:
                 raise invalid_ai_output_error(
-                    f"AI trả về tiêu chí không thuộc rubric '{rubric.id}': '{cid}'."
+                    f"AI tr\u1ea3 v\u1ec1 ti\xeau ch\xed kh\xf4ng thu\u1ed9c rubric '{rubric.id}': '{cid}'."
                 )
             if cid in seen_criteria:
                 raise invalid_ai_output_error(
-                    f"AI trả về kết quả bị lặp cho tiêu chí '{cid}' trong rubric '{rubric.id}'."
+                    f"AI tr\u1ea3 v\u1ec1 k\u1ebft qu\u1ea3 b\u1ecb l\u1eb7p cho ti\xeau ch\xed '{cid}' trong rubric '{rubric.id}'."
                 )
             seen_criteria.add(cid)
 
@@ -174,7 +179,7 @@ class EvidenceValidator:
         ]
         if missing_criteria:
             raise invalid_ai_output_error(
-                f"AI bỏ sót tiêu chí trong rubric '{rubric.id}': {', '.join(missing_criteria)}."
+                f"AI b\u1ecf s\xf3t ti\xeau ch\xed trong rubric '{rubric.id}': {', '.join(missing_criteria)}."
             )
 
         # Return verified checks in the canonical order declared by rubric.criteria
@@ -200,7 +205,7 @@ class EvidenceValidator:
 
         if not proposed.evidence:
             raise invalid_ai_output_error(
-                f"Tiêu chí '{criterion.id}' không có bằng chứng (evidence) đi kèm."
+                f"Ti\xeau ch\xed '{criterion.id}' kh\xf4ng c\xf3 b\u1eb1ng ch\u1ee9ng (evidence) \u0111i k\xe8m."
             )
 
         verified_items: list[VerifiedEvidence] = [
@@ -217,24 +222,24 @@ class EvidenceValidator:
         if status == CriterionStatus.MET:
             if EvidenceType.QUOTE not in evidence_types:
                 raise invalid_ai_output_error(
-                    f"Tiêu chí '{criterion.id}' được gắn 'met' nhưng không có trích đoạn trực tiếp ('quote')."
+                    f"Ti\xeau ch\xed '{criterion.id}' \u0111\u01b0\u1ee3c g\u1eafn 'met' nh\u01b0ng kh\xf4ng c\xf3 tr\xedch \u0111o\u1ea1n tr\u1ef1c ti\u1ebfp ('quote')."
                 )
             if EvidenceType.OMISSION in evidence_types or EvidenceType.AMBIGUOUS in evidence_types:
                 raise invalid_ai_output_error(
-                    f"Tiêu chí '{criterion.id}' có trạng thái 'met' không được chứa bằng chứng "
-                    "'omission' hoặc 'ambiguous'."
+                    f"Ti\xeau ch\xed '{criterion.id}' c\xf3 tr\u1ea1ng th\xe1i 'met' kh\xf4ng \u0111\u01b0\u1ee3c ch\u1ee9a b\u1eb1ng ch\u1ee9ng "
+                    "'omission' ho\u1eb7c 'ambiguous'."
                 )
 
         elif status == CriterionStatus.UNMET:
             if EvidenceType.AMBIGUOUS in evidence_types:
                 raise invalid_ai_output_error(
-                    f"Tiêu chí '{criterion.id}' có bằng chứng 'ambiguous' phải mang trạng thái "
-                    "'insufficient_evidence', không được gắn 'unmet'."
+                    f"Ti\xeau ch\xed '{criterion.id}' c\xf3 b\u1eb1ng ch\u1ee9ng 'ambiguous' ph\u1ea3i mang tr\u1ea1ng th\xe1i "
+                    "'insufficient_evidence', kh\xf4ng \u0111\u01b0\u1ee3c g\u1eafn 'unmet'."
                 )
             if evidence_types == {EvidenceType.OMISSION} and not criterion.omission_means_unmet:
                 raise invalid_ai_output_error(
-                    f"Tiêu chí '{criterion.id}' không cho phép kết luận 'unmet' chỉ dựa trên "
-                    "sự thiếu vắng ('omission_means_unmet' = False)."
+                    f"Ti\xeau ch\xed '{criterion.id}' kh\xf4ng cho ph\xe9p k\u1ebft lu\u1eadn 'unmet' ch\u1ec9 d\u1ef1a tr\xean "
+                    "s\u1ef1 thi\u1ebfu v\u1eafng ('omission_means_unmet' = False)."
                 )
 
         elif status == CriterionStatus.INSUFFICIENT_EVIDENCE:
@@ -243,8 +248,8 @@ class EvidenceValidator:
                 and EvidenceType.OMISSION not in evidence_types
             ):
                 raise invalid_ai_output_error(
-                    f"Tiêu chí '{criterion.id}' có trạng thái 'insufficient_evidence' phải đi kèm "
-                    "bằng chứng loại 'ambiguous' hoặc 'omission'."
+                    f"Ti\xeau ch\xed '{criterion.id}' c\xf3 tr\u1ea1ng th\xe1i 'insufficient_evidence' ph\u1ea3i \u0111i k\xe8m "
+                    "b\u1eb1ng ch\u1ee9ng lo\u1ea1i 'ambiguous' ho\u1eb7c 'omission'."
                 )
 
         return VerifiedCriterionCheck(
@@ -272,11 +277,11 @@ class EvidenceValidator:
 
         if not item.observation or not item.observation.strip():
             raise invalid_ai_output_error(
-                f"Bằng chứng của tiêu chí '{criterion.id}' thiếu nhận xét giải thích (observation)."
+                f"B\u1eb1ng ch\u1ee9ng c\u1ee7a ti\xeau ch\xed '{criterion.id}' thi\u1ebfu nh\u1eadn x\xe9t gi\u1ea3i th\xedch (observation)."
             )
         if not item.location or not item.location.strip():
             raise invalid_ai_output_error(
-                f"Bằng chứng của tiêu chí '{criterion.id}' thiếu thông tin vị trí (location)."
+                f"B\u1eb1ng ch\u1ee9ng c\u1ee7a ti\xeau ch\xed '{criterion.id}' thi\u1ebfu th\xf4ng tin v\u1ecb tr\xed (location)."
             )
 
         if evidence_type == EvidenceType.OMISSION:
@@ -286,8 +291,8 @@ class EvidenceValidator:
                 or item.end_offset is not None
             ):
                 raise invalid_ai_output_error(
-                    f"Bằng chứng 'omission' của tiêu chí '{criterion.id}' không được chứa "
-                    "quote, start_offset hoặc end_offset."
+                    f"B\u1eb1ng ch\u1ee9ng 'omission' c\u1ee7a ti\xeau ch\xed '{criterion.id}' kh\xf4ng \u0111\u01b0\u1ee3c ch\u1ee9a "
+                    "quote, start_offset ho\u1eb7c end_offset."
                 )
             return VerifiedEvidence(
                 answer_ref=answer_ref,
@@ -302,14 +307,14 @@ class EvidenceValidator:
         # QUOTE always requires a non-empty literal quote; AMBIGUOUS may optionally carry a quote
         if evidence_type == EvidenceType.QUOTE and (not item.quote or not item.quote.strip()):
             raise invalid_ai_output_error(
-                f"Bằng chứng 'quote' của tiêu chí '{criterion.id}' phải có đoạn trích nguyên văn."
+                f"B\u1eb1ng ch\u1ee9ng 'quote' c\u1ee7a ti\xeau ch\xed '{criterion.id}' ph\u1ea3i c\xf3 \u0111o\u1ea1n tr\xedch nguy\xean v\u0103n."
             )
 
         if item.quote is None:
             # AMBIGUOUS without a literal quote: offsets must also be None
             if item.start_offset is not None or item.end_offset is not None:
                 raise invalid_ai_output_error(
-                    f"Bằng chứng của tiêu chí '{criterion.id}' có offset nhưng thiếu quote."
+                    f"B\u1eb1ng ch\u1ee9ng c\u1ee7a ti\xeau ch\xed '{criterion.id}' c\xf3 offset nh\u01b0ng thi\u1ebfu quote."
                 )
             return VerifiedEvidence(
                 answer_ref=answer_ref,
@@ -323,7 +328,7 @@ class EvidenceValidator:
 
         if not item.quote.strip():
             raise invalid_ai_output_error(
-                f"Trích đoạn (quote) của tiêu chí '{criterion.id}' không được chỉ chứa khoảng trắng."
+                f"Tr\xedch \u0111o\u1ea1n (quote) c\u1ee7a ti\xeau ch\xed '{criterion.id}' kh\xf4ng \u0111\u01b0\u1ee3c ch\u1ec9 ch\u1ee9a kho\u1ea3ng tr\u1eafng."
             )
 
         start_offset, end_offset = self._validate_or_resolve_quote_offsets(
@@ -358,8 +363,8 @@ class EvidenceValidator:
         """
         if (start_offset is None) != (end_offset is None):
             raise invalid_ai_output_error(
-                f"Trích đoạn của tiêu chí '{criterion_id}' phải cung cấp đủ cả "
-                "start_offset và end_offset hoặc để trống cả hai."
+                f"Tr\xedch \u0111o\u1ea1n c\u1ee7a ti\xeau ch\xed '{criterion_id}' ph\u1ea3i cung c\u1ea5p \u0111\u1ee7 c\u1ea3 "
+                "start_offset v\xe0 end_offset ho\u1eb7c \u0111\u1ec3 tr\u1ed1ng c\u1ea3 hai."
             )
 
         if start_offset is not None and end_offset is not None:
@@ -370,18 +375,18 @@ class EvidenceValidator:
                 or isinstance(end_offset, bool)
             ):
                 raise invalid_ai_output_error(
-                    f"Vị trí trích đoạn của tiêu chí '{criterion_id}' phải là số nguyên."
+                    f"V\u1ecb tr\xed tr\xedch \u0111o\u1ea1n c\u1ee7a ti\xeau ch\xed '{criterion_id}' ph\u1ea3i l\xe0 s\u1ed1 nguy\xean."
                 )
             if start_offset < 0 or end_offset <= start_offset or end_offset > len(answer_text):
                 raise invalid_ai_output_error(
-                    f"Vị trí trích đoạn [{start_offset}:{end_offset}] của tiêu chí "
-                    f"'{criterion_id}' nằm ngoài phạm vi câu trả lời."
+                    f"V\u1ecb tr\xed tr\xedch \u0111o\u1ea1n [{start_offset}:{end_offset}] c\u1ee7a ti\xeau ch\xed "
+                    f"'{criterion_id}' n\u1eb1m ngo\xe0i ph\u1ea1m vi c\xe2u tr\u1ea3 l\u1eddi."
                 )
             actual_slice = answer_text[start_offset:end_offset]
             if actual_slice != quote:
                 raise invalid_ai_output_error(
-                    f"Đoạn trích của tiêu chí '{criterion_id}' không khớp với nguyên văn câu trả lời "
-                    f"tại vị trí [{start_offset}:{end_offset}]."
+                    f"\u0110o\u1ea1n tr\xedch c\u1ee7a ti\xeau ch\xed '{criterion_id}' kh\xf4ng kh\u1edbp v\u1edbi nguy\xean v\u0103n c\xe2u tr\u1ea3 l\u1eddi "
+                    f"t\u1ea1i v\u1ecb tr\xed [{start_offset}:{end_offset}]."
                 )
             return start_offset, end_offset
 
@@ -397,17 +402,21 @@ class EvidenceValidator:
 
         if not matches:
             raise invalid_ai_output_error(
-                f"Đoạn trích của tiêu chí '{criterion_id}' không xuất hiện nguyên văn trong câu trả lời."
+                f"\u0110o\u1ea1n tr\xedch c\u1ee7a ti\xeau ch\xed '{criterion_id}' kh\xf4ng xu\u1ea5t hi\u1ec7n nguy\xean v\u0103n trong c\xe2u tr\u1ea3 l\u1eddi."
             )
         if len(matches) > 1:
             raise invalid_ai_output_error(
-                f"Đoạn trích của tiêu chí '{criterion_id}' xuất hiện {len(matches)} lần trong bài làm "
-                "nhưng AI không chỉ rõ start_offset và end_offset."
+                f"\u0110o\u1ea1n tr\xedch c\u1ee7a ti\xeau ch\xed '{criterion_id}' xu\u1ea5t hi\u1ec7n {len(matches)} l\u1ea7n trong b\xe0i l\xe0m "
+                "nh\u01b0ng AI kh\xf4ng ch\u1ec9 r\xf5 start_offset v\xe0 end_offset."
             )
 
         resolved_start = matches[0]
         resolved_end = resolved_start + len(quote)
         return resolved_start, resolved_end
+
+
+_normalize_criterion_status = EvidenceValidator._normalize_criterion_status
+_normalize_evidence_type = EvidenceValidator._normalize_evidence_type
 
 
 class FeedbackGenerator:
@@ -439,26 +448,26 @@ class FeedbackGenerator:
             primary_observation = check.evidence[0].observation
 
             if check.status == CriterionStatus.MET:
-                met_summaries.append(f"Đạt '{criterion.label}': {primary_observation}")
+                met_summaries.append(f"\u0110\u1ea1t '{criterion.label}': {primary_observation}")
             elif check.status == CriterionStatus.UNMET:
                 issue_text = (
-                    f"Chưa đạt '{criterion.label}' (Yêu cầu: {criterion.acceptance_rule}): "
+                    f"Ch\u01b0a \u0111\u1ea1t '{criterion.label}' (Y\xeau c\u1ea7u: {criterion.acceptance_rule}): "
                     f"{primary_observation}"
                 )
                 unmet_issues.append(issue_text)
             elif check.status == CriterionStatus.INSUFFICIENT_EVIDENCE:
                 unresolved_notes.append(
-                    f"Cần làm rõ '{criterion.label}' (Yêu cầu: {criterion.acceptance_rule}): "
+                    f"C\u1ea7n l\xe0m r\xf5 '{criterion.label}' (Y\xeau c\u1ea7u: {criterion.acceptance_rule}): "
                     f"{primary_observation}"
                 )
 
         sections: list[str] = [result.reason]
         if met_summaries:
-            sections.append("Phần đã đáp ứng: " + " | ".join(met_summaries))
+            sections.append("Ph\u1ea7n \u0111\xe3 \u0111\xe1p \u1ee9ng: " + " | ".join(met_summaries))
         if unmet_issues:
-            sections.append("Phần cần cải thiện: " + " | ".join(unmet_issues))
+            sections.append("Ph\u1ea7n c\u1ea7n c\u1ea3i thi\u1ec7n: " + " | ".join(unmet_issues))
         if unresolved_notes:
-            sections.append("Phần chưa đủ căn cứ: " + " | ".join(unresolved_notes))
+            sections.append("Ph\u1ea7n ch\u01b0a \u0111\u1ee7 c\u0103n c\u1ee9: " + " | ".join(unresolved_notes))
 
         explanation = " ".join(sections)
 
@@ -487,17 +496,140 @@ class EvaluationService:
 
     def __init__(
         self,
-        repository: EvaluationRepository,
-        scoring_service: ScoringService,
-        evidence_validator: EvidenceValidator,
-        feedback_generator: FeedbackGenerator,
-        interpreter: EvidenceInterpreter,
+        repository: object,
+        scoring_service: object = None,
+        evidence_validator: object = None,
+        feedback_generator: object = None,
+        interpreter: object = None,
     ) -> None:
         self._repository = repository
-        self._scoring_service = scoring_service
-        self._evidence_validator = evidence_validator
-        self._feedback_generator = feedback_generator
-        self._interpreter = interpreter
+        self.repository = repository
+        if isinstance(scoring_service, ScoringService):
+            self._scoring_service = scoring_service
+            self._evidence_validator = evidence_validator
+            self._feedback_generator = feedback_generator
+            self._interpreter = interpreter
+        else:
+            self.interpreterFactory = scoring_service
+            self.rubricRules = evidence_validator
+            self.evidenceReview = feedback_generator
+            self.feedbackBuilder = interpreter
+            self._scoring_service = None
+            self._evidence_validator = None
+            self._feedback_generator = None
+            self._interpreter = None
+
+    def loadInputs(self, inputPath: Path, answerPath: Path | None) -> EvaluationInput:
+        inputs = self.repository.loadInput(inputPath)
+        if answerPath is None:
+            return inputs
+        inputData = inputs.model_dump()
+        inputData["answer"].update(
+            originalText=self.repository.loadAnswer(answerPath),
+            answerId=f"answer.{uuid4().hex}",
+            revision=1,
+        )
+        return EvaluationInput.model_validate(inputData)
+
+    def evaluateFiles(
+        self,
+        inputPath: Path,
+        providerName: str,
+        recordingPath: Path | None = None,
+        answerPath: Path | None = None,
+        outputPath: Path | None = None,
+    ) -> tuple[EvaluationReport, Path]:
+        if providerName not in ("gemini", "recorded"):
+            raise EvaluationError("providerConfig", "Unsupported interpretation provider.")
+        if (providerName == "recorded") != (recordingPath is not None):
+            raise EvaluationError("providerConfig", "Recorded mode requires a matching recording file.")
+        inputs = self.loadInputs(inputPath, answerPath)
+        cached = self.repository.findCompletedReport(inputs.inputDigest())
+        if cached is not None:
+            report, cachedPath = cached
+            if not report.results or not report.feedbackItems:
+                raise EvaluationError("invalidState", "Stored evaluation is incomplete.")
+            self.validateResults(AnswerEvaluation(inputs=report.inputs, results=report.results, feedbackItems=report.feedbackItems))
+            return report, cachedPath
+        resultPath = self.repository.resolveOutput(outputPath, inputs.inputDigest())
+        recording = self.repository.loadRecording(recordingPath) if recordingPath is not None else None
+        interpreter = self.interpreterFactory.createInterpreter(providerName, recording)
+        report = self.assessAnswer(inputs, interpreter)
+        self.repository.saveReport(report, resultPath)
+        return report, resultPath
+
+    def assessAnswer(self, inputs: EvaluationInput, interpreter: object) -> EvaluationReport:
+        evaluation = self.createEvaluation(inputs.question, inputs.rubrics, inputs.answer, inputs.exampleOnly)
+        evaluation = self.evaluateCriteria(evaluation, interpreter)
+        evaluation = self.generateFeedback(evaluation)
+        return self.readReport(evaluation, interpreter)
+
+    def createEvaluation(self, question: Question, rubrics: tuple[Rubric, ...], answer: Answer, exampleOnly: bool = False) -> AnswerEvaluation:
+        inputs = EvaluationInput(question=question, rubrics=rubrics, answer=answer, exampleOnly=exampleOnly)
+        self.rubricRules.validateInputs(inputs)
+        return AnswerEvaluation(inputs=inputs)
+
+    def evaluateCriteria(self, evaluation: AnswerEvaluation, interpreter: object) -> AnswerEvaluation:
+        if evaluation.results or evaluation.feedbackItems:
+            raise EvaluationError("invalidState", "This answer has already been assessed. Create a new evaluation to reassess it.")
+        self.rubricRules.validateInputs(evaluation.inputs)
+        interpretation = self.evidenceReview.validateInterpretation(evaluation.inputs, interpreter.interpret(evaluation.inputs))
+        results = []
+        for rubric, review in zip(evaluation.inputs.rubrics, interpretation.reviews, strict=True):
+            score, reason = self.rubricRules.scoreChecks(rubric, review.criterionChecks)
+            results.append(EvaluationResult(
+                resultId=f"result.{uuid4().hex}",
+                answerId=evaluation.inputs.answer.answerId,
+                rubricId=rubric.rubricId,
+                status="graded" if score is not None else "insufficientEvidence",
+                score=score,
+                criterionChecks=review.criterionChecks,
+                reason=reason,
+            ))
+        return evaluation.model_copy(update={"results": tuple(results)})
+
+    def generateFeedback(self, evaluation: AnswerEvaluation) -> AnswerEvaluation:
+        if not evaluation.results or evaluation.feedbackItems:
+            raise EvaluationError("invalidState", "Complete results without feedback are required before generating feedback.")
+        self.validateResults(evaluation)
+        rubricMap = {item.rubricId: item for item in evaluation.inputs.rubrics}
+        feedbackItems = tuple(self.feedbackBuilder.buildFeedback(result, rubricMap[result.rubricId]) for result in evaluation.results)
+        return evaluation.model_copy(update={"feedbackItems": feedbackItems})
+
+    def readReport(self, evaluation: AnswerEvaluation, interpreter: object) -> EvaluationReport:
+        if evaluation.results:
+            self.validateResults(evaluation)
+        elif evaluation.feedbackItems:
+            raise EvaluationError("invalidState", "Feedback cannot exist without assessment results.")
+        return EvaluationReport(
+            inputHash=evaluation.inputs.inputDigest(),
+            inputs=evaluation.inputs,
+            providerName=interpreter.providerName,
+            modelName=interpreter.modelName,
+            promptVersion=interpreter.promptVersion,
+            results=evaluation.results,
+            feedbackItems=evaluation.feedbackItems,
+        )
+
+    def validateResults(self, evaluation: AnswerEvaluation) -> None:
+        self.rubricRules.validateInputs(evaluation.inputs)
+        results = evaluation.results
+        if len({item.resultId for item in results}) != len(results):
+            raise EvaluationError("invalidState", "Result IDs must be unique.")
+        reviews = tuple(RubricReview(rubricId=item.rubricId, criterionChecks=item.criterionChecks) for item in results)
+        self.evidenceReview.validateInterpretation(evaluation.inputs, Interpretation(reviews=reviews))
+        rubricMap = {item.rubricId: item for item in evaluation.inputs.rubrics}
+        for result in results:
+            if result.answerId != evaluation.inputs.answer.answerId:
+                raise EvaluationError("invalidState", "A result is linked to a different answer.")
+            score, reason = self.rubricRules.scoreChecks(rubricMap[result.rubricId], result.criterionChecks)
+            expectedStatus = "graded" if score is not None else "insufficientEvidence"
+            if result.score != score or result.reason != reason or result.status != expectedStatus:
+                raise EvaluationError("invalidState", "The score or reason does not match the rubric rules.")
+        if evaluation.feedbackItems:
+            expectedFeedback = tuple(self.feedbackBuilder.buildFeedback(item, rubricMap[item.rubricId]) for item in results)
+            if evaluation.feedbackItems != expectedFeedback:
+                raise EvaluationError("invalidState", "Feedback does not match the criterion results.")
 
     def evaluate_submission(
         self,
@@ -524,7 +656,7 @@ class EvaluationService:
             raise
         except Exception as exc:
             raise storage_failure_error(
-                f"Không thể truy vấn kết quả đánh giá đã lưu: {exc}"
+                f"Kh\xf4ng th\u1ec3 truy v\u1ea5n k\u1ebft qu\u1ea3 \u0111\xe1nh gi\xe1 \u0111\xe3 l\u01b0u: {exc}"
             ) from exc
 
         if existing_report is not None:
@@ -588,7 +720,7 @@ class EvaluationService:
             raise
         except Exception as exc:
             raise storage_failure_error(
-                f"Không thể lưu báo cáo kết quả đánh giá: {exc}"
+                f"Kh\xf4ng th\u1ec3 l\u01b0u b\xe1o c\xe1o k\u1ebft qu\u1ea3 \u0111\xe1nh gi\xe1: {exc}"
             ) from exc
 
     def verify_report_consistency(self, report: CompleteEvaluationReport) -> None:
@@ -599,11 +731,11 @@ class EvaluationService:
         """
         if len(report.results) != len(report.rubrics):
             raise malformed_input_error(
-                "Số lượng kết quả chấm không khớp với số lượng rubric đầu vào."
+                "S\u1ed1 l\u01b0\u1ee3ng k\u1ebft qu\u1ea3 ch\u1ea5m kh\xf4ng kh\u1edbp v\u1edbi s\u1ed1 l\u01b0\u1ee3ng rubric \u0111\u1ea7u v\xe0o."
             )
         if len(report.feedback_items) != len(report.results):
             raise malformed_input_error(
-                "Số lượng phản hồi (feedback_items) không khớp với số lượng kết quả chấm."
+                "S\u1ed1 l\u01b0\u1ee3ng ph\u1ea3n h\u1ed3i (feedback_items) kh\xf4ng kh\u1edbp v\u1edbi s\u1ed1 l\u01b0\u1ee3ng k\u1ebft qu\u1ea3 ch\u1ea5m."
             )
 
         for rubric, result, feedback in zip(
@@ -611,24 +743,24 @@ class EvaluationService:
         ):
             if result.rubric_ref.id != rubric.id or feedback.rubric_ref.id != rubric.id:
                 raise malformed_input_error(
-                    f"Liên kết rubric_id không nhất quán cho rubric '{rubric.id}'."
+                    f"Li\xean k\u1ebft rubric_id kh\xf4ng nh\u1ea5t qu\xe1n cho rubric '{rubric.id}'."
                 )
             if feedback.result_id != result.result_id:
                 raise malformed_input_error(
-                    f"Feedback result_id '{feedback.result_id}' không khớp với '{result.result_id}'."
+                    f"Feedback result_id '{feedback.result_id}' kh\xf4ng kh\u1edbp v\u1edbi '{result.result_id}'."
                 )
             if feedback.score != result.score or feedback.status != result.status:
                 raise malformed_input_error(
-                    f"Điểm hoặc trạng thái trong feedback không khớp với kết quả của rubric '{rubric.id}'."
+                    f"\u0110i\u1ec3m ho\u1eb7c tr\u1ea1ng th\xe1i trong feedback kh\xf4ng kh\u1edbp v\u1edbi k\u1ebft qu\u1ea3 c\u1ee7a rubric '{rubric.id}'."
                 )
             if result.status == RubricResultStatus.GRADED and result.score is None:
                 raise malformed_input_error(
-                    f"Rubric '{rubric.id}' có trạng thái 'graded' nhưng điểm lại là None."
+                    f"Rubric '{rubric.id}' c\xf3 tr\u1ea1ng th\xe1i 'graded' nh\u01b0ng \u0111i\u1ec3m l\u1ea1i l\xe0 None."
                 )
             if (
                 result.status == RubricResultStatus.INSUFFICIENT_EVIDENCE
                 and result.score is not None
             ):
                 raise malformed_input_error(
-                    f"Rubric '{rubric.id}' có trạng thái 'insufficient_evidence' nhưng vẫn gán điểm {result.score}."
+                    f"Rubric '{rubric.id}' c\xf3 tr\u1ea1ng th\xe1i 'insufficient_evidence' nh\u01b0ng v\u1eabn g\xe1n \u0111i\u1ec3m {result.score}."
                 )
