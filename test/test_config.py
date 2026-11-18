@@ -117,3 +117,37 @@ def test_configured_local_databases_and_sidecars_are_git_ignored(
         check=True,
     )
     assert set(result.stdout.splitlines()) == set(expected)
+
+
+def test_antigravity_settings_default_to_gemini_38_flash_without_api_key() -> None:
+    settings = load_settings(
+        {
+            "EVALUATION_PROVIDER": "antigravity",
+            "ANTIGRAVITY_MODEL": " ",
+            "ANTIGRAVITY_TIMEOUT_SECONDS": " ",
+            "ANTIGRAVITY_EXECUTABLE": " ",
+        }
+    )
+
+    assert settings.provider is ProviderMode.ANTIGRAVITY
+    assert settings.demo_label is None
+    assert settings.gemini_api_key is None
+    assert settings.antigravity_model == "gemini-3.8-flash-medium"
+    assert settings.antigravity_timeout_seconds == 120.0
+    assert settings.antigravity_executable == "agy"
+
+
+@pytest.mark.parametrize(
+    ("variable", "value"),
+    [
+        ("ANTIGRAVITY_MODEL", "models/gemini-3.8-flash-medium"),
+        ("ANTIGRAVITY_TIMEOUT_SECONDS", "true"),
+        ("ANTIGRAVITY_TIMEOUT_SECONDS", "0"),
+        ("ANTIGRAVITY_TIMEOUT_SECONDS", "301"),
+    ],
+)
+def test_antigravity_settings_reject_invalid_model_and_timeout(
+    variable: str, value: str
+) -> None:
+    with pytest.raises(ConfigurationError, match=variable):
+        load_settings({"EVALUATION_PROVIDER": "antigravity", variable: value})
