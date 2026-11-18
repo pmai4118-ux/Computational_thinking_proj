@@ -1,0 +1,72 @@
+{
+  "session_id": "session.demo-20261118-01",
+  "state": "ended_early",
+  "demo_mode_label": "Dữ liệu minh họa",
+  "completed_question_count": 2,
+  "total_question_count": 4,
+  "unanswered_categories": [
+    "algorithm_explanation",
+    "ai_code_review"
+  ],
+  "unresolved_categories": [
+    "programming_knowledge"
+  ],
+  "outcomes": [
+    {
+      "slot_index": 0,
+      "category": "technical_case",
+      "skill_id": "skill.backend.data_consistency",
+      "question_ref": {
+        "id": "case.c03.inventory_race.v1",
+        "version": 1
+      },
+      "question_prompt": "Kho còn một sản phẩm. Hai yêu cầu mua đến đồng thời, có thể tới hai instance ứng dụng khác nhau. Đề xuất cách chỉ tạo tối đa một đơn thành công, không âm kho; giải thích transaction và cách kiểm thử.",
+      "answer_ref": {
+        "id": "answer.demo-20261118-01",
+        "revision": 1
+      },
+      "evaluation_id": "evaluation.demo-20261118-01",
+      "evaluation_status": "completed",
+      "total_score": 5,
+      "maximum_score": 6,
+      "unresolved_criteria_count": 0,
+      "confirmed_gap_criterion_ids": [
+        "c03.concurrent_tests"
+      ]
+    },
+    {
+      "slot_index": 1,
+      "category": "programming_knowledge",
+      "skill_id": "skill.programming.code_semantics",
+      "question_ref": {
+        "id": "prog.c02.java_string_immutability.v1",
+        "version": 1
+      },
+      "question_prompt": "Giải thích tính bất biến của String trong Java và hệ quả với String Pool.",
+      "answer_ref": {
+        "id": "answer.demo-20261118-02",
+        "revision": 1
+      },
+      "evaluation_id": "evaluation.demo-20261118-02",
+      "evaluation_status": "completed",
+      "total_score": null,
+      "maximum_score": 6,
+      "unresolved_criteria_count": 3,
+      "confirmed_gap_criterion_ids": []
+    }
+  ],
+  "observed_gaps": [
+    {
+      "skill_id": "skill.backend.data_consistency",
+      "skill_label": "Giữ tính nhất quán của dữ liệu",
+      "question_ref": {
+        "id": "case.c03.inventory_race.v1",
+        "version": 1
+      },
+      "evaluation_id": "evaluation.demo-20261118-01",
+      "criterion_id": "c03.concurrent_tests",
+      "criterion_label": "Kiểm thử bất biến",
+      "reason": "Chưa nêu kịch bản kiểm thử chèn lỗi tạo đơn để xác nhận rollback tồn kho."
+    }
+  ]
+}

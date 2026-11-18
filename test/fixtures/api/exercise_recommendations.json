@@ -1,0 +1,41 @@
+{
+  "session_id": "session.demo-20261118-01",
+  "demo_mode_label": "Dữ liệu minh họa",
+  "recommendations": [
+    {
+      "exercise_id": "exercise.backend.rollback_invariant_test",
+      "version": 1,
+      "title": "Viết kiểm thử đồng thời và kiểm thử rollback cho giao dịch trừ kho",
+      "summary": "Thực hành thiết kế hai kịch bản kiểm thử độc lập: (1) hai yêu cầu đồng thời tranh chấp sản phẩm cuối cùng và (2) chèn lỗi khi tạo đơn để xác nhận tồn kho được hoàn trả.",
+      "related_skill_ids": [
+        "skill.backend.data_consistency"
+      ],
+      "prerequisite_ids": [
+        "exercise.backend.atomic_transaction_locking"
+      ],
+      "estimated_duration_minutes": 25,
+      "matched_gap": {
+        "skill_id": "skill.backend.data_consistency",
+        "skill_label": "Giữ tính nhất quán của dữ liệu",
+        "question_ref": {
+          "id": "case.c03.inventory_race.v1",
+          "version": 1
+        },
+        "evaluation_id": "evaluation.demo-20261118-01",
+        "criterion_id": "c03.concurrent_tests",
+        "criterion_label": "Kiểm thử bất biến",
+        "reason": "Chưa nêu kịch bản kiểm thử chèn lỗi tạo đơn để xác nhận rollback tồn kho."
+      },
+      "source": {
+        "source_id": "source.c03.concurrent_inventory",
+        "title": "PostgreSQL Documentation Chapter 13 — Concurrency Control (Read Committed & Row-Level Locking)",
+        "url": "https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/doc/src/sgml/mvcc.sgml",
+        "license_spdx": "PostgreSQL",
+        "required_notice": "Portions Copyright (c) 1996-2026, PostgreSQL Global Development Group. Portions Copyright (c) 1994, The Regents of the University of California. Licensed under The PostgreSQL License."
+      },
+      "eligible_alternate_question_available": true
+    }
+  ],
+  "unmatched_skill_ids": [],
+  "message": "Thời lượng 25 phút là ước tính tham khảo dựa trên điểm thiếu đã xác nhận ở tiêu chí c03.concurrent_tests."
+}

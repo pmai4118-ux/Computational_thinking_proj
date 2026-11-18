@@ -1,0 +1,89 @@
+{
+  "evaluation_id": "evaluation.demo-20261118-01",
+  "version": 1,
+  "status": "completed",
+  "answer_ref": {
+    "id": "answer.demo-20261118-01",
+    "revision": 1
+  },
+  "question_ref": {
+    "id": "case.c03.inventory_race.v1",
+    "version": 1
+  },
+  "rubric_ref": {
+    "id": "rubric.c03.inventory_race.v1",
+    "version": 1
+  },
+  "answer_text": "Hai yêu cầu có thể cùng đọc stock=1 trước khi ghi ở nhiều instance. Em dùng conditional update UPDATE inventory SET stock = stock - 1 WHERE id = ? AND stock >= 1 và kiểm tra affected rows = 1. Trừ kho và tạo đơn nằm trong cùng một database transaction; nếu tạo đơn lỗi thì rollback để kho về 1. Em kiểm thử bằng hai luồng gửi đồng thời qua hai instance: chỉ đúng 1 đơn thành công và stock = 0.",
+  "criterion_checks": [
+    {
+      "criterion_id": "c03.race",
+      "criterion_label": "Nhận ra thao tác tranh chấp",
+      "status": "met",
+      "score": 2,
+      "max_score": 2,
+      "evidence": [
+        {
+          "answer_ref": {
+            "id": "answer.demo-20261118-01",
+            "revision": 1
+          },
+          "quote": "Hai yêu cầu có thể cùng đọc stock=1 trước khi ghi ở nhiều instance.",
+          "start_offset": 0,
+          "end_offset": 67,
+          "observation": null
+        }
+      ],
+      "explanation": "Nêu rõ tranh chấp đọc-kiểm-tra-ghi (stock=1) trên phạm vi nhiều instance ứng dụng.",
+      "unresolved_reason": null
+    },
+    {
+      "criterion_id": "c03.atomicity",
+      "criterion_label": "Giữ bất biến tại dữ liệu chia sẻ",
+      "status": "met",
+      "score": 2,
+      "max_score": 2,
+      "evidence": [
+        {
+          "answer_ref": {
+            "id": "answer.demo-20261118-01",
+            "revision": 1
+          },
+          "quote": "Trừ kho và tạo đơn nằm trong cùng một database transaction; nếu tạo đơn lỗi thì rollback để kho về 1.",
+          "start_offset": 193,
+          "end_offset": 294,
+          "observation": null
+        }
+      ],
+      "explanation": "Bảo vệ tồn kho bằng conditional update nguyên tử tại DB kèm transaction rollback khi tạo đơn lỗi.",
+      "unresolved_reason": null
+    },
+    {
+      "criterion_id": "c03.concurrent_tests",
+      "criterion_label": "Kiểm thử bất biến",
+      "status": "unmet",
+      "score": 1,
+      "max_score": 2,
+      "evidence": [
+        {
+          "answer_ref": {
+            "id": "answer.demo-20261118-01",
+            "revision": 1
+          },
+          "quote": "Em kiểm thử bằng hai luồng gửi đồng thời qua hai instance: chỉ đúng 1 đơn thành công và stock = 0.",
+          "start_offset": 295,
+          "end_offset": 393,
+          "observation": null
+        }
+      ],
+      "explanation": "Có kiểm thử hai yêu cầu đồng thời với assertion cho số đơn (=1) và tồn kho (=0), nhưng chưa nêu ca kiểm thử chèn lỗi tạo đơn để xác nhận rollback tồn kho.",
+      "unresolved_reason": null
+    }
+  ],
+  "total_score": 5,
+  "maximum_score": 6,
+  "demo_mode_label": "Dữ liệu minh họa",
+  "prompt_version": "interpret_answer/1",
+  "model_id": "fixture",
+  "evaluated_at": "2026-11-18T03:00:02Z"
+}
