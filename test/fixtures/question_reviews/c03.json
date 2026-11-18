@@ -1,0 +1,43 @@
+{
+  "schema_version": "review-fixture/0.1-proposal",
+  "example_only": false,
+  "review_status": "approved",
+  "question_id": "case.c03.transfer_deadlock.v1",
+  "question_version": 1,
+  "rubric_id": "rubric.c03.transfer_deadlock.v1",
+  "curator_id": "nguyentrg",
+  "reviewer_id": "Tin",
+  "reviewed_at": "2026-11-18T04:42:00Z",
+  "cases": [
+    {
+      "case_id": "c03.v2.correct.lock_ordering",
+      "label": "Câu trả lời đạt tối đa: Giải thích vòng chờ khóa và sắp thứ tự wallet_id tăng dần",
+      "answer": "Deadlock xảy ra vì Request 1 giữ row lock của ví 11111 rồi chờ khóa ví 22222, trong khi Request 2 giữ row lock của ví 22222 rồi chờ khóa ví 11111, tạo vòng chờ chéo. Để triệt tiêu vòng chờ, trong mỗi transaction em luôn khóa hai dòng theo thứ tự wallet_id tăng dần bằng SELECT wallet_id, balance FROM wallets WHERE wallet_id IN (:from_id, :to_id) ORDER BY wallet_id FOR UPDATE, kiểm tra ví nguồn đủ tiền rồi mới thực hiện trừ và cộng trong cùng transaction (nếu thiếu tiền thì ROLLBACK). Kiểm thử bằng cách cho 2 luồng bắn lặp lại chuyển tiền ngược chiều A->B và B->A đồng thời, kiểm tra không xảy ra lỗi deadlock, không ví nào âm và tổng số dư A + B giữ nguyên.",
+      "answer_context": {"missing_attachment": false},
+      "checks": [
+        {
+          "criterion_id": "c03.q2.deadlock_cycle",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "Request 1 giữ row lock của ví 11111 rồi chờ khóa ví 22222, trong khi Request 2 giữ row lock của ví 22222 rồi chờ khóa ví 11111, tạo vòng chờ chéo.",
+          "reason": "Chỉ rõ trình tự giữ và chờ khóa ngược chiều."
+        },
+        {
+          "criterion_id": "c03.q2.lock_ordering",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "luôn khóa hai dòng theo thứ tự wallet_id tăng dần bằng SELECT wallet_id, balance FROM wallets WHERE wallet_id IN (:from_id, :to_id) ORDER BY wallet_id FOR UPDATE",
+          "reason": "Thứ tự khóa xác định toàn cục kèm transaction rollback."
+        },
+        {
+          "criterion_id": "c03.q2.tests",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "cho 2 luồng bắn lặp lại chuyển tiền ngược chiều A->B và B->A đồng thời, kiểm tra không xảy ra lỗi deadlock, không ví nào âm và tổng số dư A + B giữ nguyên.",
+          "reason": "Đầy đủ kịch bản chuyển chéo và bất biến tổng số dư."
+        }
+      ],
+      "expected_total": 6
+    }
+  ]
+}
