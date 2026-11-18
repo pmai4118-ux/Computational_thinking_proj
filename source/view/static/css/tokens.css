@@ -1,0 +1,115 @@
+/* P06 Shared Design Tokens — interviewUS (Purple Glass UI/UX)
+ * Vietnamese-ready typography, high-contrast surfaces for reading prompts/answers,
+ * evidence quote highlighting, and accessible keyboard focus states.
+ */
+
+:root {
+  /* Core Palette (aligned with P02/P06 brief) */
+  --color-canvas: #F5F3FA;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FAF8FF;
+  --color-subtle: #EDE9FE;
+  --color-border: #D8D0E8;
+  --color-border-strong: #B8A9D9;
+
+  /* Brand & Interactive */
+  --color-primary: #7C3AED;
+  --color-primary-hover: #6D28D9;
+  --color-primary-active: #5B21B6;
+  --color-on-primary: #FFFFFF;
+  --color-accent-teal: #0D9488;
+  --color-accent-teal-subtle: #CCFBF1;
+
+  /* Text Hierarchy (WCAG AA contrast against #F5F3FA and #FFFFFF) */
+  --color-text: #211A32;
+  --color-text-secondary: #584F6B;
+  --color-text-muted: #6E6582;
+
+  /* Criterion & Evaluation Status Semantics (always paired with text/icon labels) */
+  --color-status-met-bg: #ECFDF5;
+  --color-status-met-border: #059669;
+  --color-status-met-text: #065F46;
+
+  --color-status-unmet-bg: #FEF2F2;
+  --color-status-unmet-border: #DC2626;
+  --color-status-unmet-text: #991B1B;
+
+  --color-status-unresolved-bg: #FFFBEB;
+  --color-status-unresolved-border: #D97706;
+  --color-status-unresolved-text: #92400E;
+
+  --color-status-error-bg: #FFF1F2;
+  --color-status-error-border: #E11D48;
+  --color-status-error-text: #881337;
+
+  /* Exact Evidence Quote Highlight */
+  --color-evidence-highlight-bg: #F3E8FF;
+  --color-evidence-highlight-active-bg: #DDD6FE;
+  --color-evidence-highlight-border: #7C3AED;
+
+  /* Glass Chrome (reserved for header/toolbar only; prompts & textareas use solid surface) */
+  --surface-glass-bg: rgba(255, 255, 255, 0.84);
+  --surface-glass-border: rgba(124, 58, 237, 0.18);
+  --surface-glass-blur: 10px;
+
+  /* Typography — Full Vietnamese diacritic support */
+  --font-sans: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, "Courier New", monospace;
+
+  --font-size-xs: 0.8125rem;   /* 13px */
+  --font-size-sm: 0.875rem;    /* 14px */
+  --font-size-base: 1rem;      /* 16px — default for question prompt & answer textarea */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.375rem;    /* 22px */
+  --font-size-2xl: 1.75rem;    /* 28px */
+
+  --line-height-tight: 1.35;
+  --line-height-relaxed: 1.65; /* comfortable line height for Vietnamese stacked diacritics */
+  --measure-reading: 72ch;
+
+  /* Spacing & Layout Scale */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-5: 1.5rem;   /* 24px */
+  --space-6: 2rem;     /* 32px */
+  --space-8: 3rem;     /* 48px */
+
+  --layout-max-width: 76rem;   /* 1216px */
+  --layout-narrow-breakpoint: 48rem; /* 768px */
+
+  /* Radii & Shadows */
+  --radius-sm: 0.375rem; /* 6px */
+  --radius-md: 0.625rem; /* 10px */
+  --radius-lg: 0.875rem; /* 14px */
+  --shadow-card: 0 2px 8px rgba(33, 26, 50, 0.06);
+
+  /* Keyboard Focus Ring */
+  --focus-ring-color: #6D28D9;
+  --focus-ring-offset: 2px;
+  --focus-ring: 2px solid var(--focus-ring-color);
+
+  /* Motion */
+  --transition-fast: 140ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
