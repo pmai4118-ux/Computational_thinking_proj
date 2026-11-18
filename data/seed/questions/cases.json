@@ -1,0 +1,140 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "case.c03.inventory_race.v1",
+    "version": 1,
+    "category": "technical_case",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "difficulty": "applied",
+    "skill_ids": [
+      "skill.backend.data_consistency"
+    ],
+    "source_id": "source.c03.concurrent_inventory",
+    "prompt": "Kho còn một sản phẩm. Hai yêu cầu mua đến đồng thời, có thể tới hai instance ứng dụng khác nhau. Đề xuất cách chỉ tạo tối đa một đơn thành công, không âm kho; giải thích transaction và cách kiểm thử.",
+    "code": null,
+    "code_language": null,
+    "constraints": [
+      "Cơ sở dữ liệu được dùng chung giữa các instance ứng dụng.",
+      "Nếu tạo đơn hàng thất bại thì thay đổi tồn kho cũng phải rollback.",
+      "Không yêu cầu thiết kế hệ thống thanh toán hoặc quy trình giao hàng bên ngoài."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_case",
+      "summary": "Thích nghi từ tài liệu chính thức PostgreSQL Chapter 13 Concurrency Control (doc/src/sgml/mvcc.sgml @ 83cefb7b738c32a66a91537aa502d99891a63b11, mục Read Committed & Row-Level Locking SELECT FOR UPDATE / UPDATE); chuyển sang bài toán trừ sản phẩm cuối cùng trong kho giữa nhiều instance dùng chung DB kèm yêu cầu rollback khi tạo đơn lỗi.",
+      "translator_id": "hwngMP"
+    },
+    "rubric": {
+      "id": "rubric.c03.inventory_race.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c03.race",
+          "criterion_type": "failure_analysis",
+          "label": "Nhận ra thao tác tranh chấp",
+          "expected_evidence": [
+            "Hai luồng có thể cùng đọc stock=1 trước khi ghi.",
+            "Phân tích phải áp dụng cho nhiều instance ứng dụng độc lập."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Cho rằng thao tác đọc rồi ghi riêng lẻ luôn an toàn hoặc không nhận ra nguy cơ tranh chấp dữ liệu."
+            },
+            {
+              "score": 1,
+              "description": "Nhận ra vấn đề đồng thời nhưng chưa chỉ ra được khoảng tranh chấp (interleaving đọc-kiểm-tra-ghi) hoặc chỉ xét trong một instance đơn lẻ."
+            },
+            {
+              "score": 2,
+              "description": "Mô tả rõ interleaving đọc-kiểm-tra-ghi (check-then-act) và phạm vi nhiều instance ứng dụng dùng chung cơ sở dữ liệu."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận mọi cách diễn đạt tương đương về việc hai request cùng đọc snapshot còn hàng trước khi một bên kịp cập nhật."
+        },
+        {
+          "id": "c03.atomicity",
+          "criterion_type": "invariant_preservation",
+          "label": "Giữ bất biến tại dữ liệu chia sẻ",
+          "expected_evidence": [
+            "Điều kiện mua và trừ kho được bảo vệ nguyên tử tại cơ sở dữ liệu dùng chung.",
+            "Tạo đơn hàng và trừ kho thuộc cùng một transaction có rollback khi lỗi."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Chỉ dùng khóa bộ nhớ cục bộ của từng instance (như synchronized/threading.Lock) hoặc vẫn để hai đơn cùng thành công gây âm kho."
+            },
+            {
+              "score": 1,
+              "description": "Có cơ chế bảo vệ tồn kho tại cơ sở dữ liệu dùng chung nhưng chưa bao quát transaction tạo đơn và rollback khi tạo đơn thất bại."
+            },
+            {
+              "score": 2,
+              "description": "Bảo đảm tại tầng dữ liệu chia sẻ chỉ tối đa một đơn trừ kho thành công và rollback toàn vẹn cả tồn kho lẫn đơn hàng khi xảy ra lỗi."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận conditional atomic update (UPDATE ... SET stock = stock - 1 WHERE stock >= 1 kèm kiểm tra affected rows = 1), pessimistic row lock (SELECT ... FOR UPDATE trong transaction), hoặc optimistic locking (cột version) có xử lý xung đột/rollback đúng."
+        },
+        {
+          "id": "c03.concurrent_tests",
+          "criterion_type": "test_design",
+          "label": "Kiểm thử bất biến",
+          "expected_evidence": [
+            "Gửi hai yêu cầu mua đồng thời qua hai luồng hoặc hai instance.",
+            "Kiểm tra số đơn thành công (=1), tồn kho cuối (=0) và kiểm thử rollback khi chèn lỗi tạo đơn."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đề xuất kiểm thử hoặc kết quả mong đợi vi phạm bất biến tồn kho."
+            },
+            {
+              "score": 1,
+              "description": "Có kiểm thử hai yêu cầu đồng thời nhưng thiếu kiểm tra số đơn/tồn kho hoặc thiếu kịch bản kiểm thử rollback khi tạo đơn lỗi."
+            },
+            {
+              "score": 2,
+              "description": "Có cả kịch bản kiểm thử đồng thời và kịch bản kiểm thử rollback với kết quả mong đợi rõ ràng cho số đơn và số lượng tồn kho."
+            }
+          ],
+          "equivalent_answers": "Không bắt buộc công cụ kiểm thử cụ thể; chỉ cần nêu rõ cách tạo hai yêu cầu đồng thời, cách giả lập lỗi tạo đơn và kết quả cần đối chiếu."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [
+          0,
+          1,
+          2
+        ],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Gán unmet (score = 0) nếu đề bài yêu cầu rõ và câu trả lời hoàn toàn bỏ qua hoặc trình bày sai; gán insufficient_evidence (score = null) nếu câu trả lời viện dẫn tệp đính kèm hoặc liên kết ngoài không có trong phiên.",
+        "provider_failure": "processing_error, không gán điểm hoặc kết luận năng lực",
+        "equivalent_answers": "Chấp nhận phương án khác đúng theo ràng buộc đề bài; không so khớp từ khóa máy móc."
+      }
+    },
+    "review": {
+      "status": "approved",
+      "curator_id": "hwngMP",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:40:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Biến thể 1 của nhóm technical_case: tập trung vào check-then-act race condition trên cùng một dòng tồn kho (single-row contention)."
+    }
+  }
+]
