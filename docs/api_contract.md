@@ -1,0 +1,109 @@
+# Hợp đồng API nội bộ và dữ liệu mẫu (P04)
+
+| Thuộc tính | Nội dung |
+| --- | --- |
+| Mã công việc | P04 — Thống nhất API và dữ liệu mẫu |
+| Người thực hiện | hwngMP (`member-1`) |
+| Phụ thuộc | [P01 (`scope.md`)](scope.md), [P02 (`user_flow.md`)](user_flow.md), [P03 (`data_contract.md`)](data_contract.md), [C01 (`content_guide.md`)](content_guide.md) |
+| Đầu ra | `docs/api_contract.md`, [`source/Control/schemas.py`](../source/Control/schemas.py), `test/fixtures/api/*.json` |
+| Trạng thái | Bản hợp đồng dùng chung cho phát triển song song Frontend (`U01–U08`) và Backend (`I01–I06`) |
+
+---
+
+## 1. Quy ước chung và phân định phạm vi
+
+1. **Định dạng dữ liệu:** Tất cả request/response JSON dùng chuẩn `snake_case` đồng nhất với hợp đồng miền P03 ([`source/Model/question.py`](../source/Model/question.py), [`source/Model/evaluation.py`](../source/Model/evaluation.py)) và được kiểm tra kiểu nghiêm ngặt (`extra="forbid"`, `frozen=True`) qua [`source/Control/schemas.py`](../source/Control/schemas.py).
+2. **Bảo mật thông tin đề bài:** Trước và trong khi người học trả lời, `QuestionPromptDTO` chỉ gửi nội dung đề (`prompt`, `code`, `constraints`), kỹ năng và nguồn ghi công. Tuyệt đối không trả `expected_evidence`, mô tả các mức điểm của rubric hay đáp án tham khảo xuống client ở bước làm bài.
+3. **Ngữ nghĩa điểm số và trạng thái:**
+   - `score: 0` / `total_score: 0` là điểm 0 thực sự khi câu trả lời vi phạm tiêu chí quan sát được (`status: "unmet"`).
+   - `score: null` với `status: "insufficient_evidence"` biểu thị chưa đủ căn cứ để kết luận (kèm `unresolved_reason` bắt buộc). Khi bất kỳ tiêu chí nào trong rubric có `status: "insufficient_evidence"`, `total_score` của câu đó giữ giá trị `null`.
+   - Lỗi của AI provider (timeout, hết quota, từ chối, JSON sai) trả về lỗi có cấu trúc (`ApiErrorResponse`), không tạo điểm `0` và không kết luận người học thiếu năng lực.
+4. **Liên hệ với lát cắt demo P02:**
+   - Sơ đồ P02 ([`docs/user_flow.md`](user_flow.md)) mô tả lát cắt demo 5 màn hình (`S01` → `S05`), trong đó màn hình bài tập (`S06`) được đánh dấu hoãn hiển thị CTA trên bản demo thu gọn.
+   - Hợp đồng P04 này vẫn định nghĩa đầy đủ cả 6 nhóm endpoint (bao gồm endpoint đề xuất bài tập cho `I06`/`U06`) để không chặn bất kỳ nhánh phát triển nào trong bảng việc.
+
+---
+
+## 2. Quyền truy cập phiên, lưu nháp và chống gửi trùng
+
+### 2.1. Định danh phiên ẩn danh (Anonymous Session Binding)
+- Khi tạo phiên đầu tiên (`POST /api/sessions`), server phát hành cookie `interview_owner_id` (`HttpOnly`, `SameSite=Lax`, `Path=/`).
+- Mỗi bản ghi `Session` lưu mã băm/định danh của `interview_owner_id`.
+- Mọi thao tác đọc/ghi trên `/api/sessions/{session_id}` hoặc `/api/answers/{answer_id}/*` đều kiểm tra quyền sở hữu:
+  - Không khớp `interview_owner_id`: trả `403 Forbidden` với `error_code: "SESSION_FORBIDDEN"`.
+  - Phiên hết hạn khả dụng: trả `410 Gone` với `error_code: "SESSION_EXPIRED"`.
+  - Không tồn tại ID: trả `404 Not Found` với `error_code: "SESSION_NOT_FOUND"`.
+
+### 2.2. Lưu bài bất biến và `client_submission_id` (Idempotency)
+- Luồng gửi bài luôn tách thành 2 bước rõ ràng theo P02 (`W01`, `W03`, `W04`, `W05`):
+  1. **Bước 1 — Lưu nguyên văn bài trả lời (`POST /api/sessions/{session_id}/answers`):**
+     - Client sinh `client_submission_id` (UUID/chuỗi duy nhất cho mỗi lần bấm gửi) và giữ nguyên mã này nếu mất mạng cần gửi lại.
+     - Nếu `(session_id, client_submission_id)` đã tồn tại với **cùng** `question_id`, `question_version` và `text`: server trả lại đúng `SavedAnswerDTO` đã lưu kèm `idempotent_replay: true` (`200 OK`).
+     - Nếu cùng `client_submission_id` nhưng **khác** nội dung hoặc câu hỏi: server trả `409 Conflict` với `error_code: "SUBMISSION_CONFLICT"`.
+     - Giới hạn chiều dài câu trả lời: từ `1` đến `20.000` ký tự (sau khi cắt khoảng trắng hai đầu không được rỗng).
+  2. **Bước 2 — Yêu cầu đánh giá (`POST /api/answers/{answer_id}/evaluate`):**
+     - Chỉ gọi sau khi bước 1 trả về `answer_id`.
+     - Nếu `answer_id` (cùng `revision`) đã có `EvaluationResult` ở trạng thái `completed`: trả lại ngay kết quả đã lưu (`200 OK`), không gọi lại provider và không tạo bản ghi trùng.
+     - Nếu đang có một yêu cầu đánh giá khác chạy cho cùng `(answer_id, revision)`: trả `409 Conflict` (`error_code: "EVALUATION_IN_PROGRESS"`, `retryable: true`) để UI đọc trạng thái qua `GET /api/answers/{answer_id}/evaluation`.
+     - Nếu lần đánh giá trước thất bại (`failed` do timeout/mạng/quota): cho phép bấm **Thử đánh giá lại** với cùng `answer_id` và `answer_revision`, giữ nguyên bài trả lời gốc.
+
+### 2.3. Chính sách bản nháp trình duyệt (Browser Draft Policy)
+- Trình duyệt chỉ lưu bản nháp cục bộ theo khóa `draft:{session_id}:{question_id}` trong `sessionStorage` để chống mất dữ liệu khi rớt mạng hoặc hết phiên.
+- Bản nháp cục bộ phải hiển thị nhãn *"Bản nháp trên trình duyệt (chưa lưu server)"*, không được hiển thị *"Đã lưu"* cho tới khi `POST /api/sessions/{session_id}/answers` trả về thành công.
+- Khi mở phiên mới hoặc đổi `session_id`, không tự nạp bản nháp của phiên khác.
+
+---
+
+## 3. Danh mục Endpoints
+
+| Nhóm màn hình | Phương thức & Đường dẫn | Request DTO | Response DTO |Fixture mẫu |
+| --- | --- | --- | --- | --- |
+| **S01 / S02 · Mở phiên** | `POST /api/sessions` | `CreateSessionRequest` | `SessionViewDTO` (`201 Created`) | [`session_created.json`](../test/fixtures/api/session_created.json) |
+| **S01 / S03 · Đọc phiên** | `GET /api/sessions/{session_id}` | — | `SessionViewDTO` (`200 OK`) | [`session_created.json`](../test/fixtures/api/session_created.json) |
+| **S03 · Lưu bài trả lời** | `POST /api/sessions/{session_id}/answers` | `SubmitAnswerRequest` | `SubmitAnswerResponse` (`201` / `200`) | [`answer_submitted.json`](../test/fixtures/api/answer_submitted.json) |
+| **S03 / S04 · Đánh giá bài** | `POST /api/answers/{answer_id}/evaluate` | `EvaluateAnswerRequest` | `EvaluationResultDTO` (`200 OK`) | [`evaluation_completed.json`](../test/fixtures/api/evaluation_completed.json) |
+| **S04 · Đọc kết quả** | `GET /api/answers/{answer_id}/evaluation` | — | `EvaluationResultDTO` (`200 OK`) | [`evaluation_insufficient_evidence.json`](../test/fixtures/api/evaluation_insufficient_evidence.json) |
+| **S04 → S03/S05 · Chuyển câu** | `POST /api/sessions/{session_id}/next` | `NextQuestionRequest` | `SessionViewDTO` (`200 OK`) | [`session_created.json`](../test/fixtures/api/session_created.json) |
+| **S03 / S04 → S05 · Kết thúc sớm** | `POST /api/sessions/{session_id}/end` | `EndSessionRequest` | `SessionSummaryDTO` (`200 OK`) | [`session_summary.json`](../test/fixtures/api/session_summary.json) |
+| **S05 · Tổng kết phiên** | `GET /api/sessions/{session_id}/summary` | — | `SessionSummaryDTO` (`200 OK`) | [`session_summary.json`](../test/fixtures/api/session_summary.json) |
+| **S06 · Đề xuất bài tập** | `GET /api/sessions/{session_id}/exercises` | — | `ExerciseRecommendationsResponse` (`200 OK`) | [`exercise_recommendations.json`](../test/fixtures/api/exercise_recommendations.json) |
+
+### Quy tắc chuyển câu (`POST /api/sessions/{session_id}/next`)
+- Client gửi `from_question_index` (chỉ số câu hiện tại mà người học đang xem kết quả).
+- Server chỉ tăng sang câu kế tiếp khi câu tại `from_question_index` đã có kết quả đánh giá `completed` (bao gồm cả trường hợp `completed` nhưng có tiêu chí `insufficient_evidence`).
+- Nếu client gửi lặp lại cùng `from_question_index` sau khi server đã chuyển sang `from_question_index + 1`, server trả lại `SessionViewDTO` hiện tại mà không nhảy cách qua hai câu (`W05`).
+- Nếu câu hiện tại chưa được đánh giá xong (`pending`/`processing`/`failed`), server từ chối chuyển câu với `409 Conflict` (`error_code: "INVALID_STATE_TRANSITION"`).
+
+---
+
+## 4. Bảng mã lỗi chuẩn (`ApiErrorResponse`)
+
+Mọi phản hồi lỗi đều tuân theo schema `ApiErrorResponse` trong [`source/Control/schemas.py`](../source/Control/schemas.py) và có mẫu đối chiếu tại [`test/fixtures/api/errors.json`](../test/fixtures/api/errors.json):
+
+| HTTP Status | `error_code` | `retryable` | Tình huống và hướng dẫn phục hồi trên UI |
+| :---: | --- | :---: | --- |
+| `422` | `INVALID_INPUT` | `false` | Câu trả lời rỗng, vượt 20.000 ký tự, hoặc cấu hình role/level không hợp lệ. Giữ nguyên nội dung đã nhập và focus vào trường lỗi. |
+| `403` | `SESSION_FORBIDDEN` | `false` | Cookie phiên không khớp chủ sở hữu của `session_id`/`answer_id`. Giữ bản nháp để người học sao chép và mở phiên mới hợp lệ. |
+| `404` | `SESSION_NOT_FOUND` / `EXERCISE_NOT_FOUND` | `false` | Không tìm thấy phiên, câu trả lời hoặc bài tập. Cung cấp nút quay về màn hình Bắt đầu / Tổng kết. |
+| `410` | `SESSION_EXPIRED` | `false` | Phiên đã hết hạn. Khóa gửi vào phiên cũ, giữ bản nháp trên màn hình và hướng dẫn tạo phiên mới. |
+| `409` | `SUBMISSION_CONFLICT` | `false` | Gửi trùng `client_submission_id` với nội dung khác. Đọc lại bài đã lưu hoặc sinh mã gửi mới nếu tạo lượt trả lời mới. |
+| `409` | `EVALUATION_IN_PROGRESS` | `true` | Đang có tiến trình chấm cho cùng bài. Hiển thị trạng thái đang xử lý, không tạo yêu cầu chấm mới song song. |
+| `409` | `INVALID_STATE_TRANSITION` | `false` | Bấm chuyển câu khi câu hiện tại chưa đánh giá xong hoặc phiên đã kết thúc. |
+| `503` | `INSUFFICIENT_QUESTION_BANK` | `false` | Ngân hàng câu hỏi đã duyệt chưa đủ phủ 4 nhóm theo khung `C01`. Báo rõ nhóm kỹ năng thiếu, không mở phiên rỗng. |
+| `504` | `PROVIDER_TIMEOUT` | `true` | Quá hạn chờ Gemini/provider. Giữ nguyên `answer_ref` đã lưu và hiện nút **Thử đánh giá lại**. |
+| `429` | `PROVIDER_QUOTA_EXCEEDED` | `true` | Hết hạn mức gọi API tạm thời. Giữ nguyên `answer_ref`, thông báo thử lại sau hoặc chuyển sang chế độ dữ liệu mẫu. |
+| `502` | `PROVIDER_REFUSAL` / `PROVIDER_OUTPUT_INVALID` | `true` | Provider từ chối yêu cầu hoặc trả JSON/trích dẫn không hợp lệ. Không gán điểm 0; giữ bài gốc để thử đánh giá lại. |
+
+---
+
+## 5. Kiểm tra hoàn thành (Acceptance Checks)
+
+Chạy kiểm thử tự động xác nhận toàn bộ fixture mẫu khớp schema P04:
+
+```powershell
+uv run --locked python -m pytest test/test_api_contract.py
+```
+
+- [x] Mọi fixture thành công (`session_created.json`, `answer_submitted.json`, `evaluation_completed.json`, `evaluation_insufficient_evidence.json`, `session_summary.json`, `exercise_recommendations.json`) đều parse hợp lệ qua DTO trong `source/Control/schemas.py` mà UI không phải đoán tên trường.
+- [x] Mọi trích dẫn (`quote`, `start_offset`, `end_offset`) trong fixture khớp chính xác với chuỗi con trong `answer_text`.
+- [x] Có đầy đủ fixture lỗi cho đầu vào sai (`INVALID_INPUT`), phiên không thuộc người dùng (`SESSION_FORBIDDEN`), xung đột mã gửi (`SUBMISSION_CONFLICT`) và lỗi timeout giữ nguyên `answer_ref` (`PROVIDER_TIMEOUT`).
