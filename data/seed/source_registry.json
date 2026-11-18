@@ -2,6 +2,56 @@
   {
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
+    "id": "source.cpython.faq.mutable_defaults",
+    "title": "Python Programming FAQ — Why are default values shared between objects?",
+    "url": "https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/Doc/faq/programming.rst",
+    "file_path": "Doc/faq/programming.rst",
+    "revision": "94276402cf3b3a5e1fa96cedb33a4dc498a77ed2",
+    "authors": [
+      "Python Software Foundation",
+      "CPython Documentation Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Why are default values shared between objects? It is often expected that a function call creates new objects for default values. This is not what happens. Default values are created exactly once, when the function is defined. If that object is changed, like the dictionary in this example, subsequent calls to the function will refer to this changed object.",
+      "code": "def foo(mydict={}):  # Danger: shared reference to one dict for all calls\n    ... compute something ...\n    mydict[key] = value\n    return mydict"
+    },
+    "license": {
+      "spdx_id": "PSF-2.0",
+      "url": "https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/LICENSE",
+      "required_notice": "Copyright (c) 2001-2026 Python Software Foundation; All Rights Reserved. Licensed under the PSF License Agreement Version 2.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.cpython.faq.late_binding_closures",
+    "title": "Python Programming FAQ — Why do lambdas defined in a loop with different values all return the same result?",
+    "url": "https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/Doc/faq/programming.rst",
+    "file_path": "Doc/faq/programming.rst",
+    "revision": "94276402cf3b3a5e1fa96cedb33a4dc498a77ed2",
+    "authors": [
+      "Python Software Foundation",
+      "CPython Documentation Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Why do lambdas defined in a loop with different values all return the same result? This happens because x is not local to the lambdas, but is defined in the outer scope, and it is accessed when the lambda is called --- not when it is defined. At the end of the loop, the value of x is 4, so all the functions now return 4**2, that is 16.",
+      "code": "squares = []\nfor x in range(5):\n    squares.append(lambda: x**2)"
+    },
+    "license": {
+      "spdx_id": "PSF-2.0",
+      "url": "https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/LICENSE",
+      "required_notice": "Copyright (c) 2001-2026 Python Software Foundation; All Rights Reserved. Licensed under the PSF License Agreement Version 2.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
     "id": "source.c03.concurrent_inventory",
     "title": "PostgreSQL Documentation Chapter 13 — Concurrency Control (Read Committed & Row-Level Locking)",
     "url": "https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/doc/src/sgml/mvcc.sgml",
