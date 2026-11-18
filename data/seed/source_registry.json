@@ -144,5 +144,54 @@
       "required_notice": "Copyright (c) 2016-2026 TheAlgorithms and contributors. Licensed under the MIT License.",
       "status": "verified"
     }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.thealgorithms.python.binary_search_fn",
+    "title": "TheAlgorithms/Python — searches/binary_search.py (binary_search with pairwise precheck)",
+    "url": "https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/searches/binary_search.py",
+    "file_path": "searches/binary_search.py",
+    "revision": "30507bbe41397065728167fb09aa820f9fce8dc7",
+    "authors": [
+      "TheAlgorithms Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Pure implementation of a binary search algorithm in Python. If there are multiple occurrences of the item, returns the index of the leftmost occurrence.",
+      "code": "def binary_search(sorted_collection: list[int], item: int) -> int:\n    if any(a > b for a, b in pairwise(sorted_collection)):\n        raise ValueError(\"sorted_collection must be sorted in ascending order\")\n    left = 0\n    right = len(sorted_collection) - 1\n    result = -1\n    while left <= right:\n        midpoint = left + (right - left) // 2\n        current_item = sorted_collection[midpoint]\n        if current_item == item:\n            result = midpoint\n            right = midpoint - 1\n        elif item < current_item:\n            right = midpoint - 1\n        else:\n            left = midpoint + 1\n    return result"
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/LICENSE.md",
+      "required_notice": "Copyright (c) 2016-2026 TheAlgorithms and contributors. Licensed under the MIT License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.owasp.query_parameterization",
+    "title": "OWASP Cheat Sheet Series — Query Parameterization Cheat Sheet",
+    "url": "https://github.com/OWASP/CheatSheetSeries/blob/7af0ef1b745f1a38ce905c00c5a592d5b3a515a9/cheatsheets/Query_Parameterization_Cheat_Sheet.md",
+    "file_path": "cheatsheets/Query_Parameterization_Cheat_Sheet.md",
+    "revision": "7af0ef1b745f1a38ce905c00c5a592d5b3a515a9",
+    "authors": [
+      "OWASP Foundation",
+      "OWASP Cheat Sheet Series Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "SQL Injection is best prevented through the use of parameterized queries... Please ensure that query parameterization is done server-side!",
+      "code": "String custname = request.getParameter(\"customerName\");\nString query = \"SELECT account_balance FROM user_data WHERE user_name = ? \";\nPreparedStatement pstmt = connection.prepareStatement( query );\npstmt.setString( 1, custname);\nResultSet results = pstmt.executeQuery( );"
+    },
+    "license": {
+      "spdx_id": "CC-BY-SA-4.0",
+      "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "required_notice": "Copyright (c) OWASP Foundation. Licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA-4.0).",
+      "status": "verified"
+    }
   }
 ]

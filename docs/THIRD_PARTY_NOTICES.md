@@ -34,3 +34,9 @@ copyright notices are preserved below.
 - Copyright Notice: Copyright (c) 2016-2026 TheAlgorithms and contributors. Licensed under the MIT License.
 - Adaptation: Used as reference code for two Vietnamese algorithm-explanation questions (`algo.c04.bisect_left_bounds.v1`, `algo.c04.balanced_brackets_stack.v1`) and one code-review critique exercise (`review.c05.binary_search_precheck.v1` analyzing the $O(n)$ `pairwise` precheck under an $O(\log n)$ endpoint contract).
 
+### 2.4. OWASP Cheat Sheet Series (`source.owasp.query_parameterization`)
+- Repository: [OWASP/CheatSheetSeries](https://github.com/OWASP/CheatSheetSeries)
+- File: `cheatsheets/Query_Parameterization_Cheat_Sheet.md` @ commit `7af0ef1b745f1a38ce905c00c5a592d5b3a515a9`
+- License: Creative Commons Attribution-ShareAlike 4.0 International (`CC-BY-SA-4.0`) — `https://creativecommons.org/licenses/by-sa/4.0/`
+- Copyright Notice: Copyright (c) OWASP Foundation. Adapted material in `review.c05.sql_query_parameterization.v1` and `exercise.engineering.contract_and_security_review` is shared under CC-BY-SA-4.0. Note: defects in the candidate snippet of `review.c05.sql_query_parameterization.v1` were intentionally seeded by the project team for educational code review and do not appear in OWASP's safe reference code.
+
