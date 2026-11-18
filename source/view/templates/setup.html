@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Thiết lập phiên luyện tập — interviewUS{% endblock %}
+
+{% block content %}
+<div class="grid-two">
+  <section class="card" aria-labelledby="setup-heading">
+    <form method="post" action="/setup" class="stack" novalidate>
+      <div>
+        <h1 id="setup-heading">Thiết lập phiên luyện tập</h1>
+        <p class="text-secondary reading-measure">
+          Chỉ chọn thông tin cần thiết để hệ thống rút đúng bộ 4 câu hỏi đã kiểm duyệt.
+          Ứng dụng không thu thập họ tên, email hay hồ sơ CV.
+        </p>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="role-select">Vai trò mục tiêu</label>
+        <select
+          id="role-select"
+          name="role"
+          class="form-select"
+          {% if field_errors and field_errors.get("role") %}aria-invalid="true" aria-describedby="role-error"{% endif %}
+        >
+          <option value="backend_developer" {% if selected_role == "backend_developer" %}selected{% endif %}>
+            Backend Developer
+          </option>
+        </select>
+        {% if field_errors and field_errors.get("role") %}
+          <p id="role-error" class="form-error">{{ field_errors.get("role") }}</p>
+        {% endif %}
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="level-select">Cấp độ phỏng vấn</label>
+        <select
+          id="level-select"
+          name="level"
+          class="form-select"
+          {% if field_errors and field_errors.get("level") %}aria-invalid="true" aria-describedby="level-error"{% endif %}
+        >
+          <option value="intern_fresher" {% if selected_level == "intern_fresher" %}selected{% endif %}>
+            Intern / Fresher
+          </option>
+        </select>
+        {% if field_errors and field_errors.get("level") %}
+          <p id="level-error" class="form-error">{{ field_errors.get("level") }}</p>
+        {% endif %}
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="language-select">Ngôn ngữ đề bài và phản hồi</label>
+        <select id="language-select" name="language" class="form-select">
+          <option value="vi" {% if selected_language == "vi" %}selected{% endif %}>
+            Tiếng Việt (kèm thuật ngữ kỹ thuật chuẩn)
+          </option>
+        </select>
+      </div>
+
+      <div class="action-row">
+        <button type="submit" class="btn btn--primary">Xác nhận bắt đầu</button>
+        <a class="btn btn--secondary" href="/">Quay lại trang bắt đầu</a>
+      </div>
+    </form>
+  </section>
+
+  <aside class="card card--subtle" aria-labelledby="format-heading">
+    <div class="stack">
+      <h2 id="format-heading">Định dạng phiên và lưu ý</h2>
+      <ul class="meta-list">
+        <li><strong>Câu 1 — Kiến thức lập trình:</strong> Dự đoán kết quả, giải thích ngữ nghĩa và sửa hợp đồng hàm.</li>
+        <li><strong>Câu 2 — Tình huống kỹ thuật:</strong> Phân tích tranh chấp/khóa dữ liệu và thiết kế transaction nhất quán.</li>
+        <li><strong>Câu 3 — Giải thích thuật toán:</strong> Trình bày tính đúng đắn, độ phức tạp và ca kiểm thử biên.</li>
+        <li><strong>Câu 4 — Đánh giá mã nguồn:</strong> Kiểm chứng độc lập đoạn mã gợi ý, sửa lỗi và viết test.</li>
+      </ul>
+      <p class="form-hint">
+        <strong>Thời lượng ước tính:</strong> khoảng 25–35 phút cho trọn vẹn 4 câu (ước tính tham khảo; bạn có thể kết thúc phiên sớm bất kỳ lúc nào).
+      </p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
