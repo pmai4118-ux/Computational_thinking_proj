@@ -10,6 +10,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from source.Control.schemas import (
+    AnswerRevisionRefDTO,
     ApiErrorResponse,
     CreateSessionRequest,
     ErrorCode,
@@ -19,11 +20,14 @@ from source.Control.schemas import (
     SessionState as SchemaSessionState,
     SessionViewDTO,
     SourceAttributionDTO,
+    SubmitAnswerRequest,
+    SubmitAnswerResponse,
     VersionedRefDTO,
 )
-from source.Model.ids import SessionId
+from source.Model.ids import QuestionId, SessionId, VersionedRef
 from source.Model.interview import Answer
 from source.Model.question import Question, SourceMetadata
+from source.Model.repositories.interfaces import DuplicateSubmissionConflictError
 from source.service.interview_service import (
     InsufficientQuestionBankError,
     InterviewService,
@@ -250,6 +254,110 @@ class InterviewController:
             views.append(self._snapshot_to_dto(snap))
         return tuple(views)
 
+    def submit_answer(
+        self,
+        session_id: SessionId,
+        request_dto: SubmitAnswerRequest,
+        *,
+        owner_token: str | None,
+    ) -> SubmitAnswerResponse:
+        owner_hash = hash_owner_token(owner_token) if owner_token else ""
+        question_ref = VersionedRef(
+            QuestionId(request_dto.question_id),
+            request_dto.question_version,
+        )
+        try:
+            outcome = self._service.submit_answer(
+                session_id=session_id,
+                owner_token_hash=owner_hash,
+                question_ref=question_ref,
+                text=request_dto.text,
+                client_submission_id=request_dto.client_submission_id,
+            )
+        except SessionNotFoundError as error:
+            raise ApiControllerError(
+                status.HTTP_404_NOT_FOUND,
+                ApiErrorResponse(
+                    error_code=ErrorCode.SESSION_NOT_FOUND,
+                    message="Không tìm thấy phiên luyện tập để lưu câu trả lời.",
+                    retryable=False,
+                    session_id=session_id,
+                    client_submission_id=request_dto.client_submission_id,
+                    recovery_action="Sao chép nội dung đang nhập và mở phiên luyện tập mới.",
+                ),
+            ) from error
+        except SessionForbiddenError as error:
+            raise ApiControllerError(
+                status.HTTP_403_FORBIDDEN,
+                ApiErrorResponse(
+                    error_code=ErrorCode.SESSION_FORBIDDEN,
+                    message="Bạn không có quyền gửi câu trả lời vào phiên này.",
+                    retryable=False,
+                    session_id=session_id,
+                    client_submission_id=request_dto.client_submission_id,
+                    recovery_action="Sao chép bản nháp trên màn hình và bắt đầu phiên mới.",
+                ),
+            ) from error
+        except SessionExpiredError as error:
+            raise ApiControllerError(
+                status.HTTP_410_GONE,
+                ApiErrorResponse(
+                    error_code=ErrorCode.SESSION_EXPIRED,
+                    message="Phiên luyện tập đã hết hạn; câu trả lời chưa thể ghi vào phiên cũ.",
+                    retryable=False,
+                    session_id=session_id,
+                    client_submission_id=request_dto.client_submission_id,
+                    recovery_action="Giữ lại bản nháp trên trình duyệt và mở phiên mới.",
+                ),
+            ) from error
+        except DuplicateSubmissionConflictError as error:
+            existing = error.existing_answer
+            raise ApiControllerError(
+                status.HTTP_409_CONFLICT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.SUBMISSION_CONFLICT,
+                    message="Mã gửi bài (client_submission_id) đã được dùng cho một nội dung trả lời khác.",
+                    retryable=False,
+                    session_id=session_id,
+                    answer_ref=AnswerRevisionRefDTO(
+                        id=existing.id,
+                        revision=existing.revision,
+                    ),
+                    client_submission_id=request_dto.client_submission_id,
+                    recovery_action="Tải lại câu trả lời đã lưu hoặc tạo mã gửi mới khi gửi bản chỉnh sửa mới.",
+                ),
+            ) from error
+        except InvalidSessionStateError as error:
+            raise ApiControllerError(
+                status.HTTP_409_CONFLICT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.INVALID_STATE_TRANSITION,
+                    message=str(error),
+                    retryable=False,
+                    session_id=session_id,
+                    client_submission_id=request_dto.client_submission_id,
+                    recovery_action="Tải lại trạng thái phiên hiện tại trước khi gửi tiếp.",
+                ),
+            ) from error
+        except ValueError as error:
+            raise ApiControllerError(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.INVALID_INPUT,
+                    message=str(error),
+                    retryable=False,
+                    session_id=session_id,
+                    client_submission_id=request_dto.client_submission_id,
+                    field_errors={"text": str(error)},
+                ),
+            ) from error
+
+        return SubmitAnswerResponse(
+            answer=_to_saved_answer_dto(outcome.answer),
+            idempotent_replay=outcome.idempotent_replay,
+            evaluation_status=outcome.evaluation_status,
+        )
+
     def _snapshot_to_dto(self, snapshot: SessionSnapshot) -> SessionViewDTO:
         session = snapshot.session
         question_dto = (
@@ -360,6 +468,27 @@ def build_interview_router(controller: InterviewController) -> APIRouter:
     ) -> SessionViewDTO:
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
         return controller.get_session(SessionId(session_id), owner_token=owner_token)
+
+    @router.post(
+        "/{session_id}/answers",
+        response_model=SubmitAnswerResponse,
+        status_code=status.HTTP_201_CREATED,
+    )
+    def submit_answer_endpoint(
+        session_id: str,
+        payload: SubmitAnswerRequest,
+        request: Request,
+        response: Response,
+    ) -> SubmitAnswerResponse:
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        result = controller.submit_answer(
+            SessionId(session_id),
+            payload,
+            owner_token=owner_token,
+        )
+        if result.idempotent_replay:
+            response.status_code = status.HTTP_200_OK
+        return result
 
     return router
 
