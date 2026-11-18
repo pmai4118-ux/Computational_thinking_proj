@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đánh giá câu trả lời | PoC</title>
+  <link rel="stylesheet" href="/static/demo.css">
+  <script src="/static/demoState.js" defer></script>
+  <script src="/static/demo.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#answer-text">Đến ô trả lời</a>
+  <header class="topbar"><a class="brand" href="/">Interview Practice · PoC</a><span class="demo-label">Bộ 10 câu hỏi</span></header>
+  <main class="page-shell">
+    <section class="intro">
+      <div><h1>Đánh giá câu trả lời có căn cứ</h1><p class="intro-copy">Chọn câu hỏi, xem chuẩn chấm và đối chiếu kết quả theo từng nhóm.</p></div>
+      <span class="provisional-badge" id="question-badge">Đang tải dữ liệu</span>
+    </section>
+    <div class="workspace">
+      <section class="panel practice-panel" aria-labelledby="question-heading">
+        <label class="field-label" for="question-select">Chọn câu hỏi</label>
+        <select id="question-select" disabled><option>Đang tải…</option></select>
+        <div class="panel-heading"><h2 id="question-heading">Câu hỏi</h2></div>
+        <div class="question-card">
+          <p class="question-prompt" id="question-prompt"></p>
+          <pre class="question-code" id="question-code" hidden></pre>
+          <h3>Yêu cầu</h3><ul id="requirements-list"></ul>
+        </div>
+        <details class="rubric-drawer" open>
+          <summary>Nhóm đánh giá và thang điểm 0–1–2</summary>
+          <p>Chấm riêng từng nhóm áp dụng. Chưa đủ căn cứ được ghi riêng; các nhóm không áp dụng không có điểm.</p>
+          <div id="rubric-content"></div>
+        </details>
+        <form id="answer-form">
+          <label class="field-label" for="answer-text">Câu trả lời của bạn</label>
+          <textarea id="answer-text" rows="10" maxlength="40000" aria-describedby="answer-help" placeholder="Trình bày lời giải, phân tích, test hoặc code theo yêu cầu của câu hỏi." disabled></textarea>
+          <p class="answer-meta" id="answer-help">Bản nháp được giữ trong phiên trình duyệt. Code trong bài trả lời không được thực thi.</p>
+          <div class="actions"><button id="evaluate-button" class="button button-primary" type="submit" disabled>Đánh giá bằng AI</button><span id="character-count">0 / 40.000</span></div>
+          <p class="inline-status" id="live-status" role="status">Đang kiểm tra cấu hình…</p>
+        </form>
+        <details class="examples-drawer" open>
+          <summary>Bài mẫu để demo</summary>
+          <div class="example-controls">
+            <label class="field-label" for="example-select">Loại bài trả lời</label>
+            <div class="example-control-row"><select id="example-select"></select><button class="button button-secondary" id="load-example-button" type="button" disabled>Tải bài mẫu</button></div>
+            <button class="text-button" id="preview-button" type="button" disabled>Xem kết quả ghi sẵn</button>
+            <p class="example-note">Bài mẫu và nhận định được chuẩn bị để minh họa quy trình, đang chờ người duyệt độc lập. Xem bản ghi không gọi AI.</p>
+          </div>
+        </details>
+      </section>
+      <section class="panel results-panel" aria-labelledby="results-heading">
+        <div class="results-heading-row"><h2 id="results-heading" tabindex="-1">Kết quả đánh giá</h2><button class="button button-secondary" id="download-button" type="button" disabled>Tải JSON</button></div>
+        <p id="result-status" class="result-message" role="status" aria-live="polite">Tải một bài mẫu rồi xem kết quả, hoặc nhập bài và đánh giá bằng AI.</p>
+        <div id="report-content" hidden></div>
+      </section>
+    </div>
+    <footer class="page-footer"><span id="source-caption"></span><span>Điểm được chọn bằng quy tắc rubric trong Python.</span></footer>
+  </main>
+</body>
+</html>

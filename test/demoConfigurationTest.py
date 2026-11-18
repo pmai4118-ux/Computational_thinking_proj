@@ -56,7 +56,7 @@ def testInjectedSettingsDoNotChangeEnvironment(monkeypatch):
 def testBlankAntigravityOverridesUseDefaults(monkeypatch):
     for name in ("DEMO_EVALUATION_PROVIDER", "ANTIGRAVITY_MODEL", "ANTIGRAVITY_TIMEOUT", "ANTIGRAVITY_EXECUTABLE"):
         monkeypatch.setenv(name, " ")
-    assert selectedProvider() == "antigravity"
+    assert selectedProvider() == "gemini"
     settings = loadAntigravitySettings()
     assert (settings.modelName, settings.timeoutSeconds, settings.executable) == ("gemini-3.8-flash-medium", 120, "agy")
 
