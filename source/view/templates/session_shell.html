@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Phiên {{ session.session_id }} — interviewUS{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="stack">
+    <div class="session-item">
+      <div>
+        <strong>Phiên {{ session.session_id }}</strong>
+        {% if session.state.value == "in_progress" %}
+          <span class="badge badge--unresolved">
+            Câu {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
+          </span>
+        {% else %}
+          <span class="badge badge--met">{{ session.state.value }}</span>
+        {% endif %}
+      </div>
+      <div class="action-row">
+        <a class="btn btn--secondary" href="/">Về danh sách phiên</a>
+      </div>
+    </div>
+
+    {% if session.current_question %}
+      <article class="stack reading-measure" aria-labelledby="question-heading">
+        <div>
+          <span class="badge">{{ session.current_question.category }}</span>
+          {% if session.current_question.source.license_spdx %}
+            <span class="badge">Nguồn mở: {{ session.current_question.source.license_spdx }}</span>
+          {% endif %}
+        </div>
+
+        <h1 id="question-heading">Câu {{ session.progress.current_index + 1 }}: Đề bài</h1>
+        <p>{{ session.current_question.prompt }}</p>
+
+        {% if session.current_question.code %}
+          <pre class="code-block"><code>{{ session.current_question.code }}</code></pre>
+        {% endif %}
+
+        {% if session.current_question.constraints %}
+          <div>
+            <h2>Ràng buộc</h2>
+            <ul>
+              {% for item in session.current_question.constraints %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if session.current_question.source.url %}
+          <p class="form-hint">
+            Nguồn tham chiếu đã xác minh:
+            <a href="{{ session.current_question.source.url }}" rel="noopener noreferrer" target="_blank">
+              {{ session.current_question.source.source_id }}
+            </a>
+          </p>
+        {% endif %}
+      </article>
+
+      <section class="alert alert--status" role="status">
+        <p class="alert__title">
+           Đề bài và phiên đã được khởi tạo trên máy chủ (API lưu bài <code>POST /api/sessions/{{ session.session_id }}/answers</code> đã hoạt động; khung soạn thảo lưu nháp và bảng đối chiếu tiêu chí thuộc hạng mục U03–U04).
+        </p>
+      </section>
+    {% else %}
+      <p>Phiên luyện tập này đã kết thúc ({{ session.progress.answered_count }}/{{ session.progress.total_questions }} câu đã lưu).</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Bắt đầu luyện phỏng vấn Backend — interviewUS{% endblock %}
+
+{% block content %}
+<section class="card">
+  <div class="stack reading-measure">
+    <div>
+      <span class="badge">Phiên bản MVP · Tiếng Việt</span>
+    </div>
+    <h1>Luyện phỏng vấn kỹ thuật Backend với căn cứ từ bài làm</h1>
+    <p>
+      Thực hành trả lời tự luận cho vị trí <strong>Backend Intern / Fresher</strong>.
+      Mỗi câu trả lời được đối chiếu trực tiếp với tiêu chí quan sát được và trích dẫn nguyên văn,
+      giúp bạn phân biệt rõ phần đã đạt, phần thiếu yêu cầu và phần chưa đủ bằng chứng.
+    </p>
+
+    <ul class="meta-list" aria-label="Thông tin cấu trúc phiên">
+      <li><strong>Cấu trúc cố định:</strong> 4 câu hỏi tiếng Việt (Kiến thức lập trình, Tình huống kỹ thuật, Giải thích thuật toán, Đánh giá mã nguồn).</li>
+      <li><strong>Thời lượng ước tính:</strong> khoảng 25–35 phút (ước tính tham khảo, không giới hạn đếm ngược cứng).</li>
+      <li><strong>Quyền riêng tư:</strong> Không yêu cầu tạo tài khoản, không thu thập CV hay thông tin cá nhân.</li>
+    </ul>
+
+    <div class="action-row">
+      <a class="btn btn--primary" href="/setup">Bắt đầu luyện tập</a>
+    </div>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="history-heading">
+  <div class="stack">
+    <div>
+      <h2 id="history-heading">Phiên luyện tập trên trình duyệt này</h2>
+      <p class="text-secondary reading-measure">
+        Danh sách phiên được gắn ẩn danh với trình duyệt hiện tại để bạn tiếp tục khi đang làm dở.
+      </p>
+    </div>
+
+    {% if sessions %}
+      <ul class="session-list">
+        {% for item in sessions %}
+          <li class="session-item">
+            <div class="stack" style="gap: var(--space-1);">
+              <div>
+                <strong>Phiên {{ item.session_id }}</strong>
+                {% if item.state.value == "in_progress" %}
+                  <span class="badge badge--unresolved">
+                    Đang thực hiện · Câu {{ item.progress.current_index + 1 }}/{{ item.progress.total_questions }}
+                  </span>
+                {% elif item.state.value == "completed" %}
+                  <span class="badge badge--met">
+                    Đã hoàn thành · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu
+                  </span>
+                {% else %}
+                  <span class="badge">
+                    {{ item.state.value }} · Đã trả lời {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu
+                  </span>
+                {% endif %}
+              </div>
+              <span class="text-secondary" style="font-size: var(--font-size-sm);">
+                Vai trò: Backend Developer (Intern / Fresher) · Ngôn ngữ: Tiếng Việt
+              </span>
+            </div>
+
+            <div class="action-row">
+              {% if item.state.value == "in_progress" %}
+                <a class="btn btn--primary" href="/sessions/{{ item.session_id }}">Tiếp tục phiên</a>
+              {% else %}
+                <a class="btn btn--secondary" href="/sessions/{{ item.session_id }}">Xem phiên</a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="card card--subtle">
+        <p style="margin-top: 0;">
+          Chưa có phiên luyện tập nào trên trình duyệt này. Bạn có thể thiết lập phiên 4 câu ngay bây giờ.
+        </p>
+        <div class="action-row">
+          <a class="btn btn--secondary" href="/setup">Thiết lập phiên đầu tiên</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
