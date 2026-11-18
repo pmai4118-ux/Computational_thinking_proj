@@ -1,4 +1,4 @@
-"""P07 Antigravity CLI structured-output adapter (primary team live provider).
+"""P07/E04 Antigravity CLI structured-output adapter conforming to E01 `EvidenceInterpreter`.
 
 Runs the signed-in local Antigravity CLI (`agy`, defaulting to `gemini-3.8-flash-medium`)
 inside an isolated empty directory with all agent tools disabled and API-key variables
@@ -22,10 +22,12 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model
 from source.Model.evaluation import CriterionStatus
 from source.Model.ids import CriterionId
 from source.Model.question import Question, Rubric
-from source.service.providers.gemini_provider import (
-    PROMPT_VERSION,
+from source.service.prompts import PROMPT_VERSION, InterpretationPromptBuilder
+from source.service.providers.interfaces import (
+    CriterionObservation,
+    InterpretationBatch,
     ProviderErrorKind,
-    SYSTEM_INSTRUCTION,
+    ProviderFailureError,
 )
 
 DEFAULT_ANTIGRAVITY_MODEL = "gemini-3.8-flash-medium"
@@ -43,14 +45,8 @@ class _AntigravitySettingsLike(Protocol):
     antigravity_executable: str
 
 
-class AntigravityProviderError(RuntimeError):
+class AntigravityProviderError(ProviderFailureError):
     """Raised when the Antigravity CLI cannot produce a valid structured interpretation."""
-
-    def __init__(self, code: str, message: str, *, retryable: bool = False) -> None:
-        super().__init__(message)
-        self.code = code
-        self.message = message
-        self.retryable = retryable
 
 
 class _StrictModel(BaseModel):
@@ -99,25 +95,10 @@ class AntigravityCriterionDTO(_StrictModel):
 
 
 @dataclass(frozen=True, slots=True)
-class AntigravityObservation:
-    """Criterion observation produced by Antigravity without a numeric score."""
-
-    criterion_id: CriterionId
-    status: CriterionStatus
-    explanation: str
-    quote: str | None = None
-    start_offset: int | None = None
-    end_offset: int | None = None
-    observation: str | None = None
-    unresolved_reason: str | None = None
-    satisfied_expected_indexes: tuple[int, ...] | None = None
-
-
-@dataclass(frozen=True, slots=True)
 class AntigravityCallResult:
     """Validated Antigravity structured observations paired with telemetry."""
 
-    observations: tuple[AntigravityObservation, ...]
+    observations: tuple[CriterionObservation, ...]
     model_id: str
     prompt_version: str
     elapsed_ms: int
@@ -128,6 +109,7 @@ def _resolve_quote_offsets(
     dto: AntigravityCriterionDTO,
     answer_text: str,
 ) -> AntigravityCriterionDTO:
+    """Populate exact offsets when Antigravity returns a unique exact quote with null offsets."""
     if dto.quote is None or (dto.start_offset is not None and dto.end_offset is not None):
         return dto
     first = answer_text.find(dto.quote)
@@ -162,6 +144,7 @@ class AntigravityProvider:
         model_id: str = DEFAULT_ANTIGRAVITY_MODEL,
         timeout_seconds: float = DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS,
         executable: str = DEFAULT_ANTIGRAVITY_EXECUTABLE,
+        prompt_builder: InterpretationPromptBuilder | None = None,
         prompt_version: str = PROMPT_VERSION,
         runner: Callable[..., subprocess.CompletedProcess[str]] | None = None,
     ) -> None:
@@ -188,7 +171,8 @@ class AntigravityProvider:
         self.model_id = cleaned_model
         self.timeout_seconds = float(timeout_seconds)
         self.executable = cleaned_exec
-        self.prompt_version = f"{prompt_version}+antigravity/1"
+        self._prompt_builder = prompt_builder or InterpretationPromptBuilder(version=prompt_version)
+        self.prompt_version = f"{self._prompt_builder.version}+antigravity/1"
         self._runner = runner or subprocess.run
 
     def __repr__(self) -> str:
@@ -220,6 +204,7 @@ class AntigravityProvider:
 
     @staticmethod
     def session_settings() -> dict[str, Any]:
+        """Isolated CLI settings blocking all filesystem, shell, web, and MCP tools."""
         return {
             "modelProvider": "",
             "useG1Credits": False,
@@ -239,6 +224,7 @@ class AntigravityProvider:
 
     @staticmethod
     def subscription_environment() -> dict[str, str]:
+        """Strip API-key env vars so Antigravity CLI uses the signed-in account only."""
         env = dict(os.environ)
         for name in (
             "GEMINI_API_KEY",
@@ -259,6 +245,7 @@ class AntigravityProvider:
 
     @staticmethod
     def response_model(rubric: Rubric) -> type[BaseModel]:
+        """Build a keyed-object Pydantic schema without prefixItems/allOf/const for `agy`."""
         criterion_fields: dict[str, Any] = {
             f"c{index}": (AntigravityCriterionDTO, Field(alias=criterion.id))
             for index, criterion in enumerate(rubric.criteria)
@@ -285,37 +272,13 @@ class AntigravityProvider:
         rubric: Rubric,
         answer_text: str,
     ) -> str:
-        user_json = json.dumps(
-            {
-                "prompt_version": self.prompt_version,
-                "question": {
-                    "id": question.id,
-                    "version": question.version,
-                    "category": question.category,
-                    "prompt": question.prompt,
-                    "code": question.code,
-                    "code_language": question.code_language,
-                    "constraints": list(question.constraints),
-                },
-                "rubric": {
-                    "id": rubric.id,
-                    "version": rubric.version,
-                    "criteria": [
-                        {
-                            "id": c.id,
-                            "label": c.label,
-                            "expected_evidence": list(c.expected_evidence),
-                            "equivalent_answers_note": c.equivalent_answers_note,
-                        }
-                        for c in rubric.criteria
-                    ],
-                },
-                "student_answer_untrusted": answer_text,
-            },
-            ensure_ascii=False,
+        user_json = self._prompt_builder.build_user_data_json(
+            question=question,
+            rubric=rubric,
+            answer_text=answer_text,
         )
         prompt = (
-            f"{SYSTEM_INSTRUCTION}\n"
+            f"{self._prompt_builder.system_instruction()}\n"
             "Submit the assessment using the finish structured-output tool only. "
             "Do not use command, file, workspace, web, or MCP tools. "
             "Return a `criterion_checks` OBJECT keyed by the exact rubric criterion IDs, "
@@ -399,7 +362,7 @@ class AntigravityProvider:
         stderr: str,
         rubric: Rubric,
         answer_text: str,
-    ) -> tuple[AntigravityObservation, ...]:
+    ) -> tuple[CriterionObservation, ...]:
         if len(stdout.encode("utf-8")) > MAX_RESPONSE_BYTES:
             raise AntigravityProviderError(
                 ProviderErrorKind.INVALID_OUTPUT,
@@ -474,12 +437,12 @@ class AntigravityProvider:
                 retryable=True,
             ) from None
 
-        observations: list[AntigravityObservation] = []
+        observations: list[CriterionObservation] = []
         for criterion in rubric.criteria:
             dto = AntigravityCriterionDTO.model_validate(raw_checks[criterion.id])
             resolved = _resolve_quote_offsets(criterion.id, dto, answer_text)
             observations.append(
-                AntigravityObservation(
+                CriterionObservation(
                     criterion_id=CriterionId(criterion.id),
                     status=resolved.status,
                     explanation=resolved.explanation,
@@ -565,11 +528,30 @@ class AntigravityProvider:
             elapsed_ms=elapsed_ms,
         )
 
+    def interpret(
+        self,
+        *,
+        question: Question,
+        rubric: Rubric,
+        answer_text: str,
+    ) -> InterpretationBatch:
+        call_result = self.interpret_answer(
+            question=question,
+            rubric=rubric,
+            answer_text=answer_text,
+        )
+        return InterpretationBatch(
+            observations=call_result.observations,
+            model_id=call_result.model_id,
+            prompt_version=call_result.prompt_version,
+            demo_mode_label=None,
+            elapsed_ms=call_result.elapsed_ms,
+        )
+
 
 __all__ = [
     "AntigravityCallResult",
     "AntigravityCriterionDTO",
-    "AntigravityObservation",
     "AntigravityProvider",
     "AntigravityProviderError",
     "DEFAULT_ANTIGRAVITY_EXECUTABLE",
