@@ -1,0 +1,182 @@
+[
+  {
+    "schema_version": "exercise-record/0.1-proposal",
+    "example_only": false,
+    "id": "exercise.programming.mutable_defaults_and_binding",
+    "version": 1,
+    "title": "Thực hành tách trạng thái mặc định và biến tự do trong closure Python",
+    "summary": "Luyện dự đoán thời điểm định nghĩa so với thời điểm gọi hàm trong Python và viết bản sửa giữ nguyên hợp đồng tham số của người gọi (thời lượng ước tính ~25 phút, có thể thay đổi theo tốc độ cá nhân).",
+    "instructions": "1. Đọc mục 'Why are default values shared between objects?' và 'Why do lambdas defined in a loop with different values all return the same result?' trong tài liệu CPython Programming FAQ.\n2. Viết lại hai hàm mẫu: (a) hàm nhận danh sách tùy chọn dùng sentinel `None` và kiểm tra `is None`; (b) danh sách hàm tạo trong vòng lặp bắt giữ đúng biến tại từng bước mà không đổi chữ ký gọi.\n3. Viết `pytest` kiểm tra tính độc lập giữa hai lần gọi bỏ qua đối số và kiểm tra bảo toàn tham chiếu (`is`) khi truyền danh sách rỗng `[]`.",
+    "related_skill_ids": [
+      "skill.programming.code_semantics"
+    ],
+    "prerequisite_ids": [],
+    "target_criterion_types": [
+      "behavior_explanation",
+      "contract_preservation",
+      "test_design"
+    ],
+    "estimated_duration_minutes": 25,
+    "observable_outcome": "Giải thích được sự khác biệt giữa thời điểm thực thi câu lệnh `def`/`lambda` và thời điểm gọi hàm; bộ kiểm thử pytest xanh cho cả trường hợp mặc định lẫn truyền `[]` tường minh.",
+    "source_id": "source.cpython.faq.mutable_defaults",
+    "review": {
+      "status": "approved",
+      "curator_id": "nkphuc",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:50:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Ánh xạ cho khoảng thiếu thuộc skill.programming.code_semantics; thời lượng là ước tính tham khảo."
+    }
+  },
+  {
+    "schema_version": "exercise-record/0.1-proposal",
+    "example_only": false,
+    "id": "exercise.backend.atomic_transaction_locking",
+    "version": 1,
+    "title": "Bảo vệ bất biến dữ liệu bằng cập nhật nguyên tử và thứ tự khóa dòng",
+    "summary": "Phân tích khoảng tranh chấp đọc-kiểm-tra-ghi và vòng chờ khóa giữa nhiều kết nối DB, sau đó cài đặt giao dịch nguyên tử giữ bất biến số dư/tồn kho (thời lượng ước tính ~30 phút).",
+    "instructions": "1. Đọc tài liệu PostgreSQL Chapter 13 về Read Committed và Row-Level Locks / Deadlocks.\n2. Cài đặt hàm trừ tồn kho bằng câu lệnh cập nhật có điều kiện (`WHERE stock >= :qty`) kết hợp chèn bản ghi đơn hàng trong cùng một transaction.\n3. Cài đặt hàm chuyển điểm giữa hai ví luôn khóa dòng theo thứ tự định danh tăng dần để loại bỏ vòng chờ khóa ngược chiều.",
+    "related_skill_ids": [
+      "skill.backend.data_consistency"
+    ],
+    "prerequisite_ids": [],
+    "target_criterion_types": [
+      "failure_analysis",
+      "invariant_preservation"
+    ],
+    "estimated_duration_minutes": 30,
+    "observable_outcome": "Chỉ ra được thời điểm hai kết nối đọc cùng snapshot hoặc khóa chéo nhau, và viết được transaction SQL không bao giờ để tồn kho hoặc số dư ví xuống âm.",
+    "source_id": "source.postgres.mvcc.deadlocks",
+    "review": {
+      "status": "approved",
+      "curator_id": "nguyentrg",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:50:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Bài nền tảng về khóa dòng và transaction nguyên tử trước khi viết kiểm thử rollback đồng thời."
+    }
+  },
+  {
+    "schema_version": "exercise-record/0.1-proposal",
+    "example_only": false,
+    "id": "exercise.backend.rollback_invariant_test",
+    "version": 1,
+    "title": "Viết kiểm thử đồng thời và kiểm thử rollback cho giao dịch trừ kho",
+    "summary": "Thực hành thiết kế hai kịch bản kiểm thử độc lập: (1) hai yêu cầu đồng thời tranh chấp sản phẩm cuối cùng và (2) chèn lỗi khi tạo đơn để xác nhận tồn kho được hoàn trả (thời lượng ước tính ~25 phút).",
+    "instructions": "1. Dựa trên giao dịch trừ kho nguyên tử đã xây dựng ở bài tiên quyết, tạo cơ sở dữ liệu kiểm thử khởi tạo `stock = 1`.\n2. Dùng `threading.Barrier` hoặc hai kết nối độc lập gửi đồng thời hai yêu cầu mua sản phẩm cuối cùng; đối chiếu đúng 1 đơn thành công và `stock == 0`.\n3. Giả lập ngoại lệ ở bước tạo bản ghi đơn hàng sau khi câu lệnh trừ kho đã chạy trong transaction; đối chiếu `orders == 0` và `stock == 1` sau khi rollback.",
+    "related_skill_ids": [
+      "skill.backend.data_consistency"
+    ],
+    "prerequisite_ids": [
+      "exercise.backend.atomic_transaction_locking"
+    ],
+    "target_criterion_types": [
+      "test_design",
+      "invariant_preservation"
+    ],
+    "estimated_duration_minutes": 25,
+    "observable_outcome": "Có đủ hai bài kiểm thử tự động kiểm chứng bất biến số đơn và số lượng tồn kho khi tranh chấp đồng thời lẫn khi xảy ra lỗi giữa giao dịch.",
+    "source_id": "source.c03.concurrent_inventory",
+    "review": {
+      "status": "approved",
+      "curator_id": "hwngMP",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:50:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Phụ thuộc bài tiên quyết exercise.backend.atomic_transaction_locking; thời lượng 25 phút chỉ là ước tính tham khảo."
+    }
+  },
+  {
+    "schema_version": "exercise-record/0.1-proposal",
+    "example_only": false,
+    "id": "exercise.algorithms.loop_invariant_and_bounds",
+    "version": 1,
+    "title": "Lập luận bất biến vòng lặp, độ phức tạp và danh sách kiểm thử biên mảng/ngăn xếp",
+    "summary": "Thực hành viết lập luận tính đúng đắn 3 bước (khởi tạo, duy trì, kết thúc), phân tích thời gian/bộ nhớ phụ và kiểm thử các trường hợp biên mảng/chuỗi (thời lượng ước tính ~30 phút).",
+    "instructions": "1. Chọn một thuật toán tìm kiếm nhị phân biên trái (`bisect_left`) hoặc kiểm tra ngoặc cân bằng bằng ngăn xếp.\n2. Viết rõ bất biến được giữ sau mỗi bước lặp và giải thích vì sao vòng lặp chắc chắn dừng.\n3. Đối chiếu danh sách corner cases từ Tech Interview Handbook (dãy rỗng, 1–2 phần tử, toàn phần tử trùng nhau, không có kết quả khớp) để viết bộ ca kiểm thử kèm kết quả kỳ vọng.",
+    "related_skill_ids": [
+      "skill.algorithms.correctness_and_complexity"
+    ],
+    "prerequisite_ids": [],
+    "target_criterion_types": [
+      "correctness_argument",
+      "complexity_analysis",
+      "test_design"
+    ],
+    "estimated_duration_minutes": 30,
+    "observable_outcome": "Trình bày được bất biến vòng lặp không phụ thuộc ví dụ cảm tính, nêu đúng độ phức tạp thời gian/không gian xấu nhất và viết đủ 4 nhóm ca kiểm thử biên.",
+    "source_id": "source.tech_interview_handbook.array_stack",
+    "review": {
+      "status": "approved",
+      "curator_id": "nkphuc",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:50:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Ánh xạ cho khoảng thiếu thuộc skill.algorithms.correctness_and_complexity; thời lượng là ước tính."
+    }
+  },
+  {
+    "schema_version": "exercise-record/0.1-proposal",
+    "example_only": false,
+    "id": "exercise.engineering.contract_and_security_review",
+    "version": 1,
+    "title": "Quy trình review độc lập mã gợi ý: hợp đồng đầu ra, độ phức tạp và tham số hóa truy vấn",
+    "summary": "Luyện đối chiếu đoạn mã gợi ý với hợp đồng hàm (giá trị trả về khi rỗng, cam kết độ phức tạp, an toàn truy vấn SQL) và viết test phản chứng trước khi chấp nhận mã (thời lượng ước tính ~25 phút).",
+    "instructions": "1. Đọc OWASP Query Parameterization Cheat Sheet về nguyên tắc tách biệt câu lệnh SQL và dữ liệu đầu vào.\n2. Với mỗi đoạn mã cần review, lập bảng kiểm 3 mục: (a) hành vi khi không có dữ liệu hoặc biên rỗng so với kiểu trả về cam kết; (b) chi phí ẩn trên đường nóng; (c) an toàn đầu vào chưa tin cậy.\n3. Viết ít nhất 3 bài kiểm thử độc lập (trường hợp chuẩn, trường hợp không có dữ liệu trả `None`/`-1`, và đầu vào chứa ký tự đặc biệt/biên lớn) với kết quả tự tính trước khi chạy mã.",
+    "related_skill_ids": [
+      "skill.engineering.code_review_and_verification"
+    ],
+    "prerequisite_ids": [],
+    "target_criterion_types": [
+      "failure_analysis",
+      "contract_preservation",
+      "test_design"
+    ],
+    "estimated_duration_minutes": 25,
+    "observable_outcome": "Phát hiện được lỗi vi phạm hợp đồng và lỗ hổng nối chuỗi SQL, sửa đúng bằng truy vấn tham số hóa và có bộ kiểm thử độc lập tái hiện lỗi cũ.",
+    "source_id": "source.owasp.query_parameterization",
+    "review": {
+      "status": "approved",
+      "curator_id": "nguyentrg",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:50:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Ánh xạ cho khoảng thiếu thuộc skill.engineering.code_review_and_verification; nội dung dẫn xuất từ OWASP Cheat Sheet chia sẻ theo CC-BY-SA-4.0."
+    }
+  }
+]
