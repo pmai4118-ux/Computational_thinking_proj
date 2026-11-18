@@ -1,0 +1,149 @@
+{
+  "schema_version": "review-fixture/0.1-proposal",
+  "example_only": false,
+  "review_status": "approved",
+  "question_id": "case.c03.inventory_race.v1",
+  "question_version": 1,
+  "rubric_id": "rubric.c03.inventory_race.v1",
+  "curator_id": "hwngMP",
+  "reviewer_id": "Tin",
+  "reviewed_at": "2026-11-12T09:30:00Z",
+  "cases": [
+    {
+      "case_id": "p05.correct.conditional_update",
+      "label": "Ví dụ đúng chuẩn: Conditional update kèm transaction rollback và kiểm thử đầy đủ",
+      "answer": "Hai yêu cầu đến hai instance có thể cùng đọc stock=1 trước khi bên nào kịp ghi. Em dùng câu lệnh nguyên tử UPDATE inventory SET stock = stock - 1 WHERE product_id = :id AND stock >= 1 và kiểm tra affected_rows == 1. Thao tác trừ kho và INSERT đơn hàng đặt trong cùng một database transaction; nếu tạo đơn lỗi thì rollback để stock quay lại 1. Để kiểm thử, em chạy 2 luồng gửi request đồng thời tới 2 instance và kiểm tra chỉ có 1 đơn tạo thành công, stock = 0; sau đó giả lập lỗi chèn đơn để xác nhận không có đơn nào được lưu và stock vẫn bằng 1.",
+      "answer_context": {
+        "missing_attachment": false
+      },
+      "checks": [
+        {
+          "criterion_id": "c03.race",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "Hai yêu cầu đến hai instance có thể cùng đọc stock=1 trước khi bên nào kịp ghi.",
+          "reason": "Chỉ rõ khoảng tranh chấp đọc-kiểm-tra-ghi (stock=1) giữa hai instance."
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "Thao tác trừ kho và INSERT đơn hàng đặt trong cùng một database transaction; nếu tạo đơn lỗi thì rollback để stock quay lại 1.",
+          "reason": "Kết hợp cập nhật có điều kiện nguyên tử với transaction rollback khi tạo đơn lỗi."
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "chỉ có 1 đơn tạo thành công, stock = 0; sau đó giả lập lỗi chèn đơn để xác nhận không có đơn nào được lưu và stock vẫn bằng 1.",
+          "reason": "Đủ cả hai kịch bản kiểm thử đồng thời và kiểm thử rollback với kỳ vọng cụ thể."
+        }
+      ],
+      "expected_total": 6
+    },
+    {
+      "case_id": "p05.equivalent.pessimistic_lock",
+      "label": "Ví dụ lời giải tương đương: Pessimistic row lock (SELECT FOR UPDATE) trong transaction",
+      "answer": "Vì hai instance cùng truy cập một DB, nếu chỉ SELECT stock rồi kiểm tra trong code ứng dụng thì cả hai đều thấy còn 1 sản phẩm. Giải pháp của em là mở transaction tại DB, dùng SELECT stock FROM inventory WHERE id = :id FOR UPDATE để khóa dòng sản phẩm đó. Luồng thứ hai sẽ phải đợi luồng thứ nhất commit xong mới đọc được stock=0. Trong cùng transaction, nếu bước tạo bản ghi order bị lỗi thì DB tự rollback nên tồn kho vẫn là 1. Kiểm thử: bắn 2 request song song qua barrier, assert tổng số order = 1 và stock = 0; thêm 1 test mock lỗi ghi bảng orders và assert stock = 1, orders = 0.",
+      "answer_context": {
+        "missing_attachment": false
+      },
+      "checks": [
+        {
+          "criterion_id": "c03.race",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "Vì hai instance cùng truy cập một DB, nếu chỉ SELECT stock rồi kiểm tra trong code ứng dụng thì cả hai đều thấy còn 1 sản phẩm.",
+          "reason": "Diễn đạt tương đương đúng bản chất tranh chấp đọc-kiểm-tra-ghi trên nhiều instance."
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "mở transaction tại DB, dùng SELECT stock FROM inventory WHERE id = :id FOR UPDATE để khóa dòng sản phẩm đó.",
+          "reason": "Phương án SELECT ... FOR UPDATE kèm transaction rollback hoàn toàn hợp lệ và tương đương conditional update."
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "assert tổng số order = 1 và stock = 0; thêm 1 test mock lỗi ghi bảng orders và assert stock = 1, orders = 0.",
+          "reason": "Đầy đủ hai kịch bản kiểm thử bất biến tồn kho và rollback."
+        }
+      ],
+      "expected_total": 6
+    },
+    {
+      "case_id": "p05.partial.local_lock_and_missing_rollback_test",
+      "label": "Ví dụ thiếu yêu cầu: Nhận ra đồng thời nhưng dùng khóa RAM cục bộ và thiếu test rollback",
+      "answer": "Khi hai người bấm mua cùng lúc ở hai server thì cả hai có thể đọc thấy kho còn 1 sản phẩm. Em sẽ thêm từ khóa synchronized vào hàm mua hàng trong code backend để từng luồng chạy lần lượt. Để test, em mở 2 tab gửi 2 request cùng lúc xem có bị tạo 2 đơn không.",
+      "answer_context": {
+        "missing_attachment": false
+      },
+      "checks": [
+        {
+          "criterion_id": "c03.race",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "Khi hai người bấm mua cùng lúc ở hai server thì cả hai có thể đọc thấy kho còn 1 sản phẩm.",
+          "reason": "Nêu được hiện tượng hai yêu cầu ở hai server cùng đọc thấy stock=1."
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "unmet",
+          "score": 0,
+          "evidence_quote": "Em sẽ thêm từ khóa synchronized vào hàm mua hàng trong code backend để từng luồng chạy lần lượt.",
+          "reason": "Khóa RAM (synchronized) chỉ có tác dụng trong một tiến trình JVM, không ngăn được hai instance khác nhau cùng trừ kho và cũng không có transaction rollback."
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "unmet",
+          "score": 1,
+          "evidence_quote": "em mở 2 tab gửi 2 request cùng lúc xem có bị tạo 2 đơn không.",
+          "reason": "Có nêu ý kiểm thử đồng thời hai yêu cầu nhưng thiếu kiểm tra tồn kho cuối cùng và thiếu hoàn toàn kiểm thử rollback khi tạo đơn lỗi."
+        }
+      ],
+      "expected_total": 3
+    },
+    {
+      "case_id": "p05.ambiguous.missing_referenced_attachment",
+      "label": "Ví dụ mơ hồ / chưa đủ căn cứ: Viện dẫn sơ đồ và code trong tệp đính kèm không tồn tại",
+      "answer": "Em đã vẽ sơ đồ sequence diagram xử lý transaction và viết sẵn bộ test trong file đính kèm, thầy/cô xem giúp em ở file đó ạ.",
+      "answer_context": {
+        "missing_attachment": true
+      },
+      "checks": [
+        {
+          "criterion_id": "c03.race",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã vẽ sơ đồ sequence diagram xử lý transaction và viết sẵn bộ test trong file đính kèm",
+          "reason": "Tệp đính kèm được viện dẫn không có trong phiên; chưa có căn cứ xác định người học hiểu đúng hay sai về thao tác tranh chấp."
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã vẽ sơ đồ sequence diagram xử lý transaction và viết sẵn bộ test trong file đính kèm",
+          "reason": "Nội dung thiết kế transaction nằm ở tệp đính kèm vắng mặt; giữ score=null thay vì gán điểm 0."
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã vẽ sơ đồ sequence diagram xử lý transaction và viết sẵn bộ test trong file đính kèm",
+          "reason": "Bộ test nằm ở tệp đính kèm vắng mặt; chưa đủ căn cứ để chấm."
+        }
+      ],
+      "expected_total": null
+    }
+  ],
+  "disagreement_log": [
+    {
+      "criterion_id": "c03.concurrent_tests",
+      "initial_curator_score": 0,
+      "initial_reviewer_score": 1,
+      "resolution": "Thống nhất mức 1 cho câu trả lời có nêu kịch bản bắn hai request đồng thời kiểm tra số đơn nhưng thiếu kiểm thử rollback; mức 0 chỉ áp dụng khi bỏ qua hoàn toàn việc kiểm thử hoặc nêu kỳ vọng sai bất biến."
+    }
+  ]
+}
