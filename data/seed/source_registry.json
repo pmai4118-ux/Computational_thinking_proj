@@ -193,5 +193,30 @@
       "required_notice": "Copyright (c) OWASP Foundation. Licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA-4.0).",
       "status": "verified"
     }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.tech_interview_handbook.array_stack",
+    "title": "Tech Interview Handbook — Array and Stack Study Guides",
+    "url": "https://github.com/yangshun/tech-interview-handbook/blob/e1d28e8886c0b6ff3e50da991ce0e895134ddc59/apps/website/contents/algorithms/array.md",
+    "file_path": "apps/website/contents/algorithms/array.md",
+    "revision": "e1d28e8886c0b6ff3e50da991ce0e895134ddc59",
+    "authors": [
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Corner cases: Empty sequence, Sequence with 1 or 2 elements, Sequence with repeated elements, Duplicated values in sequence.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/yangshun/tech-interview-handbook/blob/e1d28e8886c0b6ff3e50da991ce0e895134ddc59/LICENSE",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
+      "status": "verified"
+    }
   }
 ]

@@ -40,3 +40,9 @@ copyright notices are preserved below.
 - License: Creative Commons Attribution-ShareAlike 4.0 International (`CC-BY-SA-4.0`) — `https://creativecommons.org/licenses/by-sa/4.0/`
 - Copyright Notice: Copyright (c) OWASP Foundation. Adapted material in `review.c05.sql_query_parameterization.v1` and `exercise.engineering.contract_and_security_review` is shared under CC-BY-SA-4.0. Note: defects in the candidate snippet of `review.c05.sql_query_parameterization.v1` were intentionally seeded by the project team for educational code review and do not appear in OWASP's safe reference code.
 
+### 2.5. Tech Interview Handbook (`source.tech_interview_handbook.array_stack`)
+- Repository: [yangshun/tech-interview-handbook](https://github.com/yangshun/tech-interview-handbook)
+- File: `apps/website/contents/algorithms/array.md` @ commit `e1d28e8886c0b6ff3e50da991ce0e895134ddc59`
+- License: MIT License (`MIT`) — `https://github.com/yangshun/tech-interview-handbook/blob/e1d28e8886c0b6ff3e50da991ce0e895134ddc59/LICENSE`
+- Copyright Notice: Copyright (c) Yangshun Tay. Licensed under the MIT License.
+- Adaptation: Used for corner-case checklist structure in `exercise.algorithms.loop_invariant_and_bounds`.
