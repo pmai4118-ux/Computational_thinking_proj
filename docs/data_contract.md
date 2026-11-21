@@ -286,3 +286,4 @@ The P01 baseline still needs team confirmation. P04 must finalize API
 representations, session ownership, retry/idempotency and transitions. F02 must
 implement the remaining Session/Answer/Exercise classes and invariant checks.
 P05 must supply a reviewed question, rubric and source set.
+E09: evaluate_saved_answer consumes an AnswerRevisionRef and returns its committed EvaluationResult plus feedback derived with the saved rubric version. save_evaluation(..., reuse_completed=True) returns the existing completed result for that revision or atomically stores the new result with its checks.
