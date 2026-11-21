@@ -1,0 +1,73 @@
+{
+  "schema_version": "review-fixture/0.1-proposal",
+  "example_only": false,
+  "review_status": "approved",
+  "question_id": "prog.c02.mutable_default_arg.v1",
+  "question_version": 1,
+  "rubric_id": "rubric.c02.mutable_default_arg.v1",
+  "curator_id": "nkphuc",
+  "reviewer_id": "Tin",
+  "reviewed_at": "2026-11-18T04:40:00Z",
+  "cases": [
+    {
+      "case_id": "c02.correct.none_sentinel",
+      "label": "Câu trả lời đạt tối đa với None sentinel và test đầy đủ",
+      "answer": "Cả hai lệnh print đều in ra ['login', 'export_report'] vì đối số mặc định events=[] chỉ được tạo một lần duy nhất lúc định nghĩa hàm def, nên hai lần gọi cùng sửa chung một list. Em sửa thành events: list[str] | None = None và trong hàm kiểm tra if events is None: events = [] để nếu người gọi truyền sẵn b = [] thì hàm vẫn append vào đúng b. Kiểm thử: gọi hai lần không truyền events phải ra ['login'] và ['export_report'] tách biệt; truyền b = [] vào append_audit_event('ping', b) thì kết quả trả về is b và b == ['ping'].",
+      "answer_context": {"missing_attachment": false},
+      "checks": [
+        {
+          "criterion_id": "c02.q1.semantics",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "Cả hai lệnh print đều in ra ['login', 'export_report'] vì đối số mặc định events=[] chỉ được tạo một lần duy nhất lúc định nghĩa hàm def",
+          "reason": "Dự đoán đúng kết quả và giải thích rõ thời điểm khởi tạo mặc định."
+        },
+        {
+          "criterion_id": "c02.q1.contract_fix",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "if events is None: events = [] để nếu người gọi truyền sẵn b = [] thì hàm vẫn append vào đúng b.",
+          "reason": "Giữ nguyên identity cho cả list rỗng truyền tường minh."
+        },
+        {
+          "criterion_id": "c02.q1.tests",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "gọi hai lần không truyền events phải ra ['login'] và ['export_report'] tách biệt; truyền b = [] vào append_audit_event('ping', b) thì kết quả trả về is b",
+          "reason": "Đủ cả hai ca kiểm thử hợp đồng."
+        }
+      ],
+      "expected_total": 6
+    },
+    {
+      "case_id": "c02.insufficient.missing_attachment",
+      "label": "Thiếu tệp được viện dẫn: giữ score null",
+      "answer": "Em đã gửi đoạn code sửa và file pytest đính kèm bên ngoài ạ.",
+      "answer_context": {"missing_attachment": true},
+      "checks": [
+        {
+          "criterion_id": "c02.q1.semantics",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã gửi đoạn code sửa và file pytest đính kèm bên ngoài ạ.",
+          "reason": "Tệp đính kèm không có trong phiên."
+        },
+        {
+          "criterion_id": "c02.q1.contract_fix",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã gửi đoạn code sửa và file pytest đính kèm bên ngoài ạ.",
+          "reason": "Tệp đính kèm không có trong phiên."
+        },
+        {
+          "criterion_id": "c02.q1.tests",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã gửi đoạn code sửa và file pytest đính kèm bên ngoài ạ.",
+          "reason": "Tệp đính kèm không có trong phiên."
+        }
+      ],
+      "expected_total": null
+    }
+  ]
+}

@@ -1,0 +1,268 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "prog.c02.mutable_default_arg.v1",
+    "version": 1,
+    "category": "programming_knowledge",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "difficulty": "foundational",
+    "skill_ids": [
+      "skill.programming.code_semantics"
+    ],
+    "source_id": "source.cpython.faq.mutable_defaults",
+    "prompt": "Đoạn mã Python bên dưới in ra kết quả gì sau hai lần gọi hàm `append_audit_event` mà không truyền tham số `events`? Giải thích quy tắc ngôn ngữ dẫn đến hành vi đó, sửa lại hàm để mỗi lần bỏ qua `events` đều tạo một danh sách mới độc lập nhưng nếu bên gọi truyền sẵn một danh sách (kể cả `[]`) thì hàm vẫn cập nhật trực tiếp trên chính danh sách đó, và nêu kiểm thử cụ thể.",
+    "code": "def append_audit_event(action: str, events: list[str] = []) -> list[str]:\n    events.append(action)\n    return events\n\nfirst_batch = append_audit_event(\"login\")\nsecond_batch = append_audit_event(\"export_report\")\nprint(first_batch)\nprint(second_batch)",
+    "code_language": "python",
+    "constraints": [
+      "Chạy trên Python 3.11; hai lệnh print thực thi sau khi cả hai lần gọi hàm đã hoàn tất.",
+      "Bản sửa phải giữ nguyên danh tính (identity) của list khi người gọi truyền tường minh, kể cả list rỗng []."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_documentation",
+      "summary": "Chuyển ngữ và thích nghi từ mục 'Why are default values shared between objects?' trong tài liệu chính thức CPython (Doc/faq/programming.rst @ 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2); đặt vào bối cảnh ghi nhận sự kiện backend và bổ sung ràng buộc bảo toàn tham chiếu khi truyền list rỗng.",
+      "translator_id": "nkphuc"
+    },
+    "rubric": {
+      "id": "rubric.c02.mutable_default_arg.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c02.q1.semantics",
+          "criterion_type": "behavior_explanation",
+          "label": "Dự đoán kết quả và giải thích thời điểm khởi tạo đối số mặc định",
+          "expected_evidence": [
+            "Cả hai lệnh print đều in ra ['login', 'export_report'].",
+            "Giá trị mặc định được khởi tạo đúng một lần tại thời điểm định nghĩa hàm (def) nên cùng một list bị dùng chung giữa các lần gọi."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Dự đoán hai danh sách độc lập hoặc giải thích sai thời điểm tạo giá trị mặc định."
+            },
+            {
+              "score": 1,
+              "description": "Nêu đúng kết quả in ra hoặc nhận ra dùng chung list nhưng thiếu giải thích thời điểm định nghĩa hàm ( hoặc quên rằng print chạy sau cả hai lần gọi)."
+            },
+            {
+              "score": 2,
+              "description": "Nêu đúng cả hai lần in đều là ['login', 'export_report'] và giải thích rõ list mặc định tạo một lần lúc định nghĩa hàm rồi bị mutate qua các lần gọi."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận mọi cách diễn đạt tương đương về việc cùng trỏ tới một đối tượng list được gắn với function object khi nạp/định nghĩa hàm."
+        },
+        {
+          "id": "c02.q1.contract_fix",
+          "criterion_type": "contract_preservation",
+          "label": "Sửa hàm giữ đúng hợp đồng tham số truyền tường minh",
+          "expected_evidence": [
+            "Dùng giá trị canh (như None) và khởi tạo list mới bên trong thân hàm khi tham số bị bỏ qua.",
+            "Kiểm tra `if events is None:` để vẫn giữ nguyên đối tượng list rỗng `[]` do người gọi truyền vào."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Bản sửa vẫn để list làm giá trị mặc định hoặc làm sai lệch kết quả hàm."
+            },
+            {
+              "score": 1,
+              "description": "Tách được list mặc định bằng `events = events or []`, làm mất tham chiếu khi người gọi truyền `[]` tường minh."
+            },
+            {
+              "score": 2,
+              "description": "Dùng `events: list[str] | None = None` (hoặc sentinel object) kèm kiểm tra `is None` để giữ đúng identity cho cả `[]` truyền tường minh."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận dùng `None` hoặc đối tượng `object()` làm sentinel nếu kiểm tra bằng toán tử `is`."
+        },
+        {
+          "id": "c02.q1.tests",
+          "criterion_type": "test_design",
+          "label": "Thiết kế kiểm thử cho cả hai nhánh hợp đồng",
+          "expected_evidence": [
+            "Kiểm thử hai lần gọi liên tiếp không truyền `events` trả về hai list độc lập.",
+            "Kiểm thử truyền `custom = []` vào hàm thì `custom` được cập nhật phần tử và kết quả trả về `is custom`."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu kiểm thử hoặc nêu kết quả kỳ vọng sai."
+            },
+            {
+              "score": 1,
+              "description": "Chỉ kiểm thử trường hợp bỏ qua tham số, thiếu kiểm thử truyền list rỗng tường minh (hoặc ngược lại)."
+            },
+            {
+              "score": 2,
+              "description": "Nêu rõ cả hai kiểm thử với đầu vào và kết quả/identity mong đợi cụ thể."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận code `assert` pytest/unittest hoặc mô tả rõ đầu vào và kết quả mong đợi."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [0, 1, 2],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Gán unmet (score = 0) nếu bỏ qua yêu cầu bắt buộc; gán insufficient_evidence (score = null) nếu viện dẫn tệp ngoài không có trong bài.",
+        "provider_failure": "processing_error, không gán điểm",
+        "equivalent_answers": "Chấp nhận mọi giải pháp giữ đúng hợp đồng Python."
+      }
+    },
+    "review": {
+      "status": "approved",
+      "curator_id": "nkphuc",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:40:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Nguồn gốc CPython Programming FAQ (PSF-2.0) đã xác minh tại commit 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2."
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "prog.c02.closure_late_binding.v1",
+    "version": 1,
+    "category": "programming_knowledge",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "difficulty": "applied",
+    "skill_ids": [
+      "skill.programming.code_semantics"
+    ],
+    "source_id": "source.cpython.faq.late_binding_closures",
+    "prompt": "Đoạn mã dưới đây tạo danh sách các hàm tính bình phương trong vòng lặp. Kết quả của `validators[1]()` và `validators[3]()` là bao nhiêu? Giải thích cơ chế tra cứu biến của closure trong Python gây ra kết quả đó, đề xuất cách sửa để mỗi phần tử `validators[i]()` trả về đúng `i ** 2`, và nêu kiểm thử xác nhận.",
+    "code": "def build_validators():\n    validators = []\n    for step in range(5):\n        validators.append(lambda: step ** 2)\n    return validators\n\nvalidators = build_validators()\n\nprint(validators[1]())\nprint(validators[3]())",
+    "code_language": "python",
+    "constraints": [
+      "Chạy trên Python 3.11.",
+      "Bản sửa vẫn phải tạo danh sách gồm 5 hàm không nhận đối số bắt buộc khi gọi `validators[i]()`."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_documentation",
+      "summary": "Chuyển ngữ từ mục 'Why do lambdas defined in a loop with different values all return the same result?' trong tài liệu chính thức CPython (Doc/faq/programming.rst @ 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2); thêm ràng buộc giữ nguyên chữ ký gọi không đối số `validators[i]()`.",
+      "translator_id": "nkphuc"
+    },
+    "rubric": {
+      "id": "rubric.c02.closure_late_binding.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c02.q2.late_binding",
+          "criterion_type": "behavior_explanation",
+          "label": "Dự đoán kết quả và giải thích cơ chế late binding của biến tự do",
+          "expected_evidence": [
+            "Cả `validators[1]()` và `validators[3]()` đều in ra `16`.",
+            "Biến `step` nằm ở phạm vi ngoài và chỉ được tra cứu giá trị tại thời điểm gọi lambda (khi vòng lặp đã kết thúc với `step = 4`)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Trả lời kết quả là 1 và 9 hoặc giải thích sai cơ chế phạm vi biến."
+            },
+            {
+              "score": 1,
+              "description": "Nêu đúng cả hai đều ra 16 nhưng chưa giải thích rõ sự khác biệt giữa thời điểm định nghĩa lambda và thời điểm gọi hàm."
+            },
+            {
+              "score": 2,
+              "description": "Nêu đúng kết quả 16 cho cả hai lần gọi và giải thích rõ biến `step` ở scope ngoài được tra cứu lúc thực thi lambda sau khi vòng lặp dừng ở 4."
+            }
+          ],
+          "equivalent_answers": "Không bắt buộc dùng cụm từ 'late binding' hay 'lexical closure' nếu giải thích đúng việc các lambda cùng tham chiếu biến `step` của scope ngoài và đọc giá trị cuối cùng `4` khi gọi."
+        },
+        {
+          "id": "c02.q2.fix",
+          "criterion_type": "contract_preservation",
+          "label": "Cố định giá trị theo từng vòng lặp mà vẫn gọi được không đối số",
+          "expected_evidence": [
+            "Bắt giữ giá trị hiện tại của `step` tại từng bước lặp (ví dụ `lambda s=step: s ** 2`, `functools.partial`, hoặc hàm factory tạo scope riêng).",
+            "Vẫn gọi được `validators[i]()` không cần truyền đối số bắt buộc."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Bản sửa vẫn trả về 16 cho mọi phần tử hoặc không chạy được."
+            },
+            {
+              "score": 1,
+              "description": "Đổi thành `lambda s: s ** 2` bắt buộc người gọi phải tự truyền đối số `validators[1](1)`, vi phạm ràng buộc đề bài."
+            },
+            {
+              "score": 2,
+              "description": "Bắt giữ đúng giá trị tại từng vòng lặp và giữ nguyên cách gọi không đối số `validators[i]()`."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận đối số mặc định `lambda s=step: s ** 2`, hàm bọc `def make_fn(s): return lambda: s ** 2`, hoặc `functools.partial`."
+        },
+        {
+          "id": "c02.q2.tests",
+          "criterion_type": "test_design",
+          "label": "Kiểm thử toàn bộ danh sách hàm và tính độc lập với biến ngoài",
+          "expected_evidence": [
+            "Kiểm tra `[fn() for fn in validators] == [0, 1, 4, 9, 16]`.",
+            "Kiểm tra gán lại biến `step` sau vòng lặp (ví dụ `step = 99`) không làm đổi kết quả của các hàm đã tạo."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu kiểm thử hoặc kết quả kỳ vọng sai."
+            },
+            {
+              "score": 1,
+              "description": "Kiểm tra kết quả `[0, 1, 4, 9, 16]` nhưng chưa kiểm tra việc thay đổi `step` ngoài vòng lặp không ảnh hưởng closure."
+            },
+            {
+              "score": 2,
+              "description": "Kiểm tra cả dãy kết quả `[0, 1, 4, 9, 16]` lẫn tính bất biến khi thay đổi biến `step` ở scope ngoài."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận kiểm tra trên các chỉ số đại diện kèm kiểm chứng gán lại `step` sau vòng lặp."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [0, 1, 2],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Gán unmet (score = 0) nếu bỏ qua yêu cầu bắt buộc; gán insufficient_evidence (score = null) nếu viện dẫn tệp ngoài không có trong bài.",
+        "provider_failure": "processing_error, không gán điểm",
+        "equivalent_answers": "Chấp nhận default-arg capture, factory function hoặc functools.partial."
+      }
+    },
+    "review": {
+      "status": "approved",
+      "curator_id": "nkphuc",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:40:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Nguồn gốc CPython Programming FAQ (PSF-2.0) đã xác minh tại commit 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2."
+    }
+  }
+]
