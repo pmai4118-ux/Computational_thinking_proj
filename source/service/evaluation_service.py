@@ -13,7 +13,7 @@ from source.Model.evaluation import (
     EvaluationStatus,
     Evidence,
 )
-from source.Model.ids import CriterionId, EvaluationId
+from source.Model.ids import CriterionId, EvaluationId, VersionedRef
 from source.Model.interview import Answer
 from source.Model.question import Question, Rubric
 from source.Model.repositories.interfaces import EvaluationRepository
@@ -195,6 +195,14 @@ class EvaluationService:
         interpreter: EvidenceInterpreter,
         evaluation_id: EvaluationId | None = None,
     ) -> EvaluationResult:
+        expected_rubric_ref = VersionedRef(rubric.id, rubric.version)
+        if answer.question_ref != question.ref:
+            raise ValueError("answer.question_ref must match question.ref.")
+        if answer.rubric_ref != expected_rubric_ref:
+            raise ValueError("answer.rubric_ref must match the supplied rubric version.")
+        if question.rubric_ref != expected_rubric_ref:
+            raise ValueError("question.rubric_ref must match the supplied rubric version.")
+
         if self._evaluation_repo is not None:
             cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer.ref)
             if cached is not None:
