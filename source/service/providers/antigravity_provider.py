@@ -11,6 +11,9 @@ from dataclasses import dataclass
 import json
 import os
 import re
+import logging
+from pathlib import Path
+from uuid import uuid4
 import shutil
 import subprocess
 import tempfile
@@ -19,6 +22,9 @@ from typing import Any, Callable, NoReturn, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model, model_validator
 
+from source.Model.repositories.request_budget import RequestBudget
+from source.Model.repositories.interfaces import RepositoryError, RequestBudgetRepository
+from source.config import GeminiLimits
 from source.Model.evaluation import CriterionStatus
 from source.Model.ids import CriterionId
 from source.Model.question import Question, Rubric
@@ -39,6 +45,8 @@ _MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$")
 
 
 class _AntigravitySettingsLike(Protocol):
+    database_path: Path
+    gemini_limits: GeminiLimits
     provider: str
     antigravity_model: str | None
     antigravity_timeout_seconds: float
@@ -141,6 +149,9 @@ class AntigravityProvider:
     def __init__(
         self,
         *,
+        limits: GeminiLimits = GeminiLimits(response_bytes=MAX_RESPONSE_BYTES),
+        budget_path: Path | None = None,
+        budget: RequestBudgetRepository | None = None,
         model_id: str = DEFAULT_ANTIGRAVITY_MODEL,
         timeout_seconds: float = DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS,
         executable: str = DEFAULT_ANTIGRAVITY_EXECUTABLE,
@@ -168,12 +179,14 @@ class AntigravityProvider:
                 "ANTIGRAVITY_EXECUTABLE must be a valid executable name or path.",
                 retryable=False,
             )
+        self.limits = limits
+        self._budget: RequestBudgetRepository = budget if budget is not None else RequestBudget(limits.request_budget, budget_path)
         self.model_id = cleaned_model
         self.timeout_seconds = float(timeout_seconds)
         self.executable = cleaned_exec
         self._prompt_builder = prompt_builder or InterpretationPromptBuilder(version=prompt_version)
         self.prompt_version = f"{self._prompt_builder.version}+antigravity/1"
-        self._runner = runner or subprocess.run
+        self._runner = runner or self._bounded_runner
 
     def __repr__(self) -> str:
         return (
@@ -196,6 +209,8 @@ class AntigravityProvider:
                 retryable=False,
             )
         return cls(
+            limits=settings.gemini_limits,
+            budget_path=settings.database_path,
             model_id=settings.antigravity_model or DEFAULT_ANTIGRAVITY_MODEL,
             timeout_seconds=settings.antigravity_timeout_seconds,
             executable=settings.antigravity_executable or DEFAULT_ANTIGRAVITY_EXECUTABLE,
@@ -341,6 +356,8 @@ class AntigravityProvider:
                 "Sign in to Antigravity CLI (`agy`) before running live evaluation.",
                 retryable=False,
             )
+        if re.search(r"\b(?:refusal|safety_block|prohibited_content|blocked_by_safety)\b", diagnostics):
+            raise AntigravityProviderError(ProviderErrorKind.REFUSAL, "Assessment blocked by the provider.")
         if "invalid_argument" in diagnostics:
             raise AntigravityProviderError(
                 ProviderErrorKind.INVALID_OUTPUT,
@@ -427,13 +444,22 @@ class AntigravityProvider:
             res_payload = results[0]
             content = res_payload.get("structured_output")
             if content is None:
-                content = json.loads(res_payload["response"])
+                content = res_payload["response"]
+            if isinstance(content, str):
+                content = json.loads(content)
             validated_top = cls.response_model(rubric).model_validate(content)
             raw_checks = validated_top.model_dump(by_alias=True)["criterion_checks"]
-        except (ValueError, KeyError, TypeError, AttributeError, ValidationError):
+        except (ValueError, KeyError, TypeError, AttributeError) as error:
+            detail = "invalid JSON envelope"
+            if isinstance(error, ValidationError):
+                first = error.errors(include_input=False, include_context=False)[0]
+                known_fields = {"criterion_checks", *AntigravityCriterionDTO.model_fields,
+                                *(criterion.id for criterion in rubric.criteria)}
+                path = ".".join(str(part) if part in known_fields else "?" for part in first["loc"])
+                detail = f"{path or 'root'} ({first['type']})"
             raise AntigravityProviderError(
                 ProviderErrorKind.INVALID_OUTPUT,
-                "Antigravity returned invalid structured assessment JSON; no score was created.",
+                f"Invalid assessment JSON: {detail}; no score was created.",
                 retryable=True,
             ) from None
 
@@ -484,8 +510,83 @@ class AntigravityProvider:
             json.dumps({"event": "user", "message": {"content": prompt}}, ensure_ascii=False)
             + "\n"
         )
+        if len(stdin_ndjson.encode("utf-8")) > self.limits.input_bytes:
+            raise AntigravityProviderError(ProviderErrorKind.INPUT_LIMIT, "Request exceeds byte limit.")
         command = self.build_command(executable, rubric)
         started = time.perf_counter()
+        request_id = uuid4().hex
+        for attempt in range(self.limits.max_retries + 1):
+            outcome = "OK"
+            tick = time.perf_counter()
+            try:
+                try:
+                    reserved = self._budget.reserve()
+                except RepositoryError:
+                    raise AntigravityProviderError(ProviderErrorKind.CONFIG, "Cannot reserve request budget.") from None
+                if not reserved:
+                    raise AntigravityProviderError(ProviderErrorKind.QUOTA, "Configured request budget exhausted.")
+                return self._run_attempt(command, stdin_ndjson, started, rubric, answer_text)
+            except AntigravityProviderError as error:
+                outcome = error.code
+                if (attempt >= self.limits.max_retries or not error.retryable or
+                        error.code not in {ProviderErrorKind.TIMEOUT, ProviderErrorKind.QUOTA}):
+                    raise
+            finally:
+                logging.getLogger(__name__).info(
+                    "agy request_id=%s attempt=%d elapsed_ms=%d outcome=%s",
+                    request_id, attempt + 1, (time.perf_counter() - tick) * 1000, outcome,
+                )
+        raise AssertionError("Invalid retry configuration")
+
+    def _bounded_runner(self, command, *, input, timeout, cwd, env, creationflags,
+                        encoding, **options):
+        """Feed stdin from a file; drain both output pipes within fixed byte limits."""
+        from threading import Event, Thread
+
+        exceeded = Event()
+        buffers = [bytearray(), bytearray()]
+        with tempfile.TemporaryFile() as source:
+            source.write(input.encode(encoding))
+            source.seek(0)
+            with subprocess.Popen(command, stdin=source, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, cwd=cwd, env=env,
+                                  creationflags=creationflags, bufsize=0) as process:
+                def drain(pipe, buffer):
+                    with pipe:
+                        while True:
+                            remaining = self.limits.response_bytes - len(buffer)
+                            chunk = pipe.read(min(65536, remaining + 1))
+                            if len(chunk) > remaining:
+                                exceeded.set()
+                                process.kill()
+                                return
+                            if not chunk:
+                                return
+                            buffer.extend(chunk)
+
+                readers = [Thread(target=drain, args=(pipe, buffer), daemon=True)
+                           for pipe, buffer in zip((process.stdout, process.stderr), buffers)]
+                for reader in readers:
+                    reader.start()
+                deadline = time.monotonic() + timeout
+                try:
+                    process.wait(timeout=timeout)
+                    for reader in readers:
+                        reader.join(max(0, deadline - time.monotonic()))
+                        if reader.is_alive():
+                            raise subprocess.TimeoutExpired(command, timeout)
+                finally:
+                    if process.poll() is None:
+                        process.kill()
+                    process.wait()
+                if exceeded.is_set():
+                    raise AntigravityProviderError(ProviderErrorKind.INVALID_OUTPUT,
+                                                   "Antigravity output exceeds byte limit.")
+                return subprocess.CompletedProcess(command, process.returncode,
+                                                   buffers[0].decode(encoding), buffers[1].decode(encoding))
+
+    def _run_attempt(self, command: list[str], stdin_ndjson: str, started: float,
+                     rubric: Rubric, answer_text: str) -> AntigravityCallResult:
         try:
             with tempfile.TemporaryDirectory(prefix="interview-antigravity-") as workdir:
                 proc = self._runner(
@@ -514,6 +615,8 @@ class AntigravityProvider:
             ) from None
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)
+        if max(len(proc.stdout.encode("utf-8")), len(proc.stderr.encode("utf-8"))) > self.limits.response_bytes:
+            raise AntigravityProviderError(ProviderErrorKind.INVALID_OUTPUT, "Response exceeds byte limit.")
         observations = self.parse_response(
             returncode=proc.returncode,
             stdout=proc.stdout,
