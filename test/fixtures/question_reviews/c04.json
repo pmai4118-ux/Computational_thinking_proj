@@ -1,0 +1,43 @@
+{
+  "schema_version": "review-fixture/0.1-proposal",
+  "example_only": false,
+  "review_status": "approved",
+  "question_id": "algo.c04.bisect_left_bounds.v1",
+  "question_version": 1,
+  "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+  "curator_id": "nkphuc",
+  "reviewer_id": "Tin",
+  "reviewed_at": "2026-11-18T04:45:00Z",
+  "cases": [
+    {
+      "case_id": "c04.correct.invariant_and_bounds",
+      "label": "Giải thích đúng bất biến nửa khoảng, độ phức tạp O(log n)/O(1) và kiểm thử biên",
+      "answer": "Hàm duy trì bất biến mọi phần tử ở chỉ số < lo đều nhỏ hơn item và mọi phần tử từ hi trở đi đều >= item. Khi sorted_collection[mid] == item, nhánh else gán hi = mid để tiếp tục tìm về bên trái nên trả đúng vị trí xuất hiện đầu tiên; vì lo <= mid < hi khi lo < hi nên khoảng hi - lo luôn giảm nghiêm ngặt và dừng ở lo == hi. Thời gian chạy là O(log n) do chia đôi khoảng mỗi bước, bộ nhớ phụ O(1). Kiểm thử biên: [1, 2, 2, 2, 4] với item=2 trả 1; mảng rỗng [] với item=5 trả 0; [1, 3, 5] với item=10 trả 3.",
+      "answer_context": {"missing_attachment": false},
+      "checks": [
+        {
+          "criterion_id": "c04.q1.correctness",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "Khi sorted_collection[mid] == item, nhánh else gán hi = mid để tiếp tục tìm về bên trái nên trả đúng vị trí xuất hiện đầu tiên; vì lo <= mid < hi khi lo < hi nên khoảng hi - lo luôn giảm nghiêm ngặt và dừng ở lo == hi.",
+          "reason": "Giải thích đầy đủ bất biến, phần tử trùng và tính hội tụ."
+        },
+        {
+          "criterion_id": "c04.q1.complexity",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "Thời gian chạy là O(log n) do chia đôi khoảng mỗi bước, bộ nhớ phụ O(1).",
+          "reason": "Đúng cả thời gian và bộ nhớ phụ."
+        },
+        {
+          "criterion_id": "c04.q1.edge_tests",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "[1, 2, 2, 2, 4] với item=2 trả 1; mảng rỗng [] với item=5 trả 0; [1, 3, 5] với item=10 trả 3.",
+          "reason": "Đủ ca trùng lặp, rỗng và vượt biên phải."
+        }
+      ],
+      "expected_total": 6
+    }
+  ]
+}

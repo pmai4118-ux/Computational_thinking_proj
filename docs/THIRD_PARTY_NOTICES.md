@@ -25,3 +25,12 @@ copyright notices are preserved below.
 - Copyright Notice: Portions Copyright (c) 1996-2026, PostgreSQL Global Development Group. Portions Copyright (c) 1994, The Regents of the University of California.
 - Adaptation: Adapted into two Vietnamese Backend Intern/Fresher technical case variants (`case.c03.inventory_race.v1`, `case.c03.transfer_deadlock.v1`) and follow-up exercises (`exercise.backend.atomic_transaction_locking`, `exercise.backend.rollback_invariant_test`).
 
+### 2.3. TheAlgorithms / Python (`source.thealgorithms.python.bisect_left`, `source.thealgorithms.python.balanced_parentheses`, `source.thealgorithms.python.binary_search_fn`)
+- Repository: [TheAlgorithms/Python](https://github.com/TheAlgorithms/Python)
+- Files:
+  - `searches/binary_search.py` @ commit `30507bbe41397065728167fb09aa820f9fce8dc7`
+  - `data_structures/stacks/balanced_parentheses.py` @ commit `30507bbe41397065728167fb09aa820f9fce8dc7`
+- License: MIT License (`MIT`) — `https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/LICENSE.md`
+- Copyright Notice: Copyright (c) 2016-2026 TheAlgorithms and contributors. Licensed under the MIT License.
+- Adaptation: Used as reference code for two Vietnamese algorithm-explanation questions (`algo.c04.bisect_left_bounds.v1`, `algo.c04.balanced_brackets_stack.v1`) and one code-review critique exercise (`review.c05.binary_search_precheck.v1` analyzing the $O(n)$ `pairwise` precheck under an $O(\log n)$ endpoint contract).
+
