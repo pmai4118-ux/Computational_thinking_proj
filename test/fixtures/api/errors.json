@@ -1,0 +1,50 @@
+{
+  "invalid_input": {
+    "error_code": "INVALID_INPUT",
+    "message": "Câu trả lời không được để trống và không vượt quá 20.000 ký tự.",
+    "retryable": false,
+    "session_id": "session.demo-20261118-01",
+    "answer_ref": null,
+    "client_submission_id": "subm-20261118-empty",
+    "field_errors": {
+      "text": "Vui lòng nhập nội dung câu trả lời trước khi gửi."
+    },
+    "recovery_action": "Giữ nguyên bản nháp tại ô nhập và bổ sung câu trả lời trước khi bấm Gửi lại."
+  },
+  "foreign_session": {
+    "error_code": "SESSION_FORBIDDEN",
+    "message": "Phiên luyện tập này không thuộc trình duyệt hiện tại hoặc đã hết quyền truy cập.",
+    "retryable": false,
+    "session_id": "session.foreign-99",
+    "answer_ref": null,
+    "client_submission_id": null,
+    "field_errors": {},
+    "recovery_action": "Sao chép bản nháp cục bộ nếu có và bắt đầu phiên mới từ màn hình Thiết lập."
+  },
+  "submission_conflict": {
+    "error_code": "SUBMISSION_CONFLICT",
+    "message": "Mã gửi bài (client_submission_id) đã được dùng cho một nội dung trả lời khác.",
+    "retryable": false,
+    "session_id": "session.demo-20261118-01",
+    "answer_ref": {
+      "id": "answer.demo-20261118-01",
+      "revision": 1
+    },
+    "client_submission_id": "subm-20261118-0001",
+    "field_errors": {},
+    "recovery_action": "Đọc lại bài đã lưu của phiên hoặc tạo client_submission_id mới nếu gửi câu trả lời mới."
+  },
+  "provider_timeout": {
+    "error_code": "PROVIDER_TIMEOUT",
+    "message": "Dịch vụ đánh giá phản hồi quá thời gian chờ. Câu trả lời gốc đã được lưu an toàn.",
+    "retryable": true,
+    "session_id": "session.demo-20261118-01",
+    "answer_ref": {
+      "id": "answer.demo-20261118-01",
+      "revision": 1
+    },
+    "client_submission_id": "subm-20261118-0001",
+    "field_errors": {},
+    "recovery_action": "Bấm 'Thử đánh giá lại' với cùng answer_id để chấm lại bài đã lưu mà không cần nhập lại."
+  }
+}

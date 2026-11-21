@@ -1,0 +1,89 @@
+{
+  "evaluation_id": "evaluation.demo-20261118-02",
+  "version": 1,
+  "status": "completed",
+  "answer_ref": {
+    "id": "answer.demo-20261118-02",
+    "revision": 1
+  },
+  "question_ref": {
+    "id": "case.c03.inventory_race.v1",
+    "version": 1
+  },
+  "rubric_ref": {
+    "id": "rubric.c03.inventory_race.v1",
+    "version": 1
+  },
+  "answer_text": "Em đã trình bày toàn bộ phân tích transaction và script kiểm thử trong tệp đính kèm.",
+  "criterion_checks": [
+    {
+      "criterion_id": "c03.race",
+      "criterion_label": "Nhận ra thao tác tranh chấp",
+      "status": "insufficient_evidence",
+      "score": null,
+      "max_score": 2,
+      "evidence": [
+        {
+          "answer_ref": {
+            "id": "answer.demo-20261118-02",
+            "revision": 1
+          },
+          "quote": "Em đã trình bày toàn bộ phân tích transaction và script kiểm thử trong tệp đính kèm.",
+          "start_offset": 0,
+          "end_offset": 84,
+          "observation": null
+        }
+      ],
+      "explanation": "Câu trả lời viện dẫn tệp đính kèm không có trong phiên nên chưa đủ căn cứ đối chiếu.",
+      "unresolved_reason": "Tệp đính kèm được viện dẫn không tồn tại trong bản ghi câu trả lời."
+    },
+    {
+      "criterion_id": "c03.atomicity",
+      "criterion_label": "Giữ bất biến tại dữ liệu chia sẻ",
+      "status": "insufficient_evidence",
+      "score": null,
+      "max_score": 2,
+      "evidence": [
+        {
+          "answer_ref": {
+            "id": "answer.demo-20261118-02",
+            "revision": 1
+          },
+          "quote": null,
+          "start_offset": null,
+          "end_offset": null,
+          "observation": "Nội dung phân tích transaction nằm ở tệp ngoài không có trong phiên hiện tại."
+        }
+      ],
+      "explanation": "Chưa có nội dung giải pháp trong văn bản đã lưu để chấm tiêu chí này.",
+      "unresolved_reason": "Thiếu nội dung tệp đính kèm được người học dẫn chiếu."
+    },
+    {
+      "criterion_id": "c03.concurrent_tests",
+      "criterion_label": "Kiểm thử bất biến",
+      "status": "insufficient_evidence",
+      "score": null,
+      "max_score": 2,
+      "evidence": [
+        {
+          "answer_ref": {
+            "id": "answer.demo-20261118-02",
+            "revision": 1
+          },
+          "quote": null,
+          "start_offset": null,
+          "end_offset": null,
+          "observation": "Script kiểm thử được viện dẫn ở tệp đính kèm chưa có trong hệ thống."
+        }
+      ],
+      "explanation": "Chưa đủ căn cứ để kết luận đạt hay không đạt; không tự gán điểm 0.",
+      "unresolved_reason": "Thiếu script kiểm thử trong tệp đính kèm được dẫn chiếu."
+    }
+  ],
+  "total_score": null,
+  "maximum_score": 6,
+  "demo_mode_label": "Dữ liệu minh họa",
+  "prompt_version": "interpret_answer/1",
+  "model_id": "fixture",
+  "evaluated_at": "2026-11-18T03:01:00Z"
+}

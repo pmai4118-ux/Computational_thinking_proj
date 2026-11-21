@@ -1,0 +1,16 @@
+{
+  "answer": {
+    "answer_id": "answer.demo-20261118-01",
+    "revision": 1,
+    "session_id": "session.demo-20261118-01",
+    "question_ref": {
+      "id": "case.c03.inventory_race.v1",
+      "version": 1
+    },
+    "client_submission_id": "subm-20261118-0001",
+    "text": "Hai yêu cầu có thể cùng đọc stock=1 trước khi ghi ở nhiều instance. Em dùng conditional update UPDATE inventory SET stock = stock - 1 WHERE id = ? AND stock >= 1 và kiểm tra affected rows = 1. Trừ kho và tạo đơn nằm trong cùng một database transaction; nếu tạo đơn lỗi thì rollback để kho về 1. Em kiểm thử bằng hai luồng gửi đồng thời qua hai instance: chỉ đúng 1 đơn thành công và stock = 0.",
+    "submitted_at": "2026-11-18T03:00:00Z"
+  },
+  "idempotent_replay": false,
+  "evaluation_status": "pending"
+}

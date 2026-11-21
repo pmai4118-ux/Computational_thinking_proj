@@ -1,0 +1,44 @@
+{
+  "session_id": "session.demo-20261118-01",
+  "state": "in_progress",
+  "role": "backend_developer",
+  "level": "intern_fresher",
+  "language": "vi",
+  "demo_mode_label": "Dữ liệu minh họa",
+  "progress": {
+    "current_index": 0,
+    "total_questions": 4,
+    "answered_count": 0,
+    "evaluated_count": 0
+  },
+  "current_question": {
+    "id": "case.c03.inventory_race.v1",
+    "version": 1,
+    "category": "technical_case",
+    "language": "vi",
+    "prompt": "Kho còn một sản phẩm. Hai yêu cầu mua đến đồng thời, có thể tới hai instance ứng dụng khác nhau. Đề xuất cách chỉ tạo tối đa một đơn thành công, không âm kho; giải thích transaction và cách kiểm thử.",
+    "code": null,
+    "code_language": null,
+    "constraints": [
+      "Cơ sở dữ liệu được dùng chung giữa các instance ứng dụng.",
+      "Nếu tạo đơn hàng thất bại thì thay đổi tồn kho cũng phải rollback.",
+      "Không yêu cầu thiết kế hệ thống thanh toán hoặc quy trình giao hàng bên ngoài."
+    ],
+    "skill_ids": [
+      "skill.backend.data_consistency"
+    ],
+    "rubric_ref": {
+      "id": "rubric.c03.inventory_race.v1",
+      "version": 1
+    },
+    "source": {
+      "source_id": "source.c03.concurrent_inventory",
+      "title": "Concurrent Inventory Decrement & Race Condition Case",
+      "url": "https://github.com/yangshun/tech-interview-handbook",
+      "license_spdx": "MIT",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License."
+    }
+  },
+  "current_answer": null,
+  "latest_evaluation_id": null
+}
