@@ -2,6 +2,7 @@
 from pathlib import Path
 import sqlite3
 from threading import Lock
+from source.Model.repositories.interfaces import RepositoryError
 
 
 class RequestBudget:
@@ -12,6 +13,12 @@ class RequestBudget:
         self._lock = Lock()
 
     def reserve(self) -> bool:
+        try:
+            return self._reserve()
+        except (sqlite3.Error, OSError) as error:
+            raise RepositoryError("Cannot reserve request budget.") from error
+
+    def _reserve(self) -> bool:
         if self._budget_path is None:
             with self._lock:
                 if self._used < self.limit:
