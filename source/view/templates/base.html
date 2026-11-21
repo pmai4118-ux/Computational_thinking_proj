@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Luyện phỏng vấn kỹ thuật Backend — interviewUS{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/components.css">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Chuyển tới nội dung chính</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="site-brand">
+        <a class="site-brand__link" href="/">
+          <span class="site-brand__mark" aria-hidden="true">iU</span>
+          <span class="site-brand__text">interviewUS</span>
+        </a>
+        <span class="site-brand__subtitle">Luyện phỏng vấn Backend Intern / Fresher</span>
+      </div>
+
+      <nav class="site-nav" aria-label="Điều hướng chính">
+        <a class="site-nav__link" href="/">Bắt đầu</a>
+        <a class="site-nav__link" href="/setup">Thiết lập phiên</a>
+        {% if demo_mode_label %}
+          <span class="badge badge--demo" role="status" aria-label="Chế độ dữ liệu: {{ demo_mode_label }}">
+            {{ demo_mode_label }}
+          </span>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" class="page-shell" tabindex="-1">
+    {% if error_message %}
+      <section class="alert alert--error" role="alert" aria-live="assertive">
+        <p class="alert__title">{{ error_message }}</p>
+        {% if recovery_action %}
+          <p class="alert__hint">{{ recovery_action }}</p>
+        {% endif %}
+      </section>
+    {% endif %}
+
+    {% if status_message %}
+      <section class="alert alert--status" role="status" aria-live="polite">
+        <p class="alert__title">{{ status_message }}</p>
+      </section>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <p>
+        Ngân hàng câu hỏi và bài tập được tuyển chọn từ nguồn mở có giấy phép đã xác minh.
+        Điểm số được tính bằng quy tắc Rubric minh bạch trên đoạn trích nguyên văn.
+      </p>
+    </div>
+  </footer>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
