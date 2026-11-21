@@ -129,3 +129,16 @@ def test_agy_accepts_serialized_structured_output_and_rejects_missing_criteria()
     del checks[rubric.criteria[0].id]
     with pytest.raises(AntigravityProviderError, match="missing"):
         parse()
+
+
+@pytest.mark.parametrize("stream", ["stdout", "stderr"])
+def test_agy_stops_real_process_at_byte_limit(stream, tmp_path):
+    import sys
+    from source.service.providers.antigravity_provider import AntigravityProvider, AntigravityProviderError
+
+    provider = AntigravityProvider(limits=GeminiLimits(response_bytes=32))
+    cmd = [sys.executable, "-c",
+           f"import sys,time; sys.{stream}.buffer.write(b'x'*33); sys.{stream}.flush(); time.sleep(20)"]
+    with pytest.raises(AntigravityProviderError, match="byte limit"):
+        provider._bounded_runner(cmd, input="", timeout=5, cwd=tmp_path, env=None,
+                                 creationflags=0, encoding="utf-8")
