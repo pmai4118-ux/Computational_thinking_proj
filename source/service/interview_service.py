@@ -427,7 +427,7 @@ class InterviewService:
             raise InvalidSessionStateError(
                 f"Session '{session_id}' is in state '{session.state.value}' and cannot advance."
             )
-        if from_question_index == session.current_index - 1:
+        if session.current_index > 0 and from_question_index == session.current_index - 1:
             # Idempotent retry of 'next' after already advancing one step (W05)
             return self._build_snapshot(session)
         if from_question_index != session.current_index:
