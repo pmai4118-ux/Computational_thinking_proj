@@ -202,7 +202,11 @@ class InMemoryRepositoryStore:
         return tuple(items)
 
     # EvaluationRepository
-    def save_evaluation(self, result: EvaluationResult) -> EvaluationResult:
+    def save_evaluation(self, result: EvaluationResult, *, reuse_completed: bool = False) -> EvaluationResult:
+        if reuse_completed:
+            existing = self.get_completed_evaluation_for_answer(result.answer_ref)
+            if existing is not None:
+                return existing
         key = (result.id, result.version)
         existing = self._evaluations.get(key)
         if existing is not None and existing != result:

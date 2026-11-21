@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from source.Model.evaluation import (
+    AnswerRevisionRef,
     CriterionCheck,
     CriterionFeedback,
     EvaluationFeedback,
@@ -18,7 +19,9 @@ from source.Model.evaluation import (
 from source.Model.ids import CriterionId, EvaluationId
 from source.Model.interview import Answer
 from source.Model.question import Question, Rubric
-from source.Model.repositories.interfaces import EvaluationRepository
+from source.Model.repositories.interfaces import (
+    ContentRepository, EvaluationRepository, RecordNotFoundError, SessionRepository,
+)
 from source.service.providers.interfaces import (
     CriterionObservation,
     EvidenceInterpreter,
@@ -214,12 +217,44 @@ class EvaluationService:
         self,
         *,
         evaluation_repo: EvaluationRepository | None = None,
+        session_repo: SessionRepository | None = None,
+        content_repo: ContentRepository | None = None,
+        interpreter: EvidenceInterpreter | None = None,
         validator: EvidenceValidator | None = None,
         scorer: RubricScoringService | None = None,
     ) -> None:
         self._evaluation_repo = evaluation_repo
+        self._session_repo = session_repo
+        self._content_repo = content_repo
+        self._interpreter = interpreter
         self.validator = validator or EvidenceValidator()
         self.scorer = scorer or RubricScoringService()
+
+    def evaluate_saved_answer(
+        self, answer_ref: AnswerRevisionRef,
+    ) -> tuple[EvaluationResult, EvaluationFeedback]:
+        """Evaluate an immutable submission or replay its committed result."""
+        if (self._session_repo is None or self._content_repo is None
+                or self._evaluation_repo is None or self._interpreter is None):
+            raise RuntimeError("Saved evaluation requires repositories and an interpreter.")
+        answer = self._session_repo.get_answer(answer_ref)
+        if answer is None:
+            raise RecordNotFoundError("Answer revision not found.")
+        question = self._content_repo.get_question(answer.question_ref)
+        rubric = self._content_repo.get_rubric(answer.rubric_ref)
+        if question is None or rubric is None:
+            raise RecordNotFoundError("Question or rubric snapshot not found.")
+        if question.rubric_ref != answer.rubric_ref:
+            raise ValueError("Question and answer reference different rubric versions.")
+        cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer_ref)
+        if cached is not None:
+            return cached, build_feedback(cached, rubric)
+        result = self._compute_result(answer, question, rubric, self._interpreter, None)
+        feedback = build_feedback(result, rubric)
+        committed = self._evaluation_repo.save_evaluation(result, reuse_completed=True)
+        if committed != result:
+            feedback = build_feedback(committed, rubric)
+        return committed, feedback
 
     def evaluate_answer(
         self,
@@ -235,6 +270,15 @@ class EvaluationService:
             if cached is not None:
                 return cached
 
+        result = self._compute_result(answer, question, rubric, interpreter, evaluation_id)
+        if self._evaluation_repo is not None:
+            return self._evaluation_repo.save_evaluation(result)
+        return result
+
+    def _compute_result(
+        self, answer: Answer, question: Question, rubric: Rubric,
+        interpreter: EvidenceInterpreter, evaluation_id: EvaluationId | None,
+    ) -> EvaluationResult:
         next_version = 1
         resolved_eval_id = evaluation_id or EvaluationId(f"evaluation.{uuid4().hex[:12]}")
         if self._evaluation_repo is not None:
@@ -294,8 +338,6 @@ class EvaluationService:
             model_id=batch.model_id,
             demo_mode_label=batch.demo_mode_label,
         )
-        if self._evaluation_repo is not None:
-            self._evaluation_repo.save_evaluation(result)
         return result
 
 

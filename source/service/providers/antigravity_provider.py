@@ -61,6 +61,10 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
 
+class _EvidenceShapeError(ValueError):
+    """Static diagnostic safe to expose without student data."""
+
+
 class AntigravityCriterionDTO(_StrictModel):
     """Structured observation emitted by Antigravity for one criterion (no numeric score)."""
 
@@ -81,24 +85,24 @@ class AntigravityCriterionDTO(_StrictModel):
         has_observation = self.observation is not None and bool(self.observation.strip())
 
         if has_partial_offset:
-            raise ValueError("Provide both start_offset and end_offset, or leave both null.")
+            raise _EvidenceShapeError("Provide both start_offset and end_offset, or leave both null.")
         if has_offsets and not has_quote:
-            raise ValueError("Offsets require a non-empty quote.")
+            raise _EvidenceShapeError("Offsets require a non-empty quote.")
         if has_quote and has_observation:
-            raise ValueError("Provide either a literal quote or an observation, not both.")
+            raise _EvidenceShapeError("Provide either a literal quote or an observation, not both.")
         if not has_quote and not has_observation:
-            raise ValueError("Each criterion check requires either a quote or an observation.")
+            raise _EvidenceShapeError("Each criterion check requires either a quote or an observation.")
         if has_quote and has_offsets:
             assert self.quote is not None
             assert self.start_offset is not None
             assert self.end_offset is not None
             if self.end_offset <= self.start_offset:
-                raise ValueError("end_offset must be greater than start_offset.")
+                raise _EvidenceShapeError("end_offset must be greater than start_offset.")
             if len(self.quote) != (self.end_offset - self.start_offset):
-                raise ValueError("Quote length must match end_offset - start_offset.")
+                raise _EvidenceShapeError("Quote length must match end_offset - start_offset.")
         if self.status is CriterionStatus.INSUFFICIENT_EVIDENCE:
             if not self.unresolved_reason or not self.unresolved_reason.strip():
-                raise ValueError("insufficient_evidence requires a non-empty unresolved_reason.")
+                raise _EvidenceShapeError("insufficient_evidence requires a non-empty unresolved_reason.")
         return self
 
 
@@ -297,8 +301,10 @@ class AntigravityProvider:
             "Do not use command, file, workspace, web, or MCP tools. "
             "Return a `criterion_checks` OBJECT keyed by the exact rubric criterion IDs, "
             "including every criterion exactly once and never adding scores. "
-            "For a unique exact quote you may leave start_offset/end_offset null or give exact "
-            "Python 0-based indices; for omissions/ambiguities set observation with quote=null.\n"
+            "For a unique quote, copy it verbatim and leave observation and both offsets null. "
+            "Only supply zero-based, end-exclusive offsets to disambiguate repeated quotes. "
+            "For an omission use observation alone with quote and both offsets null. "
+            "For insufficient_evidence also supply a nonempty unresolved_reason.\n"
             f"{user_json}"
         )
         if len(prompt.encode("utf-8")) > MAX_REQUEST_BYTES:
@@ -451,11 +457,14 @@ class AntigravityProvider:
         except (ValueError, KeyError, TypeError, AttributeError) as error:
             detail = "invalid JSON envelope"
             if isinstance(error, ValidationError):
-                first = error.errors(include_input=False, include_context=False)[0]
+                first = error.errors(include_input=False)[0]
                 known_fields = {"criterion_checks", *AntigravityCriterionDTO.model_fields,
                                 *(criterion.id for criterion in rubric.criteria)}
                 path = ".".join(str(part) if part in known_fields else "?" for part in first["loc"])
                 detail = f"{path or 'root'} ({first['type']})"
+                reason = first.get("ctx", {}).get("error")
+                if isinstance(reason, _EvidenceShapeError):
+                    detail += f": {reason}"
             raise AntigravityProviderError(
                 ProviderErrorKind.INVALID_OUTPUT,
                 f"Invalid assessment JSON: {detail}; no score was created.",
