@@ -111,3 +111,13 @@ def test_e06_rejects_contradictory_status_and_undeclared_scores() -> None:
 
     with pytest.raises(ScoringError, match="marked UNMET cannot satisfy all"):
         scorer.score_criterion(crit, status=CriterionStatus.UNMET, satisfied_expected_indexes=(0, 1))
+
+
+@pytest.mark.parametrize("status", (CriterionStatus.MET, CriterionStatus.UNMET))
+def test_e06_rejects_scoreable_observations_without_expected_evidence_indexes(
+    status: CriterionStatus,
+) -> None:
+    criterion = _three_level_rubric().criteria[0]
+
+    with pytest.raises(ScoringError, match="requires satisfied_expected_indexes"):
+        RubricScoringService().score_criterion(criterion, status=status)
