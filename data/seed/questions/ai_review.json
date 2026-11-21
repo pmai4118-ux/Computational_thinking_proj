@@ -1,0 +1,268 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "review.c05.binary_search_precheck.v1",
+    "version": 1,
+    "category": "ai_code_review",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "difficulty": "applied",
+    "skill_ids": [
+      "skill.engineering.code_review_and_verification"
+    ],
+    "source_id": "source.thealgorithms.python.binary_search_fn",
+    "prompt": "Trong một endpoint tra cứu trên danh sách chỉ mục `sorted_collection` đã được tầng lưu trữ bảo đảm sắp tăng dần (có thể tới hàng triệu phần tử), bạn đang review một đoạn mã gợi ý cho hàm `binary_search` bên dưới với yêu cầu: thời gian chạy mỗi lần tra cứu là `O(log n)`, trả về vị trí xuất hiện đầu tiên bên trái của `item`, hoặc trả `-1` nếu không tìm thấy. Hãy chỉ ra vấn đề khiến đoạn mã vi phạm hợp đồng hiệu năng dù kết quả trả về đúng, đề xuất cách sửa giữ đúng hành vi tìm biên trái, và nêu các ca kiểm thử độc lập.",
+    "code": "from itertools import pairwise\n\ndef binary_search(sorted_collection: list[int], item: int) -> int:\n    if any(a > b for a, b in pairwise(sorted_collection)):\n        raise ValueError(\"sorted_collection must be sorted in ascending order\")\n    left = 0\n    right = len(sorted_collection) - 1\n    result = -1\n    while left <= right:\n        midpoint = left + (right - left) // 2\n        current_item = sorted_collection[midpoint]\n        if current_item == item:\n            result = midpoint\n            right = midpoint - 1\n        elif item < current_item:\n            right = midpoint - 1\n        else:\n            left = midpoint + 1\n    return result",
+    "code_language": "python",
+    "constraints": [
+      "Hợp đồng của tầng gọi đã cam kết `sorted_collection` được sắp không giảm một lần khi nạp dữ liệu; hàm này được gọi lặp lại trên đường nóng (hot path) cần `O(log n)` mỗi lượt.",
+      "Đoạn mã trên được trích nguyên bản từ hàm `binary_search` của dự án nguồn mở TheAlgorithms/Python (không phải đoạn mã giả định tự gán là do AI sinh); bối cảnh review kiểm tra khả năng đối chiếu mã gợi ý với ràng buộc hệ thống."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_code_for_review",
+      "summary": "Sử dụng nguyên bản hàm `binary_search` có bước kiểm tra `pairwise` từ TheAlgorithms/Python (`searches/binary_search.py` @ 30507bbe41397065728167fb09aa820f9fce8dc7, giấy phép MIT) và đặt vào bài toán review theo hợp đồng hot-path `O(log n)` trên dữ liệu đã sắp sẵn; ghi rõ nguồn gốc mã thực tế thay vì tuyên bố do AI sinh.",
+      "translator_id": "nguyentrg"
+    },
+    "rubric": {
+      "id": "rubric.c05.binary_search_precheck.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c05.q1.performance_defect",
+          "criterion_type": "failure_analysis",
+          "label": "Phát hiện bước quét tuyến tính làm mất độ phức tạp O(log n)",
+          "expected_evidence": [
+            "Biểu thức `any(a > b for a, b in pairwise(sorted_collection))` phải duyệt toàn bộ danh sách khi mảng hợp lệ (đã sắp không giảm).",
+            "Do đó mỗi lần gọi hàm trên dữ liệu hợp lệ đều tốn `O(n)` thay vì `O(log n)` như yêu cầu hợp đồng."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Kết luận hàm đã đạt `O(log n)` hoặc chỉ bắt lỗi giả định sai trong thân vòng lặp nhị phân (vốn đã đúng)."
+            },
+            {
+              "score": 1,
+              "description": "Nhận ra dòng `pairwise` tốn chi phí nhưng chưa giải thích rõ rằng với input hợp lệ đã sắp sẵn `any(...)` buộc phải duyệt hết toàn mảng làm độ phức tạp trở thành `O(n)`."
+            },
+            {
+              "score": 2,
+              "description": "Chỉ rõ `any(... pairwise ...)` quét hết `n - 1` cặp trên mảng hợp lệ khiến mọi lượt tra cứu suy biến thành `O(n)`, vi phạm trực tiếp yêu cầu `O(log n)`."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận giải thích tương đương về việc tiền kiểm tra toàn mảng tốn thời gian tuyến tính lớn hơn chính bước tìm kiếm nhị phân."
+        },
+        {
+          "id": "c05.q1.contract_fix",
+          "criterion_type": "contract_preservation",
+          "label": "Sửa đúng hợp đồng hiệu năng và giữ nguyên hành vi tìm biên trái",
+          "expected_evidence": [
+            "Loại bỏ bước quét `pairwise` khỏi đường nóng mỗi lần tra cứu (hoặc chuyển kiểm tra/sắp xếp sang bước nạp chỉ mục một lần; hoặc dùng cờ debug/precondition).",
+            "Giữ nguyên logic cập nhật `result = midpoint; right = midpoint - 1` (hoặc `bisect_left` kiểm tra khớp) để vẫn trả về vị trí trái nhất của `item` hoặc `-1`."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Vẫn giữ quét toàn mảng mỗi lần gọi hoặc sửa vòng lặp làm trả sai vị trí khi có phần tử trùng / trả lỗi thay vì `-1`."
+            },
+            {
+              "score": 1,
+              "description": "Bỏ được bước quét `O(n)` nhưng vô tình đổi `result = midpoint; right = midpoint - 1` thành `return midpoint` ngay lập tức khiến mất cam kết trả vị trí xuất hiện đầu tiên bên trái."
+            },
+            {
+              "score": 2,
+              "description": "Bỏ quét tuyến tính khỏi hàm tra cứu để đạt `O(log n)` đồng thời giữ nguyên hành vi trả vị trí xuất hiện trái nhất và `-1` khi vắng mặt."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận giữ nguyên vòng lặp hiện tại sau khi bỏ `pairwise` hoặc dùng `bisect_left` kèm kiểm tra biên và giá trị tại chỉ số trả về."
+        },
+        {
+          "id": "c05.q1.independent_tests",
+          "criterion_type": "test_design",
+          "label": "Thiết kế kiểm thử độc lập cho tính đúng và hiệu năng",
+          "expected_evidence": [
+            "Kiểm thử chức năng độc lập: mảng có phần tử trùng `[1, 2, 2, 2, 5]` tìm `2` trả `1`, mảng rỗng `[]` hoặc không có phần tử trả `-1`, phần tử ở đầu/cuối mảng.",
+            "Kiểm thử xác nhận loại bỏ quét tuyến tính (ví dụ dùng dãy lười/sequence đếm số lần truy cập phần tử `<= ceil(log2(n)) + 2` trên mảng lớn)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu ca kiểm thử độc lập hoặc nêu kết quả kỳ vọng sai."
+            },
+            {
+              "score": 1,
+              "description": "Có ca kiểm thử chức năng đúng (trùng lặp, không tìm thấy) nhưng chưa nêu cách kiểm chứng hàm không còn đọc toàn bộ mảng (hoặc ngược lại)."
+            },
+            {
+              "score": 2,
+              "description": "Nêu đủ các ca kiểm thử biên chức năng (trùng lặp biên trái, rỗng/không khớp) và cách kiểm chứng số lượt đọc phần tử/hiệu năng `O(log n)`."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận đo số lần `__getitem__` trên sequence giả lập hoặc benchmark so sánh kích thước `n` tăng gấp đôi."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [0, 1, 2],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Gán unmet (score = 0) nếu bỏ qua yêu cầu bắt buộc; gán insufficient_evidence (score = null) nếu viện dẫn tệp ngoài không có trong bài.",
+        "provider_failure": "processing_error, không gán điểm",
+        "equivalent_answers": "Chấp nhận giữ vòng lặp gốc bỏ precheck hoặc dùng bisect_left đúng hợp đồng."
+      }
+    },
+    "review": {
+      "status": "approved",
+      "curator_id": "nguyentrg",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:48:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Nguồn TheAlgorithms/Python searches/binary_search.py (MIT) @ 30507bbe41397065728167fb09aa820f9fce8dc7."
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "review.c05.sql_query_parameterization.v1",
+    "version": 1,
+    "category": "ai_code_review",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "difficulty": "foundational",
+    "skill_ids": [
+      "skill.engineering.code_review_and_verification"
+    ],
+    "source_id": "source.owasp.query_parameterization",
+    "prompt": "Bạn đang review một đoạn mã đề xuất cho hàm `get_account_balance(conn, username)` dùng kết nối SQLite DB-API 2.0 (`sqlite3`). Yêu cầu của hàm: nhận `username` là chuỗi đầu vào trực tiếp từ HTTP request chưa tin cậy, trả về số dư kiểu `int` của đúng tài khoản đó, hoặc trả về `None` nếu không tồn tại người dùng. Hãy chỉ ra các lỗi bảo mật và lỗi xử lý kết quả trong đoạn mã bên dưới, viết bản sửa tuân thủ đúng hợp đồng, và thiết kế bộ kiểm thử độc lập.",
+    "code": "import sqlite3\n\ndef get_account_balance(conn: sqlite3.Connection, username: str) -> int | None:\n    cursor = conn.cursor()\n    query = f\"SELECT account_balance FROM user_data WHERE user_name = '{username}'\"\n    cursor.execute(query)\n    return cursor.fetchone()[0]",
+    "code_language": "python",
+    "constraints": [
+      "Bảng `user_data(user_name TEXT PRIMARY KEY, account_balance INTEGER NOT NULL)` đã tồn tại trong kết nối SQLite `conn`.",
+      "Ghi chú minh bạch nguồn gốc: mẫu truy vấn chuẩn an toàn lấy từ OWASP Query Parameterization Cheat Sheet (CC-BY-SA-4.0); hai lỗi nối chuỗi f-string và truy cập `fetchone()[0]` không kiểm tra `None` trong đoạn mã đề bài là do nhóm biên soạn chủ động cài vào để phục vụ bài tập review, không phải lỗi của tài liệu OWASP và không tuyên bố là kết quả thật từ một mô hình AI."
+    ],
+    "adaptation": {
+      "kind": "seeded_defect_review_from_open_source_guideline",
+      "summary": "Dựa trên truy vấn mẫu `SELECT account_balance FROM user_data WHERE user_name = ?` của OWASP Query Parameterization Cheat Sheet (`cheatsheets/Query_Parameterization_Cheat_Sheet.md` @ 7af0ef1b745f1a38ce905c00c5a592d5b3a515a9, giấy phép CC-BY-SA-4.0); chuyển sang Python `sqlite3` và chủ động cài hai lỗi (nội suy f-string gây SQL Injection và `cursor.fetchone()[0]` gây `TypeError` khi không có bản ghi) để kiểm tra kỹ năng review độc lập.",
+      "translator_id": "nguyentrg"
+    },
+    "rubric": {
+      "id": "rubric.c05.sql_query_parameterization.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c05.q2.defects",
+          "criterion_type": "failure_analysis",
+          "label": "Phát hiện đủ lỗi SQL Injection và lỗi truy cập kết quả rỗng",
+          "expected_evidence": [
+            "Ghép trực tiếp `username` bằng f-string vào câu SQL tạo lỗ hổng SQL Injection (hoặc lỗi cú pháp khi tên chứa dấu nháy đơn `'`).",
+            "`cursor.fetchone()` trả về `None` khi không tìm thấy người dùng nên `fetchone()[0]` ném `TypeError` thay vì trả `None` theo hợp đồng."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Cho rằng hàm đúng hoặc giải thích sai cả hai lỗi."
+            },
+            {
+              "score": 1,
+              "description": "Chỉ phát hiện được lỗi SQL Injection mà bỏ sót lỗi `fetchone()[0]` khi `username` không tồn tại (hoặc ngược lại)."
+            },
+            {
+              "score": 2,
+              "description": "Phát hiện và giải thích rõ cả lỗ hổng SQL Injection do nội suy chuỗi lẫn lỗi `TypeError` khi `fetchone()` trả `None`."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận ví dụ cụ thể như `username = \"' OR '1'='1\"` và `username = 'missing_user'` để chứng minh hai lỗi."
+        },
+        {
+          "id": "c05.q2.safe_fix",
+          "criterion_type": "contract_preservation",
+          "label": "Tham số hóa câu lệnh SQL và xử lý an toàn trường hợp không có dòng",
+          "expected_evidence": [
+            "Sử dụng placeholder tham số của `sqlite3` (`WHERE user_name = ?` hoặc `:username`) và truyền tham số tách biệt vào `cursor.execute(query, (username,))`.",
+            "Lưu `row = cursor.fetchone()` và trả về `None` khi `row is None`, ngược lại trả `int(row[0])` / `row[0]`."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Vẫn ghép chuỗi SQL thủ công (kể cả chỉ `replace(\"'\", \"''\")`) và vẫn văng lỗi khi kết quả rỗng."
+            },
+            {
+              "score": 1,
+              "description": "Sửa đúng tham số hóa `?` (kèm tuple 1 phần tử `(username,)`) nhưng quên xử lý `row is None` hoặc truyền nhầm `username` không phải tuple/mapping."
+            },
+            {
+              "score": 2,
+              "description": "Tham số hóa truy vấn đúng chuẩn DB-API (`?` với `(username,)` hoặc `:name` với dict) và kiểm tra `row is None` để trả `None` đúng hợp đồng."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận `conn.execute(\"SELECT ... WHERE user_name = ?\", (username,)).fetchone()` kèm biểu thức điều kiện trả `None`."
+        },
+        {
+          "id": "c05.q2.independent_tests",
+          "criterion_type": "test_design",
+          "label": "Kiểm chứng độc lập các trường hợp chuẩn, rỗng và chuỗi độc hại",
+          "expected_evidence": [
+            "Kiểm thử trên SQLite in-memory: người dùng có thật (kể cả số dư `0`) trả đúng số nguyên `0`, người dùng không tồn tại trả `None`.",
+            "Kiểm thử `username` chứa dấu nháy đơn / payload SQL Injection như `\"alice' OR '1'='1\"` trả `None` (không rò rỉ số dư người khác và không làm hỏng bảng)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu kiểm thử độc lập hoặc kết quả kỳ vọng sai."
+            },
+            {
+              "score": 1,
+              "description": "Chỉ kiểm thử trường hợp tìm thấy hợp lệ hoặc thiếu kiểm thử payload chứa dấu nháy / trường hợp không tồn tại."
+            },
+            {
+              "score": 2,
+              "description": "Bao quát đủ ba nhóm kiểm thử độc lập: tìm thấy (gồm biên số dư `0`), không tồn tại (`None`), và đầu vào chứa ký tự nháy/payload injection."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận các chuỗi payload tương đương (như `\"' OR 1=1 --\"` hoặc tên hợp lệ có dấu nháy `\"O'Reilly\"`)."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [0, 1, 2],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Gán unmet (score = 0) nếu bỏ qua yêu cầu bắt buộc; gán insufficient_evidence (score = null) nếu viện dẫn tệp ngoài không có trong bài.",
+        "provider_failure": "processing_error, không gán điểm",
+        "equivalent_answers": "Chấp nhận tham số vị trí `?` hoặc tham số tên `:username` của sqlite3."
+      }
+    },
+    "review": {
+      "status": "approved",
+      "curator_id": "nguyentrg",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:48:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Nguồn OWASP Query Parameterization Cheat Sheet (CC-BY-SA-4.0) @ 7af0ef1b745f1a38ce905c00c5a592d5b3a515a9; đã ghi chú rõ hai lỗi trong đề là do nhóm chủ động cài để luyện review."
+    }
+  }
+]

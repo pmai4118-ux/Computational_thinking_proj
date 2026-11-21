@@ -1,0 +1,73 @@
+{
+  "schema_version": "review-fixture/0.1-proposal",
+  "example_only": false,
+  "review_status": "approved",
+  "question_id": "review.c05.sql_query_parameterization.v1",
+  "question_version": 1,
+  "rubric_id": "rubric.c05.sql_query_parameterization.v1",
+  "curator_id": "nguyentrg",
+  "reviewer_id": "Tin",
+  "reviewed_at": "2026-11-18T04:48:00Z",
+  "cases": [
+    {
+      "case_id": "c05.correct.parameterized_and_none_safe",
+      "label": "Phát hiện đủ SQLi + NoneType, sửa bằng tham số hóa ? và kiểm thử độc lập",
+      "answer": "Đoạn mã có hai lỗi: (1) dùng f-string ghép trực tiếp username vào câu lệnh SQL gây lỗ hổng SQL Injection hoặc lỗi cú pháp khi gặp dấu nháy đơn; (2) khi người dùng không tồn tại, cursor.fetchone() trả về None nên truy cập [0] sẽ ném TypeError thay vì trả None theo hợp đồng. Bản sửa: dùng cursor.execute('SELECT account_balance FROM user_data WHERE user_name = ?', (username,)), gán row = cursor.fetchone() rồi return None if row is None else int(row[0]). Kiểm thử trên sqlite3 ':memory:': tạo user ('alice', 0) kiểm tra trả đúng 0; gọi với 'ghost' kiểm tra trả None; gọi với payload \"alice' OR '1'='1\" kiểm tra trả None chứ không lộ dữ liệu.",
+      "answer_context": {"missing_attachment": false},
+      "checks": [
+        {
+          "criterion_id": "c05.q2.defects",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "(1) dùng f-string ghép trực tiếp username vào câu lệnh SQL gây lỗ hổng SQL Injection hoặc lỗi cú pháp khi gặp dấu nháy đơn; (2) khi người dùng không tồn tại, cursor.fetchone() trả về None nên truy cập [0] sẽ ném TypeError",
+          "reason": "Phát hiện chính xác cả hai lỗi bảo mật và xử lý kết quả rỗng."
+        },
+        {
+          "criterion_id": "c05.q2.safe_fix",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "cursor.execute('SELECT account_balance FROM user_data WHERE user_name = ?', (username,)), gán row = cursor.fetchone() rồi return None if row is None else int(row[0]).",
+          "reason": "Tham số hóa đúng tuple 1 phần tử và xử lý row is None."
+        },
+        {
+          "criterion_id": "c05.q2.independent_tests",
+          "status": "met",
+          "score": 2,
+          "evidence_quote": "tạo user ('alice', 0) kiểm tra trả đúng 0; gọi với 'ghost' kiểm tra trả None; gọi với payload \"alice' OR '1'='1\" kiểm tra trả None",
+          "reason": "Đầy đủ ba ca kiểm thử độc lập với kết quả kỳ vọng tự xác định."
+        }
+      ],
+      "expected_total": 6
+    },
+    {
+      "case_id": "c05.insufficient.missing_attachment",
+      "label": "Viện dẫn pull request bên ngoài không có trong phiên",
+      "answer": "Em đã comment chi tiết các dòng lỗi và commit bản vá kèm unit test trong link PR nội bộ rồi ạ.",
+      "answer_context": {"missing_attachment": true},
+      "checks": [
+        {
+          "criterion_id": "c05.q2.defects",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã comment chi tiết các dòng lỗi và commit bản vá kèm unit test trong link PR nội bộ rồi ạ.",
+          "reason": "Liên kết ngoài không có trong dữ liệu phiên nên chưa đủ căn cứ chấm."
+        },
+        {
+          "criterion_id": "c05.q2.safe_fix",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã comment chi tiết các dòng lỗi và commit bản vá kèm unit test trong link PR nội bộ rồi ạ.",
+          "reason": "Liên kết ngoài không có trong dữ liệu phiên nên chưa đủ căn cứ chấm."
+        },
+        {
+          "criterion_id": "c05.q2.independent_tests",
+          "status": "insufficient_evidence",
+          "score": null,
+          "evidence_quote": "Em đã comment chi tiết các dòng lỗi và commit bản vá kèm unit test trong link PR nội bộ rồi ạ.",
+          "reason": "Liên kết ngoài không có trong dữ liệu phiên nên chưa đủ căn cứ chấm."
+        }
+      ],
+      "expected_total": null
+    }
+  ]
+}
