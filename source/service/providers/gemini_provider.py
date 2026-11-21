@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-import sqlite3
-from source.service.providers.request_budget import RequestBudget
+from source.Model.repositories.request_budget import RequestBudget
+from source.Model.repositories.interfaces import RepositoryError, RequestBudgetRepository
 from uuid import uuid4
 import re
 import socket
@@ -127,6 +127,7 @@ class GeminiProvider:
         timeout_seconds: float = 30.0,
         limits: GeminiLimits = GeminiLimits(),
         budget_path: Path | None = None,
+        budget: RequestBudgetRepository | None = None,
         prompt_version: str = PROMPT_VERSION,
         prompt_builder: InterpretationPromptBuilder | None = None,
         transport: Callable[[Request, float], bytes] | None = None,
@@ -152,7 +153,7 @@ class GeminiProvider:
                 retryable=False,
             )
         self.limits = limits
-        self._budget = RequestBudget(limits.request_budget, budget_path)
+        self._budget: RequestBudgetRepository = budget if budget is not None else RequestBudget(limits.request_budget, budget_path)
         self._api_key = cleaned_key
         self.model_id = cleaned_model
         self.timeout_seconds = float(timeout_seconds)
@@ -260,7 +261,7 @@ class GeminiProvider:
                 try:
                     if not self._budget.reserve():
                         raise GeminiProviderError(ProviderErrorKind.QUOTA, "Configured request budget exhausted.")
-                except (sqlite3.Error, OSError):
+                except RepositoryError:
                     raise GeminiProviderError(ProviderErrorKind.CONFIG,
                                               "Cannot reserve Gemini request budget.") from None
                 raw_body = self._transport(request, self.timeout_seconds)
