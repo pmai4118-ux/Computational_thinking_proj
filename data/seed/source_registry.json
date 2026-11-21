@@ -72,5 +72,29 @@
       "required_notice": "Portions Copyright (c) 1996-2026, PostgreSQL Global Development Group. Portions Copyright (c) 1994, The Regents of the University of California. Licensed under The PostgreSQL License.",
       "status": "verified"
     }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.postgres.mvcc.deadlocks",
+    "title": "PostgreSQL Documentation Chapter 13 — Explicit Locking: Deadlocks",
+    "url": "https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/doc/src/sgml/mvcc.sgml",
+    "file_path": "doc/src/sgml/mvcc.sgml",
+    "revision": "83cefb7b738c32a66a91537aa502d99891a63b11",
+    "authors": [
+      "PostgreSQL Global Development Group"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Note that deadlocks can also occur as the result of row-level locks (and thus, they can occur even if explicit locking is not used). Consider the case in which two concurrent transactions modify a table... PostgreSQL automatically detects deadlock situations and resolves them by aborting one of the transactions involved, allowing the other(s) to complete.",
+      "code": "-- Transaction 1:\nUPDATE accounts SET balance = balance + 100.00 WHERE acctnum = 11111;\n-- Transaction 2:\nUPDATE accounts SET balance = balance + 100.00 WHERE acctnum = 22222;\nUPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 11111;\n-- Transaction 1:\nUPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 22222;"
+    },
+    "license": {
+      "spdx_id": "PostgreSQL",
+      "url": "https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/COPYRIGHT",
+      "required_notice": "Portions Copyright (c) 1996-2026, PostgreSQL Global Development Group. Portions Copyright (c) 1994, The Regents of the University of California. Licensed under The PostgreSQL License.",
+      "status": "verified"
+    }
   }
 ]

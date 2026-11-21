@@ -104,11 +104,7 @@
         }
       ],
       "scoring": {
-        "allowed_scores": [
-          0,
-          1,
-          2
-        ],
+        "allowed_scores": [0, 1, 2],
         "maximum_score": 6,
         "total_policy": "sum_only_when_every_criterion_is_decidable",
         "insufficient_evidence": {
@@ -135,6 +131,140 @@
         "review_cases_checked": true
       },
       "notes": "Biến thể 1 của nhóm technical_case: tập trung vào check-then-act race condition trên cùng một dòng tồn kho (single-row contention)."
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "case.c03.transfer_deadlock.v1",
+    "version": 1,
+    "category": "technical_case",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "difficulty": "applied",
+    "skill_ids": [
+      "skill.backend.data_consistency"
+    ],
+    "source_id": "source.postgres.mvcc.deadlocks",
+    "prompt": "Dịch vụ ví nội bộ thực hiện chuyển điểm giữa hai tài khoản bằng một database transaction: khóa/cập nhật ví nguồn trước rồi khóa/cập nhật ví đích sau. Khi người dùng A chuyển cho B đồng thời với lúc B chuyển ngược lại cho A (trên hai request song song), hệ thống thỉnh thoảng báo lỗi deadlock và hủy một giao dịch. Hãy giải thích trình tự giữ khóa gây deadlock, đề xuất cách thiết kế để ngăn vòng chờ khóa mà vẫn giữ tổng số dư không đổi, và nêu cách kiểm thử.",
+    "code": "-- Request 1 (chuyển từ ví 11111 sang ví 22222):\nBEGIN;\nUPDATE wallets SET balance = balance - 100 WHERE wallet_id = 11111 AND balance >= 100;\nUPDATE wallets SET balance = balance + 100 WHERE wallet_id = 22222;\nCOMMIT;\n\n-- Request 2 chạy đồng thời (chuyển từ ví 22222 sang ví 11111):\nBEGIN;\nUPDATE wallets SET balance = balance - 50 WHERE wallet_id = 22222 AND balance >= 50;\nUPDATE wallets SET balance = balance + 50 WHERE wallet_id = 11111;\nCOMMIT;",
+    "code_language": "sql",
+    "constraints": [
+      "Hai request có thể chạy trên hai instance ứng dụng khác nhau cùng kết nối vào một cơ sở dữ liệu quan hệ.",
+      "Tổng số dư của hai ví trước và sau khi các giao dịch hoàn tất phải được bảo toàn và không ví nào bị âm.",
+      "Khác với bài toán trừ kho một dòng (single-row), tình huống này liên quan đến thứ tự khóa giữa hai dòng dữ liệu khác nhau."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_case",
+      "summary": "Thích nghi trực tiếp từ ví dụ chuyển tiền giữa hai tài khoản 11111 và 22222 trong mục 'Deadlocks' của tài liệu chính thức PostgreSQL Chapter 13 (doc/src/sgml/mvcc.sgml @ 83cefb7b738c32a66a91537aa502d99891a63b11); yêu cầu giải thích vòng chờ khóa ngược chiều, cố định thứ tự khóa (lock ordering) và kiểm thử bảo toàn tổng số dư.",
+      "translator_id": "nguyentrg"
+    },
+    "rubric": {
+      "id": "rubric.c03.transfer_deadlock.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c03.q2.deadlock_cycle",
+          "criterion_type": "failure_analysis",
+          "label": "Giải thích trình tự giữ và chờ khóa ngược chiều",
+          "expected_evidence": [
+            "Giao dịch 1 giữ khóa dòng `11111` rồi chờ khóa dòng `22222`.",
+            "Đồng thời giao dịch 2 giữ khóa dòng `22222` rồi chờ khóa dòng `11111`, tạo vòng chờ (circular wait) khiến DB phải hủy một giao dịch."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Nhầm deadlock thành lỗi mạng hoặc cho rằng chỉ một dòng bị khóa."
+            },
+            {
+              "score": 1,
+              "description": "Nói chung chung hai giao dịch đụng nhau nhưng chưa chỉ rõ trình tự giữ khóa `11111` ↔ `22222` ngược chiều."
+            },
+            {
+              "score": 2,
+              "description": "Mô tả rõ trình tự T1 giữ khóa `11111` chờ `22222` trong khi T2 giữ khóa `22222` chờ `11111` tạo vòng chờ khóa cấp dòng."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận mô tả bằng ký hiệu ví A / ví B thay cho mã số `11111` / `22222` nếu trình bày đúng thứ tự giữ khóa chéo nhau."
+        },
+        {
+          "id": "c03.q2.lock_ordering",
+          "criterion_type": "invariant_preservation",
+          "label": "Ngăn deadlock bằng thứ tự khóa nhất quán và bảo toàn giao dịch",
+          "expected_evidence": [
+            "Áp đặt thứ tự khóa xác định trên mọi giao dịch (ví dụ luôn `SELECT ... FOR UPDATE` hoặc cập nhật theo thứ tự `wallet_id` tăng dần `min(a, b)` trước `max(a, b)`).",
+            "Thực hiện kiểm tra số dư không âm và cộng/trừ cả hai ví nguyên tử trong cùng một database transaction (kèm rollback khi không đủ số dư)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Tách hai lệnh UPDATE ra hai transaction riêng làm mất tính nguyên tử hoặc chỉ dùng khóa RAM cục bộ trên từng instance."
+            },
+            {
+              "score": 1,
+              "description": "Chỉ đề xuất retry khi gặp lỗi deadlock mà không chuẩn hóa thứ tự khóa (hoặc có thứ tự khóa nhưng quên bảo đảm rollback/không âm số dư trong một transaction)."
+            },
+            {
+              "score": 2,
+              "description": "Chuẩn hóa thứ tự khóa nhất quán theo định danh ví (ví dụ `ORDER BY wallet_id FOR UPDATE`) kết hợp kiểm tra số dư và cập nhật nguyên tử trong cùng một transaction."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận khóa trước bằng `SELECT ... WHERE wallet_id IN (:a, :b) ORDER BY wallet_id FOR UPDATE` hoặc một câu lệnh SQL nguyên tử/sắp xếp thứ tự khóa chặt chẽ kèm xử lý retry hữu hạn."
+        },
+        {
+          "id": "c03.q2.tests",
+          "criterion_type": "test_design",
+          "label": "Kiểm thử chuyển chéo đồng thời và bảo toàn tổng số dư",
+          "expected_evidence": [
+            "Chạy đồng thời các cặp request ngược chiều A→B và B→A lặp nhiều lượt qua hai kết nối/instance.",
+            "Đối chiếu không phát sinh deadlock chưa xử lý, không ví nào âm và tổng `balance(A) + balance(B)` không đổi."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu kiểm thử hoặc chỉ kiểm thử tuần tự một chiều."
+            },
+            {
+              "score": 1,
+              "description": "Có chạy song song A→B và B→A nhưng thiếu kiểm tra bất biến tổng số dư và điều kiện không âm."
+            },
+            {
+              "score": 2,
+              "description": "Có kịch bản chuyển chéo đồng thời A→B / B→A và kiểm tra cả việc hoàn tất không kẹt khóa lẫn bảo toàn tổng số dư, không âm ví."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận mô tả kiểm thử bằng thread pool / async clients hoặc công cụ tải song song kèm các assertion về tổng số dư."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [0, 1, 2],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Gán unmet (score = 0) nếu bỏ qua yêu cầu bắt buộc; gán insufficient_evidence (score = null) nếu viện dẫn tệp ngoài không có trong bài.",
+        "provider_failure": "processing_error, không gán điểm",
+        "equivalent_answers": "Chấp nhận mọi cách sắp thứ tự khóa toàn cục nhất quán tại DB."
+      }
+    },
+    "review": {
+      "status": "approved",
+      "curator_id": "nguyentrg",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:42:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Biến thể 2 của nhóm technical_case: cùng kỹ năng data_consistency nhưng kiểm tra multi-row lock ordering & deadlock thay vì single-row check-then-act như case.c03.inventory_race.v1."
     }
   }
 ]
