@@ -3,6 +3,11 @@
 from __future__ import annotations
 
 import json
+import logging
+from pathlib import Path
+import sqlite3
+from source.service.providers.request_budget import RequestBudget
+from uuid import uuid4
 import re
 import socket
 import time
@@ -13,6 +18,7 @@ from urllib.request import Request, urlopen
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from source.config import GeminiLimits
 from source.Model.evaluation import CriterionStatus
 from source.Model.ids import CriterionId
 from source.Model.question import Question, Rubric
@@ -25,8 +31,7 @@ from source.service.providers.interfaces import (
 )
 
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
-MAX_REQUEST_BYTES = 250_000
-MAX_RESPONSE_BYTES = 1_000_000
+logger = logging.getLogger(__name__)
 _MODEL_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$")
 
 
@@ -35,6 +40,8 @@ class _SecretValueLike(Protocol):
 
 
 class _GeminiSettingsLike(Protocol):
+    database_path: Path
+    gemini_limits: GeminiLimits
     provider: str
     gemini_timeout_seconds: float
     gemini_model: str | None
@@ -118,6 +125,8 @@ class GeminiProvider:
         api_key: str,
         model_id: str = DEFAULT_GEMINI_MODEL,
         timeout_seconds: float = 30.0,
+        limits: GeminiLimits = GeminiLimits(),
+        budget_path: Path | None = None,
         prompt_version: str = PROMPT_VERSION,
         prompt_builder: InterpretationPromptBuilder | None = None,
         transport: Callable[[Request, float], bytes] | None = None,
@@ -142,6 +151,8 @@ class GeminiProvider:
                 "GEMINI_TIMEOUT_SECONDS must be between 1 and 120 seconds.",
                 retryable=False,
             )
+        self.limits = limits
+        self._budget = RequestBudget(limits.request_budget, budget_path)
         self._api_key = cleaned_key
         self.model_id = cleaned_model
         self.timeout_seconds = float(timeout_seconds)
@@ -174,6 +185,8 @@ class GeminiProvider:
         return cls(
             api_key=api_key,
             model_id=model_id,
+            limits=settings.gemini_limits,
+            budget_path=settings.database_path,
             timeout_seconds=settings.gemini_timeout_seconds,
             transport=transport,
         )
@@ -203,16 +216,16 @@ class GeminiProvider:
             "generationConfig": {
                 "candidateCount": 1,
                 "temperature": 0.0,
-                "maxOutputTokens": 4096,
+                "maxOutputTokens": self.limits.output_tokens,
                 "responseMimeType": "application/json",
                 "responseJsonSchema": AnswerInterpretationResponse.model_json_schema(),
             },
         }
         encoded = json.dumps(body_dict, ensure_ascii=False).encode("utf-8")
-        if len(encoded) > MAX_REQUEST_BYTES:
+        if len(encoded) > self.limits.input_bytes:
             raise GeminiProviderError(
                 ProviderErrorKind.INPUT_LIMIT,
-                "Request payload exceeds the 250 KB limit.",
+                "Request payload exceeds the configured byte limit.",
                 retryable=False,
             )
         url = (
@@ -236,15 +249,40 @@ class GeminiProvider:
         rubric: Rubric,
         answer_text: str,
     ) -> GeminiCallResult:
-        request = self.build_request(
-            question=question,
-            rubric=rubric,
-            answer_text=answer_text,
-        )
         started = time.perf_counter()
-        raw_body = self._transport(request, self.timeout_seconds)
+        request_id = uuid4().hex
+        for attempt in range(1, self.limits.max_retries + 2):
+            tick = time.perf_counter()
+            outcome = "OK"
+            tokens = None
+            try:
+                request = self.build_request(question=question, rubric=rubric, answer_text=answer_text)
+                try:
+                    if not self._budget.reserve():
+                        raise GeminiProviderError(ProviderErrorKind.QUOTA, "Configured request budget exhausted.")
+                except (sqlite3.Error, OSError):
+                    raise GeminiProviderError(ProviderErrorKind.CONFIG,
+                                              "Cannot reserve Gemini request budget.") from None
+                raw_body = self._transport(request, self.timeout_seconds)
+                if len(raw_body) > self.limits.response_bytes:
+                    raise GeminiProviderError(ProviderErrorKind.INVALID_OUTPUT, "Response exceeds byte limit.")
+                interpretation = self.parse_response(raw_body)
+                usage = json.loads(raw_body).get("usageMetadata")
+                if isinstance(usage, dict) and type(usage.get("totalTokenCount")) is int:
+                    tokens = usage["totalTokenCount"]
+                break
+            except GeminiProviderError as error:
+                outcome = error.code
+                transient = error.code in {
+                    ProviderErrorKind.TIMEOUT, ProviderErrorKind.NETWORK,
+                    ProviderErrorKind.HTTP, ProviderErrorKind.QUOTA,
+                }
+                if not transient or not error.retryable or attempt > self.limits.max_retries:
+                    raise
+            finally:
+                logger.info("gemini request_id=%s attempt=%d elapsed_ms=%d outcome=%s tokens=%s",
+                            request_id, attempt, (time.perf_counter() - tick) * 1000, outcome, tokens)
         elapsed_ms = int((time.perf_counter() - started) * 1000)
-        interpretation = self.parse_response(raw_body)
         return GeminiCallResult(
             interpretation=interpretation,
             model_id=self.model_id,
@@ -286,20 +324,21 @@ class GeminiProvider:
             elapsed_ms=call_result.elapsed_ms,
         )
 
-    @staticmethod
-    def _default_transport(request: Request, timeout_seconds: float) -> bytes:
+    def _default_transport(self, request: Request, timeout_seconds: float) -> bytes:
         try:
             with urlopen(request, timeout=timeout_seconds) as response:
-                raw_body = response.read(MAX_RESPONSE_BYTES + 1)
-            if len(raw_body) > MAX_RESPONSE_BYTES:
+                raw_body = response.read(self.limits.response_bytes + 1)
+            if len(raw_body) > self.limits.response_bytes:
                 raise GeminiProviderError(
                     ProviderErrorKind.INVALID_OUTPUT,
-                    "Gemini response exceeded the 1 MB safety limit.",
+                    "Gemini response exceeded the configured byte limit.",
                     retryable=False,
                 )
             return raw_body
         except HTTPError as error:
             error.close()
+            if error.code == 408:
+                raise GeminiProviderError(ProviderErrorKind.TIMEOUT, "Gemini HTTP timeout.", retryable=True) from None
             if error.code == 402:
                 raise GeminiProviderError(
                     ProviderErrorKind.BILLING,
@@ -312,7 +351,7 @@ class GeminiProvider:
                     "Gemini rate limit or quota reached (HTTP 429); saved answer is unchanged.",
                     retryable=True,
                 ) from None
-            retryable = error.code >= 500 or error.code == 408
+            retryable = error.code in {500, 502, 503, 504}
             raise GeminiProviderError(
                 ProviderErrorKind.HTTP,
                 f"Gemini returned HTTP {error.code}; saved answer is unchanged.",
@@ -324,7 +363,13 @@ class GeminiProvider:
                 "Gemini request timed out; saved answer is unchanged.",
                 retryable=True,
             ) from None
-        except (URLError, OSError):
+        except URLError as error:
+            if isinstance(error.reason, TimeoutError):
+                raise GeminiProviderError(ProviderErrorKind.TIMEOUT, "Gemini request timed out.",
+                                          retryable=True) from None
+            raise GeminiProviderError(ProviderErrorKind.NETWORK, "Gemini connection failed.",
+                                      retryable=True) from None
+        except OSError:
             raise GeminiProviderError(
                 ProviderErrorKind.NETWORK,
                 "Network error while contacting Gemini; saved answer is unchanged.",
@@ -342,6 +387,10 @@ class GeminiProvider:
                     retryable=False,
                 )
             candidates = payload.get("candidates", [])
+            if len(candidates) == 1 and candidates[0].get("finishReason") in {
+                "SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "RECITATION"
+            }:
+                raise GeminiProviderError(ProviderErrorKind.REFUSAL, "Gemini blocked the candidate.")
             if len(candidates) != 1 or candidates[0].get("finishReason") != "STOP":
                 raise GeminiProviderError(
                     ProviderErrorKind.INCOMPLETE,

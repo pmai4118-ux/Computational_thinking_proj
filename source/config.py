@@ -1,7 +1,7 @@
 """Read server settings at the composition boundary."""
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import StrEnum
 from math import isfinite
 from os import environ
@@ -27,6 +27,35 @@ class ProviderMode(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class GeminiLimits:
+    input_bytes: int = 250_000
+    response_bytes: int = 1_000_000
+    output_tokens: int = 4096
+    request_budget: int = 50
+    max_retries: int = 1
+
+    def __post_init__(self) -> None:
+        for field in fields(self):
+            value = getattr(self, field.name)
+            minimum = 0 if field.name in {"max_retries", "request_budget"} else 1
+            maximum = 1 if field.name == "max_retries" else 2**31 - 1
+            if type(value) is not int or not minimum <= value <= maximum:
+                raise ConfigurationError(f"Invalid GEMINI_{field.name.upper()} limit.")
+
+    @classmethod
+    def from_env(cls, env: Mapping[str, str]) -> "GeminiLimits":
+        values = {}
+        for field in fields(cls):
+            key = f"GEMINI_{field.name.upper()}"
+            if key in env:
+                try:
+                    values[field.name] = int(env[key])
+                except ValueError:
+                    raise ConfigurationError(f"Set {key} to an integer.") from None
+        return cls(**values)
+
+
+@dataclass(frozen=True, slots=True)
 class Settings:
     provider: ProviderMode
     database_path: Path
@@ -36,6 +65,8 @@ class Settings:
     antigravity_model: str | None = None
     antigravity_timeout_seconds: float = DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS
     antigravity_executable: str = DEFAULT_ANTIGRAVITY_EXECUTABLE
+
+    gemini_limits: GeminiLimits = GeminiLimits()
 
     @property
     def demo_label(self) -> str | None:
@@ -141,6 +172,7 @@ def load_settings(variables: Mapping[str, str] | None = None) -> Settings:
             provider=provider,
             database_path=database_path,
             gemini_timeout_seconds=gemini_timeout,
+            gemini_limits=GeminiLimits.from_env(env),
             antigravity_model=ag_model,
             antigravity_timeout_seconds=ag_timeout,
             antigravity_executable=ag_executable,
@@ -157,4 +189,7 @@ def load_settings(variables: Mapping[str, str] | None = None) -> Settings:
         raise ConfigurationError(
             "Set GEMINI_MODEL to an API model ID or use EVALUATION_PROVIDER=antigravity / fixture."
         )
-    return Settings(provider, database_path, gemini_timeout, model, SecretStr(api_key))
+    if not 1 <= gemini_timeout <= 120:
+        raise ConfigurationError("Set GEMINI_TIMEOUT_SECONDS between 1 and 120.")
+    return Settings(provider, database_path, gemini_timeout, model, SecretStr(api_key),
+                    gemini_limits=GeminiLimits.from_env(env))
