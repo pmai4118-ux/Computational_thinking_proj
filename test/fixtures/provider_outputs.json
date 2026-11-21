@@ -1,0 +1,137 @@
+{
+  "schema_version": "provider-fixtures/v1",
+  "demo_mode_label": "Dữ liệu minh họa",
+  "prompt_version": "interpret_answer/v1",
+  "records": {
+    "case.c03.inventory_race.v1::correct": {
+      "answer_text": "Hai yêu cầu đến hai instance có thể cùng đọc stock=1 trước khi bên nào kịp ghi. Em dùng câu lệnh nguyên tử UPDATE inventory SET stock = stock - 1 WHERE product_id = :id AND stock >= 1 và kiểm tra affected_rows == 1. Thao tác trừ kho và INSERT đơn hàng đặt trong cùng một database transaction; nếu tạo đơn lỗi thì rollback để stock quay lại 1. Để kiểm thử, em chạy 2 luồng gửi request đồng thời tới 2 instance và kiểm tra chỉ có 1 đơn tạo thành công, stock = 0; sau đó giả lập lỗi chèn đơn để xác nhận không có đơn nào được lưu và stock vẫn bằng 1.",
+      "observations": [
+        {
+          "criterion_id": "c03.race",
+          "status": "met",
+          "quote": "Hai yêu cầu đến hai instance có thể cùng đọc stock=1 trước khi bên nào kịp ghi.",
+          "start_offset": 0,
+          "end_offset": 79,
+          "observation": null,
+          "explanation": "Nêu đúng hiện tượng tranh chấp đọc-kiểm-tra-ghi (stock=1) giữa nhiều instance.",
+          "unresolved_reason": null,
+          "satisfied_expected_indexes": [
+            0,
+            1
+          ]
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "met",
+          "quote": "Thao tác trừ kho và INSERT đơn hàng đặt trong cùng một database transaction; nếu tạo đơn lỗi thì rollback để stock quay lại 1.",
+          "start_offset": 216,
+          "end_offset": 342,
+          "observation": null,
+          "explanation": "Bảo vệ tồn kho nguyên tử tại DB và gắn kết với transaction rollback khi tạo đơn lỗi.",
+          "unresolved_reason": null,
+          "satisfied_expected_indexes": [
+            0,
+            1
+          ]
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "met",
+          "quote": "chỉ có 1 đơn tạo thành công, stock = 0; sau đó giả lập lỗi chèn đơn để xác nhận không có đơn nào được lưu và stock vẫn bằng 1.",
+          "start_offset": 421,
+          "end_offset": 547,
+          "observation": null,
+          "explanation": "Đủ cả kiểm thử đồng thời hai yêu cầu và kiểm thử rollback khi chèn đơn lỗi.",
+          "unresolved_reason": null,
+          "satisfied_expected_indexes": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "case.c03.inventory_race.v1::wrong": {
+      "answer_text": "Mỗi lần đọc stock=1 rồi trừ đi 1 trong biến cục bộ của hàm là đủ an toàn cho mọi máy chủ, không cần kiểm thử thêm.",
+      "observations": [
+        {
+          "criterion_id": "c03.race",
+          "status": "unmet",
+          "quote": "Mỗi lần đọc stock=1 rồi trừ đi 1 trong biến cục bộ của hàm là đủ an toàn cho mọi máy chủ",
+          "start_offset": 0,
+          "end_offset": 88,
+          "observation": null,
+          "explanation": "Khẳng định sai rằng thao tác đọc rồi ghi riêng lẻ trong biến cục bộ luôn an toàn.",
+          "unresolved_reason": null,
+          "satisfied_expected_indexes": []
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "unmet",
+          "quote": null,
+          "start_offset": null,
+          "end_offset": null,
+          "observation": "Không nêu cơ chế khóa/cập nhật nguyên tử tại DB và không có transaction rollback.",
+          "explanation": "Thiếu hoàn toàn cơ chế bảo vệ bất biến ở cơ sở dữ liệu dùng chung.",
+          "unresolved_reason": null,
+          "satisfied_expected_indexes": []
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "unmet",
+          "quote": "không cần kiểm thử thêm.",
+          "start_offset": 90,
+          "end_offset": 114,
+          "observation": null,
+          "explanation": "Từ chối nêu phương án kiểm thử bất biến dù đề bài yêu cầu.",
+          "unresolved_reason": null,
+          "satisfied_expected_indexes": []
+        }
+      ]
+    },
+    "case.c03.inventory_race.v1::insufficient_evidence": {
+      "answer_text": "Em đã trình bày toàn bộ phân tích transaction và script kiểm thử trong tệp đính kèm.",
+      "observations": [
+        {
+          "criterion_id": "c03.race",
+          "status": "insufficient_evidence",
+          "quote": "Em đã trình bày toàn bộ phân tích transaction và script kiểm thử trong tệp đính kèm.",
+          "start_offset": 0,
+          "end_offset": 84,
+          "observation": null,
+          "explanation": "Câu trả lời dẫn chiếu tệp đính kèm không có trong phiên hiện tại.",
+          "unresolved_reason": "Tệp đính kèm được viện dẫn vắng mặt.",
+          "satisfied_expected_indexes": []
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "insufficient_evidence",
+          "quote": null,
+          "start_offset": null,
+          "end_offset": null,
+          "observation": "Phân tích transaction nằm ở tệp ngoài không có trong văn bản đã nộp.",
+          "explanation": "Chưa có dữ liệu để đối chiếu tiêu chí nguyên tử và rollback.",
+          "unresolved_reason": "Thiếu nội dung tệp đính kèm.",
+          "satisfied_expected_indexes": []
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "insufficient_evidence",
+          "quote": null,
+          "start_offset": null,
+          "end_offset": null,
+          "observation": "Script kiểm thử được viện dẫn ở tệp đính kèm chưa có trong hệ thống.",
+          "explanation": "Chưa đủ căn cứ để chấm điểm kiểm thử.",
+          "unresolved_reason": "Thiếu script kiểm thử trong tệp đính kèm.",
+          "satisfied_expected_indexes": []
+        }
+      ]
+    },
+    "case.c03.inventory_race.v1::provider_timeout": {
+      "simulate_error": {
+        "code": "PROVIDER_TIMEOUT",
+        "message": "Simulated fixture timeout: original answer remains saved.",
+        "retryable": true
+      }
+    }
+  }
+}
