@@ -107,7 +107,7 @@ class SessionRepository(Protocol):
 class EvaluationRepository(Protocol):
     """Persistence contract for versioned answer evaluations."""
 
-    def save_evaluation(self, result: EvaluationResult) -> EvaluationResult: ...
+    def save_evaluation(self, result: EvaluationResult, *, reuse_completed: bool = False) -> EvaluationResult: ...
 
     def get_evaluation(
         self,
