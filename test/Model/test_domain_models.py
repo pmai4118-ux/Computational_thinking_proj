@@ -207,3 +207,30 @@ def test_f02_domain_invariants_reject_invalid_ids_versions_reviews_and_scores() 
             source_id=SourceId("source.1"),
             prerequisite_ids=(ExerciseId("ex.self"),),
         )
+
+
+def test_f02_completed_evaluation_requires_a_maximum_and_caps_total_score() -> None:
+    answer_ref = AnswerRevisionRef(AnswerId("answer.02"), revision=1)
+    check = CriterionCheck(
+        criterion_id=CriterionId("crit.02"),
+        status=CriterionStatus.MET,
+        score=3,
+        evidence=(),
+        explanation="The criterion was met.",
+    )
+    common = {
+        "id": EvaluationId("eval.completed"),
+        "version": 1,
+        "status": EvaluationStatus.COMPLETED,
+        "answer_ref": answer_ref,
+        "question_ref": VersionedRef(QuestionId("question.02"), 1),
+        "rubric_ref": VersionedRef(RubricId("rubric.02"), 1),
+        "criterion_checks": (check,),
+        "total_score": 3,
+    }
+
+    with pytest.raises(ValueError, match="requires maximum_score"):
+        EvaluationResult(**common)
+
+    with pytest.raises(ValueError, match="must not exceed maximum_score"):
+        EvaluationResult(**common, maximum_score=2)

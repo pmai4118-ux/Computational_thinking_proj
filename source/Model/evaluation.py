@@ -175,6 +175,8 @@ class EvaluationResult:
         # COMPLETED status
         if self.failure_code is not None or self.failure_message is not None:
             raise ValueError("Completed EvaluationResult must not carry failure fields.")
+        if self.maximum_score is None:
+            raise ValueError("Completed EvaluationResult requires maximum_score.")
         if not self.criterion_checks:
             raise ValueError("Completed EvaluationResult requires criterion_checks.")
         has_unresolved = any(
@@ -198,6 +200,10 @@ class EvaluationResult:
             if self.total_score != expected_total:
                 raise ValueError(
                     "EvaluationResult.total_score must equal the sum of criterion scores."
+                )
+            if self.total_score > self.maximum_score:
+                raise ValueError(
+                    "Completed EvaluationResult.total_score must not exceed maximum_score."
                 )
 
 
