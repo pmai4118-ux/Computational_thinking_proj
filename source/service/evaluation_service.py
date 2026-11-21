@@ -8,6 +8,8 @@ from uuid import uuid4
 
 from source.Model.evaluation import (
     CriterionCheck,
+    CriterionFeedback,
+    EvaluationFeedback,
     CriterionStatus,
     EvaluationResult,
     EvaluationStatus,
@@ -172,6 +174,39 @@ class EvidenceValidator:
         )
 
 
+def build_feedback(result: EvaluationResult, rubric: Rubric) -> EvaluationFeedback:
+    """Explain a completed evaluation using the exact rubric used to score it."""
+    if result.status is not EvaluationStatus.COMPLETED:
+        raise ValueError("Feedback requires a completed evaluation.")
+    if (rubric.id, rubric.version) != (result.rubric_ref.id, result.rubric_ref.version):
+        raise ValueError("Feedback requires the evaluated rubric version.")
+    by_id = {criterion.id: criterion for criterion in rubric.criteria}
+    if by_id.keys() != {check.criterion_id for check in result.criterion_checks}:
+        raise ValueError("Feedback criteria must match the evaluated rubric.")
+
+    items = []
+    for check in result.criterion_checks:
+        criterion = by_id[check.criterion_id]
+        suggestion = None
+        if check.status is CriterionStatus.INSUFFICIENT_EVIDENCE:
+            message = f"Chưa đủ căn cứ để cho điểm. {check.unresolved_reason}"
+        else:
+            level = next((level for level in criterion.levels if level.score == check.score), None)
+            if level is None:
+                raise ValueError(f"Unknown score level for {criterion.id}: {check.score}")
+            message = f"{check.score}/{criterion.max_score} điểm. {level.description} {check.explanation}"
+            if check.status is CriterionStatus.UNMET and check.evidence:
+                target = max(criterion.levels, key=lambda item: item.score)
+                suggestion = (
+                    f"Khi sửa phần {criterion.label} trong câu này, "
+                    f"hãy đối chiếu với yêu cầu sau: {target.description}"
+                )
+        items.append(CriterionFeedback(check, criterion.label, message, suggestion))
+    return EvaluationFeedback(
+        result.id, result.version, result.total_score, result.maximum_score, tuple(items)
+    )
+
+
 class EvaluationService:
     """Validates provider evidence, computes Python rubric scores, and persists results."""
 
@@ -266,6 +301,7 @@ class EvaluationService:
 
 __all__ = [
     "EvaluationService",
+    "build_feedback",
     "EvidenceValidationError",
     "EvidenceValidator",
     "ValidatedCriterionObservation",
