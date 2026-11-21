@@ -13,7 +13,6 @@ import os
 import re
 import logging
 from pathlib import Path
-import sqlite3
 from uuid import uuid4
 import shutil
 import subprocess
@@ -23,7 +22,8 @@ from typing import Any, Callable, NoReturn, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model, model_validator
 
-from source.service.providers.request_budget import RequestBudget
+from source.Model.repositories.request_budget import RequestBudget
+from source.Model.repositories.interfaces import RepositoryError, RequestBudgetRepository
 from source.config import GeminiLimits
 from source.Model.evaluation import CriterionStatus
 from source.Model.ids import CriterionId
@@ -155,6 +155,7 @@ class AntigravityProvider:
         *,
         limits: GeminiLimits = GeminiLimits(response_bytes=MAX_RESPONSE_BYTES),
         budget_path: Path | None = None,
+        budget: RequestBudgetRepository | None = None,
         model_id: str = DEFAULT_ANTIGRAVITY_MODEL,
         timeout_seconds: float = DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS,
         executable: str = DEFAULT_ANTIGRAVITY_EXECUTABLE,
@@ -183,13 +184,13 @@ class AntigravityProvider:
                 retryable=False,
             )
         self.limits = limits
-        self._budget = RequestBudget(limits.request_budget, budget_path)
+        self._budget: RequestBudgetRepository = budget if budget is not None else RequestBudget(limits.request_budget, budget_path)
         self.model_id = cleaned_model
         self.timeout_seconds = float(timeout_seconds)
         self.executable = cleaned_exec
         self._prompt_builder = prompt_builder or InterpretationPromptBuilder(version=prompt_version)
         self.prompt_version = f"{self._prompt_builder.version}+antigravity/1"
-        self._runner = runner or subprocess.run
+        self._runner = runner or self._bounded_runner
 
     def __repr__(self) -> str:
         return (
@@ -529,7 +530,7 @@ class AntigravityProvider:
             try:
                 try:
                     reserved = self._budget.reserve()
-                except (sqlite3.Error, OSError):
+                except RepositoryError:
                     raise AntigravityProviderError(ProviderErrorKind.CONFIG, "Cannot reserve request budget.") from None
                 if not reserved:
                     raise AntigravityProviderError(ProviderErrorKind.QUOTA, "Configured request budget exhausted.")
@@ -545,6 +546,53 @@ class AntigravityProvider:
                     request_id, attempt + 1, (time.perf_counter() - tick) * 1000, outcome,
                 )
         raise AssertionError("Invalid retry configuration")
+
+    def _bounded_runner(self, command, *, input, timeout, cwd, env, creationflags,
+                        encoding, **options):
+        """Feed stdin from a file; drain both output pipes within fixed byte limits."""
+        from threading import Event, Thread
+
+        exceeded = Event()
+        buffers = [bytearray(), bytearray()]
+        with tempfile.TemporaryFile() as source:
+            source.write(input.encode(encoding))
+            source.seek(0)
+            with subprocess.Popen(command, stdin=source, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, cwd=cwd, env=env,
+                                  creationflags=creationflags, bufsize=0) as process:
+                def drain(pipe, buffer):
+                    with pipe:
+                        while True:
+                            remaining = self.limits.response_bytes - len(buffer)
+                            chunk = pipe.read(min(65536, remaining + 1))
+                            if len(chunk) > remaining:
+                                exceeded.set()
+                                process.kill()
+                                return
+                            if not chunk:
+                                return
+                            buffer.extend(chunk)
+
+                readers = [Thread(target=drain, args=(pipe, buffer), daemon=True)
+                           for pipe, buffer in zip((process.stdout, process.stderr), buffers)]
+                for reader in readers:
+                    reader.start()
+                deadline = time.monotonic() + timeout
+                try:
+                    process.wait(timeout=timeout)
+                    for reader in readers:
+                        reader.join(max(0, deadline - time.monotonic()))
+                        if reader.is_alive():
+                            raise subprocess.TimeoutExpired(command, timeout)
+                finally:
+                    if process.poll() is None:
+                        process.kill()
+                    process.wait()
+                if exceeded.is_set():
+                    raise AntigravityProviderError(ProviderErrorKind.INVALID_OUTPUT,
+                                                   "Antigravity output exceeds byte limit.")
+                return subprocess.CompletedProcess(command, process.returncode,
+                                                   buffers[0].decode(encoding), buffers[1].decode(encoding))
 
     def _run_attempt(self, command: list[str], stdin_ndjson: str, started: float,
                      rubric: Rubric, answer_text: str) -> AntigravityCallResult:
@@ -576,7 +624,7 @@ class AntigravityProvider:
             ) from None
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)
-        if len(proc.stdout.encode("utf-8")) > self.limits.response_bytes:
+        if max(len(proc.stdout.encode("utf-8")), len(proc.stderr.encode("utf-8"))) > self.limits.response_bytes:
             raise AntigravityProviderError(ProviderErrorKind.INVALID_OUTPUT, "Response exceeds byte limit.")
         observations = self.parse_response(
             returncode=proc.returncode,

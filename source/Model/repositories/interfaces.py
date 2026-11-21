@@ -135,3 +135,9 @@ __all__ = [
     "RepositoryError",
     "SessionRepository",
 ]
+
+
+class RequestBudgetRepository(Protocol):
+    def reserve(self) -> bool:
+        """Consume one available attempt atomically."""
+        ...
