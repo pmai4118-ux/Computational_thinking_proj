@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 
 import pytest
@@ -19,7 +20,11 @@ from source.Model.ids import (
 )
 from source.Model.interview import Answer
 from source.Model.question import Criterion, CriterionLevel, Question, Rubric
-from source.service.evaluation_service import EvidenceValidationError, EvidenceValidator
+from source.service.evaluation_service import (
+    EvaluationService,
+    EvidenceValidationError,
+    EvidenceValidator,
+)
 from source.service.providers.interfaces import CriterionObservation, InterpretationBatch
 
 
@@ -199,3 +204,45 @@ def test_e05_rejects_missing_duplicate_unknown_and_fabricated_quotes(
     )
     with pytest.raises(EvidenceValidationError, match=expected_message):
         validator.validate_batch(answer=answer, rubric=rubric, batch=batch)
+
+
+@pytest.mark.parametrize(
+    ("mismatch", "expected_message"),
+    [
+        ("answer_question", "answer.question_ref must match question.ref"),
+        ("answer_rubric", "answer.rubric_ref must match the supplied rubric version"),
+        ("question_rubric", "question.rubric_ref must match the supplied rubric version"),
+    ],
+)
+def test_e05_evaluation_rejects_mismatched_refs_before_cache_lookup(
+    mismatch: str,
+    expected_message: str,
+) -> None:
+    answer, question, rubric = _fixture_answer_and_rubric()
+    if mismatch == "answer_question":
+        answer = replace(answer, question_ref=VersionedRef(QuestionId("q.other"), 1))
+    elif mismatch == "answer_rubric":
+        answer = replace(answer, rubric_ref=VersionedRef(RubricId("rubric.other"), 1))
+    else:
+        question = replace(
+            question,
+            rubric_ref=VersionedRef(RubricId("rubric.other"), 1),
+        )
+
+    class _CacheProbe:
+        lookups = 0
+
+        def get_completed_evaluation_for_answer(self, _answer_ref: object) -> object:
+            self.lookups += 1
+            return object()
+
+    repository = _CacheProbe()
+    with pytest.raises(ValueError, match=expected_message):
+        EvaluationService(evaluation_repo=repository).evaluate_answer(
+            answer=answer,
+            question=question,
+            rubric=rubric,
+            interpreter=object(),  # Validation must fail before the interpreter is used.
+        )
+
+    assert repository.lookups == 0
