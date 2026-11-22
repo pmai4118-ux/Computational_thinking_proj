@@ -13,7 +13,8 @@ from source.config import ProviderMode, Settings
 from source.main import create_app
 from source.service.providers.fixture_provider import FixtureProvider
 from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
-from source.Model.ids import SessionId
+from source.Model.evaluation import AnswerRevisionRef
+from source.Model.ids import AnswerId, SessionId
 
 
 def test_web_form_saves_verbatim_answer_and_displays_cached_result(tmp_path: Path) -> None:
@@ -116,5 +117,92 @@ def test_web_provider_timeout_keeps_saved_answer_and_offers_retry(tmp_path: Path
         assert response.status_code == 504
         assert 'role="alert"' in response.text
         assert "Thử đánh giá lại" in response.text
-    [saved] = app.state.container.session_repo.list_answers_for_session(SessionId(session_id))
-    assert saved.text == "Original answer remains saved."
+        [saved] = app.state.container.session_repo.list_answers_for_session(SessionId(session_id))
+        assert saved.text == "Original answer remains saved."
+
+        result_url = f"/sessions/{session_id}/answers/{saved.id}/result?revision=1"
+        saved_failure = client.get(result_url)
+        assert saved_failure.status_code == 200
+        assert "Mã lỗi:" in saved_failure.text
+        assert "Thử đánh giá lại" in saved_failure.text
+        assert "Chưa thể tính tổng điểm" not in saved_failure.text
+
+        provider.interpret.side_effect = FixtureProvider().interpret
+        retried = client.post(
+            f"/sessions/{session_id}/answers/{saved.id}/evaluate?revision=1",
+            follow_redirects=True,
+        )
+        assert retried.status_code == 200
+        assert "Tổng điểm:" in retried.text
+        assert provider.interpret.call_count == 2
+
+
+def test_web_processing_state_offers_refresh_without_duplicate_retry(tmp_path: Path) -> None:
+    app = create_app(settings=Settings(
+        provider=ProviderMode.FIXTURE,
+        database_path=tmp_path / "processing.sqlite3",
+        gemini_timeout_seconds=30.0,
+    ))
+    with TestClient(app) as client:
+        session = client.post("/api/sessions", json={}).json()
+        session_id = session["session_id"]
+        question = session["current_question"]
+        submitted = client.post(f"/api/sessions/{session_id}/answers", json={
+            "question_id": question["id"],
+            "question_version": question["version"],
+            "client_submission_id": "processing-page-test",
+            "text": "Original answer remains saved.",
+        })
+        assert submitted.status_code == 201
+        answer_id = submitted.json()["answer"]["answer_id"]
+        answer = app.state.container.session_repo.get_answer(
+            AnswerRevisionRef(AnswerId(answer_id), 1)
+        )
+        assert answer is not None
+        app.state.container.evaluation_repo.claim_evaluation(
+            answer.ref, answer.question_ref, answer.rubric_ref
+        )
+
+        page = client.get(
+            f"/sessions/{session_id}/answers/{answer_id}/result?revision=1"
+        )
+        assert page.status_code == 200
+        assert "Đánh giá đang được xử lý" in page.text
+        assert "Tải lại trạng thái" in page.text
+        assert "Thử đánh giá lại" not in page.text
+        assert "Chưa thể tính tổng điểm" not in page.text
+
+
+def test_web_permanent_failure_does_not_offer_retry(tmp_path: Path) -> None:
+    provider = Mock()
+    provider.interpret.side_effect = ProviderFailureError(
+        ProviderErrorKind.CONFIG, "Synthetic missing config", retryable=False
+    )
+    app = create_app(settings=Settings(
+        provider=ProviderMode.FIXTURE,
+        database_path=tmp_path / "permanent.sqlite3",
+        gemini_timeout_seconds=30.0,
+    ), interpreter=provider)
+    with TestClient(app) as client:
+        session = client.post("/api/sessions", json={}).json()
+        session_id = session["session_id"]
+        question = session["current_question"]
+        submitted = client.post(f"/api/sessions/{session_id}/answers", json={
+            "question_id": question["id"],
+            "question_version": question["version"],
+            "client_submission_id": "permanent-page-test",
+            "text": "Original answer remains saved.",
+        })
+        assert submitted.status_code == 201
+        answer_id = submitted.json()["answer"]["answer_id"]
+        failed = client.post(
+            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate", json={}
+        )
+        assert failed.status_code == 503
+
+        page = client.get(
+            f"/sessions/{session_id}/answers/{answer_id}/result?revision=1"
+        )
+        assert page.status_code == 200
+        assert "PROVIDER_CONFIG_ERROR" in page.text
+        assert "Thử đánh giá lại" not in page.text

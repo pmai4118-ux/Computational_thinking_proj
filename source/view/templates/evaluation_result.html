@@ -6,7 +6,7 @@
 <section class="card stack" aria-labelledby="result-heading">
   <div>
     <h1 id="result-heading">Kết quả đánh giá câu trả lời</h1>
-    {% if report %}
+    {% if report and report.result.status.value == "completed" %}
       {% if report.result.total_score is not none %}
         <p><strong>Tổng điểm: {{ report.result.total_score }}/{{ report.result.maximum_score }}</strong></p>
       {% else %}
@@ -14,11 +14,25 @@
       {% endif %}
       {% if report.result.demo_mode_label %}<p class="badge badge--demo">{{ report.result.demo_mode_label }}</p>{% endif %}
       <p class="text-secondary">Mô hình: {{ report.result.model_id }} · Phiên bản prompt: {{ report.result.prompt_version }}</p>
+    {% elif report and report.result.status.value == "processing" %}
+      <p>Đánh giá đang được xử lý. Câu trả lời gốc đã được lưu.</p>
+      <a class="btn btn--secondary" href="/sessions/{{ session_id }}/answers/{{ answer_id }}/result?revision={{ revision }}">Tải lại trạng thái</a>
+    {% elif report and report.result.status.value == "failed" %}
+      <p>Đánh giá chưa hoàn tất. Câu trả lời gốc vẫn được lưu.</p>
+      <p><strong>Mã lỗi:</strong> {{ report.result.failure_code }}</p>
+      {% if report.result.failure_message %}<p>{{ report.result.failure_message }}</p>{% endif %}
+      {% if report.result.retryable %}
+        <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}">
+          <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
+        </form>
+      {% endif %}
     {% else %}
       <p>Chưa có kết quả đánh giá hoàn tất cho bài này. Bài gốc vẫn được lưu.</p>
-      <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}">
-        <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
-      </form>
+      {% if can_retry %}
+        <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}">
+          <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
+        </form>
+      {% endif %}
     {% endif %}
   </div>
 
@@ -27,6 +41,8 @@
       <h2 id="answer-heading">Câu trả lời gốc</h2>
       <pre class="code-block">{{ report.result.answer_text }}</pre>
     </section>
+  {% endif %}
+  {% if report and report.result.status.value == "completed" %}
     <section class="stack" aria-labelledby="criteria-heading">
       <h2 id="criteria-heading">Điểm và căn cứ theo tiêu chí</h2>
       {% for check, feedback in rows %}

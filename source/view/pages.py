@@ -245,6 +245,7 @@ def build_pages_router(
                     revision=revision,
                     report=None,
                     rows=(),
+                    can_retry=error.payload.retryable,
                     error_message=error.payload.message,
                     recovery_action=error.payload.recovery_action,
                 )
@@ -271,6 +272,7 @@ def build_pages_router(
                 revision=revision,
                 report=None,
                 rows=(),
+                can_retry=error.payload.retryable,
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
             )
@@ -306,6 +308,7 @@ def build_pages_router(
                 revision=revision,
                 report=None,
                 rows=(),
+                can_retry=error.payload.retryable,
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
             )
