@@ -1,4 +1,4 @@
-"""Server-rendered page routes for Welcome, Session History, and Setup (F05/U02)."""
+"""Server-rendered page routes for the interview practice flow."""
 
 from __future__ import annotations
 
@@ -77,6 +77,7 @@ def build_pages_router(controller: InterviewController) -> APIRouter:
     welcome_template = env.get_template("welcome.html")
     setup_template = env.get_template("setup.html")
     workspace_template = env.get_template("workspace.html")
+    answer_review_template = env.get_template("answer_review.html")
 
     @router.get("/", response_class=HTMLResponse)
     def welcome_page(request: Request) -> HTMLResponse:
@@ -177,6 +178,21 @@ def build_pages_router(controller: InterviewController) -> APIRouter:
         html = workspace_template.render(
             demo_mode_label=controller.demo_mode_label,
             session=session_dto,
+        )
+        return HTMLResponse(content=html)
+
+    @router.get("/sessions/{session_id}/review", response_class=HTMLResponse)
+    def answer_review_page(session_id: str, request: Request) -> HTMLResponse:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        answer_id = request.query_params.get("answer_id")
+        if not answer_id and session_dto.current_answer is not None:
+            answer_id = str(session_dto.current_answer.answer_id)
+        html = answer_review_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            session=session_dto,
+            answer_id=answer_id,
         )
         return HTMLResponse(content=html)
 

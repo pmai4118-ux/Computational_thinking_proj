@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Kết quả câu trả lời — interviewUS{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/results.css">{% endblock %}
+
+{% block content %}
+<section class="card results-page" data-answer-review
+         data-session-id="{{ session.session_id }}"
+         data-answer-id="{{ answer_id or '' }}"
+         aria-labelledby="review-heading">
+  <div class="results-header">
+    <div>
+      <p class="eyebrow">Kết quả một câu</p>
+      <h1 id="review-heading">Đối chiếu câu trả lời theo tiêu chí</h1>
+    </div>
+    <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}">Về câu hỏi</a>
+  </div>
+  <p class="text-secondary reading-measure">Chọn một tiêu chí để xem đúng đoạn trích trong bài đã gửi. “Chưa đủ bằng chứng” không được tính thành 0 điểm.</p>
+  <div id="review-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
+  <p id="review-status" class="alert alert--status" role="status" aria-live="polite">{% if answer_id %}Đang tải kết quả đã lưu…{% else %}Chưa có bài đã lưu để hiển thị kết quả.{% endif %}</p>
+  <button id="retry-review-load" class="btn btn--secondary" type="button" hidden>Tải lại kết quả</button>
+  <div id="review-content" hidden>
+    <section class="score-summary" aria-label="Tổng điểm câu trả lời">
+      <div><span class="score-summary__label">Điểm câu này</span><strong id="evaluation-total"></strong></div>
+      <p id="evaluation-state" class="badge"></p>
+    </section>
+    <div class="review-layout">
+      <section aria-labelledby="criteria-heading">
+        <h2 id="criteria-heading">Tiêu chí đánh giá</h2>
+        <div id="criteria-list" class="criterion-list"></div>
+      </section>
+      <section class="evidence-panel" aria-labelledby="evidence-heading">
+        <h2 id="evidence-heading">Căn cứ trong bài làm</h2>
+        <p id="selected-criterion-explanation" class="text-secondary"></p>
+        <div id="evidence-detail" class="evidence-detail" aria-live="polite"></div>
+        <h3>Bài trả lời đã lưu</h3>
+        <pre id="answer-source" class="answer-source"></pre>
+      </section>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}<script src="/static/js/evidence.js" defer></script>{% endblock %}
