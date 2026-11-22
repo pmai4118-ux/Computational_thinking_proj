@@ -6,9 +6,10 @@ import json
 import sqlite3
 from contextlib import contextmanager
 from dataclasses import replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Iterator
+from uuid import uuid4
 
 from source.Model.evaluation import (
     AnswerRevisionRef,
@@ -47,12 +48,16 @@ from source.Model.question import (
 from source.Model.repositories.interfaces import (
     DuplicateRecordError,
     DuplicateSubmissionConflictError,
+    EvaluationInProgressError,
+    EvaluationRetryNotAllowedError,
     RecordNotFoundError,
     RepositoryError,
+    RETRYABLE_EVALUATION_FAILURES,
 )
 
 SCHEMA_VERSION = 1
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
+EVALUATION_LEASE = timedelta(minutes=15)
 
 
 def _dt_to_iso(value: datetime | None) -> str | None:
@@ -701,7 +706,87 @@ class SQLiteRepositoryStore:
         return tuple(self._row_to_answer(row) for row in rows)
 
     # EvaluationRepository
-    def save_evaluation(self, result: EvaluationResult, *, reuse_completed: bool = False) -> EvaluationResult:
+    def claim_evaluation(
+        self, answer_ref: AnswerRevisionRef,
+        question_ref: VersionedRef[QuestionId], rubric_ref: VersionedRef[RubricId],
+    ) -> EvaluationResult:
+        """Atomically reserve one attempt across threads and app processes."""
+        now = datetime.now(UTC)
+        with self._connect() as conn, conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT * FROM evaluations WHERE answer_id=? AND answer_revision=? "
+                "AND status='completed' ORDER BY version DESC LIMIT 1",
+                (answer_ref.id, answer_ref.revision),
+            ).fetchone()
+            if row is not None:
+                return self._load_evaluation_from_row(conn, row)
+            row = conn.execute(
+                "SELECT * FROM evaluations WHERE answer_id=? AND answer_revision=? "
+                "ORDER BY version DESC LIMIT 1",
+                (answer_ref.id, answer_ref.revision),
+            ).fetchone()
+            if row is not None and row["status"] == EvaluationStatus.PROCESSING.value:
+                started = _iso_to_dt(row["evaluated_at"])
+                if started is not None and now - started < EVALUATION_LEASE:
+                    raise EvaluationInProgressError("Evaluation is already processing.")
+                conn.execute(
+                    "UPDATE evaluations SET status='failed', failure_code='EVALUATION_INTERRUPTED', "
+                    "failure_message='The prior evaluation was interrupted.' "
+                    "WHERE id=? AND version=? AND status='processing'",
+                    (row["id"], row["version"]),
+                )
+            elif row is not None and row["status"] == EvaluationStatus.FAILED.value:
+                if row["failure_code"] not in RETRYABLE_EVALUATION_FAILURES:
+                    raise EvaluationRetryNotAllowedError("This evaluation failure cannot be retried.")
+            claim = EvaluationResult(
+                id=EvaluationId(row["id"] if row is not None else f"evaluation.{uuid4().hex[:12]}"),
+                version=int(row["version"]) + 1 if row is not None else 1,
+                status=EvaluationStatus.PROCESSING,
+                answer_ref=answer_ref,
+                question_ref=question_ref,
+                rubric_ref=rubric_ref,
+                evaluated_at=now,
+            )
+            conn.execute(
+                "INSERT INTO evaluations (id, version, status, answer_id, answer_revision, "
+                "question_id, question_version, rubric_id, rubric_version, evaluated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (claim.id, claim.version, claim.status.value, answer_ref.id, answer_ref.revision,
+                 question_ref.id, question_ref.version, rubric_ref.id, rubric_ref.version,
+                 _dt_to_iso(now)),
+            )
+            return claim
+
+    def complete_evaluation(self, claim: EvaluationResult, result: EvaluationResult) -> EvaluationResult:
+        if claim.status is not EvaluationStatus.PROCESSING or result.status is not EvaluationStatus.COMPLETED:
+            raise ValueError("A processing claim can only be completed with a completed result.")
+        if (
+            claim.id, claim.version, claim.answer_ref, claim.question_ref, claim.rubric_ref
+        ) != (
+            result.id, result.version, result.answer_ref, result.question_ref, result.rubric_ref
+        ):
+            raise ValueError("Completed result must match the reserved attempt.")
+        return self.save_evaluation(result, processing_claim=claim)
+
+    def fail_evaluation(self, claim: EvaluationResult, code: str, message: str) -> EvaluationResult:
+        failed = replace(claim, status=EvaluationStatus.FAILED, failure_code=code,
+                         failure_message=message, evaluated_at=datetime.now(UTC))
+        with self._connect() as conn, conn:
+            conn.execute("BEGIN IMMEDIATE")
+            updated = conn.execute(
+                "UPDATE evaluations SET status='failed', failure_code=?, failure_message=?, "
+                "evaluated_at=? WHERE id=? AND version=? AND status='processing'",
+                (code, message, _dt_to_iso(failed.evaluated_at), claim.id, claim.version),
+            )
+            if updated.rowcount != 1:
+                raise EvaluationInProgressError("Evaluation claim is no longer active.")
+        return failed
+
+    def save_evaluation(
+        self, result: EvaluationResult, *, reuse_completed: bool = False,
+        processing_claim: EvaluationResult | None = None,
+    ) -> EvaluationResult:
         try:
             with self._connect() as conn, conn:
                 conn.execute("BEGIN IMMEDIATE")
@@ -717,10 +802,23 @@ class SQLiteRepositoryStore:
                                    (result.id, result.version)).fetchone()
                 if row is not None:
                     existing = self._load_evaluation_from_row(conn, row)
-                    if existing == result:
+                    if processing_claim is not None and existing == processing_claim:
+                        conn.execute(
+                            "UPDATE evaluations SET status=?, total_score=?, maximum_score=?, "
+                            "evaluated_at=?, prompt_version=?, model_id=?, demo_mode_label=? "
+                            "WHERE id=? AND version=? AND status='processing'",
+                            (result.status.value, result.total_score, result.maximum_score,
+                             _dt_to_iso(result.evaluated_at), result.prompt_version, result.model_id,
+                             result.demo_mode_label, result.id, result.version),
+                        )
+                    elif existing == result:
                         return existing
-                    raise DuplicateRecordError(f"Evaluation ({result.id}, {result.version}) already exists.")
-                conn.execute(
+                    else:
+                        raise DuplicateRecordError(f"Evaluation ({result.id}, {result.version}) already exists.")
+                else:
+                    if processing_claim is not None:
+                        raise RecordNotFoundError("Evaluation claim is no longer active.")
+                    conn.execute(
                     """
                     INSERT INTO evaluations (
                         id, version, status, answer_id, answer_revision,
@@ -748,7 +846,7 @@ class SQLiteRepositoryStore:
                         result.model_id,
                         result.demo_mode_label,
                     ),
-                )
+                    )
                 for index, check in enumerate(result.criterion_checks):
                     evidence_json = json.dumps(
                         [

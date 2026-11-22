@@ -30,6 +30,7 @@ from source.service.providers.factory import create_evidence_interpreter
 from source.service.providers.interfaces import EvidenceInterpreter
 from source.service.seed_loader import load_seed_catalog_into_repository
 from source.view.pages import build_pages_router
+from source.Control.evaluation_controller import build_evaluation_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "view" / "static"
 
@@ -127,6 +128,7 @@ def create_app(
             "demo_mode_label": resolved_settings.demo_label,
         }
 
+    app.include_router(build_evaluation_router(saved_evaluation_controller))
     return app
 
 

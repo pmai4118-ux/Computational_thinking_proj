@@ -47,6 +47,12 @@
      - Nếu đang có một yêu cầu đánh giá khác chạy cho cùng `(answer_id, revision)`: trả `409 Conflict` (`error_code: "EVALUATION_IN_PROGRESS"`, `retryable: true`) để UI đọc trạng thái qua `GET /api/answers/{answer_id}/evaluation`.
      - Nếu lần đánh giá trước thất bại (`failed` do timeout/mạng/quota): cho phép bấm **Thử đánh giá lại** với cùng `answer_id` và `answer_revision`, giữ nguyên bài trả lời gốc.
 
+#### Trạng thái và retry của I04
+- `POST /api/answers/{answer_id}/evaluate` nhận `answer_revision` (mặc định `1`); `GET /api/answers/{answer_id}/evaluation?answer_revision=...` đọc lần đánh giá mới nhất của bản trả lời đó. Cả hai yêu cầu cookie chủ sở hữu của phiên chứa bài. Endpoint E09 có `session_id` vẫn hoạt động và trả `EvaluationResponseDTO` gồm `result` và `feedback_items`.
+- Trước khi gọi provider, server lưu một bản `processing` trong SQLite. Giao dịch claim bảo đảm một worker duy nhất xử lý cùng `(answer_id, revision)`; request khác nhận `409 EVALUATION_IN_PROGRESS`. GET trả `status: processing`, `processing_started_at`, không có điểm hoặc feedback.
+- Khi hoàn tất, server cập nhật chính bản claim thành `completed`. Gọi POST lại trả cùng `evaluation_id` và `version` từ DB, không gọi provider. Khi provider lỗi, server lưu `failed` với `failure_code`, thông điệp an toàn và `retryable`; GET trả trạng thái này để UI hiện nút retry. Retry cùng bản trả lời tạo version đánh giá mới; không tạo thêm Answer.
+- Retry chỉ được nhận cho timeout, quota, lỗi mạng/HTTP, phản hồi chưa đầy đủ/sai, lỗi đánh giá tạm thời hoặc worker bị gián đoạn. Lỗi cấu hình/đầu vào/từ chối không retry tự động và trả `409 EVALUATION_RETRY_NOT_ALLOWED`. Claim `processing` quá 15 phút được đánh dấu gián đoạn và có thể retry; claim cũ không được ghi đè kết quả mới.
+
 ### 2.3. Chính sách bản nháp trình duyệt (Browser Draft Policy)
 - Trình duyệt chỉ lưu bản nháp cục bộ theo khóa `draft:{session_id}:{question_id}` trong `sessionStorage` để chống mất dữ liệu khi rớt mạng hoặc hết phiên.
 - Bản nháp cục bộ phải hiển thị nhãn *"Bản nháp trên trình duyệt (chưa lưu server)"*, không được hiển thị *"Đã lưu"* cho tới khi `POST /api/sessions/{session_id}/answers` trả về thành công.
@@ -88,11 +94,13 @@ Mọi phản hồi lỗi đều tuân theo schema `ApiErrorResponse` trong [`sou
 | `410` | `SESSION_EXPIRED` | `false` | Phiên đã hết hạn. Khóa gửi vào phiên cũ, giữ bản nháp trên màn hình và hướng dẫn tạo phiên mới. |
 | `409` | `SUBMISSION_CONFLICT` | `false` | Gửi trùng `client_submission_id` với nội dung khác. Đọc lại bài đã lưu hoặc sinh mã gửi mới nếu tạo lượt trả lời mới. |
 | `409` | `EVALUATION_IN_PROGRESS` | `true` | Đang có tiến trình chấm cho cùng bài. Hiển thị trạng thái đang xử lý, không tạo yêu cầu chấm mới song song. |
+| `409` | `EVALUATION_RETRY_NOT_ALLOWED` | `false` | Lỗi đánh giá trước không thể phục hồi bằng retry; đọc trạng thái `failed` và xử lý cấu hình hoặc liên hệ hỗ trợ. |
 | `409` | `INVALID_STATE_TRANSITION` | `false` | Bấm chuyển câu khi câu hiện tại chưa đánh giá xong hoặc phiên đã kết thúc. |
 | `503` | `INSUFFICIENT_QUESTION_BANK` | `false` | Ngân hàng câu hỏi đã duyệt chưa đủ phủ 4 nhóm theo khung `C01`. Báo rõ nhóm kỹ năng thiếu, không mở phiên rỗng. |
 | `504` | `PROVIDER_TIMEOUT` | `true` | Quá hạn chờ Gemini/provider. Giữ nguyên `answer_ref` đã lưu và hiện nút **Thử đánh giá lại**. |
 | `429` | `PROVIDER_QUOTA_EXCEEDED` | `true` | Hết hạn mức gọi API tạm thời. Giữ nguyên `answer_ref`, thông báo thử lại sau hoặc chuyển sang chế độ dữ liệu mẫu. |
-| `502` | `PROVIDER_REFUSAL` / `PROVIDER_OUTPUT_INVALID` | `true` | Provider từ chối yêu cầu hoặc trả JSON/trích dẫn không hợp lệ. Không gán điểm 0; giữ bài gốc để thử đánh giá lại. |
+| `502` | `PROVIDER_OUTPUT_INVALID` / `PROVIDER_NETWORK_ERROR` / `PROVIDER_HTTP_ERROR` / `PROVIDER_INCOMPLETE_RESPONSE` | `true` | Provider lỗi hoặc trả dữ liệu không hợp lệ. Giữ bài gốc và cho phép retry. |
+| `502` / `503` / `422` | `PROVIDER_REFUSAL` / `PROVIDER_CONFIG_ERROR` / `PROVIDER_BILLING_REQUIRED` / `PROVIDER_INPUT_LIMIT` | `false` | Lỗi không thể giải quyết bằng retry cùng cấu hình và đầu vào. Giữ bài gốc và báo hướng xử lý. |
 
 ---
 

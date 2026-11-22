@@ -108,7 +108,10 @@ def test_provider_failure_does_not_delete_saved_answer(tmp_path: Path) -> None:
         response = client.post(f"{base}/evaluate", json={})
         assert response.status_code == 504
         assert response.json()["error_code"] == "PROVIDER_TIMEOUT"
-        assert client.get(f"{base}/evaluations/1").status_code == 404
+        failed = client.get(f"{base}/evaluations/1")
+        assert failed.status_code == 200
+        assert failed.json()["result"]["status"] == "failed"
+        assert failed.json()["result"]["failure_code"] == "PROVIDER_TIMEOUT"
     saved = app.state.container.session_repo.get_answer(
         AnswerRevisionRef(AnswerId(answer_id), 1)
     )

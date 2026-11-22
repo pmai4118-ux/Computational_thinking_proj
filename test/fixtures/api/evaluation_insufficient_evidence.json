@@ -85,5 +85,9 @@
   "demo_mode_label": "Dữ liệu minh họa",
   "prompt_version": "interpret_answer/1",
   "model_id": "fixture",
-  "evaluated_at": "2026-11-18T03:01:00Z"
+  "evaluated_at": "2026-11-18T03:01:00Z",
+  "processing_started_at": null,
+  "failure_code": null,
+  "failure_message": null,
+  "retryable": false
 }

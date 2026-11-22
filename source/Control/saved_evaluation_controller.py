@@ -21,11 +21,16 @@ from source.Control.schemas import (
     EvidenceItemDTO,
     VersionedRefDTO,
 )
-from source.Model.evaluation import AnswerRevisionRef, EvaluationFeedback, EvaluationResult
+from source.Model.evaluation import (
+    AnswerRevisionRef, EvaluationFeedback, EvaluationResult, EvaluationStatus,
+)
 from source.Model.ids import AnswerId, SessionId
 from source.Model.interview import Answer
 from source.Model.question import Rubric
-from source.Model.repositories.interfaces import RecordNotFoundError
+from source.Model.repositories.interfaces import (
+    EvaluationInProgressError, EvaluationRetryNotAllowedError,
+    RecordNotFoundError, RETRYABLE_EVALUATION_FAILURES,
+)
 from source.service.evaluation_service import EvaluationService
 from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
 
@@ -74,24 +79,57 @@ class SavedEvaluationController:
         answer, rubric = self._owned_context(session_id, answer_ref, owner_token)
         try:
             result, feedback = self._evaluation_service.evaluate_saved_answer(answer_ref)
+        except EvaluationInProgressError as error:
+            raise ApiControllerError(
+                status.HTTP_409_CONFLICT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.EVALUATION_IN_PROGRESS,
+                    message="Evaluation is already processing for this answer revision.",
+                    retryable=True, session_id=session_id,
+                    answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
+                    recovery_action="Read the evaluation status before trying again.",
+                ),
+            ) from error
+        except EvaluationRetryNotAllowedError as error:
+            raise ApiControllerError(
+                status.HTTP_409_CONFLICT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.EVALUATION_RETRY_NOT_ALLOWED,
+                    message="The previous evaluation failure cannot be retried.",
+                    session_id=session_id,
+                    answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
+                    recovery_action="Read the saved failure and contact support if needed.",
+                ),
+            ) from error
         except ProviderFailureError as error:
             errors = {
                 ProviderErrorKind.TIMEOUT: (ErrorCode.PROVIDER_TIMEOUT, status.HTTP_504_GATEWAY_TIMEOUT),
                 ProviderErrorKind.QUOTA: (ErrorCode.PROVIDER_QUOTA_EXCEEDED, status.HTTP_429_TOO_MANY_REQUESTS),
-                ProviderErrorKind.REFUSAL: (ErrorCode.PROVIDER_REFUSAL, status.HTTP_422_UNPROCESSABLE_CONTENT),
+                ProviderErrorKind.REFUSAL: (ErrorCode.PROVIDER_REFUSAL, status.HTTP_502_BAD_GATEWAY),
+                ProviderErrorKind.CONFIG: (ErrorCode.PROVIDER_CONFIG_ERROR, status.HTTP_503_SERVICE_UNAVAILABLE),
+                ProviderErrorKind.INPUT_LIMIT: (ErrorCode.PROVIDER_INPUT_LIMIT, status.HTTP_422_UNPROCESSABLE_CONTENT),
+                ProviderErrorKind.BILLING: (ErrorCode.PROVIDER_BILLING_REQUIRED, status.HTTP_503_SERVICE_UNAVAILABLE),
+                ProviderErrorKind.INCOMPLETE: (ErrorCode.PROVIDER_INCOMPLETE_RESPONSE, status.HTTP_502_BAD_GATEWAY),
+                ProviderErrorKind.HTTP: (ErrorCode.PROVIDER_HTTP_ERROR, status.HTTP_502_BAD_GATEWAY),
+                ProviderErrorKind.NETWORK: (ErrorCode.PROVIDER_NETWORK_ERROR, status.HTTP_502_BAD_GATEWAY),
             }
             error_code, http_status = errors.get(
                 error.code, (ErrorCode.PROVIDER_OUTPUT_INVALID, status.HTTP_502_BAD_GATEWAY)
             )
+            can_retry = str(error.code) in RETRYABLE_EVALUATION_FAILURES
             raise ApiControllerError(
                 http_status,
                 ApiErrorResponse(
                     error_code=error_code,
                     message="The evaluation provider could not complete this answer.",
-                    retryable=error.retryable,
+                    retryable=can_retry,
                     session_id=session_id,
                     answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
-                    recovery_action="The original answer remains saved; retry evaluation later.",
+                    recovery_action=(
+                        "The original answer remains saved; retry evaluation later."
+                        if can_retry else
+                        "The original answer remains saved; resolve the provider issue before continuing."
+                    ),
                 ),
             ) from error
         return self._to_response(result, feedback, answer, rubric)
@@ -100,13 +138,13 @@ class SavedEvaluationController:
         self, session_id: SessionId, answer_ref: AnswerRevisionRef, owner_token: str | None,
     ) -> EvaluationResponseDTO:
         answer, rubric = self._owned_context(session_id, answer_ref, owner_token)
-        saved = self._evaluation_service.get_completed_saved_answer(answer_ref)
+        saved = self._evaluation_service.get_latest_saved_answer(answer_ref)
         if saved is None:
             raise ApiControllerError(
                 status.HTTP_404_NOT_FOUND,
                 ApiErrorResponse(
                     error_code=ErrorCode.INVALID_INPUT,
-                    message="This answer has no completed evaluation yet.",
+                    message="This answer has no evaluation attempt yet.",
                     session_id=session_id,
                     answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
                     recovery_action="Request evaluation for this saved answer first.",
@@ -114,16 +152,32 @@ class SavedEvaluationController:
             )
         return self._to_response(*saved, answer, rubric)
 
+    def session_for_answer(self, answer_ref: AnswerRevisionRef) -> SessionId:
+        """Resolve the session for P04 answer routes; ownership is then checked normally."""
+        try:
+            answer, _question, _rubric = self._evaluation_service.get_saved_context(answer_ref)
+        except RecordNotFoundError as error:
+            raise ApiControllerError(
+                status.HTTP_404_NOT_FOUND,
+                ApiErrorResponse(error_code=ErrorCode.INVALID_INPUT,
+                                 message="Saved answer revision was not found.",
+                                 answer_ref=AnswerRevisionRefDTO(id=answer_ref.id,
+                                                                 revision=answer_ref.revision)),
+            ) from error
+        return answer.session_id
+
     @staticmethod
     def _to_response(
         result: EvaluationResult,
-        feedback: EvaluationFeedback,
+        feedback: EvaluationFeedback | None,
         answer: Answer,
         rubric: Rubric,
     ) -> EvaluationResponseDTO:
         answer_ref = AnswerRevisionRefDTO(id=answer.id, revision=answer.revision)
         criteria = {criterion.id: criterion for criterion in rubric.criteria}
-        labels = {item.check.criterion_id: item.label for item in feedback.criteria}
+        labels = {item.check.criterion_id: item.label for item in (
+            feedback.criteria if feedback is not None else ()
+        )}
         checks = tuple(
             CriterionCheckDTO(
                 criterion_id=check.criterion_id,
@@ -163,7 +217,11 @@ class SavedEvaluationController:
                 demo_mode_label=result.demo_mode_label,
                 prompt_version=result.prompt_version,
                 model_id=result.model_id,
-                evaluated_at=result.evaluated_at,
+                processing_started_at=(result.evaluated_at if result.status is EvaluationStatus.PROCESSING else None),
+                evaluated_at=(None if result.status is EvaluationStatus.PROCESSING else result.evaluated_at),
+                failure_code=result.failure_code,
+                failure_message=result.failure_message,
+                retryable=result.failure_code in RETRYABLE_EVALUATION_FAILURES,
             ),
             feedback_items=tuple(
                 CriterionFeedbackDTO(
@@ -171,7 +229,7 @@ class SavedEvaluationController:
                     message=item.message,
                     suggestion=item.suggestion,
                 )
-                for item in feedback.criteria
+                for item in (feedback.criteria if feedback is not None else ())
             ),
         )
 

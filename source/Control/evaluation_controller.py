@@ -10,12 +10,18 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
+from fastapi import APIRouter, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field
+
+from source.Control.interview_controller import OWNER_COOKIE_NAME
+from source.Control.saved_evaluation_controller import SavedEvaluationController
+from source.Control.schemas import EvaluateAnswerRequest, EvaluationResultDTO
 
 from source.Model.ids import (
     AnswerId, CriterionId, QuestionId, RubricId, SessionId,
     SkillId, SourceId, VersionedRef,
 )
+from source.Model.evaluation import AnswerRevisionRef
 from source.Model.interview import Answer
 from source.Model.question import Criterion, CriterionLevel, Question, Rubric
 from source.service.evaluation_service import EvaluationService, build_feedback
@@ -217,3 +223,32 @@ class EvaluationController:
         finally:
             if temp_name is not None:
                 Path(temp_name).unlink(missing_ok=True)
+
+
+def build_evaluation_router(controller: SavedEvaluationController) -> APIRouter:
+    """Expose the P04 answer routes while sharing E09 ownership and presentation logic."""
+    router = APIRouter(prefix="/api/answers", tags=["evaluations"])
+
+    @router.post("/{answer_id}/evaluate", response_model=EvaluationResultDTO,
+                 status_code=status.HTTP_200_OK)
+    def evaluate_endpoint(
+        answer_id: str, payload: EvaluateAnswerRequest, request: Request,
+    ) -> EvaluationResultDTO:
+        answer_ref = AnswerRevisionRef(AnswerId(answer_id), payload.answer_revision)
+        session_id = controller.session_for_answer(answer_ref)
+        return controller.evaluate(
+            session_id, answer_ref, request.cookies.get(OWNER_COOKIE_NAME)
+        ).result
+
+    @router.get("/{answer_id}/evaluation", response_model=EvaluationResultDTO,
+                status_code=status.HTTP_200_OK)
+    def read_endpoint(
+        answer_id: str, request: Request, answer_revision: int = Query(default=1, ge=1),
+    ) -> EvaluationResultDTO:
+        answer_ref = AnswerRevisionRef(AnswerId(answer_id), answer_revision)
+        session_id = controller.session_for_answer(answer_ref)
+        return controller.read(
+            session_id, answer_ref, request.cookies.get(OWNER_COOKIE_NAME)
+        ).result
+
+    return router
