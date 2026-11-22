@@ -2,6 +2,56 @@
   {
     "schema_version": "source-record/0.1-proposal",
     "example_only": false,
+    "id": "source.cpython.faq.mutable_defaults",
+    "title": "Python Programming FAQ — Why are default values shared between objects?",
+    "url": "https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/Doc/faq/programming.rst",
+    "file_path": "Doc/faq/programming.rst",
+    "revision": "94276402cf3b3a5e1fa96cedb33a4dc498a77ed2",
+    "authors": [
+      "Python Software Foundation",
+      "CPython Documentation Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Why are default values shared between objects? It is often expected that a function call creates new objects for default values. This is not what happens. Default values are created exactly once, when the function is defined. If that object is changed, like the dictionary in this example, subsequent calls to the function will refer to this changed object.",
+      "code": "def foo(mydict={}):  # Danger: shared reference to one dict for all calls\n    ... compute something ...\n    mydict[key] = value\n    return mydict"
+    },
+    "license": {
+      "spdx_id": "PSF-2.0",
+      "url": "https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/LICENSE",
+      "required_notice": "Copyright (c) 2001-2026 Python Software Foundation; All Rights Reserved. Licensed under the PSF License Agreement Version 2.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.cpython.faq.late_binding_closures",
+    "title": "Python Programming FAQ — Why do lambdas defined in a loop with different values all return the same result?",
+    "url": "https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/Doc/faq/programming.rst",
+    "file_path": "Doc/faq/programming.rst",
+    "revision": "94276402cf3b3a5e1fa96cedb33a4dc498a77ed2",
+    "authors": [
+      "Python Software Foundation",
+      "CPython Documentation Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Why do lambdas defined in a loop with different values all return the same result? This happens because x is not local to the lambdas, but is defined in the outer scope, and it is accessed when the lambda is called --- not when it is defined. At the end of the loop, the value of x is 4, so all the functions now return 4**2, that is 16.",
+      "code": "squares = []\nfor x in range(5):\n    squares.append(lambda: x**2)"
+    },
+    "license": {
+      "spdx_id": "PSF-2.0",
+      "url": "https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/LICENSE",
+      "required_notice": "Copyright (c) 2001-2026 Python Software Foundation; All Rights Reserved. Licensed under the PSF License Agreement Version 2.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
     "id": "source.c03.concurrent_inventory",
     "title": "PostgreSQL Documentation Chapter 13 — Concurrency Control (Read Committed & Row-Level Locking)",
     "url": "https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/doc/src/sgml/mvcc.sgml",
@@ -20,6 +70,152 @@
       "spdx_id": "PostgreSQL",
       "url": "https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/COPYRIGHT",
       "required_notice": "Portions Copyright (c) 1996-2026, PostgreSQL Global Development Group. Portions Copyright (c) 1994, The Regents of the University of California. Licensed under The PostgreSQL License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.postgres.mvcc.deadlocks",
+    "title": "PostgreSQL Documentation Chapter 13 — Explicit Locking: Deadlocks",
+    "url": "https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/doc/src/sgml/mvcc.sgml",
+    "file_path": "doc/src/sgml/mvcc.sgml",
+    "revision": "83cefb7b738c32a66a91537aa502d99891a63b11",
+    "authors": [
+      "PostgreSQL Global Development Group"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Note that deadlocks can also occur as the result of row-level locks (and thus, they can occur even if explicit locking is not used). Consider the case in which two concurrent transactions modify a table... PostgreSQL automatically detects deadlock situations and resolves them by aborting one of the transactions involved, allowing the other(s) to complete.",
+      "code": "-- Transaction 1:\nUPDATE accounts SET balance = balance + 100.00 WHERE acctnum = 11111;\n-- Transaction 2:\nUPDATE accounts SET balance = balance + 100.00 WHERE acctnum = 22222;\nUPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 11111;\n-- Transaction 1:\nUPDATE accounts SET balance = balance - 100.00 WHERE acctnum = 22222;"
+    },
+    "license": {
+      "spdx_id": "PostgreSQL",
+      "url": "https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/COPYRIGHT",
+      "required_notice": "Portions Copyright (c) 1996-2026, PostgreSQL Global Development Group. Portions Copyright (c) 1994, The Regents of the University of California. Licensed under The PostgreSQL License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.thealgorithms.python.bisect_left",
+    "title": "TheAlgorithms/Python — searches/binary_search.py (bisect_left)",
+    "url": "https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/searches/binary_search.py",
+    "file_path": "searches/binary_search.py",
+    "revision": "30507bbe41397065728167fb09aa820f9fce8dc7",
+    "authors": [
+      "TheAlgorithms Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Locates the first element in a sorted array that is larger or equal to a given value... return: index i such that all values in sorted_collection[lo:i] are < item and all values in sorted_collection[i:hi] are >= item.",
+      "code": "def bisect_left(\n    sorted_collection: list[int], item: int, lo: int = 0, hi: int = -1\n) -> int:\n    if hi < 0:\n        hi = len(sorted_collection)\n\n    while lo < hi:\n        mid = lo + (hi - lo) // 2\n        if sorted_collection[mid] < item:\n            lo = mid + 1\n        else:\n            hi = mid\n\n    return lo"
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/LICENSE.md",
+      "required_notice": "Copyright (c) 2016-2026 TheAlgorithms and contributors. Licensed under the MIT License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.thealgorithms.python.balanced_parentheses",
+    "title": "TheAlgorithms/Python — data_structures/stacks/balanced_parentheses.py",
+    "url": "https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/data_structures/stacks/balanced_parentheses.py",
+    "file_path": "data_structures/stacks/balanced_parentheses.py",
+    "revision": "30507bbe41397065728167fb09aa820f9fce8dc7",
+    "authors": [
+      "TheAlgorithms Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Use a stack to check if a string of parentheses is balanced.",
+      "code": "def balanced_parentheses(parentheses: str) -> bool:\n    stack: Stack[str] = Stack()\n    bracket_pairs = {\"(\": \")\", \"[\": \"]\", \"{\": \"}\"}\n    for bracket in parentheses:\n        if bracket in bracket_pairs:\n            stack.push(bracket)\n        elif bracket in (\")\", \"]\", \"}\") and (\n            stack.is_empty() or bracket_pairs[stack.pop()] != bracket\n        ):\n            return False\n    return stack.is_empty()"
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/LICENSE.md",
+      "required_notice": "Copyright (c) 2016-2026 TheAlgorithms and contributors. Licensed under the MIT License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.thealgorithms.python.binary_search_fn",
+    "title": "TheAlgorithms/Python — searches/binary_search.py (binary_search with pairwise precheck)",
+    "url": "https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/searches/binary_search.py",
+    "file_path": "searches/binary_search.py",
+    "revision": "30507bbe41397065728167fb09aa820f9fce8dc7",
+    "authors": [
+      "TheAlgorithms Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Pure implementation of a binary search algorithm in Python. If there are multiple occurrences of the item, returns the index of the leftmost occurrence.",
+      "code": "def binary_search(sorted_collection: list[int], item: int) -> int:\n    if any(a > b for a, b in pairwise(sorted_collection)):\n        raise ValueError(\"sorted_collection must be sorted in ascending order\")\n    left = 0\n    right = len(sorted_collection) - 1\n    result = -1\n    while left <= right:\n        midpoint = left + (right - left) // 2\n        current_item = sorted_collection[midpoint]\n        if current_item == item:\n            result = midpoint\n            right = midpoint - 1\n        elif item < current_item:\n            right = midpoint - 1\n        else:\n            left = midpoint + 1\n    return result"
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/LICENSE.md",
+      "required_notice": "Copyright (c) 2016-2026 TheAlgorithms and contributors. Licensed under the MIT License.",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.owasp.query_parameterization",
+    "title": "OWASP Cheat Sheet Series — Query Parameterization Cheat Sheet",
+    "url": "https://github.com/OWASP/CheatSheetSeries/blob/7af0ef1b745f1a38ce905c00c5a592d5b3a515a9/cheatsheets/Query_Parameterization_Cheat_Sheet.md",
+    "file_path": "cheatsheets/Query_Parameterization_Cheat_Sheet.md",
+    "revision": "7af0ef1b745f1a38ce905c00c5a592d5b3a515a9",
+    "authors": [
+      "OWASP Foundation",
+      "OWASP Cheat Sheet Series Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "SQL Injection is best prevented through the use of parameterized queries... Please ensure that query parameterization is done server-side!",
+      "code": "String custname = request.getParameter(\"customerName\");\nString query = \"SELECT account_balance FROM user_data WHERE user_name = ? \";\nPreparedStatement pstmt = connection.prepareStatement( query );\npstmt.setString( 1, custname);\nResultSet results = pstmt.executeQuery( );"
+    },
+    "license": {
+      "spdx_id": "CC-BY-SA-4.0",
+      "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "required_notice": "Copyright (c) OWASP Foundation. Licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC-BY-SA-4.0).",
+      "status": "verified"
+    }
+  },
+  {
+    "schema_version": "source-record/0.1-proposal",
+    "example_only": false,
+    "id": "source.tech_interview_handbook.array_stack",
+    "title": "Tech Interview Handbook — Array and Stack Study Guides",
+    "url": "https://github.com/yangshun/tech-interview-handbook/blob/e1d28e8886c0b6ff3e50da991ce0e895134ddc59/apps/website/contents/algorithms/array.md",
+    "file_path": "apps/website/contents/algorithms/array.md",
+    "revision": "e1d28e8886c0b6ff3e50da991ce0e895134ddc59",
+    "authors": [
+      "Yangshun Tay",
+      "Tech Interview Handbook Contributors"
+    ],
+    "collected_at": "2026-11-18T04:35:00Z",
+    "original_language": "en",
+    "original_content": {
+      "question_text": "Corner cases: Empty sequence, Sequence with 1 or 2 elements, Sequence with repeated elements, Duplicated values in sequence.",
+      "code": null
+    },
+    "license": {
+      "spdx_id": "MIT",
+      "url": "https://github.com/yangshun/tech-interview-handbook/blob/e1d28e8886c0b6ff3e50da991ce0e895134ddc59/LICENSE",
+      "required_notice": "Copyright (c) Yangshun Tay. Licensed under the MIT License.",
       "status": "verified"
     }
   }

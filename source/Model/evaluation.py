@@ -207,7 +207,26 @@ class EvaluationResult:
                 )
 
 
+@dataclass(frozen=True, slots=True)
+class CriterionFeedback:
+    check: CriterionCheck
+    label: str
+    message: str
+    suggestion: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class EvaluationFeedback:
+    result_id: EvaluationId
+    result_version: int
+    total_score: int | None
+    maximum_score: int | None
+    criteria: tuple[CriterionFeedback, ...]
+
+
 __all__ = [
+    "CriterionFeedback",
+    "EvaluationFeedback",
     "AnswerRevisionRef",
     "CriterionCheck",
     "CriterionStatus",

@@ -11,9 +11,38 @@ copyright notices are preserved below.
 
 ## 2. Curated interview question & exercise sources (`data/seed/`)
 
-### 2.1. PostgreSQL Official Documentation (`source.c03.concurrent_inventory`)
+### 2.1. Python Official Documentation — CPython (`source.cpython.faq.mutable_defaults`, `source.cpython.faq.late_binding_closures`)
+- Repository: [python/cpython](https://github.com/python/cpython)
+- File: `Doc/faq/programming.rst` @ commit `94276402cf3b3a5e1fa96cedb33a4dc498a77ed2`
+- License: Python Software Foundation License Version 2 (`PSF-2.0`) — `https://github.com/python/cpython/blob/94276402cf3b3a5e1fa96cedb33a4dc498a77ed2/LICENSE`
+- Copyright Notice: Copyright (c) 2001-2026 Python Software Foundation; All Rights Reserved.
+- Adaptation: Translated and adapted into two Vietnamese Backend Intern/Fresher programming-knowledge questions (`prog.c02.mutable_default_arg.v1`, `prog.c02.closure_late_binding.v1`) and follow-up exercise (`exercise.programming.mutable_defaults_and_binding`).
+
+### 2.2. PostgreSQL Official Documentation (`source.c03.concurrent_inventory`, `source.postgres.mvcc.deadlocks`)
 - Repository: [postgres/postgres](https://github.com/postgres/postgres)
 - File: `doc/src/sgml/mvcc.sgml` @ commit `83cefb7b738c32a66a91537aa502d99891a63b11`
 - License: The PostgreSQL License (`PostgreSQL`) — `https://github.com/postgres/postgres/blob/83cefb7b738c32a66a91537aa502d99891a63b11/COPYRIGHT`
 - Copyright Notice: Portions Copyright (c) 1996-2026, PostgreSQL Global Development Group. Portions Copyright (c) 1994, The Regents of the University of California.
-- Adaptation: Adapted into Vietnamese Backend Intern/Fresher technical case (`case.c03.inventory_race.v1`).
+- Adaptation: Adapted into two Vietnamese Backend Intern/Fresher technical case variants (`case.c03.inventory_race.v1`, `case.c03.transfer_deadlock.v1`) and follow-up exercises (`exercise.backend.atomic_transaction_locking`, `exercise.backend.rollback_invariant_test`).
+
+### 2.3. TheAlgorithms / Python (`source.thealgorithms.python.bisect_left`, `source.thealgorithms.python.balanced_parentheses`, `source.thealgorithms.python.binary_search_fn`)
+- Repository: [TheAlgorithms/Python](https://github.com/TheAlgorithms/Python)
+- Files:
+  - `searches/binary_search.py` @ commit `30507bbe41397065728167fb09aa820f9fce8dc7`
+  - `data_structures/stacks/balanced_parentheses.py` @ commit `30507bbe41397065728167fb09aa820f9fce8dc7`
+- License: MIT License (`MIT`) — `https://github.com/TheAlgorithms/Python/blob/30507bbe41397065728167fb09aa820f9fce8dc7/LICENSE.md`
+- Copyright Notice: Copyright (c) 2016-2026 TheAlgorithms and contributors. Licensed under the MIT License.
+- Adaptation: Used as reference code for two Vietnamese algorithm-explanation questions (`algo.c04.bisect_left_bounds.v1`, `algo.c04.balanced_brackets_stack.v1`) and one code-review critique exercise (`review.c05.binary_search_precheck.v1` analyzing the $O(n)$ `pairwise` precheck under an $O(\log n)$ endpoint contract).
+
+### 2.4. OWASP Cheat Sheet Series (`source.owasp.query_parameterization`)
+- Repository: [OWASP/CheatSheetSeries](https://github.com/OWASP/CheatSheetSeries)
+- File: `cheatsheets/Query_Parameterization_Cheat_Sheet.md` @ commit `7af0ef1b745f1a38ce905c00c5a592d5b3a515a9`
+- License: Creative Commons Attribution-ShareAlike 4.0 International (`CC-BY-SA-4.0`) — `https://creativecommons.org/licenses/by-sa/4.0/`
+- Copyright Notice: Copyright (c) OWASP Foundation. Adapted material in `review.c05.sql_query_parameterization.v1` and `exercise.engineering.contract_and_security_review` is shared under CC-BY-SA-4.0. Note: defects in the candidate snippet of `review.c05.sql_query_parameterization.v1` were intentionally seeded by the project team for educational code review and do not appear in OWASP's safe reference code.
+
+### 2.5. Tech Interview Handbook (`source.tech_interview_handbook.array_stack`)
+- Repository: [yangshun/tech-interview-handbook](https://github.com/yangshun/tech-interview-handbook)
+- File: `apps/website/contents/algorithms/array.md` @ commit `e1d28e8886c0b6ff3e50da991ce0e895134ddc59`
+- License: MIT License (`MIT`) — `https://github.com/yangshun/tech-interview-handbook/blob/e1d28e8886c0b6ff3e50da991ce0e895134ddc59/LICENSE`
+- Copyright Notice: Copyright (c) Yangshun Tay. Licensed under the MIT License.
+- Adaptation: Used for corner-case checklist structure in `exercise.algorithms.loop_invariant_and_bounds`.

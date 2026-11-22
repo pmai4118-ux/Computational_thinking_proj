@@ -1,0 +1,268 @@
+[
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "algo.c04.bisect_left_bounds.v1",
+    "version": 1,
+    "category": "algorithm_explanation",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "difficulty": "foundational",
+    "skill_ids": [
+      "skill.algorithms.correctness_and_complexity"
+    ],
+    "source_id": "source.thealgorithms.python.bisect_left",
+    "prompt": "Cho hàm `bisect_left` bên dưới nhận mảng số nguyên tăng dần `sorted_collection` và giá trị `item`, trả về vị trí đầu tiên có phần tử `>= item` (hoặc `len(sorted_collection)` nếu mọi phần tử đều nhỏ hơn `item`). Hãy giải thích bất biến vòng lặp giúp thuật toán tìm đúng vị trí biên trái ngay cả khi mảng có phần tử trùng nhau, phân tích độ phức tạp thời gian và bộ nhớ phụ, và nêu các ca kiểm thử biên.",
+    "code": "def bisect_left(\n    sorted_collection: list[int], item: int, lo: int = 0, hi: int = -1\n) -> int:\n    if hi < 0:\n        hi = len(sorted_collection)\n\n    while lo < hi:\n        mid = lo + (hi - lo) // 2\n        if sorted_collection[mid] < item:\n            lo = mid + 1\n        else:\n            hi = mid\n\n    return lo",
+    "code_language": "python",
+    "constraints": [
+      "Giả sử `sorted_collection` đã được sắp không giảm và `0 <= lo`.",
+      "Mảng có thể rỗng, có phần tử trùng lặp hoặc mọi phần tử đều nhỏ hơn/lớn hơn `item`."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_algorithm",
+      "summary": "Tuyển chọn trực tiếp hàm `bisect_left` từ TheAlgorithms/Python (`searches/binary_search.py` @ 30507bbe41397065728167fb09aa820f9fce8dc7, giấy phép MIT); chuyển thành đề bài yêu cầu giải thích bất biến nửa khoảng `[lo, hi)`, sự hội tụ của vòng lặp, độ phức tạp và kiểm thử biên.",
+      "translator_id": "nkphuc"
+    },
+    "rubric": {
+      "id": "rubric.c04.bisect_left_bounds.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c04.q1.correctness",
+          "criterion_type": "correctness_argument",
+          "label": "Giải thích bất biến và lý do trả đúng vị trí biên trái",
+          "expected_evidence": [
+            "Duy trì bất biến mọi phần tử trước `lo` đều `< item` và mọi phần tử từ `hi` trở đi đều `>= item`; khi `sorted_collection[mid] == item` nhánh `else` gán `hi = mid` nên không bỏ sót vị trí xuất hiện sớm hơn ở bên trái.",
+            "Vòng lặp luôn thu hẹp khoảng `hi - lo` ở mỗi bước (vì `lo <= mid < hi` khi `lo < hi`) nên chắc chắn dừng tại `lo == hi`."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Giải thích sai điều kiện nhánh `else` hoặc khẳng định hàm trả `-1` khi không tìm thấy."
+            },
+            {
+              "score": 1,
+              "description": "Mô tả được việc chia đôi khoảng tìm kiếm nhưng chưa giải thích vì sao `hi = mid` giữ được phần tử trùng đầu tiên hoặc vì sao vòng lặp không lặp vô hạn."
+            },
+            {
+              "score": 2,
+              "description": "Giải thích rõ bất biến phân hoạch `< item` / `>= item`, xử lý phần tử trùng bằng `hi = mid` và tính dừng của vòng lặp khi `lo == hi`."
+            }
+          ],
+          "equivalent_answers": "Không bắt buộc gọi thuật ngữ 'loop invariant' nếu diễn đạt đúng tính chất phân tách hai nửa trước `lo` và từ `hi` trở đi."
+        },
+        {
+          "id": "c04.q1.complexity",
+          "criterion_type": "complexity_analysis",
+          "label": "Phân tích độ phức tạp thời gian và không gian",
+          "expected_evidence": [
+            "Thời gian chạy `O(log n)` theo kích thước đoạn tìm kiếm `n = hi - lo` do kích thước khoảng giảm một nửa mỗi vòng lặp.",
+            "Bộ nhớ phụ `O(1)` vì chỉ dùng các biến chỉ số nguyên (`lo`, `hi`, `mid`), không cấp phát cấu trúc phụ hoặc đệ quy."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Nêu sai độ phức tạp thời gian (ví dụ `O(n)`) hoặc sai bộ nhớ phụ."
+            },
+            {
+              "score": 1,
+              "description": "Nêu đúng thời gian `O(log n)` nhưng thiếu độ phức tạp bộ nhớ phụ `O(1)` (hoặc thiếu giải thích nguyên nhân chia đôi)."
+            },
+            {
+              "score": 2,
+              "description": "Nêu đúng thời gian `O(log n)` gắn với việc thu hẹp nửa khoảng và bộ nhớ phụ `O(1)`."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận ký hiệu `O(log(hi - lo))` hoặc `O(log N)`."
+        },
+        {
+          "id": "c04.q1.edge_tests",
+          "criterion_type": "test_design",
+          "label": "Kiểm thử điều kiện biên",
+          "expected_evidence": [
+            "Ca mảng có phần tử trùng lặp (ví dụ `[1, 2, 2, 2, 4]`, `item = 2` trả về `1`).",
+            "Ca mảng rỗng `[]` (trả `0`) và ca `item` lớn hơn mọi phần tử (trả `len(sorted_collection)`)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không nêu kiểm thử hoặc nêu kết quả mong đợi sai với mã nguồn đã cho."
+            },
+            {
+              "score": 1,
+              "description": "Chỉ nêu một nhóm biên (thiếu mảng rỗng/vượt biên phải hoặc thiếu phần tử trùng lặp)."
+            },
+            {
+              "score": 2,
+              "description": "Nêu đầy đủ ca phần tử trùng lặp và ca biên rỗng / lớn hơn toàn bộ phần tử kèm chỉ số trả về chính xác."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận bộ số cụ thể bất kỳ minh họa đúng các trường hợp biên trên."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [0, 1, 2],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Gán unmet (score = 0) nếu bỏ qua yêu cầu bắt buộc; gán insufficient_evidence (score = null) nếu viện dẫn tệp ngoài không có trong bài.",
+        "provider_failure": "processing_error, không gán điểm",
+        "equivalent_answers": "Chấp nhận cách diễn đạt tương đương đúng bản chất toán học."
+      }
+    },
+    "review": {
+      "status": "approved",
+      "curator_id": "nkphuc",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:45:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Nguồn TheAlgorithms/Python searches/binary_search.py (MIT) @ 30507bbe41397065728167fb09aa820f9fce8dc7."
+    }
+  },
+  {
+    "schema_version": "question-record/0.1-proposal",
+    "example_only": false,
+    "id": "algo.c04.balanced_brackets_stack.v1",
+    "version": 1,
+    "category": "algorithm_explanation",
+    "language": "vi",
+    "role": "backend_developer",
+    "level": "intern_fresher",
+    "difficulty": "foundational",
+    "skill_ids": [
+      "skill.algorithms.correctness_and_complexity"
+    ],
+    "source_id": "source.thealgorithms.python.balanced_parentheses",
+    "prompt": "Xem hàm `balanced_parentheses` dùng cấu trúc ngăn xếp (`Stack`) bên dưới để kiểm tra tính cân bằng của ba loại dấu ngoặc `()`, `[]`, `{}` trong một chuỗi biểu thức. Hãy giải thích vì sao cơ chế LIFO của ngăn xếp bảo đảm kiểm tra đúng thứ tự đóng-mở lồng nhau, phân tích độ phức tạp thời gian và bộ nhớ theo độ dài chuỗi `n`, và thiết kế các ca kiểm thử biên.",
+    "code": "def balanced_parentheses(parentheses: str) -> bool:\n    stack: list[str] = []\n    bracket_pairs = {\"(\": \")\", \"[\": \"]\", \"{\": \"}\"}\n    for bracket in parentheses:\n        if bracket in bracket_pairs:\n            stack.append(bracket)\n        elif bracket in (\")\", \"]\", \"}\") and (\n            not stack or bracket_pairs[stack.pop()] != bracket\n        ):\n            return False\n    return not stack",
+    "code_language": "python",
+    "constraints": [
+      "Chuỗi đầu vào có thể chứa cả ký tự không phải dấu ngoặc (như chữ số, toán tử) và có thể rỗng.",
+      "Mỗi thao tác `append`, `pop` ở cuối `list` Python có chi phí trung bình `O(1)`."
+    ],
+    "adaptation": {
+      "kind": "adapted_open_source_algorithm",
+      "summary": "Thích nghi từ `data_structures/stacks/balanced_parentheses.py` của TheAlgorithms/Python (@ 30507bbe41397065728167fb09aa820f9fce8dc7, giấy phép MIT); thay wrapper `Stack` nội bộ bằng `list[str]` chuẩn của Python để đề bài độc lập hoàn toàn khi hiển thị.",
+      "translator_id": "nkphuc"
+    },
+    "rubric": {
+      "id": "rubric.c04.balanced_brackets_stack.v1",
+      "version": 1,
+      "criteria": [
+        {
+          "id": "c04.q2.correctness",
+          "criterion_type": "correctness_argument",
+          "label": "Giải thích tính đúng đắn của nguyên lý LIFO và điều kiện kết thúc",
+          "expected_evidence": [
+            "Dấu ngoặc mở gần nhất chưa đóng nằm ở đỉnh ngăn xếp và phải được khớp đầu tiên khi gặp dấu đóng; đóng dư khi stack rỗng hoặc lệch loại ngoặc (`[(])`) sẽ trả `False` ngay.",
+            "Cuối vòng lặp bắt buộc kiểm tra `not stack` để loại trường hợp còn dư dấu ngoặc mở chưa được đóng (như `'(('`)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Cho rằng chỉ cần đếm số ngoặc mở bằng số ngoặc đóng mà không cần thứ tự LIFO."
+            },
+            {
+              "score": 1,
+              "description": "Giải thích đúng việc khớp đỉnh stack khi gặp dấu đóng nhưng quên giải thích vai trò của `return not stack` ở cuối hàm (hoặc bỏ sót trường hợp stack rỗng khi gặp dấu đóng đầu tiên)."
+            },
+            {
+              "score": 2,
+              "description": "Giải thích đầy đủ cơ chế LIFO cho ngoặc lồng nhau, lý do bác bỏ khi stack rỗng/lệch cặp và điều kiện stack rỗng khi kết thúc."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận giải thích trực quan qua ngăn xếp mở gần nhất phải đóng trước."
+        },
+        {
+          "id": "c04.q2.complexity",
+          "criterion_type": "complexity_analysis",
+          "label": "Phân tích độ phức tạp thời gian và bộ nhớ xấu nhất",
+          "expected_evidence": [
+            "Thời gian `O(n)` với `n = len(parentheses)` vì duyệt qua mỗi ký tự tối đa một lần, mỗi ký tự được đẩy và lấy khỏi stack tối đa một lần.",
+            "Bộ nhớ phụ trường hợp xấu nhất `O(n)` khi chuỗi gồm toàn dấu ngoặc mở (ví dụ `'(' * n`)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Khẳng định độ phức tạp bộ nhớ là `O(1)` hoặc thời gian `O(n^2)`."
+            },
+            {
+              "score": 1,
+              "description": "Nêu đúng thời gian `O(n)` nhưng thiếu hoặc nêu sai độ phức tạp không gian trường hợp xấu nhất `O(n)`."
+            },
+            {
+              "score": 2,
+              "description": "Nêu đúng cả thời gian `O(n)` và không gian trường hợp xấu nhất `O(n)` kèm giải thích trường hợp toàn ngoặc mở."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận ghi chú `bracket_pairs` có kích thước hằng số `O(1)` nên tổng không gian phụ vẫn là `O(n)`."
+        },
+        {
+          "id": "c04.q2.edge_tests",
+          "criterion_type": "test_design",
+          "label": "Kiểm thử các trường hợp biên",
+          "expected_evidence": [
+            "Kiểm thử ngoặc đan chéo sai thứ tự `'[(])'` (`False`), đóng trước khi mở `'))(('` (`False`) và thiếu ngoặc đóng `'(('` (`False`).",
+            "Kiểm thử chuỗi rỗng `''` hoặc biểu thức không chứa ngoặc `'1+2*3'` (`True`) và ngoặc lồng hợp lệ `'([{}])'` (`True`)."
+          ],
+          "levels": [
+            {
+              "score": 0,
+              "description": "Không đưa ra ca kiểm thử hoặc xác định sai kết quả `True`/`False`."
+            },
+            {
+              "score": 1,
+              "description": "Có ca hợp lệ và một ca sai nhưng thiếu các biên quan trọng như đan chéo `'[(])'`, dư ngoặc mở `'(('` hoặc chuỗi rỗng."
+            },
+            {
+              "score": 2,
+              "description": "Bao quát cả nhóm sai biên (đan chéo, đóng sớm, dư mở) lẫn nhóm hợp lệ biên (rỗng/có ký tự thường, lồng nhiều cấp)."
+            }
+          ],
+          "equivalent_answers": "Chấp nhận các chuỗi ví dụ tương đương cho từng loại biên."
+        }
+      ],
+      "scoring": {
+        "allowed_scores": [0, 1, 2],
+        "maximum_score": 6,
+        "total_policy": "sum_only_when_every_criterion_is_decidable",
+        "insufficient_evidence": {
+          "score": null,
+          "reason_required": true,
+          "total_score": null
+        },
+        "missing_required_content": "Gán unmet (score = 0) nếu bỏ qua yêu cầu bắt buộc; gán insufficient_evidence (score = null) nếu viện dẫn tệp ngoài không có trong bài.",
+        "provider_failure": "processing_error, không gán điểm",
+        "equivalent_answers": "Chấp nhận các bộ dữ liệu kiểm thử tương đương."
+      }
+    },
+    "review": {
+      "status": "approved",
+      "curator_id": "nkphuc",
+      "reviewer_id": "Tin",
+      "reviewed_at": "2026-11-18T04:45:00Z",
+      "checks": {
+        "source_and_license_verified": true,
+        "original_and_adaptation_preserved": true,
+        "technical_correctness_checked": true,
+        "rubric_levels_distinct": true,
+        "equivalent_answers_checked": true,
+        "review_cases_checked": true
+      },
+      "notes": "Nguồn TheAlgorithms/Python data_structures/stacks/balanced_parentheses.py (MIT) @ 30507bbe41397065728167fb09aa820f9fce8dc7."
+    }
+  }
+]
