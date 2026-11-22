@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import UTC, datetime
+import json
 from pathlib import Path
+import subprocess
 
 from fastapi.testclient import TestClient
 
@@ -22,6 +24,8 @@ from source.Model.question import ReviewMetadata
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.main import create_app
 from source.service.recommendation_service import RecommendationService
+from source.service.providers.antigravity_provider import AntigravityProvider
+from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
 from test.fixtures.repositories import InMemoryRepositoryStore
 
 
@@ -254,6 +258,50 @@ def test_i06_practice_requires_owned_answer_and_different_reviewed_question(tmp_
         assert all(not item["eligible_alternate_question_available"] for item in suggestions)
 
 
+def test_i06_draft_rubric_variant_cannot_be_used_for_practice(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    store = InMemoryRepositoryStore()
+    app = _app(tmp_path, store)
+    with TestClient(app) as client:
+        session_id, answer_ref, criterion_id = _evaluated_answer(client, store)
+        answer = store.get_answer(answer_ref)
+        assert answer is not None
+        original = store.get_question(answer.question_ref)
+        assert original is not None
+        candidate_refs = {
+            question.rubric_ref
+            for question in store.list_approved_questions(
+                role=original.role, level=original.level, language=original.language,
+            )
+            if question.id != original.id and question.category == original.category
+        }
+        assert candidate_refs
+        original_get_rubric = store.get_rubric
+
+        def get_rubric_with_draft_variants(ref):
+            rubric = original_get_rubric(ref)
+            return replace(rubric, review=ReviewMetadata()) if ref in candidate_refs else rubric
+
+        monkeypatch.setattr(store, "get_rubric", get_rubric_with_draft_variants)
+        listed = client.get(f"/api/sessions/{session_id}/exercises")
+        assert listed.status_code == 200
+        assert listed.json()["recommendations"]
+        assert all(
+            not item["eligible_alternate_question_available"]
+            for item in listed.json()["recommendations"]
+        )
+        practice = client.post(
+            f"/api/sessions/{session_id}/answers/{answer_ref.id}/practice",
+            json={
+                "answer_revision": answer_ref.revision,
+                "criterion_id": criterion_id,
+                "exercise_id": "exercise.backend.rollback_invariant_test",
+            },
+        )
+        assert practice.status_code == 409
+
+
 def test_i06_invalid_prerequisite_chain_is_not_recommended(tmp_path: Path) -> None:
     store = BrokenPrerequisiteStore()
     app = _app(tmp_path, store)
@@ -341,3 +389,145 @@ def test_i06_detail_uses_requested_reviewed_version(tmp_path: Path) -> None:
         assert current.json()["version"] == 2
         assert current.json()["title"] == "Revised rollback exercise"
         assert draft.status_code == 404
+
+
+def test_i06_antigravity_evaluation_flows_into_recommendations_without_another_call(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    """Exercise the merged E09 scoring/API path and I06 with a simulated agy result."""
+    store = SQLiteRepositoryStore(tmp_path / "integrated.sqlite3")
+    settings = Settings(
+        provider=ProviderMode.ANTIGRAVITY,
+        database_path=tmp_path / "integrated.sqlite3",
+        gemini_timeout_seconds=10.0,
+        antigravity_model="gemini-3.8-flash-medium",
+        antigravity_executable="agy.exe",
+    )
+    calls: list[str] = []
+    rubric = None
+
+    def fake_runner(command: list[str], **options: object) -> subprocess.CompletedProcess[str]:
+        assert rubric is not None
+        calls.append(str(options["input"]))
+        checks = {
+            criterion.id: {
+                "status": "unmet",
+                "observation": "The synthetic answer omits this requirement.",
+                "explanation": "The requirement is absent from the saved answer.",
+                "satisfied_expected_indexes": [],
+            }
+            for criterion in rubric.criteria
+        }
+        output = json.dumps({
+            "event": "result",
+            "result": {
+                "status": "SUCCESS",
+                "structured_output": {"criterion_checks": checks},
+            },
+        })
+        return subprocess.CompletedProcess(command, 0, output, "")
+
+    provider = AntigravityProvider.from_settings(settings, runner=fake_runner)
+    monkeypatch.setattr(provider, "executable_path", lambda: "agy.exe")
+    app = create_app(
+        settings=settings, interpreter=provider,
+        content_repo=store, session_repo=store, evaluation_repo=store,
+    )
+    with TestClient(app) as client:
+        opened = client.post("/api/sessions", json={})
+        assert opened.status_code == 201
+        session_id = opened.json()["session_id"]
+        question = opened.json()["current_question"]
+        assert question is not None
+        session = store.get_session(session_id)
+        assert session is not None
+        saved_question = store.get_question(
+            next(ref for ref in session.question_refs if ref.id == question["id"])
+        )
+        assert saved_question is not None
+        rubric = store.get_rubric(saved_question.rubric_ref)
+        assert rubric is not None
+
+        submitted = client.post(
+            f"/api/sessions/{session_id}/answers",
+            json={
+                "question_id": question["id"],
+                "question_version": question["version"],
+                "client_submission_id": "i06-antigravity-integration",
+                "text": "Synthetic answer with no rubric requirements.",
+            },
+        )
+        assert submitted.status_code == 201
+        answer_id = submitted.json()["answer"]["answer_id"]
+        evaluated = client.post(
+            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
+            json={"answer_revision": 1},
+        )
+        assert evaluated.status_code == 200
+        assert evaluated.json()["result"]["model_id"] == settings.antigravity_model
+        assert evaluated.json()["result"]["total_score"] == 0
+
+        recommendations = client.get(f"/api/sessions/{session_id}/exercises")
+        assert recommendations.status_code == 200
+        assert recommendations.json()["demo_mode_label"] is None
+        assert recommendations.json()["recommendations"]
+        assert all(item["recommendation_reason"] for item in recommendations.json()["recommendations"])
+        first = next(
+            item for item in recommendations.json()["recommendations"]
+            if item["eligible_alternate_question_available"]
+        )
+        practice = client.post(
+            f"/api/sessions/{session_id}/answers/{answer_id}/practice",
+            json={
+                "answer_revision": 1,
+                "criterion_id": first["matched_gap"]["criterion_id"],
+                "exercise_id": first["exercise_id"],
+            },
+        )
+        assert practice.status_code == 201
+        assert practice.json()["current_question"]["id"] != question["id"]
+        assert len(calls) == 1
+
+
+def test_i06_provider_failure_does_not_create_recommendations(tmp_path: Path) -> None:
+    store = SQLiteRepositoryStore(tmp_path / "failed.sqlite3")
+
+    class FailingInterpreter:
+        def interpret(self, **_kwargs):
+            raise ProviderFailureError(ProviderErrorKind.TIMEOUT, "Synthetic timeout")
+
+    app = create_app(
+        settings=Settings(
+            provider=ProviderMode.FIXTURE,
+            database_path=tmp_path / "failed.sqlite3",
+            gemini_timeout_seconds=10.0,
+        ),
+        interpreter=FailingInterpreter(),
+        content_repo=store, session_repo=store, evaluation_repo=store,
+    )
+    with TestClient(app) as client:
+        opened = client.post("/api/sessions", json={})
+        assert opened.status_code == 201
+        session_id = opened.json()["session_id"]
+        question = opened.json()["current_question"]
+        assert question is not None
+        submitted = client.post(
+            f"/api/sessions/{session_id}/answers",
+            json={
+                "question_id": question["id"],
+                "question_version": question["version"],
+                "client_submission_id": "i06-failed-provider",
+                "text": "Synthetic answer saved before provider failure.",
+            },
+        )
+        assert submitted.status_code == 201
+        answer_id = submitted.json()["answer"]["answer_id"]
+        evaluated = client.post(
+            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
+            json={"answer_revision": 1},
+        )
+        assert evaluated.status_code == 504
+        recommendations = client.get(f"/api/sessions/{session_id}/exercises")
+        assert recommendations.status_code == 200
+        assert recommendations.json()["recommendations"] == []
+        assert recommendations.json()["unmatched_skill_ids"] == []
