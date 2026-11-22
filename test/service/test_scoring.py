@@ -121,3 +121,84 @@ def test_e06_rejects_scoreable_observations_without_expected_evidence_indexes(
 
     with pytest.raises(ScoringError, match="requires satisfied_expected_indexes"):
         RubricScoringService().score_criterion(criterion, status=status)
+
+
+@pytest.mark.parametrize(
+    ("status", "indexes", "expected_score"),
+    [
+        (CriterionStatus.UNMET, (), 0),
+        (CriterionStatus.UNMET, (0,), 1),
+        (CriterionStatus.MET, (0, 1), 2),
+        (CriterionStatus.INSUFFICIENT_EVIDENCE, (), None),
+    ],
+)
+def test_q01_each_rubric_boundary_preserves_unresolved_null(
+    q01_case,
+    status: CriterionStatus,
+    indexes: tuple[int, ...],
+    expected_score: int | None,
+) -> None:
+    _answer, _question, rubric = q01_case
+    score = RubricScoringService().score_criterion(
+        rubric.criteria[0],
+        status=status,
+        satisfied_expected_indexes=indexes,
+    )
+    assert score == expected_score
+    if status is CriterionStatus.INSUFFICIENT_EVIDENCE:
+        assert score is None
+
+
+def test_q01_total_with_unresolved_criterion_is_null_not_zero(q01_case) -> None:
+    answer, _question, rubric = q01_case
+    evidence = (Evidence(answer_ref=answer.ref, observation="No supporting statement."),)
+    first = CriterionCheck(
+        rubric.criteria[0].id, CriterionStatus.UNMET, 0, evidence, "Method missing."
+    )
+    second_zero = CriterionCheck(
+        rubric.criteria[1].id, CriterionStatus.UNMET, 0, evidence, "Tests missing."
+    )
+    second_unresolved = CriterionCheck(
+        rubric.criteria[1].id,
+        CriterionStatus.INSUFFICIENT_EVIDENCE,
+        None,
+        evidence,
+        "Tests cannot be checked.",
+        unresolved_reason="Referenced test file is unavailable.",
+    )
+    scorer = RubricScoringService()
+
+    assert scorer.compute_total_score(rubric, (first, second_zero)) == (0, 4)
+    unresolved_total, maximum = scorer.compute_total_score(
+        rubric, (first, second_unresolved)
+    )
+    assert unresolved_total is None
+    assert maximum == 4
+
+
+@pytest.mark.parametrize("indexes", ((0, 0), (2,), (-1,), (True,)))
+def test_q01_rejects_duplicate_out_of_range_and_boolean_indexes(
+    q01_case, indexes: tuple[int, ...]
+) -> None:
+    _answer, _question, rubric = q01_case
+    with pytest.raises(ScoringError):
+        RubricScoringService().score_criterion(
+            rubric.criteria[0],
+            status=CriterionStatus.UNMET,
+            satisfied_expected_indexes=indexes,
+        )
+
+
+def test_q01_total_rejects_score_outside_declared_levels(q01_case) -> None:
+    answer, _question, rubric = q01_case
+    evidence = (Evidence(answer_ref=answer.ref, observation="Observed."),)
+    checks = (
+        CriterionCheck(
+            rubric.criteria[0].id, CriterionStatus.UNMET, 3, evidence, "Invalid level."
+        ),
+        CriterionCheck(
+            rubric.criteria[1].id, CriterionStatus.UNMET, 0, evidence, "No tests."
+        ),
+    )
+    with pytest.raises(ScoringError, match="not a declared level"):
+        RubricScoringService().compute_total_score(rubric, checks)
