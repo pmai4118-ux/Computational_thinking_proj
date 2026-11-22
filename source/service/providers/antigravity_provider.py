@@ -98,8 +98,6 @@ class AntigravityCriterionDTO(_StrictModel):
             assert self.end_offset is not None
             if self.end_offset <= self.start_offset:
                 raise _EvidenceShapeError("end_offset must be greater than start_offset.")
-            if len(self.quote) != (self.end_offset - self.start_offset):
-                raise _EvidenceShapeError("Quote length must match end_offset - start_offset.")
         if self.status is CriterionStatus.INSUFFICIENT_EVIDENCE:
             if not self.unresolved_reason or not self.unresolved_reason.strip():
                 raise _EvidenceShapeError("insufficient_evidence requires a non-empty unresolved_reason.")
@@ -121,8 +119,16 @@ def _resolve_quote_offsets(
     dto: AntigravityCriterionDTO,
     answer_text: str,
 ) -> AntigravityCriterionDTO:
-    """Populate exact offsets when Antigravity returns a unique exact quote with null offsets."""
-    if dto.quote is None or (dto.start_offset is not None and dto.end_offset is not None):
+    """Verify the quote and repair inaccurate offsets only when its location is unique."""
+    if dto.quote is None:
+        return dto
+    if (
+        dto.start_offset is not None
+        and dto.end_offset is not None
+        and dto.end_offset <= len(answer_text)
+        and dto.end_offset - dto.start_offset == len(dto.quote)
+        and answer_text[dto.start_offset:dto.end_offset] == dto.quote
+    ):
         return dto
     first = answer_text.find(dto.quote)
     if first == -1:
@@ -134,7 +140,7 @@ def _resolve_quote_offsets(
     if answer_text.find(dto.quote, first + 1) != -1:
         raise AntigravityProviderError(
             ProviderErrorKind.INVALID_OUTPUT,
-            f"Quote for '{criterion_id}' appears multiple times without explicit offsets.",
+            f"Quote for '{criterion_id}' has ambiguous offsets in the answer.",
             retryable=True,
         )
     return dto.model_copy(
