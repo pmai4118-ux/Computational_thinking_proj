@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from source.config import ProviderMode, Settings, load_settings
+from source.config import Settings, load_settings
 from source.Control.interview_controller import (
     InterviewController,
     build_interview_router,
@@ -22,9 +22,7 @@ from source.Model.repositories.interfaces import (
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.service.evaluation_service import EvaluationService
 from source.service.interview_service import InterviewService
-from source.service.providers.antigravity_provider import AntigravityProvider
-from source.service.providers.fixture_provider import FixtureProvider
-from source.service.providers.gemini_provider import GeminiProvider
+from source.service.providers.factory import create_evidence_interpreter
 from source.service.providers.interfaces import EvidenceInterpreter
 from source.service.seed_loader import load_seed_catalog_into_repository
 from source.view.pages import build_pages_router
@@ -44,14 +42,6 @@ class AppContainer:
     interview_service: InterviewService
     evaluation_service: EvaluationService
     interview_controller: InterviewController
-
-
-def _build_interpreter(settings: Settings) -> EvidenceInterpreter:
-    if settings.provider is ProviderMode.FIXTURE:
-        return FixtureProvider()
-    if settings.provider is ProviderMode.ANTIGRAVITY:
-        return AntigravityProvider.from_settings(settings)
-    return GeminiProvider.from_settings(settings)
 
 
 def create_app(
@@ -81,7 +71,7 @@ def create_app(
         load_seed_catalog_into_repository(resolved_content_repo)
 
     resolved_interpreter = (
-        interpreter if interpreter is not None else _build_interpreter(resolved_settings)
+        interpreter if interpreter is not None else create_evidence_interpreter(resolved_settings)
     )
 
     interview_service = InterviewService(
@@ -130,3 +120,9 @@ def create_app(
 
 
 __all__ = ["AppContainer", "STATIC_DIR", "create_app"]
+
+
+if __name__ == "__main__":
+    from source.view.evaluation_cli import run
+
+    raise SystemExit(run())
