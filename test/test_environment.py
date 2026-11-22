@@ -3,8 +3,8 @@
 from fastapi.testclient import TestClient
 
 
-def test_web_stack_renders_vietnamese_text(smoke_client: TestClient) -> None:
-    question = "Giải thích vòng lặp."
+def testWebStackRendersUnicode(smoke_client: TestClient) -> None:
+    question = "Explain iteration for n \u2265 0."
 
     response = smoke_client.post("/preview", json={"question": question})
 

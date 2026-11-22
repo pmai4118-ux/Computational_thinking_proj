@@ -5,16 +5,18 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from source.Control.evaluationController import evaluateAnswer
+from source.main import Application
 from source.Model.answerData import EvaluationInput
 from source.Model.evaluationData import CriterionCheck, Interpretation, RecordedReview
-from source.service.answerEvaluation import createEvaluation, evaluate, generateFeedback, readReport
 from source.service.evaluationErrors import EvaluationError
-from source.service.evidenceReview import validateInterpretation, validateQuote
-from source.service.providers.evidenceInterpreter import inputDigest
+from source.service.evidenceReview import EvidenceReview
 from source.service.providers.recordedInterpreter import RecordedInterpreter
-from source.service.rubricRules import scoreChecks, validateInputs
+from source.service.rubricRules import RubricRules
 
+
+evaluator = Application().view.controller.service
+rubricRules = RubricRules()
+evidenceReview = EvidenceReview()
 
 examplePath = Path(__file__).resolve().parents[1] / "examples" / "evaluateAnswer"
 
@@ -30,13 +32,13 @@ def recording():
 
 
 def startEvaluation(inputs):
-    return createEvaluation(inputs.question, inputs.rubrics, inputs.answer, inputs.exampleOnly)
+    return evaluator.createEvaluation(inputs.question, inputs.rubrics, inputs.answer, inputs.exampleOnly)
 
 
 def statusCheck(criterionId, status):
     return CriterionCheck(criterionId=criterionId, status=status, evidence=({
-        "type": "omission", "quote": None, "location": "Toàn bộ originalText",
-        "observation": "Dữ liệu nhân tạo để kiểm tra phép ánh xạ trạng thái sang điểm.",
+        "type": "omission", "quote": None, "location": "Entire originalText",
+        "observation": "Synthetic evidence for checking the mapping from status to score.",
         "startOffset": None, "endOffset": None,
     },))
 
@@ -45,19 +47,19 @@ def testCompleteFlow(inputs, recording):
     originalJson = inputs.model_dump_json()
     interpreter = RecordedInterpreter(recording)
     state = startEvaluation(inputs)
-    initialReport = readReport(state, interpreter)
+    initialReport = evaluator.readReport(state, interpreter)
     assert initialReport.results == ()
-    scored = evaluate(state, interpreter)
+    scored = evaluator.evaluateCriteria(state, interpreter)
     assert state.results == ()
     assert scored.feedbackItems == ()
-    completed = generateFeedback(scored)
-    report = readReport(completed, interpreter)
+    completed = evaluator.generateFeedback(scored)
+    report = evaluator.readReport(completed, interpreter)
     assert len(report.results) == len(inputs.rubrics) == 4
     assert all(result.score == 2 for result in report.results)
     assert all(result.status == "graded" for result in report.results)
     assert all(not item.identifiedIssues for item in report.feedbackItems)
     assert inputs.model_dump_json() == originalJson
-    assert report.inputHash == inputDigest(inputs)
+    assert report.inputHash == inputs.inputDigest()
     for result, feedback in zip(report.results, report.feedbackItems, strict=True):
         assert feedback.resultId == result.resultId
         for check in result.criterionChecks:
@@ -75,7 +77,7 @@ def testScoreCombinations(inputs, firstStatus, secondStatus):
     for firstValue, secondValue in product(firstValues, secondValues):
         possibilities.append(2 if firstValue and secondValue else 1 if firstValue else 0)
     expected = possibilities[0] if len(set(possibilities)) == 1 else None
-    score, reason = scoreChecks(rubric, checks)
+    score, reason = rubricRules.scoreChecks(rubric, checks)
     assert score == expected
     assert reason
 
@@ -85,9 +87,9 @@ def testCustomScoreValues(inputs):
     for level, value in zip(data["rubrics"][0]["scoreLevels"], (1.5, 4, 9), strict=True):
         level["value"] = value
     changed = EvaluationInput.model_validate(data)
-    validateInputs(changed)
+    rubricRules.validateInputs(changed)
     checks = (statusCheck("complement", "met"), statusCheck("complexity", "met"))
-    assert scoreChecks(changed.rubrics[0], checks)[0] == 9
+    assert rubricRules.scoreChecks(changed.rubrics[0], checks)[0] == 9
 
 
 def testCountThresholds(inputs):
@@ -95,9 +97,9 @@ def testCountThresholds(inputs):
     for level in data["rubrics"][0]["scoreLevels"]:
         level["requiredMet"] = []
     changed = EvaluationInput.model_validate(data)
-    validateInputs(changed)
+    rubricRules.validateInputs(changed)
     checks = (statusCheck("complement", "unmet"), statusCheck("complexity", "met"))
-    assert scoreChecks(changed.rubrics[0], checks)[0] == 1
+    assert rubricRules.scoreChecks(changed.rubrics[0], checks)[0] == 1
 
 
 @pytest.mark.parametrize("change", ("answerLink", "rubricLink", "duplicateRubric", "duplicateCriterion", "unknownGate", "unreachableLevel", "unorderedScores", "missingBaseline", "largeThreshold"))
@@ -145,7 +147,7 @@ def testInvalidInterpretations(inputs, recording, change):
     elif change == "unknownCriterion":
         checks[0]["criterionId"] = "unknown"
     elif change == "fakeQuote":
-        evidence["quote"] = "Đây là một trích dẫn bịa đặt."
+        evidence["quote"] = "This excerpt does not exist."
     elif change == "badOffset":
         evidence["startOffset"] += 1
     elif change == "largeOffset":
@@ -155,26 +157,26 @@ def testInvalidInterpretations(inputs, recording, change):
     elif change == "ambiguousMet":
         evidence["type"] = "ambiguity"
     with pytest.raises(EvaluationError):
-        validateInterpretation(inputs, Interpretation.model_validate(data))
+        evidenceReview.validateInterpretation(inputs, Interpretation.model_validate(data))
 
 
 def testQuoteOffsets(inputs, recording):
     evidence = recording.interpretation.reviews[0].criterionChecks[0].evidence[0]
     unresolved = evidence.model_copy(update={"startOffset": None, "endOffset": None})
-    resolved = validateQuote(unresolved, inputs.answer.originalText)
+    resolved = evidenceReview.validateQuote(unresolved, inputs.answer.originalText)
     assert resolved.startOffset == evidence.startOffset
     with pytest.raises(EvaluationError):
-        validateQuote(unresolved, inputs.answer.originalText * 2)
-    assert validateQuote(evidence, inputs.answer.originalText * 2).startOffset == 0
+        evidenceReview.validateQuote(unresolved, inputs.answer.originalText * 2)
+    assert evidenceReview.validateQuote(evidence, inputs.answer.originalText * 2).startOffset == 0
 
 
 def testUnknownKeepsNull(inputs, recording):
     data = recording.interpretation.model_dump(mode="json")
     check = data["reviews"][0]["criterionChecks"][0]
     check["status"] = "insufficientEvidence"
-    check["evidence"][0].update(type="ambiguity", observation="Diễn giải giả lập tình huống chưa rõ, chỉ phục vụ kiểm tra luồng.")
-    changed = RecordedReview(inputHash=inputDigest(inputs), interpretation=Interpretation.model_validate(data))
-    report = evaluateAnswer(inputs, RecordedInterpreter(changed))
+    check["evidence"][0].update(type="ambiguity", observation="Synthetic ambiguous passage for checking the assessment flow.")
+    changed = RecordedReview(inputHash=inputs.inputDigest(), interpretation=Interpretation.model_validate(data))
+    report = evaluator.assessAnswer(inputs, RecordedInterpreter(changed))
     assert report.results[0].score is None
     assert report.results[0].status == "insufficientEvidence"
     assert report.feedbackItems[0].identifiedIssues == ()
@@ -188,23 +190,23 @@ def testEmptyAnswer(inputs):
     interpretation = Interpretation(reviews=tuple({"rubricId": rubric.rubricId, "criterionChecks": tuple(
         statusCheck(criterion.criterionId, "unmet") for criterion in rubric.criteria
     )} for rubric in inputs.rubrics))
-    recording = RecordedReview(inputHash=inputDigest(emptyInputs), interpretation=interpretation)
-    report = evaluateAnswer(emptyInputs, RecordedInterpreter(recording))
+    recording = RecordedReview(inputHash=emptyInputs.inputDigest(), interpretation=interpretation)
+    report = evaluator.assessAnswer(emptyInputs, RecordedInterpreter(recording))
     assert all(result.score == 0 for result in report.results)
     assert all(len(item.identifiedIssues) == 2 for item in report.feedbackItems)
     data["rubrics"][0]["criteria"][0]["omissionMeansUnmet"] = False
     with pytest.raises(EvaluationError):
-        validateInterpretation(EvaluationInput.model_validate(data), interpretation)
+        evidenceReview.validateInterpretation(EvaluationInput.model_validate(data), interpretation)
 
 
 def testAtomicProviderFailure(inputs):
     class FailingInterpreter:
         def interpret(self, suppliedInputs):
-            raise EvaluationError("providerTimeout", "Giả lập timeout.", True)
+            raise EvaluationError("providerTimeout", "Simulated timeout.", True)
 
     state = startEvaluation(inputs)
     with pytest.raises(EvaluationError):
-        evaluate(state, FailingInterpreter())
+        evaluator.evaluateCriteria(state, FailingInterpreter())
     assert state.results == ()
     assert state.inputs.answer.originalText == inputs.answer.originalText
 
@@ -212,21 +214,21 @@ def testAtomicProviderFailure(inputs):
 def testLifecycleGuards(inputs, recording):
     state = startEvaluation(inputs)
     with pytest.raises(EvaluationError):
-        generateFeedback(state)
+        evaluator.generateFeedback(state)
     interpreter = RecordedInterpreter(recording)
-    completed = generateFeedback(evaluate(state, interpreter))
+    completed = evaluator.generateFeedback(evaluator.evaluateCriteria(state, interpreter))
     with pytest.raises(EvaluationError):
-        evaluate(completed, interpreter)
+        evaluator.evaluateCriteria(completed, interpreter)
     with pytest.raises(EvaluationError):
-        generateFeedback(completed)
+        evaluator.generateFeedback(completed)
     with pytest.raises(ValidationError):
         inputs.answer.originalText = "Changed"
 
 
 def testRecordingInputBinding(inputs, recording):
     changed = inputs.model_dump(mode="json")
-    changed["answer"]["originalText"] += " Bài mới."
-    with pytest.raises(EvaluationError, match="không thuộc"):
+    changed["answer"]["originalText"] += " New answer."
+    with pytest.raises(EvaluationError, match="does not match"):
         RecordedInterpreter(recording).interpret(EvaluationInput.model_validate(changed))
 
 
@@ -242,21 +244,21 @@ def testSchemaRejectsCoercion(inputs):
 
 def testLateFailureAtomicity(inputs, recording):
     data = recording.interpretation.model_dump(mode="json")
-    data["reviews"][-1]["criterionChecks"][-1]["evidence"][0]["quote"] = "Trích dẫn không có thật."
-    broken = RecordedReview(inputHash=inputDigest(inputs), interpretation=Interpretation.model_validate(data))
+    data["reviews"][-1]["criterionChecks"][-1]["evidence"][0]["quote"] = "This excerpt does not exist."
+    broken = RecordedReview(inputHash=inputs.inputDigest(), interpretation=Interpretation.model_validate(data))
     state = startEvaluation(inputs)
     with pytest.raises(EvaluationError):
-        evaluate(state, RecordedInterpreter(broken))
+        evaluator.evaluateCriteria(state, RecordedInterpreter(broken))
     assert state.results == ()
     assert state.feedbackItems == ()
 
 
 def testRejectsChangedResults(inputs, recording):
     interpreter = RecordedInterpreter(recording)
-    state = evaluate(startEvaluation(inputs), interpreter)
+    state = evaluator.evaluateCriteria(startEvaluation(inputs), interpreter)
     changedResult = state.results[0].model_copy(update={"score": 99})
     changedState = state.model_copy(update={"results": (changedResult, *state.results[1:])})
     with pytest.raises(EvaluationError):
-        generateFeedback(changedState)
+        evaluator.generateFeedback(changedState)
     with pytest.raises(EvaluationError):
-        readReport(changedState, interpreter)
+        evaluator.readReport(changedState, interpreter)

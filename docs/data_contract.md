@@ -311,13 +311,13 @@ the PoC controller, service, provider adapters, CLI/view, and its focused tests.
 | `ScoreLevel.requiredMet`, `minimumMet` | Executable positive gates and threshold; select highest matching value. Descriptions remain human-readable. |
 | Evidence `type`, `quote`, `location`, `observation`, `startOffset`, `endOffset` | Exact excerpts/ambiguities or explicit omissions. Same Python Unicode offset convention as P03. |
 | Result `status` | `graded` or `insufficientEvidence`; processing failures are separate errors, not fabricated results. |
-| `inputHash`, input snapshots, `providerName`, `modelName`, `promptVersion` | Bind recorded interpretations and reports to exact inputs and identify illustrative versus live processing. |
+| `inputHash`, input snapshots, `providerName`, `modelName`, `promptVersion`, `providerDurationMs`, `createdAt` | Bind reports to exact inputs, identify the interpretation version, and retain request duration and UTC report time. |
 | `exampleOnly` | Marks unreviewed synthetic PoC content; it does not bypass question-bank approval. |
 
 The report has one result per rubric, one check per criterion, and one feedback
 per result. Score must be a declared level or null with an explanation. No raw
 cross-rubric total is produced. Results are accumulated in memory and published
-only after all validations succeed; CLI writes a complete report without
+only after all validations succeed; the service saves through its repository a complete report without
 overwriting an existing file. Original input files are never changed.
 
 The new schema is **not** accepted by the existing draft question-bank JSON
@@ -325,5 +325,23 @@ format without an explicit adapter and team decision. F02/P04 integration must
 agree whether to adopt this multi-rubric model or map it to P03 while preserving
 versions, evidence and score semantics. There is no automatic lossy conversion.
 The PoC does not mark source/license checks or independent rubric review complete.
-See [the implementation guide](evaluateAnswer.md) for executable scoring semantics,
+See [the architecture report](../source/reports/architectureReport.pdf) for executable scoring semantics,
 limitations and the live evaluation procedure.
+The OOP refactor preserves serialized field names and `answerEvaluation/1`.
+`EvaluationInput.inputDigest()` retains the same canonical JSON hash, so existing
+recordings remain valid. `EvaluationService` now owns the lifecycle operations
+`createEvaluation`, `evaluateCriteria`, `generateFeedback`, and `readReport` as
+methods. It receives `RubricRules`, `EvidenceReview`, and `FeedbackBuilder`
+objects; each evaluation's state stays in an immutable `AnswerEvaluation`, not
+in shared service fields. `InterpreterFactory.createInterpreter()` selects a
+provider; `GeminiSettings.fromEnvironment()` reads its configuration. Callers
+of the earlier module-level Python helpers must use these objects. The CLI and
+JSON consumers require no migration.
+
+The architecture review moves persistence behind `Model/repositories`, puts
+request/response DTOs and error translation in `Control`, and centralizes wiring
+in `source/main.py`. `EvaluationService` depends on an `EvaluationRepository`
+protocol and an injected interpreter factory. The CLI View calls the Controller;
+it does not read input files, write reports, or construct providers. PoC reports
+live in `source/reports` as requested. Shared planning and contract documents in
+`docs` retain their existing locations and owners.

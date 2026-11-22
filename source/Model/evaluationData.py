@@ -1,4 +1,5 @@
 from typing import Annotated, Literal
+from datetime import datetime, timezone
 
 from pydantic import Field, StrictInt, model_validator as modelValidator
 
@@ -46,7 +47,7 @@ class EvaluationResult(FrozenData):
     @modelValidator(mode="after")
     def checkScore(self):
         if (self.status == "graded") != (self.score is not None):
-            raise ValueError("graded cần điểm; insufficientEvidence cần score=null.")
+            raise ValueError("graded requires a score; insufficientEvidence requires score=null.")
         return self
 
 
@@ -69,6 +70,8 @@ class EvaluationReport(FrozenData):
     providerName: Text
     modelName: Text
     promptVersion: Text
+    providerDurationMs: Annotated[int, Field(ge=0)] | None = None
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     results: tuple[EvaluationResult, ...]
     feedbackItems: tuple[Feedback, ...]
 
