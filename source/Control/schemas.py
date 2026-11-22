@@ -383,6 +383,7 @@ class ExerciseRecommendationDTO(BaseModel):
     prerequisite_ids: tuple[ExerciseId, ...] = ()
     estimated_duration_minutes: int | None = Field(default=None, ge=1)
     matched_gap: ObservedGapDTO
+    recommendation_reason: str = Field(min_length=1)
     source: SourceAttributionDTO
     eligible_alternate_question_available: bool = False
 
@@ -395,6 +396,30 @@ class ExerciseRecommendationsResponse(BaseModel):
     recommendations: tuple[ExerciseRecommendationDTO, ...] = ()
     unmatched_skill_ids: tuple[SkillId, ...] = ()
     message: str | None = None
+
+
+class ExerciseDetailDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    exercise_id: ExerciseId = Field(min_length=1)
+    version: int = Field(ge=1)
+    title: str = Field(min_length=1)
+    summary: str = Field(min_length=1)
+    instructions: str = Field(min_length=1)
+    related_skill_ids: tuple[SkillId, ...] = Field(min_length=1)
+    prerequisite_ids: tuple[ExerciseId, ...] = ()
+    target_criterion_types: tuple[str, ...] = ()
+    estimated_duration_minutes: int | None = Field(default=None, ge=1)
+    observable_outcome: str | None = None
+    source: SourceAttributionDTO
+
+
+class StartPracticeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    answer_revision: int = Field(ge=1)
+    criterion_id: CriterionId = Field(min_length=1)
+    exercise_id: ExerciseId = Field(min_length=1)
 
 
 class ApiErrorResponse(BaseModel):
@@ -426,6 +451,7 @@ __all__ = [
     "EvidenceItemDTO",
     "ExerciseRecommendationDTO",
     "ExerciseRecommendationsResponse",
+    "ExerciseDetailDTO",
     "NextQuestionRequest",
     "ObservedGapDTO",
     "QuestionOutcomeSummaryDTO",
@@ -433,6 +459,7 @@ __all__ = [
     "SavedAnswerDTO",
     "SessionProgressDTO",
     "SessionState",
+    "StartPracticeRequest",
     "SessionSummaryDTO",
     "SessionViewDTO",
     "SourceAttributionDTO",

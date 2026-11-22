@@ -73,6 +73,14 @@
 | **S03 / S04 → S05 · Kết thúc sớm** | `POST /api/sessions/{session_id}/end` | `EndSessionRequest` | `SessionSummaryDTO` (`200 OK`) | [`session_summary.json`](../test/fixtures/api/session_summary.json) |
 | **S05 · Tổng kết phiên** | `GET /api/sessions/{session_id}/summary` | — | `SessionSummaryDTO` (`200 OK`) | [`session_summary.json`](../test/fixtures/api/session_summary.json) |
 | **S06 · Đề xuất bài tập** | `GET /api/sessions/{session_id}/exercises` | — | `ExerciseRecommendationsResponse` (`200 OK`) | [`exercise_recommendations.json`](../test/fixtures/api/exercise_recommendations.json) |
+| **S06 · Chi tiết bài tập** | `GET /api/exercises/{exercise_id}?version={version}` | — | `ExerciseDetailDTO` (`200 OK`) | Chỉ trả nội dung đã duyệt và nguồn đã xác minh |
+| **S06 · Luyện lại từ bài đã chấm** | `POST /api/sessions/{session_id}/answers/{answer_id}/practice` | `StartPracticeRequest` (`answer_revision`, `criterion_id`, `exercise_id`) | `SessionViewDTO` (`201 Created`) | Tạo phiên một câu bằng biến thể đã duyệt khác câu gốc |
+
+### Quy tắc đề xuất và luyện lại (I06)
+- Chỉ tiêu chí `unmet` có điểm dưới mức tối đa trong kết quả `completed` của bản trả lời mới nhất mới tạo điểm thiếu; `insufficient_evidence`, lỗi provider và câu chưa trả lời không tạo khuyến nghị.
+- Bài tập phải có trạng thái duyệt `approved`, nguồn có giấy phép đã xác minh, cùng `skill_id` và `criterion_type` với điểm thiếu. Bài tiên quyết được đưa trước bài phụ thuộc; chuỗi tiên quyết thiếu hoặc có vòng lặp bị bỏ qua. `recommendation_reason` giải thích trực tiếp điểm thiếu hoặc quan hệ tiên quyết.
+- Khi không có điểm thiếu hoặc không có bài phù hợp, `recommendations` rỗng và `message` nêu rõ lý do; `unmatched_skill_ids` liệt kê kỹ năng có điểm thiếu nhưng không có bài hợp lệ.
+- Lượt luyện mới chỉ được tạo từ bản trả lời thuộc phiên của cookie hiện tại, với tiêu chí và bài tập thực sự nằm trong khuyến nghị. Chỉ chọn câu hỏi đã duyệt, đúng kỹ năng/loại tiêu chí, khác câu gốc; nếu không có biến thể hợp lệ thì trả `409`, không tạo phiên rỗng. Phiên luyện mới có một câu và dùng lại cơ chế nộp bài, chấm điểm, quyền sở hữu hiện có.
 
 ### Quy tắc chuyển câu (`POST /api/sessions/{session_id}/next`)
 - Client gửi `from_question_index` (chỉ số câu hiện tại mà người học đang xem kết quả).

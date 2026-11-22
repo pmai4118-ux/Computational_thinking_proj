@@ -13,6 +13,7 @@ from source.Control.saved_evaluation_controller import (
     SavedEvaluationController,
     build_saved_evaluation_router,
 )
+from source.Control.exercise_controller import ExerciseController, build_exercise_router
 from source.Control.interview_controller import (
     InterviewController,
     build_interview_router,
@@ -26,6 +27,7 @@ from source.Model.repositories.interfaces import (
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.service.evaluation_service import EvaluationService
 from source.service.interview_service import InterviewService
+from source.service.recommendation_service import RecommendationService
 from source.service.providers.factory import create_evidence_interpreter
 from source.service.providers.interfaces import EvidenceInterpreter
 from source.service.seed_loader import load_seed_catalog_into_repository
@@ -48,6 +50,8 @@ class AppContainer:
     evaluation_service: EvaluationService
     interview_controller: InterviewController
     saved_evaluation_controller: SavedEvaluationController
+    recommendation_service: RecommendationService
+    exercise_controller: ExerciseController
 
 
 def create_app(
@@ -97,6 +101,17 @@ def create_app(
     saved_evaluation_controller = SavedEvaluationController(
         interview_controller, evaluation_service
     )
+    recommendation_service = RecommendationService(
+        content_repo=resolved_content_repo,
+        session_repo=resolved_session_repo,
+        evaluation_repo=resolved_eval_repo,
+        interview_service=interview_service,
+    )
+    exercise_controller = ExerciseController(
+        service=recommendation_service,
+        interview_controller=interview_controller,
+        demo_mode_label=resolved_settings.demo_label,
+    )
 
     app = FastAPI(
         title="interviewUS — Luyện phỏng vấn kỹ thuật Backend",
@@ -112,12 +127,15 @@ def create_app(
         evaluation_service=evaluation_service,
         interview_controller=interview_controller,
         saved_evaluation_controller=saved_evaluation_controller,
+        recommendation_service=recommendation_service,
+        exercise_controller=exercise_controller,
     )
 
     register_api_exception_handlers(app)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     app.include_router(build_interview_router(interview_controller))
     app.include_router(build_saved_evaluation_router(saved_evaluation_controller))
+    app.include_router(build_exercise_router(exercise_controller))
     app.include_router(build_pages_router(interview_controller, saved_evaluation_controller))
 
     @app.get("/health", tags=["system"])
