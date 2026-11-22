@@ -1,5 +1,5 @@
 {
-  "inputHash": "a00235880522f7bbd00ccb19a951c875905b02727edc7a79d2571e9e1e861906",
+  "inputHash": "4cf7dc05172733c9fb6b8bafe0e79713162ec46433e4b16d0af850962945cd50",
   "interpretation": {
     "reviews": [
       {
@@ -11,11 +11,11 @@
             "evidence": [
               {
                 "type": "excerpt",
-                "quote": "Tìm phần bù target - value.",
+                "quote": "Find the complement target - value.",
                 "location": "originalText",
-                "observation": "Nêu đúng quan hệ giữa phần tử hiện tại và phần bù cần tìm.",
+                "observation": "The answer states the target complement relationship.",
                 "startOffset": 0,
-                "endOffset": 27
+                "endOffset": 35
               }
             ]
           },
@@ -25,11 +25,11 @@
             "evidence": [
               {
                 "type": "excerpt",
-                "quote": "Tra cứu bảng băm trung bình O(1) mỗi lượt nên tổng thời gian kỳ vọng O(n), bộ nhớ O(n).\nKhông bảo đảm O(n) trong trường hợp băm xấu nhất.",
+                "quote": "Average hash lookup is O(1), so expected total time is O(n) and extra space is O(n).\nO(n) time is not guaranteed in the worst hash case.",
                 "location": "originalText",
-                "observation": "Giải thích thời gian kỳ vọng theo tra cứu băm và nêu cả bộ nhớ cùng giới hạn trường hợp xấu nhất.",
-                "startOffset": 496,
-                "endOffset": 633
+                "observation": "The expected lookup cost, space cost, and worst case limitation are stated.",
+                "startOffset": 542,
+                "endOffset": 678
               }
             ]
           }
@@ -44,11 +44,11 @@
             "evidence": [
               {
                 "type": "excerpt",
-                "quote": "Kiểm tra phần bù trước khi lưu phần tử hiện tại nên hai chỉ số luôn khác nhau.",
+                "quote": "Check the complement before adding the current item, so the two indices are always distinct.",
                 "location": "originalText",
-                "observation": "Kiểm tra trên các chỉ số đã duyệt trước khi thêm chỉ số hiện tại, nên không lấy một phần tử hai lần.",
-                "startOffset": 75,
-                "endOffset": 153
+                "observation": "Checking earlier indices before inserting the current one prevents reusing an item.",
+                "startOffset": 92,
+                "endOffset": 184
               }
             ]
           },
@@ -58,11 +58,11 @@
             "evidence": [
               {
                 "type": "excerpt",
-                "quote": "Chỉ lưu phần tử đã duyệt: nếu có phần bù thì cặp tìm được đúng; nếu duyệt hết mà không gặp thì không có cặp.",
+                "quote": "Only earlier items are stored: a found complement gives a valid pair; after scanning all items without one, no pair exists.",
                 "location": "originalText",
-                "observation": "Lập luận dựa trên các phần tử đã duyệt, bao gồm lý do không có cặp khi duyệt hết.",
-                "startOffset": 154,
-                "endOffset": 262
+                "observation": "The explanation covers both a found pair and an exhaustive unsuccessful scan.",
+                "startOffset": 185,
+                "endOffset": 308
               }
             ]
           }
@@ -79,9 +79,9 @@
                 "type": "excerpt",
                 "quote": "def findPair(values, target):\n    seen = {}\n    for index, value in enumerate(values):\n        needed = target - value\n        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None",
                 "location": "originalText",
-                "observation": "Đọc code cho thấy kiểm tra phần bù trước khi thêm phần tử, hỗ trợ số âm và số trùng; đây là nhận xét từ code, không phải kết quả chạy code.",
-                "startOffset": 264,
-                "endOffset": 494
+                "observation": "The code checks before insertion and handles duplicates and negatives; this is a reading of code, not an execution result.",
+                "startOffset": 310,
+                "endOffset": 540
               }
             ]
           },
@@ -93,9 +93,9 @@
                 "type": "excerpt",
                 "quote": "        if needed in seen:\n            return [seen[needed], index]\n        seen[value] = index\n    return None",
                 "location": "originalText",
-                "observation": "Nhánh tìm thấy trả chỉ số cũ và hiện tại, nhánh kết thúc trả None.",
-                "startOffset": 383,
-                "endOffset": 494
+                "observation": "The found branch returns two indices, and the final branch returns None.",
+                "startOffset": 429,
+                "endOffset": 540
               }
             ]
           }
@@ -110,11 +110,11 @@
             "evidence": [
               {
                 "type": "excerpt",
-                "quote": "Ví dụ [2, 7, 11], target=9 trả [0, 1].",
+                "quote": "Example: [2, 7, 11], target=9 returns [0, 1].",
                 "location": "originalText",
-                "observation": "Ca [2, 7, 11] với target=9 và kết quả [0, 1] phù hợp yêu cầu.",
-                "startOffset": 634,
-                "endOffset": 672
+                "observation": "The example gives a valid input and expected indices.",
+                "startOffset": 679,
+                "endOffset": 724
               }
             ]
           },
@@ -124,11 +124,11 @@
             "evidence": [
               {
                 "type": "excerpt",
-                "quote": "Kiểm tra [3, 3], target=6 trả [0, 1]; [-2, 5], target=3 trả [0, 1].\nKiểm tra [3], target=6 trả None; [], target=0 trả None; [1, 2], target=8 trả None.",
+                "quote": "Tests: [3, 3], target=6 returns [0, 1]; [-2, 5], target=3 returns [0, 1].\nTests: [3], target=6 returns None; [], target=0 returns None; [1, 2], target=8 returns None.",
                 "location": "originalText",
-                "observation": "Nêu đúng đầu vào và kết quả cho số trùng, số âm, rỗng, một phần tử và không có cặp.",
-                "startOffset": 673,
-                "endOffset": 823
+                "observation": "The listed cases cover duplicates, negatives, empty and single lists, and no matching pair.",
+                "startOffset": 725,
+                "endOffset": 891
               }
             ]
           }

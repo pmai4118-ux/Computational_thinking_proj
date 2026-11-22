@@ -1,4 +1,4 @@
-Ta xét từng cặp chỉ số i và j với i < j. Nếu values[i] + values[j] bằng target thì trả cặp chỉ số đó. Điều kiện i < j bảo đảm hai phần tử khác nhau, kể cả khi chúng có cùng giá trị.
+Consider each pair of indices i and j with i < j. If values[i] + values[j] equals target, return those indices. The condition i < j guarantees different items even when the values match.
 
 def findPair(values, target):
     for firstIndex in range(len(values)):
@@ -7,8 +7,8 @@ def findPair(values, target):
                 return [firstIndex, secondIndex]
     return None
 
-Mỗi cặp chỉ số khác nhau được xét đúng một lần. Vì vậy cặp trả về có tổng đúng; nếu duyệt hết mà không thấy cặp thì không có lời giải.
-Có nhiều nhất n(n-1)/2 cặp nên thời gian O(n^2), bộ nhớ phụ O(1). Đề không bắt buộc thời gian tuyến tính.
-Ca thông thường: [2, 7, 11], target=9 trả [0, 1].
-Ca số trùng: [3, 3], target=6 trả [0, 1]. Ca số âm: [-2, 5], target=3 trả [0, 1].
-Ca một phần tử: [3], target=6 trả None. Ca rỗng: [], target=0 trả None. Ca không có cặp: [1, 2], target=8 trả None.
+Each distinct pair is considered once. A returned pair has the correct sum; if the search ends without a pair, no solution exists.
+There are at most n(n-1)/2 pairs, so time is O(n^2) and extra space is O(1). The question does not require linear time.
+Normal case: [2, 7, 11], target=9 returns [0, 1].
+Duplicates: [3, 3], target=6 returns [0, 1]. Negative values: [-2, 5], target=3 returns [0, 1].
+Single item: [3], target=6 returns None. Empty list: [], target=0 returns None. No pair: [1, 2], target=8 returns None.
