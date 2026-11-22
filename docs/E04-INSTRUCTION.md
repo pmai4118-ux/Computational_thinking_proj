@@ -1,260 +1,163 @@
-# E04 — Hướng dẫn cài đặt và chạy kiểm tra Gemini
+# E04-INSTRUCTION — Chạy đánh giá AI bằng Antigravity
 
-**Cập nhật:** 22/11/2026.
+Tài liệu này hướng dẫn từ lúc lấy nhánh `codex/e04-gemini-structured-output` về máy Windows đến khi xem được điểm và báo cáo JSON. Đường chạy demo dùng **Antigravity CLI (`agy`)**: mỗi người cài CLI và đăng nhập tài khoản Google của mình; **không cần Gemini API key**. Model mặc định của đường chạy này là `gemini-3.8-flash-medium`.
 
-Tài liệu này dành cho người vừa lấy nhánh `codex/e04-gemini-structured-output` về Windows. E04 thêm adapter gọi Gemini API và yêu cầu Gemini trả kết quả JSON có cấu trúc theo hợp đồng E01.
+E04 hiện đánh giá **một câu trả lời cho một câu hỏi** bằng dòng lệnh. Chương trình đọc câu hỏi, rubric và bài gốc từ JSON; AI diễn giải từng tiêu chí; Python kiểm tra bằng chứng, chọn mức điểm theo rubric, in phản hồi và lưu báo cáo. Luồng này chưa kết nối vào giao diện web.
 
-**Phạm vi hiện tại:** E04 chưa phải một ứng dụng có giao diện để chạy độc lập và chưa tự tạo `EvaluationReport`. Hãy kiểm chứng adapter bằng các lệnh pytest ở dưới. Mặc định toàn dự án là `fixture`, tức dữ liệu minh họa chạy ngoại tuyến; muốn gọi Gemini thật thì cần API key cá nhân.
+## 1. Mở PowerShell và lấy nhánh E04
 
-**Model hướng dẫn dùng:** code hiện tại còn giá trị mặc định `gemini-2.5-flash` trong adapter và bài test live. Tuy nhiên, cấu hình cho phép truyền model qua biến `GEMINI_MODEL`, và bạn đã xác nhận gọi live thành công với `gemini-4-hydrogen`. Vì vậy, các lệnh trong tài liệu này chọn `gemini-4-hydrogen`; đây là lựa chọn hướng dẫn, không phải giá trị mặc định đã hard-code trong nhánh. Google liệt kê model này là Stable và hỗ trợ structured outputs. Xem mục [Model và giới hạn](#model-và-giới-hạn).
+Nhấn **phím Windows** hoặc **nút Windows Start** trên thanh tác vụ, gõ `PowerShell`, rồi mở **Windows PowerShell**.
 
-## 1. Lấy nhánh E04
-
-Mở PowerShell tại thư mục mà bạn muốn lưu dự án. Nếu chưa clone repo, chạy:
+**Nếu chưa clone repo**, chuyển đến nơi muốn lưu dự án và chạy:
 
 ```powershell
+Set-Location "$HOME\Documents"
 git clone --branch codex/e04-gemini-structured-output https://github.com/pmai4118-ux/Computational_thinking_proj.git
 Set-Location .\Computational_thinking_proj
 ```
 
-Nếu đã clone repo, vào thư mục gốc rồi cập nhật nhánh:
+**Nếu đã clone repo**, thay đường dẫn ví dụ bên dưới bằng đường dẫn repo trên máy của bạn. Nếu nhánh E04 **chưa có ở máy**, chạy:
 
 ```powershell
 Set-Location "D:\TDTT\src\Computational_thinking_proj"
 git fetch origin
 git switch --track origin/codex/e04-gemini-structured-output
-git pull --ff-only
+git pull --ff-only origin codex/e04-gemini-structured-output
 ```
 
-Nếu nhánh đã có ở máy, dùng `git switch codex/e04-gemini-structured-output` thay cho lệnh `git switch --track ...`, rồi chạy `git pull --ff-only`.
+Nếu nhánh E04 **đã có ở máy**, dùng `git switch codex/e04-gemini-structured-output` thay cho dòng `git switch --track ...`, rồi chạy `git pull --ff-only origin codex/e04-gemini-structured-output`.
 
-Kiểm tra bạn đang ở đúng nhánh và đúng thư mục gốc:
+Kiểm tra thư mục và nhánh:
 
 ```powershell
 git status --short --branch
 Test-Path .\pyproject.toml
 ```
 
-Lệnh đầu cần hiện `codex/e04-gemini-structured-output`; lệnh sau cần trả `True`. Nếu repo của bạn nằm ở đường dẫn khác, thay đường dẫn trong `Set-Location`.
+Kết quả phải hiện tên nhánh E04 và `True`. Nếu Git báo có thay đổi cục bộ cản trở việc chuyển nhánh/pull, hãy giữ lại và xử lý chúng trước; không dùng lệnh reset để xóa công việc đang có.
 
-## 2. Cài Python, uv và dependencies
+## 2. Cài Python và thư viện dự án
 
-Dự án yêu cầu CPython **3.11**. `uv` sẽ tạo môi trường ảo `.venv` và cài đúng các phiên bản được khóa trong `uv.lock`.
-
-### 2.1. Cài uv
-
-Trong PowerShell, thử cài bằng WinGet:
-
-```powershell
-winget install --id astral-sh.uv -e
-```
-
-Nếu WinGet không có trên máy, dùng lệnh cài đặt PowerShell chính thức của uv:
-
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-Sau khi cài, **đóng PowerShell và mở cửa sổ PowerShell mới** để cập nhật `PATH`, rồi kiểm tra:
+Dự án yêu cầu **Python 3.11** và cài phiên bản thư viện từ `uv.lock`. Kiểm tra `uv`:
 
 ```powershell
 uv --version
 ```
 
-### 2.2. Cài Python và thư viện dự án
+Nếu chưa có `uv`, dùng WinGet:
 
-Đảm bảo PowerShell đang ở thư mục gốc repo, sau đó chạy:
+```powershell
+winget install --id astral-sh.uv -e
+```
+
+Nếu máy không có WinGet, dùng [lệnh cài đặt chính thức của uv trên Windows](https://docs.astral.sh/uv/getting-started/installation/):
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Sau khi cài, **đóng PowerShell và mở lại**, quay về thư mục gốc repo và xác nhận `uv --version` chạy được. Sau đó:
 
 ```powershell
 uv python install 3.11
 uv sync --locked
-```
-
-`uv sync --locked` đọc `pyproject.toml` và `uv.lock`, tạo `.venv`, cài FastAPI, Pydantic, Jinja2, Uvicorn cùng các công cụ phát triển như pytest. E04 gọi Gemini qua HTTP bằng thư viện chuẩn của Python (`urllib`), nên **không cần cài `google-genai`**.
-
-Kiểm tra phiên bản Python và dependencies:
-
-```powershell
 uv run --locked python --version
 uv pip check
 ```
 
-Python cần hiện phiên bản `3.11.x`; `uv pip check` cần báo không có dependency bị thiếu hoặc xung đột.
+`uv sync --locked` tạo `.venv` và cài dependencies đúng theo repo. Phiên bản Python cần là `3.11.x`. Không cần `pip` hoặc `google-genai` để chạy qua `agy`. Luôn chạy các lệnh `uv` ở thư mục có `pyproject.toml`.
 
-## 3. Tạo Gemini API key
+## 3. Cài `agy` và đăng nhập
 
-Mỗi người dùng tạo và giữ key riêng. Không gửi key qua chat, không dán key vào file `.py`, không commit key lên Git và không đưa key vào ảnh chụp màn hình.
-
-1. Mở trang [Google AI Studio — API keys](https://aistudio.google.com/apikey) và đăng nhập tài khoản Google.
-2. Chọn một Google Cloud project có quyền dùng Gemini API. Nếu AI Studio yêu cầu, hãy tạo project hoặc import project hiện có.
-3. Nhấn **Create API key** và chọn project phù hợp.
-4. Sao chép key vừa tạo, cất ở nơi riêng tư. Không dán key vào tài liệu hoặc repo.
-5. Nếu trang cho phép, giới hạn key chỉ dùng với **Gemini API**.
-
-Khả năng sử dụng miễn phí, xác minh project và yêu cầu billing phụ thuộc tài khoản/project. Tạo được key không đảm bảo model đã chọn có quota hoặc đang được cấp quyền cho tài khoản đó.
-
-## 4. Lưu key vào Windows User environment variables
-
-Cách này lưu key trong biến môi trường của tài khoản Windows hiện tại, không ghi key vào repo.
-
-1. Nhấn **nút Windows Start** trên thanh tác vụ hoặc nhấn phím Windows.
-2. Gõ `Edit environment variables for your account`.
-3. Mở kết quả **Edit environment variables for your account**.
-4. Trong phần **User variables for ...**, nhấn **New...**.
-5. Điền:
-   - **Variable name:** `GEMINI_API_KEY`
-   - **Variable value:** dán API key vừa tạo; không thêm dấu ngoặc kép và không thêm khoảng trắng ở đầu/cuối.
-6. Nhấn **OK** trong các cửa sổ để lưu và đóng.
-7. Đóng các cửa sổ PowerShell đang mở, rồi mở PowerShell mới. Ứng dụng đã mở trước khi tạo biến cũng cần được khởi động lại để nhận biến mới.
-
-Kiểm tra key đã được nạp mà không in key ra màn hình:
+Cần cài **Antigravity CLI**, kể cả khi máy đã có ứng dụng Antigravity. [Lệnh PowerShell chính thức của Google](https://antigravity.google/docs/getting-started):
 
 ```powershell
-if ([string]::IsNullOrWhiteSpace($env:GEMINI_API_KEY)) {
-    "GEMINI_API_KEY chưa có trong PowerShell này."
-} else {
-    "GEMINI_API_KEY đã sẵn sàng."
-}
+irm https://antigravity.google/cli/install.ps1 | iex
 ```
 
-Nếu vừa sửa biến User mà PowerShell mới vẫn chưa thấy, nạp lại trong cửa sổ hiện tại:
+Đóng và mở lại PowerShell để cập nhật `PATH`, quay về thư mục repo, rồi kiểm tra:
 
 ```powershell
-$env:GEMINI_API_KEY = [Environment]::GetEnvironmentVariable("GEMINI_API_KEY", "User")
+agy --version
 ```
 
-Không chạy lệnh `Write-Output $env:GEMINI_API_KEY`, vì lệnh đó sẽ làm lộ key trong terminal.
-
-## 5. Chọn cấu hình Gemini cho lần chạy hiện tại
-
-Tại PowerShell mới, vào thư mục gốc repo:
+Gõ `agy` để mở CLI tương tác, làm theo hướng dẫn đăng nhập bằng **tài khoản Google của chính bạn** trong trình duyệt, hoàn tất thiết lập lần đầu và thoát CLI. Xem model mà tài khoản được dùng:
 
 ```powershell
-Set-Location "D:\TDTT\src\Computational_thinking_proj"
+agy models
 ```
 
-Chọn provider Gemini và khai báo model/timeout cho **cửa sổ PowerShell này**:
+Cần thấy `gemini-3.8-flash-medium`. Code đã chọn model này làm mặc định; người dùng **không phải tạo key, không sửa code và không ghi đường dẫn máy mình vào Git**. Việc được dùng model và quota phụ thuộc tài khoản đã đăng nhập. Phiên đăng nhập có thể cần làm lại khi hết hạn.
+
+Nếu `agy` chưa có trong `PATH`, kiểm tra vị trí cài mặc định trên Windows:
 
 ```powershell
-$env:EVALUATION_PROVIDER = "gemini"
-$env:GEMINI_MODEL = "gemini-4-hydrogen"
-$env:GEMINI_TIMEOUT_SECONDS = "30"
+Test-Path "$env:LOCALAPPDATA\agy\bin\agy.exe"
 ```
 
-Ứng dụng yêu cầu `GEMINI_MODEL` khi `EVALUATION_PROVIDER=gemini`; không dựa vào mặc định trong class provider. `GEMINI_TIMEOUT_SECONDS` mặc định là 30 giây; adapter chấp nhận từ 1 đến 120 giây.
+Nếu trả `True`, dùng tham số `--antigravity-executable` ở bước 4. Tham số này chỉ dành cho máy đang chạy, không phải cấu hình cố định trong repo.
 
-Các lệnh trên không thay đổi biến User đã lưu trong Windows; chúng chỉ cấu hình tiến trình PowerShell hiện tại. Muốn chạy bài live test bên dưới thì cần thêm hai biến bật bài test và chọn model kiểm tra:
+## 4. Gọi AI để đánh giá và xem báo cáo
+
+Ở **thư mục gốc repo**, chạy bài mẫu tổng hợp có bốn tiêu chí:
 
 ```powershell
-$env:RUN_GEMINI_LIVE_TEST = "1"
-$env:E04_GEMINI_LIVE_MODEL = $env:GEMINI_MODEL
+uv run --locked python -m source.main --provider antigravity --input test/fixtures/e04/inventory_answer.json --output .local/e04-report.json
 ```
 
-## 6. Chạy kiểm tra
-
-### 6.1. Kiểm tra offline, không gọi API
-
-Chạy các test của adapter. Các test này dùng dữ liệu giả lập và mock HTTP, không cần key, không tiêu thụ quota:
+Nếu `agy` chưa có trong `PATH`, dùng đường dẫn thực thi cục bộ:
 
 ```powershell
-Remove-Item Env:RUN_GEMINI_LIVE_TEST -ErrorAction SilentlyContinue
-uv run --locked python -m pytest -q test/test_gemini_provider.py
+uv run --locked python -m source.main --provider antigravity --antigravity-executable "$env:LOCALAPPDATA\agy\bin\agy.exe" --input test/fixtures/e04/inventory_answer.json --output .local/e04-report.json
 ```
 
-Chạy toàn bộ test suite của repo:
+Terminal sẽ hiện `Evaluation complete: .../8 | model=gemini-3.8-flash-medium`, phản hồi cho **Knowledge, Analysis, Implementation, Testing** và vị trí lưu report. Mỗi tiêu chí có các mức **0, 1, 2**. Kết quả do AI diễn giải có thể thay đổi giữa các lần chạy; không mặc định bài nào cũng đạt điểm tối đa.
+
+Xem báo cáo JSON đã lưu:
 
 ```powershell
-uv run --locked python -m pytest
+$report = Get-Content .local/e04-report.json -Raw | ConvertFrom-Json
+$report.provider
+$report.modelId
+$report.result.totalScore
+$report.result.maximumScore
+$report.result.criterionChecks | Select-Object criterionId,status,score
+$report.feedbackItems | Select-Object label,message
 ```
 
-### 6.2. Gọi Gemini thật bằng dữ liệu tổng hợp
+Report chứa câu hỏi, rubric, bài gốc, trạng thái từng tiêu chí, đoạn trích hoặc ghi nhận nội dung thiếu, điểm, phản hồi, model ID, phiên bản prompt và thời gian gọi. Nếu **chưa đủ căn cứ**, điểm của tiêu chí là `null`, khác với 0. Thư mục `.local/` không được Git theo dõi. Nếu lời gọi AI hoặc bằng chứng lỗi, chương trình báo lỗi và không ghi report mới.
 
-Trước khi chạy, xác nhận key đã có mà không hiển thị giá trị:
+**Thử câu trả lời của bạn cho cùng câu hỏi:** sao chép file mẫu vào `.local/`, mở bản sao và chỉ sửa `answer.id`, `answer.text`; giữ nguyên câu hỏi và rubric, bảo đảm JSON hợp lệ:
 
 ```powershell
-if ([string]::IsNullOrWhiteSpace($env:GEMINI_API_KEY)) { throw "GEMINI_API_KEY chưa được nạp." }
+Copy-Item test/fixtures/e04/inventory_answer.json .local/my-answer.json
+notepad .local/my-answer.json
+uv run --locked python -m source.main --provider antigravity --input .local/my-answer.json --output .local/my-report.json
 ```
 
-Sau đó chạy đúng một bài live test:
+Nội dung `answer.text` được gửi đến dịch vụ Antigravity theo phiên đăng nhập của bạn, nên hãy dùng bài luyện tập không chứa dữ liệu riêng tư. Nếu muốn đổi câu hỏi hoặc rubric thì phải khai báo lại tiêu chí, bằng chứng mong đợi và các mức điểm cho phù hợp; rubric mẫu không dùng chung cho mọi câu hỏi.
+
+## 5. Kiểm tra code và hiểu bài test bị bỏ qua
+
+Bộ test tự động dùng mock/fixture, **không gọi `agy` thật**:
 
 ```powershell
-$env:EVALUATION_PROVIDER = "gemini"
-$env:GEMINI_MODEL = "gemini-4-hydrogen"
-$env:RUN_GEMINI_LIVE_TEST = "1"
-$env:E04_GEMINI_LIVE_MODEL = $env:GEMINI_MODEL
-uv run --locked python -m pytest -q test/test_gemini_provider.py -k live
+uv run --locked python -m pytest -q
 ```
 
-Bài test gửi một câu hỏi, rubric và câu trả lời **tổng hợp** đến Gemini. Thành công thường hiện `1 passed`. Khi kết thúc, tắt chế độ live để lần pytest sau không gọi API ngoài ý muốn:
+Ở phiên bản bàn giao này, khi không bật bài live dùng Gemini API key, kết quả đã kiểm tra là `53 passed, 1 skipped`. `1 skipped` là **bài thử Gemini API trực tiếp**; nó **không phải** việc gọi `agy` bị bỏ qua. Muốn kiểm chứng AI thật và report JSON, chạy lệnh ở bước 4. Khi bàn giao E04, bài mẫu đầy đủ cho **8/8**, bài cố ý thiếu ý cho **3/8**; mỗi report có bốn kết quả tiêu chí, bốn phản hồi và vị trí trích dẫn đúng. Hai lần chạy này chứng minh luồng demo hoạt động, chưa chứng minh độ chính xác trên mọi bài.
 
-```powershell
-Remove-Item Env:RUN_GEMINI_LIVE_TEST -ErrorAction SilentlyContinue
-```
+Repo cũng giữ provider gọi Gemini API trực tiếp cho một luồng khác. Bài live riêng của provider đó cần `GEMINI_API_KEY` và model được đặt qua `E04_GEMINI_LIVE_MODEL`; **không cần** các biến này trong hướng dẫn `agy`. CLI đánh giá E04 hiện nhận `antigravity` hoặc `fixture`, chưa có tùy chọn `--provider gemini`.
 
-`1 passed` xác nhận lần gọi live trả về observation có cấu trúc, model ID khớp cấu hình và bằng chứng trích dẫn có vị trí hợp lệ. Nó không đo chất lượng chấm trên toàn bộ bộ câu hỏi, không tạo report đánh giá hoàn chỉnh, và không thay thế việc so sánh với kết quả tham chiếu.
+## Lỗi thường gặp
 
-## 7. Model và các giới hạn cần biết
-
-### Model của repo và model của E04
-
-| Trường hợp | Cấu hình hiện tại |
+| Hiện tượng | Cách xử lý |
 | --- | --- |
-| Chạy mặc định của dự án | `EVALUATION_PROVIDER=fixture`: dữ liệu minh họa, không gọi AI. |
-| Provider AI thật nhóm chọn làm chính trong P07 | Antigravity CLI, model `gemini-3.8-flash-medium`; cần cài/đăng nhập `agy`, không dùng API key Gemini trong luồng này. |
-| Adapter E04 gọi trực tiếp Gemini API | `GEMINI_MODEL` bắt buộc trong cấu hình. Hướng dẫn và lệnh live test bên dưới chọn `gemini-4-hydrogen`; test trong source tự mặc định về `gemini-2.5-flash` nếu không đặt biến override. Cần `GEMINI_API_KEY`. |
+| `uv` hoặc `agy` không được nhận diện | Đóng/mở PowerShell sau khi cài; kiểm tra `uv --version`, `agy --version`. Với `agy`, dùng tham số đường dẫn thực thi nếu cần. |
+| Thiếu module hoặc `.venv` | Chạy `uv sync --locked` tại thư mục gốc repo rồi dùng `uv run --locked python ...`, không gọi Python hệ thống. |
+| Chưa đăng nhập hoặc không thấy model | Chạy `agy` đăng nhập lại; kiểm tra `agy models` và quyền dùng model. |
+| Hết quota hoặc timeout | Kiểm tra tài khoản, kết nối và trạng thái CLI. Có thể đặt `$env:ANTIGRAVITY_TIMEOUT_SECONDS = "180"` cho cửa sổ hiện tại rồi thử lại; code chấp nhận 1–300 giây. |
+| Test có `1 skipped` | Đây là test live tùy chọn của Gemini API. Dùng bước 4 để kiểm tra Antigravity thật. |
+| Không có report mới | Xem lỗi trong terminal; AI trả kết quả không hợp lệ sẽ không được biến thành điểm hay report. |
 
-Vì vậy, cần phân biệt: **model dùng theo hướng dẫn E04 là `gemini-4-hydrogen` (bạn đã xác nhận live test chạy được); giá trị mặc định cũ trong source test là `gemini-2.5-flash`; toàn ứng dụng mặc định là `fixture`, còn phương án AI thật chính theo P07 là Antigravity với `gemini-3.8-flash-medium`.** Xem [quyết định AI P07](ai_decision.md) để biết lý do nhóm chọn hai đường kết nối này.
-
-### Giới hạn trong code
-
-| Giới hạn | Giá trị hiện tại | Nguồn |
-| --- | --- | --- |
-| Payload request tới Gemini | Tối đa 250 KB | `MAX_REQUEST_BYTES` trong `source/service/providers/gemini_provider.py`. |
-| Nội dung response đọc từ mạng | Tối đa 1 MB | `MAX_RESPONSE_BYTES` trong cùng provider. |
-| Số token output được yêu cầu | Tối đa 4,096 token | `generationConfig.maxOutputTokens` trong provider; thấp hơn giới hạn tối đa công bố của model. |
-| Timeout API | Mặc định 30 giây; provider nhận 1–120 giây | `GEMINI_TIMEOUT_SECONDS` trong `source/config.py` và provider. |
-| Token limit của `gemini-4-hydrogen` | Context tổng 1,048,576 token; output đồng bộ tối đa 65,536 token | E04 hiện chỉ yêu cầu tối đa 4,096 output token; không bật chế độ long decode. |
-
-### Quota, quyền truy cập và chi phí API
-
-Google đo quota theo các giới hạn như RPM (request/phút), TPM (token/phút) và RPD (request/ngày). Quota áp dụng theo **Google Cloud project**, không phải riêng từng API key; quota model/tier và tài khoản thay đổi, nên không thể đảm bảo một con số cố định cho tất cả người pull code. Xem số đang áp dụng cho project của bạn tại [AI Studio → Rate limits](https://aistudio.google.com/rate-limit?timeRange=last-28-days) và mức sử dụng tại [AI Studio → Usage](https://aistudio.google.com/usage).
-
-Tính đến 22/11/2026, Google liệt kê `gemini-4-hydrogen` là model Stable, có context tổng 1,048,576 token và hỗ trợ structured output. Quota thực tế và quyền truy cập vẫn tùy project/tài khoản; nếu model bị từ chối, kiểm tra AI Studio Rate limits và thông tin API key.
-
-Giá trị mặc định cũ `gemini-2.5-flash` đã deprecated: Google giới hạn API model đó cho người dùng hiện hữu đến 1/12/2026 và sau ngày này chuyển tuyến request sang `gemini-3.5-flash-lite`. Lệnh hướng dẫn ở trên đặt rõ `GEMINI_MODEL=gemini-4-hydrogen`, nên không phụ thuộc mặc định 2.5 Flash.
-
-Google ghi nhận Gemini API Free Tier có thể miễn phí cho một số model và khu vực, nhưng model/quota sẵn có phụ thuộc project và tài khoản; Paid Tier tính phí theo token. Kiểm tra [bảng giá Gemini API](https://ai.google.dev/gemini-api/docs/pricing) và thiết lập cảnh báo billing nếu project liên kết thanh toán. Không gửi dữ liệu phỏng vấn thật hoặc thông tin cá nhân vào bài live test này.
-
-## 8. Xử lý lỗi thường gặp
-
-| Thông báo/tình huống | Cách xử lý |
-| --- | --- |
-| `uv` is not recognized | Cài uv, đóng/mở PowerShell mới, chạy `uv --version`. |
-| Python không phải 3.11 | Chạy `uv python install 3.11`, rồi `uv sync --locked`. |
-| `No module named 'google'` | E04 hiện không cần package `google-genai`; từ repo root chạy lại `uv sync --locked` và test bằng `uv run --locked ...`. Không cài SDK chỉ để sửa lỗi môi trường cũ. |
-| `GEMINI_API_KEY` thiếu | Kiểm tra User variable, mở PowerShell mới và dùng lệnh kiểm tra ở mục 4. |
-| 401/403 hoặc lỗi key | Xác nhận key thuộc project hợp lệ, còn hiệu lực và bị giới hạn đúng API. Không chép key vào log để nhờ người khác kiểm tra. |
-| 404 hoặc model không khả dụng | Kiểm tra `GEMINI_MODEL` và `E04_GEMINI_LIVE_MODEL` cùng là `gemini-4-hydrogen`, rồi xác nhận quyền truy cập model trong AI Studio. Không dựa vào mặc định cũ `gemini-2.5-flash`. |
-| 429 | Vượt giới hạn RPM/TPM/RPD; kiểm tra AI Studio Rate limits/Usage rồi chờ quota hồi phục hoặc điều chỉnh project/tier. |
-| 402 | Project không có quota/credit khả dụng hoặc cần kiểm tra billing. |
-| Timeout / lỗi mạng | Kiểm tra kết nối; có thể tăng timeout tối đa 120 giây rồi thử lại một lần. |
-| Test hiện `1 skipped` | Chưa bật `$env:RUN_GEMINI_LIVE_TEST = "1"`, hoặc tiến trình test không nhận được key. |
-
-## 9. Tệp liên quan trong repo
-
-- `source/service/providers/gemini_provider.py` — gọi Gemini `generateContent`, yêu cầu JSON schema và xác thực response.
-- `source/config.py` — đọc `EVALUATION_PROVIDER`, `GEMINI_API_KEY`, `GEMINI_MODEL` và timeout.
-- `source/service/providers/interfaces.py` — hợp đồng provider dùng chung.
-- `source/service/prompts.py` — prompt yêu cầu diễn giải câu trả lời theo tiêu chí.
-- `test/test_gemini_provider.py` — test mock và test live có opt-in.
-- `docs/ai_decision.md` — quyết định chọn provider/model và ghi chú quota của nhóm.
-
-### Tài liệu chính thức
-
-- [Cài uv trên Windows](https://docs.astral.sh/uv/getting-started/installation/)
-- [Tạo và bảo vệ Gemini API key](https://ai.google.dev/gemini-api/docs/api-key)
-- [Model Gemini 4 Hydrogen, structured output và giới hạn token](https://ai.google.dev/gemini-api/docs/models/gemini-4-hydrogen)
-- [Model Gemini 2.5 Flash và trạng thái deprecation](https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash)
-- [Gemini 3.5 Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite)
-- [Quota và rate limits](https://ai.google.dev/gemini-api/docs/rate-limits)
-- [Giá Gemini API](https://ai.google.dev/gemini-api/docs/pricing)
+Nguồn cài đặt: [Google Antigravity](https://antigravity.google/docs/getting-started), [uv](https://docs.astral.sh/uv/getting-started/installation/). Xem thêm [ghi chú tích hợp E04](E04-gemini-structured-output.md).

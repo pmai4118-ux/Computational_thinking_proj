@@ -1,0 +1,111 @@
+{
+  "question": {
+    "id": "question.inventoryRace",
+    "version": 1,
+    "category": "technical_case",
+    "language": "en",
+    "prompt": "An inventory item has stock 1. Explain the concurrency risk, propose a safe implementation, and describe how to test it.",
+    "skillIds": [
+      "skill.backend.concurrency"
+    ],
+    "sourceId": "source.synthetic.e04"
+  },
+  "rubric": {
+    "id": "rubric.inventoryRace",
+    "version": 1,
+    "criteria": [
+      {
+        "id": "knowledge",
+        "label": "Knowledge",
+        "expectedEvidence": [
+          "Two buyers can both read stock 1.",
+          "Neither buyer has committed when both read the same stock."
+        ],
+        "levels": [
+          {
+            "score": 0,
+            "description": "Does not identify the concurrency risk."
+          },
+          {
+            "score": 1,
+            "description": "Mentions concurrency without the shared-read race."
+          },
+          {
+            "score": 2,
+            "description": "Identifies the shared-read race."
+          }
+        ]
+      },
+      {
+        "id": "analysis",
+        "label": "Analysis",
+        "expectedEvidence": [
+          "The check and update are separate, non-atomic operations.",
+          "Both buyers may succeed and oversell the last item."
+        ],
+        "levels": [
+          {
+            "score": 0,
+            "description": "Does not explain the failure."
+          },
+          {
+            "score": 1,
+            "description": "States overselling without explaining the cause."
+          },
+          {
+            "score": 2,
+            "description": "Connects the non-atomic operation to overselling."
+          }
+        ]
+      },
+      {
+        "id": "implementation",
+        "label": "Implementation",
+        "expectedEvidence": [
+          "The inventory change is performed in a transaction.",
+          "An atomic conditional decrement updates stock only if it is positive."
+        ],
+        "levels": [
+          {
+            "score": 0,
+            "description": "No safe implementation."
+          },
+          {
+            "score": 1,
+            "description": "Proposes synchronization without an atomic operation."
+          },
+          {
+            "score": 2,
+            "description": "Uses an atomic conditional decrement in a transaction."
+          }
+        ]
+      },
+      {
+        "id": "testing",
+        "label": "Testing",
+        "expectedEvidence": [
+          "Two buyers run at the same time and only one succeeds.",
+          "A simulated failure verifies transaction rollback."
+        ],
+        "levels": [
+          {
+            "score": 0,
+            "description": "No concurrency test."
+          },
+          {
+            "score": 1,
+            "description": "Tests one buyer only."
+          },
+          {
+            "score": 2,
+            "description": "Tests simultaneous buyers and rollback."
+          }
+        ]
+      }
+    ]
+  },
+  "answer": {
+    "id": "answer.synthetic.e04",
+    "text": "Two buyers can both read stock 1 before either commits. A separate check and update is not atomic, so both can buy and oversell. Use one transaction with an atomic conditional decrement, updating only when stock is greater than zero. Test two buyers at the same time and verify that only one succeeds. Also simulate a failure and check that the transaction rolls back."
+  }
+}
