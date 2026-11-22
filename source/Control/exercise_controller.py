@@ -84,7 +84,9 @@ class ExerciseController:
         suggestions = []
         for item in result.suggestions:
             gap = item.gap
-            source = self._service.get_reviewed_exercise(item.exercise.id)
+            source = self._service.get_reviewed_exercise(
+                item.exercise.id, item.exercise.version
+            )
             if source is None:
                 continue
             suggestions.append(
