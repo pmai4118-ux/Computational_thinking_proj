@@ -89,7 +89,10 @@ def create_app(
         session_repo=resolved_session_repo,
         evaluation_repo=resolved_eval_repo,
     )
-    evaluation_service = EvaluationService(evaluation_repo=resolved_eval_repo)
+    evaluation_service = EvaluationService(
+        evaluation_repo=resolved_eval_repo, session_repo=resolved_session_repo,
+        content_repo=resolved_content_repo, interpreter=resolved_interpreter,
+    )
     interview_controller = InterviewController(
         interview_service=interview_service,
         demo_mode_label=resolved_settings.demo_label,

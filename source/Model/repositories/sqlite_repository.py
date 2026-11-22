@@ -701,16 +701,25 @@ class SQLiteRepositoryStore:
         return tuple(self._row_to_answer(row) for row in rows)
 
     # EvaluationRepository
-    def save_evaluation(self, result: EvaluationResult) -> EvaluationResult:
-        existing = self.get_evaluation(result.id, result.version)
-        if existing is not None:
-            if existing == result:
-                return existing
-            raise DuplicateRecordError(
-                f"Evaluation ({result.id}, {result.version}) already exists with different content."
-            )
+    def save_evaluation(self, result: EvaluationResult, *, reuse_completed: bool = False) -> EvaluationResult:
         try:
             with self._connect() as conn, conn:
+                conn.execute("BEGIN IMMEDIATE")
+                if reuse_completed:
+                    row = conn.execute(
+                        "SELECT * FROM evaluations WHERE answer_id=? AND answer_revision=? "
+                        "AND status='completed' ORDER BY version DESC LIMIT 1",
+                        (result.answer_ref.id, result.answer_ref.revision),
+                    ).fetchone()
+                    if row is not None:
+                        return self._load_evaluation_from_row(conn, row)
+                row = conn.execute("SELECT * FROM evaluations WHERE id=? AND version=?",
+                                   (result.id, result.version)).fetchone()
+                if row is not None:
+                    existing = self._load_evaluation_from_row(conn, row)
+                    if existing == result:
+                        return existing
+                    raise DuplicateRecordError(f"Evaluation ({result.id}, {result.version}) already exists.")
                 conn.execute(
                     """
                     INSERT INTO evaluations (
