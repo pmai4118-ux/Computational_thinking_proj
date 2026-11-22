@@ -58,11 +58,19 @@
         {% endif %}
       </article>
 
-      <section class="alert alert--status" role="status">
-        <p class="alert__title">
-           Đề bài và phiên đã được khởi tạo trên máy chủ (API lưu bài <code>POST /api/sessions/{{ session.session_id }}/answers</code> đã hoạt động; khung soạn thảo lưu nháp và bảng đối chiếu tiêu chí thuộc hạng mục U03–U04).
-        </p>
-      </section>
+      <form method="post" action="/sessions/{{ session.session_id }}/answers" class="stack">
+        <input type="hidden" name="question_id" value="{{ session.current_question.id }}">
+        <input type="hidden" name="question_version" value="{{ session.current_question.version }}">
+        <input type="hidden" name="client_submission_id" value="{{ submission_id }}">
+        <div class="form-field">
+          <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
+          <textarea id="answer-text" name="text" class="form-textarea" rows="9" maxlength="20000" required>{{ answer_text }}</textarea>
+          <p class="form-hint">Bài gốc được lưu trước khi đánh giá. Kết quả minh họa được ghi nhãn rõ khi dùng chế độ fixture.</p>
+        </div>
+        <div class="action-row">
+          <button type="submit" class="btn btn--primary">Lưu bài và đánh giá</button>
+        </div>
+      </form>
     {% else %}
       <p>Phiên luyện tập này đã kết thúc ({{ session.progress.answered_count }}/{{ session.progress.total_questions }} câu đã lưu).</p>
     {% endif %}

@@ -230,13 +230,12 @@ class EvaluationService:
         self.validator = validator or EvidenceValidator()
         self.scorer = scorer or RubricScoringService()
 
-    def evaluate_saved_answer(
+    def get_saved_context(
         self, answer_ref: AnswerRevisionRef,
-    ) -> tuple[EvaluationResult, EvaluationFeedback]:
-        """Evaluate an immutable submission or replay its committed result."""
-        if (self._session_repo is None or self._content_repo is None
-                or self._evaluation_repo is None or self._interpreter is None):
-            raise RuntimeError("Saved evaluation requires repositories and an interpreter.")
+    ) -> tuple[Answer, Question, Rubric]:
+        """Load the immutable answer and the exact reviewed question/rubric versions."""
+        if self._session_repo is None or self._content_repo is None:
+            raise RuntimeError("Saved evaluation requires session and content repositories.")
         answer = self._session_repo.get_answer(answer_ref)
         if answer is None:
             raise RecordNotFoundError("Answer revision not found.")
@@ -244,8 +243,30 @@ class EvaluationService:
         rubric = self._content_repo.get_rubric(answer.rubric_ref)
         if question is None or rubric is None:
             raise RecordNotFoundError("Question or rubric snapshot not found.")
-        if question.rubric_ref != answer.rubric_ref:
+        expected_rubric_ref = VersionedRef(rubric.id, rubric.version)
+        if question.rubric_ref != expected_rubric_ref or answer.rubric_ref != expected_rubric_ref:
             raise ValueError("Question and answer reference different rubric versions.")
+        return answer, question, rubric
+
+    def get_completed_saved_answer(
+        self, answer_ref: AnswerRevisionRef,
+    ) -> tuple[EvaluationResult, EvaluationFeedback] | None:
+        """Read a completed result without invoking a provider or changing saved data."""
+        if self._evaluation_repo is None:
+            raise RuntimeError("Saved evaluation requires an evaluation repository.")
+        _answer, _question, rubric = self.get_saved_context(answer_ref)
+        cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer_ref)
+        if cached is None:
+            return None
+        return cached, build_feedback(cached, rubric)
+
+    def evaluate_saved_answer(
+        self, answer_ref: AnswerRevisionRef,
+    ) -> tuple[EvaluationResult, EvaluationFeedback]:
+        """Evaluate an immutable submission or replay its committed result."""
+        if self._evaluation_repo is None or self._interpreter is None:
+            raise RuntimeError("Saved evaluation requires a repository and an interpreter.")
+        answer, question, rubric = self.get_saved_context(answer_ref)
         cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer_ref)
         if cached is not None:
             return cached, build_feedback(cached, rubric)

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Kết quả đánh giá — interviewUS{% endblock %}
+
+{% block content %}
+<section class="card stack" aria-labelledby="result-heading">
+  <div>
+    <h1 id="result-heading">Kết quả đánh giá câu trả lời</h1>
+    {% if report %}
+      {% if report.result.total_score is not none %}
+        <p><strong>Tổng điểm: {{ report.result.total_score }}/{{ report.result.maximum_score }}</strong></p>
+      {% else %}
+        <p><strong>Chưa thể tính tổng điểm:</strong> có tiêu chí chưa đủ căn cứ.</p>
+      {% endif %}
+      {% if report.result.demo_mode_label %}<p class="badge badge--demo">{{ report.result.demo_mode_label }}</p>{% endif %}
+      <p class="text-secondary">Mô hình: {{ report.result.model_id }} · Phiên bản prompt: {{ report.result.prompt_version }}</p>
+    {% else %}
+      <p>Chưa có kết quả đánh giá hoàn tất cho bài này. Bài gốc vẫn được lưu.</p>
+      <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}">
+        <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if report %}
+    <section class="stack" aria-labelledby="answer-heading">
+      <h2 id="answer-heading">Câu trả lời gốc</h2>
+      <pre class="code-block">{{ report.result.answer_text }}</pre>
+    </section>
+    <section class="stack" aria-labelledby="criteria-heading">
+      <h2 id="criteria-heading">Điểm và căn cứ theo tiêu chí</h2>
+      {% for check, feedback in rows %}
+        <article class="card card--subtle stack">
+          <h3>{{ check.criterion_label }}</h3>
+          <p>Trạng thái: {{ check.status.value }} · Điểm: {% if check.score is not none %}{{ check.score }}/{{ check.max_score }}{% else %}chưa đủ căn cứ{% endif %}</p>
+          <p>{{ feedback.message }}</p>
+          {% if feedback.suggestion %}<p>{{ feedback.suggestion }}</p>{% endif %}
+          {% for item in check.evidence %}
+            {% if item.quote %}<blockquote>“{{ item.quote }}”</blockquote>
+            {% elif item.observation %}<p>Căn cứ quan sát: {{ item.observation }}</p>{% endif %}
+          {% endfor %}
+        </article>
+      {% endfor %}
+    </section>
+  {% endif %}
+  <div class="action-row"><a class="btn btn--secondary" href="/sessions/{{ session_id }}">Quay lại phiên</a></div>
+</section>
+{% endblock %}
