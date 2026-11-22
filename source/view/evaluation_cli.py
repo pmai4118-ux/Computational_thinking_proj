@@ -25,7 +25,7 @@ def run() -> int:
         "--output", type=Path, default=Path(".local/e04-report.json")
     )
     parser.add_argument(
-        "--provider", choices=("antigravity", "fixture"), default="antigravity"
+        "--provider", choices=("antigravity", "gemini", "fixture"), default="antigravity"
     )
     parser.add_argument(
         "--antigravity-executable",

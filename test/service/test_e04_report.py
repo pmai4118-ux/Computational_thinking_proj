@@ -2,6 +2,8 @@
 
 from dataclasses import replace
 import json
+import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -128,3 +130,22 @@ def test_middle_rubric_level_is_reachable_for_partial_evidence():
     assert scorer.score_criterion(
         criterion, status=CriterionStatus.UNMET, satisfied_expected_indexes=(0,)
     ) == 1
+
+
+def test_e04_cli_writes_json_using_the_merged_service(tmp_path):
+    output = tmp_path / "cli-report.json"
+    completed = subprocess.run(
+        [
+            sys.executable, "-m", "source.main", "--provider", "fixture",
+            "--input", str(SAMPLE), "--output", str(output),
+        ],
+        cwd=Path(__file__).resolve().parents[2],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert report["result"]["totalScore"] == 8
+    assert len(report["feedbackItems"]) == 4

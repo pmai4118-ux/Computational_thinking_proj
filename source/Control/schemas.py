@@ -291,6 +291,21 @@ class EvaluationResultDTO(BaseModel):
         return self
 
 
+class CriterionFeedbackDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    criterion_id: CriterionId = Field(min_length=1)
+    message: str = Field(min_length=1)
+    suggestion: str | None = None
+
+
+class EvaluationResponseDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    result: EvaluationResultDTO
+    feedback_items: tuple[CriterionFeedbackDTO, ...]
+
+
 class NextQuestionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -391,10 +406,12 @@ __all__ = [
     "ApiErrorResponse",
     "CreateSessionRequest",
     "CriterionCheckDTO",
+    "CriterionFeedbackDTO",
     "EndSessionRequest",
     "ErrorCode",
     "EvaluateAnswerRequest",
     "EvaluationResultDTO",
+    "EvaluationResponseDTO",
     "EvidenceItemDTO",
     "ExerciseRecommendationDTO",
     "ExerciseRecommendationsResponse",

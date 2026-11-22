@@ -9,6 +9,10 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from source.config import Settings, load_settings
+from source.Control.saved_evaluation_controller import (
+    SavedEvaluationController,
+    build_saved_evaluation_router,
+)
 from source.Control.interview_controller import (
     InterviewController,
     build_interview_router,
@@ -42,6 +46,7 @@ class AppContainer:
     interview_service: InterviewService
     evaluation_service: EvaluationService
     interview_controller: InterviewController
+    saved_evaluation_controller: SavedEvaluationController
 
 
 def create_app(
@@ -88,6 +93,10 @@ def create_app(
         demo_mode_label=resolved_settings.demo_label,
     )
 
+    saved_evaluation_controller = SavedEvaluationController(
+        interview_controller, evaluation_service
+    )
+
     app = FastAPI(
         title="interviewUS — Luyện phỏng vấn kỹ thuật Backend",
         version="0.1.0",
@@ -101,12 +110,14 @@ def create_app(
         interview_service=interview_service,
         evaluation_service=evaluation_service,
         interview_controller=interview_controller,
+        saved_evaluation_controller=saved_evaluation_controller,
     )
 
     register_api_exception_handlers(app)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     app.include_router(build_interview_router(interview_controller))
-    app.include_router(build_pages_router(interview_controller))
+    app.include_router(build_saved_evaluation_router(saved_evaluation_controller))
+    app.include_router(build_pages_router(interview_controller, saved_evaluation_controller))
 
     @app.get("/health", tags=["system"])
     def health_check() -> dict[str, str | None]:
