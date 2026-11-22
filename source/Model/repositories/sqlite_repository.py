@@ -142,6 +142,130 @@ class SQLiteRepositoryStore:
                     (SCHEMA_VERSION, _dt_to_iso(datetime.now(UTC))),
                 )
 
+    def import_seed_records(
+        self, *, skills: tuple[Skill, ...], sources: tuple[SourceMetadata, ...],
+        rubrics: tuple[Rubric, ...], questions: tuple[Question, ...],
+        exercises: tuple[Exercise, ...],
+    ) -> dict[str, int]:
+        """Commit the validated catalog as one unit; reject changed versioned records."""
+        inserted = {name: 0 for name in ("skills", "sources", "rubrics", "questions", "exercises")}
+        try:
+            with self._connect() as conn, conn:
+                conn.execute("BEGIN IMMEDIATE;")
+                for skill in skills:
+                    if conn.execute("SELECT 1 FROM skills WHERE id=?;", (skill.id,)).fetchone() is None:
+                        inserted["skills"] += 1
+                    conn.execute(
+                        """INSERT INTO skills (id, label, description) VALUES (?, ?, ?)
+                           ON CONFLICT(id) DO UPDATE SET label=excluded.label,
+                           description=excluded.description;""",
+                        (skill.id, skill.label, skill.description),
+                    )
+                for source in sources:
+                    if conn.execute("SELECT 1 FROM sources WHERE id=?;", (source.id,)).fetchone() is None:
+                        inserted["sources"] += 1
+                    conn.execute(
+                        """INSERT INTO sources (
+                             id, url, revision, author, license_identifier, license_url,
+                             license_status, collected_at, required_notice
+                           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                           ON CONFLICT(id) DO UPDATE SET
+                             url=excluded.url, revision=excluded.revision,
+                             author=excluded.author,
+                             license_identifier=excluded.license_identifier,
+                             license_url=excluded.license_url,
+                             license_status=excluded.license_status,
+                             collected_at=excluded.collected_at,
+                             required_notice=excluded.required_notice;""",
+                        (source.id, source.url, source.revision, source.author,
+                         source.license_identifier, source.license_url,
+                         source.license_status.value, _dt_to_iso(source.collected_at),
+                         source.required_notice),
+                    )
+                for rubric in rubrics:
+                    criteria_json = json.dumps([
+                        {"id": criterion.id, "label": criterion.label,
+                         "expected_evidence": list(criterion.expected_evidence),
+                         "levels": [{"score": level.score, "description": level.description}
+                                    for level in criterion.levels],
+                         "equivalent_answers_note": criterion.equivalent_answers_note,
+                         "criterion_type": criterion.criterion_type}
+                        for criterion in rubric.criteria
+                    ], ensure_ascii=False)
+                    review_json = _serialize_review(rubric.review)
+                    cursor = conn.execute(
+                        """INSERT INTO rubrics (id, version, criteria_json, review_json)
+                           VALUES (?, ?, ?, ?) ON CONFLICT(id, version) DO NOTHING;""",
+                        (rubric.id, rubric.version, criteria_json, review_json),
+                    )
+                    inserted["rubrics"] += cursor.rowcount
+                    row = conn.execute(
+                        "SELECT criteria_json, review_json FROM rubrics WHERE id=? AND version=?;",
+                        (rubric.id, rubric.version),
+                    ).fetchone()
+                    if (json.loads(row["criteria_json"]) != json.loads(criteria_json)
+                            or json.loads(row["review_json"]) != json.loads(review_json)):
+                        raise DuplicateRecordError(
+                            f"Rubric ({rubric.id}, {rubric.version}) conflicts with existing content."
+                        )
+                for question in questions:
+                    cursor = conn.execute(
+                        """INSERT INTO questions (
+                             id, version, category, language, role, level, difficulty,
+                             prompt, skill_ids_json, rubric_id, rubric_version, source_id,
+                             review_status, review_json, original_content, adaptation_note,
+                             code, code_language, constraints_json
+                           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                           ON CONFLICT(id, version) DO NOTHING;""",
+                        (question.id, question.version, question.category, question.language,
+                         question.role, question.level, question.difficulty, question.prompt,
+                         json.dumps(list(question.skill_ids), ensure_ascii=False),
+                         question.rubric_ref.id, question.rubric_ref.version,
+                         question.source_id, question.review.status.value,
+                         _serialize_review(question.review), question.original_content,
+                         question.adaptation_note, question.code, question.code_language,
+                         json.dumps(list(question.constraints), ensure_ascii=False)),
+                    )
+                    inserted["questions"] += cursor.rowcount
+                    row = conn.execute(
+                        "SELECT * FROM questions WHERE id=? AND version=?;",
+                        (question.id, question.version),
+                    ).fetchone()
+                    if self._row_to_question(row) != question:
+                        raise DuplicateRecordError(
+                            f"Question ({question.id}, {question.version}) conflicts with existing content."
+                        )
+                for exercise in exercises:
+                    cursor = conn.execute(
+                        """INSERT INTO exercises (
+                             id, version, title, summary, instructions,
+                             related_skill_ids_json, prerequisite_ids_json,
+                             target_criterion_types_json, estimated_duration_minutes,
+                             observable_outcome, source_id, review_status, review_json
+                           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                           ON CONFLICT(id, version) DO NOTHING;""",
+                        (exercise.id, exercise.version, exercise.title, exercise.summary,
+                         exercise.instructions,
+                         json.dumps(list(exercise.related_skill_ids), ensure_ascii=False),
+                         json.dumps(list(exercise.prerequisite_ids), ensure_ascii=False),
+                         json.dumps(list(exercise.target_criterion_types), ensure_ascii=False),
+                         exercise.estimated_duration_minutes, exercise.observable_outcome,
+                         exercise.source_id, exercise.review.status.value,
+                         _serialize_review(exercise.review)),
+                    )
+                    inserted["exercises"] += cursor.rowcount
+                    row = conn.execute(
+                        "SELECT * FROM exercises WHERE id=? AND version=?;",
+                        (exercise.id, exercise.version),
+                    ).fetchone()
+                    if self._row_to_exercise(row) != exercise:
+                        raise DuplicateRecordError(
+                            f"Exercise ({exercise.id}, {exercise.version}) conflicts with existing content."
+                        )
+        except sqlite3.IntegrityError as error:
+            raise RepositoryError(f"Atomic seed import failed: {error}") from error
+        return inserted
+
     # ContentRepository
     def save_skill(self, skill: Skill) -> None:
         with self._connect() as conn, conn:
