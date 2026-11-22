@@ -1,0 +1,115 @@
+.workspace-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.workspace-topline,
+.results-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.workspace-topline {
+  padding: var(--space-4);
+  border: 1px solid var(--surface-glass-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(115deg, var(--color-hero-start), var(--color-hero-end));
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.workspace-topline h1,
+.results-header h1 {
+  margin-bottom: 0;
+}
+
+.workspace-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.workspace-progress progress {
+  width: min(22rem, 60%);
+  min-height: 1rem;
+  accent-color: var(--color-primary);
+}
+
+.workspace-question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-elevated);
+}
+
+.workspace-question h2,
+.workspace-question h3,
+.workspace-question p {
+  margin-bottom: 0;
+}
+
+.workspace-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.constraint-list {
+  margin: 0;
+  padding-left: 1.4rem;
+}
+
+.workspace-answer-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-5);
+}
+
+.form-textarea[readonly] {
+  background-color: var(--color-surface-elevated);
+}
+
+.empty-state {
+  padding: var(--space-5);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-elevated);
+}
+
+.empty-state h2,
+.empty-state p {
+  margin-top: 0;
+}
+
+@media (max-width: 48rem) {
+  .workspace-topline,
+  .results-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .workspace-progress {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workspace-progress progress {
+    width: 100%;
+  }
+}

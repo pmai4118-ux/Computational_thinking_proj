@@ -76,7 +76,7 @@ def build_pages_router(controller: InterviewController) -> APIRouter:
     env = create_template_environment()
     welcome_template = env.get_template("welcome.html")
     setup_template = env.get_template("setup.html")
-    session_template = env.get_template("session_shell.html")
+    workspace_template = env.get_template("workspace.html")
 
     @router.get("/", response_class=HTMLResponse)
     def welcome_page(request: Request) -> HTMLResponse:
@@ -147,8 +147,10 @@ def build_pages_router(controller: InterviewController) -> APIRouter:
             apply_owner_cookie(redirect, token)
         return redirect
 
-    @router.get("/sessions/{session_id}", response_class=HTMLResponse)
-    def session_shell_page(session_id: str, request: Request) -> HTMLResponse:
+    def _get_owned_session_page_data(
+        session_id: str,
+        request: Request,
+    ):
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
         try:
             session_dto = controller.get_session(
@@ -163,9 +165,16 @@ def build_pages_router(controller: InterviewController) -> APIRouter:
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
             )
-            return HTMLResponse(content=html, status_code=error.status_code)
+            return None, HTMLResponse(content=html, status_code=error.status_code)
 
-        html = session_template.render(
+        return session_dto, None
+
+    @router.get("/sessions/{session_id}", response_class=HTMLResponse)
+    def session_workspace_page(session_id: str, request: Request) -> HTMLResponse:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        html = workspace_template.render(
             demo_mode_label=controller.demo_mode_label,
             session=session_dto,
         )

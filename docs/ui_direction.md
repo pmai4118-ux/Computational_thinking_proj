@@ -11,7 +11,9 @@
 
 ## 1. Định hướng thẩm mỹ và nguyên tắc hiển thị
 
-- **Nhận diện:** Giữ định hướng **interviewUS — Purple Glass UI/UX** ([Figma reference](https://www.figma.com/design/IAFdJtqvSdDrfFHbtxZHxs?node-id=5-403)), sử dụng nền sáng hơi tím (`#F5F3FA`) và bề mặt kính mờ (`backdrop-filter`) có chọn lọc cho thanh trạng thái/điều hướng.
+- **Tham chiếu hình ảnh:** Dùng [Google Stitch — CT - Nhóm 5](https://stitch.google.com/projects/9796937928996326892) làm hướng chính cho U03–U06, với phong cách **Luminous Violet Glass**: nền lavender rất nhạt (`#FAF9FE`), điểm nhấn tím điện (`#7C3AED`), chữ lớn, rõ và các mảng sáng dịu. Tham chiếu Figma interviewUS trước đây vẫn là nền tảng của P06; các token bên dưới đã được cập nhật theo Stitch.
+- **Dùng kính có chọn lọc:** Hiệu ứng kính mờ chỉ nằm ở điều hướng và dải tiêu đề kết quả; thẻ đề bài, câu trả lời, tiêu chí và căn cứ vẫn dùng bề mặt đặc để dễ đọc.
+- **Áp dụng theo luồng:** U03 nhấn vào đề bài và vùng nhập; U04 làm nổi bật điểm tổng cùng căn cứ theo từng tiêu chí; U05 trình bày độ phủ và kết quả như báo cáo đầu vào; U06 trình bày điểm thiếu đã xác nhận và bài luyện như lộ trình. Không thêm điểm tổng hợp hay đề xuất nếu API chưa trả dữ liệu đó.
 - **Ưu tiên độ đọc cho văn bản kỹ thuật tiếng Việt:**
   - Khung đề bài, đoạn mã nguồn, ô nhập câu trả lời (`textarea`), đoạn trích dẫn bằng chứng (`evidence quote`) và bảng tiêu chí bắt buộc đặt trên nền đặc `#FFFFFF` để đảm bảo độ tương phản cao nhất.
   - Phông chữ ưu tiên `"Be Vietnam Pro"` kèm chuỗi fallback hệ thống hỗ trợ đầy đủ dấu tiếng Việt chồng tầng (`--line-height-relaxed: 1.65`, chiều dài dòng tối đa `72ch`).
@@ -97,14 +99,15 @@
 
 | Nhóm | Biến CSS | Giá trị | Mục đích sử dụng |
 | --- | --- | --- | --- |
-| **Bề mặt** | `--color-canvas` | `#F5F3FA` | Nền trang chính |
+| **Bề mặt** | `--color-canvas` | `#FAF9FE` | Nền lavender rất nhạt theo Stitch |
 | | `--color-surface` | `#FFFFFF` | Nền thẻ đề bài, ô trả lời, bảng tiêu chí |
-| | `--color-subtle` | `#EDE9FE` | Nền phụ, chip kỹ năng, vùng tóm tắt |
+| | `--color-subtle` | `#F0EAFE` | Nền lavender phụ, chip và trạng thái đạt |
+| | `--color-border` / `--color-border-strong` | `#E4DDEF` / `#C7B8E2` | Viền nhẹ, giữ phân cấp trên nền sáng |
 | **Thương hiệu** | `--color-primary` / `--color-primary-hover` | `#7C3AED` / `#6D28D9` | Nút hành động chính và viền tiêu chí đang chọn |
-| | `--color-accent-teal` | `#0D9488` | Nhấn phụ cho thông tin tiến độ/nguồn mở |
+| | `--color-accent-violet-subtle` | `#F0EAFE` | Nền nhấn phụ, đồng bộ với sắc tím chủ đạo |
 | **Văn bản** | `--color-text` | `#211A32` | Văn bản chính (tỷ lệ tương phản `> 13:1` trên nền trắng) |
 | | `--color-text-secondary` | `#584F6B` | Nhãn phụ, metadata nguồn (tỷ lệ tương phản `> 6.5:1`) |
-| **Trạng thái tiêu chí** | `--color-status-met-*` | `#ECFDF5` / `#059669` / `#065F46` | Tiêu chí `met` (`Đạt`) |
+| **Trạng thái tiêu chí** | `--color-status-met-*` | `#F0EAFE` / `#7C3AED` / `#5227A8` | Tiêu chí `met` (`Đạt`), đi kèm nhãn chữ |
 | | `--color-status-unmet-*` | `#FEF2F2` / `#DC2626` / `#991B1B` | Tiêu chí `unmet` (`Chưa đạt`) |
 | | `--color-status-unresolved-*` | `#FFFBEB` / `#D97706` / `#92400E` | Tiêu chí `insufficient_evidence` (`Chưa đủ bằng chứng`) |
 | | `--color-status-error-*` | `#FFF1F2` / `#E11D48` / `#881337` | Lỗi lưu bài hoặc lỗi AI provider (`failed`) |
@@ -136,3 +139,9 @@ Mọi màn hình (`U01–U08`) dùng thống nhất một tên cho cùng một h
 2. **Focus rõ ràng:** Mọi phần tử tương tác hiển thị viền `--focus-ring: 2px solid #6D28D9` với `outline-offset: 2px` qua `:focus-visible`.
 3. **Thông báo trạng thái động:** Vùng thông báo lưu bài, đang đánh giá và báo lỗi gắn `role="status"` hoặc `role="alert"` (`aria-live="polite"` / `"assertive"`), chuyển focus về thông báo lỗi hoặc trường cần sửa sau khi request thất bại.
 4. **Tôn trọng giảm chuyển động:** Tự động tắt hiệu ứng chuyển cảnh và cuộn mượt khi hệ điều hành bật `prefers-reduced-motion: reduce`.
+
+## 6. Bổ sung hướng thiết kế cho U05–U06
+
+- **U05 — Tổng kết phiên:** thứ tự nội dung là trạng thái/độ phủ, kết quả từng câu, rồi điểm thiếu đã xác nhận và liên kết hành động tiếp theo. Dùng các thẻ một cột thay cho bảng rộng để câu hỏi dài vẫn đọc được ở màn hình hẹp. Không tạo điểm năng lực chung; `total_score: null` phải giữ nguyên ý nghĩa chưa đủ căn cứ.
+- **U06 — Bài tập:** đặt lý do khớp điểm thiếu lên trước, sau đó mới tới nội dung bài, tiên quyết, thời lượng ước tính và nguồn. Dùng cùng nền trắng, nhãn trạng thái có chữ và màu từ design token; trên màn hình hẹp xếp theo một cột.
+- **Phạm vi sprint:** bảng việc U06 yêu cầu có trang bài tập, dù luồng demo P02 trước đây hoãn CTA S06. Giao diện chỉ cho bắt đầu biến thể khi API xác nhận khả dụng và cung cấp thao tác bắt đầu gắn đúng kỹ năng. Hợp đồng P04 hiện mới có cờ `eligible_alternate_question_available`, chưa có endpoint bắt đầu lượt luyện; trong thời gian chờ I06, nút được giữ vô hiệu và nêu rõ lý do. Không dùng endpoint chuyển câu thường để giả làm biến thể theo kỹ năng.
