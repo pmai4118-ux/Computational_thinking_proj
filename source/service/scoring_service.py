@@ -45,20 +45,20 @@ class RubricScoringService:
                 )
             return None
 
+        if satisfied_expected_indexes is None:
+            raise ScoringError(
+                f"Criterion {criterion.id} with {status.value} requires satisfied_expected_indexes."
+            )
+
         if status is CriterionStatus.MET:
-            if (
-                satisfied_expected_indexes is not None
-                and len(satisfied_expected_indexes) != total_expected
-            ):
+            if len(satisfied_expected_indexes) != total_expected:
                 raise ScoringError(
                     f"Criterion {criterion.id} marked MET must satisfy all {total_expected} expected items."
                 )
             return sorted_levels[-1].score
 
         # CriterionStatus.UNMET
-        satisfied_count = (
-            0 if satisfied_expected_indexes is None else len(satisfied_expected_indexes)
-        )
+        satisfied_count = len(satisfied_expected_indexes)
         if satisfied_count >= total_expected:
             raise ScoringError(
                 f"Criterion {criterion.id} marked UNMET cannot satisfy all expected items."
