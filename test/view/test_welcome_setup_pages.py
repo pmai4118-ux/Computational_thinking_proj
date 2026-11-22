@@ -118,3 +118,32 @@ def test_u02_handles_empty_question_bank_invalid_setup_and_foreign_session_with_
         assert forbid_page.status_code == 403
         assert 'role="alert"' in forbid_page.text
         assert "Bắt đầu luyện tập" in forbid_page.text
+
+
+def test_u02_rejects_oversized_setup_form_body(tmp_path: Path) -> None:
+    app = _make_app(tmp_path, auto_seed=True)
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/setup",
+            content=b"x" * (8 * 1024 + 1),
+            headers={"content-type": "application/x-www-form-urlencoded"},
+        )
+
+    assert response.status_code == 413
+    assert "Yêu cầu thiết lập quá lớn" in response.text
+
+
+def test_u02_rejects_setup_form_with_too_many_fields(tmp_path: Path) -> None:
+    app = _make_app(tmp_path, auto_seed=True)
+    body = urlencode({f"extra_{index}": "x" for index in range(9)})
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/setup",
+            content=body,
+            headers={"content-type": "application/x-www-form-urlencoded"},
+        )
+
+    assert response.status_code == 413
+    assert "quá nhiều trường" in response.text

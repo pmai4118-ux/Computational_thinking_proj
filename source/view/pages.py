@@ -25,6 +25,8 @@ from source.Model.ids import AnswerId
 from source.Model.ids import SessionId
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
+MAX_SETUP_FORM_BODY_BYTES = 8 * 1024
+MAX_SETUP_FORM_FIELDS = 8
 
 
 def create_template_environment() -> Environment:
@@ -39,6 +41,39 @@ def _first_form_value(parsed: dict[str, list[str]], key: str, default: str) -> s
     if not values:
         return default
     return values[0].strip()
+
+
+def _setup_payload_too_large(controller: InterviewController) -> HTMLResponse:
+    html = create_template_environment().get_template("setup.html").render(
+        demo_mode_label=controller.demo_mode_label,
+        selected_role="backend_developer",
+        selected_level="intern_fresher",
+        selected_language="vi",
+        field_errors={},
+        error_message="Yêu cầu thiết lập quá lớn hoặc có quá nhiều trường.",
+        recovery_action="Vui lòng tải lại trang và chỉ gửi các lựa chọn trên biểu mẫu.",
+    )
+    return HTMLResponse(content=html, status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+
+
+async def _read_setup_body_with_limit(request: Request) -> bytes | None:
+    """Read at most the setup form limit, including for chunked requests."""
+    content_length = request.headers.get("content-length")
+    if content_length is not None:
+        try:
+            if int(content_length) > MAX_SETUP_FORM_BODY_BYTES:
+                return None
+        except ValueError:
+            return None
+
+    chunks: list[bytes] = []
+    total_bytes = 0
+    async for chunk in request.stream():
+        total_bytes += len(chunk)
+        if total_bytes > MAX_SETUP_FORM_BODY_BYTES:
+            return None
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def build_pages_router(
@@ -77,43 +112,31 @@ def build_pages_router(
 
     @router.post("/setup", response_model=None)
     async def submit_setup_page(request: Request) -> Response:
-        raw_body = (await request.body()).decode("utf-8", errors="replace")
-        parsed = parse_qs(raw_body, keep_blank_values=True)
+        body = await _read_setup_body_with_limit(request)
+        if body is None:
+            return _setup_payload_too_large(controller)
+        try:
+            parsed = parse_qs(
+                body.decode("utf-8", errors="replace"),
+                keep_blank_values=True,
+                max_num_fields=MAX_SETUP_FORM_FIELDS,
+            )
+        except ValueError:
+            return _setup_payload_too_large(controller)
         role = _first_form_value(parsed, "role", "backend_developer")
         level = _first_form_value(parsed, "level", "intern_fresher")
         language = _first_form_value(parsed, "language", "vi")
-
-        try:
-            create_req = CreateSessionRequest(
-                role=role,
-                level=level,
-                language=language,
-            )
-        except ValidationError as error:
-            field_errors = {
-                str(err["loc"][0]): err["msg"]
-                for err in error.errors()
-                if err.get("loc")
-            }
-            html = setup_template.render(
-                demo_mode_label=controller.demo_mode_label,
-                selected_role=role,
-                selected_level=level,
-                selected_language=language,
-                field_errors=field_errors,
-                error_message="Thông tin thiết lập phiên chưa hợp lệ.",
-                recovery_action="Vui lòng chọn vai trò và cấp độ hợp lệ rồi bấm Xác nhận bắt đầu.",
-            )
-            return HTMLResponse(
-                content=html,
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            )
 
         token, created_new = ensure_owner_cookie_token(
             request.cookies.get(OWNER_COOKIE_NAME)
         )
         try:
-            created = controller.create_session(create_req, owner_token=token)
+            created = controller.create_session_from_form(
+                role=role,
+                level=level,
+                language=language,
+                owner_token=token,
+            )
         except ApiControllerError as error:
             html = setup_template.render(
                 demo_mode_label=controller.demo_mode_label,
