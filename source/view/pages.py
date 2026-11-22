@@ -79,6 +79,7 @@ def build_pages_router(controller: InterviewController) -> APIRouter:
     workspace_template = env.get_template("workspace.html")
     answer_review_template = env.get_template("answer_review.html")
     summary_template = env.get_template("summary.html")
+    exercise_template = env.get_template("exercise.html")
 
     @router.get("/", response_class=HTMLResponse)
     def welcome_page(request: Request) -> HTMLResponse:
@@ -205,6 +206,19 @@ def build_pages_router(controller: InterviewController) -> APIRouter:
         html = summary_template.render(
             demo_mode_label=controller.demo_mode_label,
             session=session_dto,
+        )
+        return HTMLResponse(content=html)
+
+    @router.get("/sessions/{session_id}/exercises", response_class=HTMLResponse)
+    def session_exercises_page(session_id: str, request: Request) -> HTMLResponse:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        html = exercise_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            session=session_dto,
+            exercise_id=request.query_params.get("exercise_id"),
+            skill_id=request.query_params.get("skill_id"),
         )
         return HTMLResponse(content=html)
 
