@@ -216,7 +216,7 @@ def test_p06_tokens_and_p08_workflow_documents_exist_and_cover_required_contract
         encoding="utf-8"
     )
     for required_token in (
-        "--color-canvas: #F5F3FA",
+        "--color-canvas: #FAF9FE",
         "--color-surface: #FFFFFF",
         "--color-primary: #7C3AED",
         "--color-status-met-bg",

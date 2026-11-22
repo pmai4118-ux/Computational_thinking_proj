@@ -3,7 +3,7 @@
 <desc id="desc">Xác nhận cấu hình, trả lời một câu, lưu trước khi đánh giá, hiển thị điểm và chuyển câu không theo điểm. Lỗi lưu giữ draft; lỗi đánh giá thử lại bài đã lưu. Hết câu đến tổng kết.</desc>
 <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#625A73"/></marker>
 <style>text{font-family:'Segoe UI',Arial,sans-serif;fill:#211A32} .head{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#625A73}.label{font-size:18px;font-weight:600}.body{font-size:15px}.edge{fill:none;stroke:#625A73;stroke-width:2;marker-end:url(#arrow)}.box{fill:white;stroke:#C4B5FD;stroke-width:2}.err{fill:#FFF7ED;stroke:#C97836;stroke-width:1.5}.tag{font-size:14px;fill:#625A73}</style></defs>
-<rect width="1200" height="1080" fill="#F5F3FA"/>
+<rect width="1200" height="1080" fill="#FAF9FE"/>
 <text x="48" y="53" class="head">P02 · Phiên phỏng vấn để demo đối chứng rubric</text>
 <text x="48" y="84" class="sub">Qthynhh · 09/11/2026 · Luồng thiết kế, chưa phải chức năng đã triển khai</text>
 <path class="edge" d="M350 180 V212"/><path class="edge" d="M350 300 V335"/>
@@ -30,7 +30,7 @@
 <rect x="95" y="575" width="510" height="70" rx="14" class="box"/>
 <text x="120" y="604" class="label">Đánh giá bài đã lưu theo rubric</text>
 <text x="120" y="629" class="body">Bộ đánh giá của MelBel; UI không tự tính điểm</text>
-<rect x="95" y="690" width="510" height="90" rx="14" fill="#EDE9FE" stroke="#7C3AED" stroke-width="2"/>
+<rect x="95" y="690" width="510" height="90" rx="14" fill="#F0EAFE" stroke="#7C3AED" stroke-width="2"/>
 <text x="120" y="723" class="label">S04 · Điểm từng tiêu chí và tổng</text>
 <text x="120" y="749" class="body">Hiện ngay sau mỗi câu; null khác điểm 0</text>
 <text x="120" y="771" class="tag">Kết thúc phiên → S05; còn câu → bấm Câu tiếp theo</text>
@@ -55,7 +55,7 @@
 <text x="739" y="799" class="body">Hết quyền: giữ draft, khôi phục quyền hợp lệ</text>
 <text x="739" y="824" class="body">hoặc về thiết lập; không ghi vào phiên cũ.</text>
 <text x="739" y="850" class="body">Thoát sớm: xác nhận, tổng kết chưa hoàn tất.</text>
-<rect x="715" y="915" width="420" height="118" rx="12" fill="#CCFBF1"/>
+<rect x="715" y="915" width="420" height="118" rx="12" fill="#F0EAFE"/>
 <text x="739" y="948" class="label">Giới hạn demo</text>
 <text x="739" y="976" class="body">Chưa nhận xét điểm mạnh / điểm yếu.</text>
 <text x="739" y="1002" class="body">Chưa đề xuất bài tập hoặc lộ trình.</text>

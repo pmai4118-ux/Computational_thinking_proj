@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Làm câu hỏi — interviewUS{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css">{% endblock %}
+
+{% block content %}
+<section class="card workspace-card" aria-labelledby="workspace-heading"
+         data-workspace
+         data-session-id="{{ session.session_id }}"
+         data-question-id="{{ session.current_question.id if session.current_question else '' }}"
+         data-question-version="{{ session.current_question.version if session.current_question else '' }}"
+         data-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"
+         data-answer-revision="{{ session.current_answer.revision if session.current_answer else '' }}">
+  <div class="workspace-topline">
+    <div>
+      <p class="eyebrow">Luyện phỏng vấn Backend · Fresher</p>
+      <h1 id="workspace-heading">{% if session.current_question %}Không gian trả lời{% else %}Phiên luyện tập{% endif %}</h1>
+    </div>
+    <span class="badge badge--unresolved" id="question-progress-label">
+      {% if session.current_question %}Câu {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}{% else %}Đã lưu {{ session.progress.answered_count }} / {{ session.progress.total_questions }} câu{% endif %}
+    </span>
+  </div>
+
+  {% if session.current_question %}
+    <div class="workspace-progress" aria-label="Tiến độ phiên">
+      <progress aria-label="Tiến độ phiên" max="{{ session.progress.total_questions }}" value="{{ session.progress.current_index + 1 }}">
+        {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
+      </progress>
+      <span>{{ session.progress.evaluated_count }} câu đã có kết quả</span>
+    </div>
+
+    <article class="workspace-question reading-measure" aria-labelledby="question-heading">
+      <div class="workspace-tags">
+        <span class="badge">
+          {% if session.current_question.category == "programming_knowledge" %}Kiến thức lập trình
+          {% elif session.current_question.category == "technical_case" %}Tình huống kỹ thuật
+          {% elif session.current_question.category == "algorithm_explanation" %}Giải thích thuật toán
+          {% elif session.current_question.category == "ai_code_review" %}Đánh giá mã nguồn
+          {% else %}{{ session.current_question.category }}{% endif %}
+        </span>
+        {% if session.current_question.source.license_spdx %}
+          <span class="badge">Nguồn mở · {{ session.current_question.source.license_spdx }}</span>
+        {% endif %}
+      </div>
+      <h2 id="question-heading">Đề bài</h2>
+      <p>{{ session.current_question.prompt }}</p>
+
+      {% if session.current_question.code %}
+        <pre class="code-block"><code>{{ session.current_question.code }}</code></pre>
+      {% endif %}
+
+      {% if session.current_question.constraints %}
+        <div>
+          <h3>Ràng buộc cần lưu ý</h3>
+          <ul class="constraint-list">
+            {% for item in session.current_question.constraints %}<li>{{ item }}</li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      {% if session.current_question.source.url %}
+        <p class="form-hint">
+          Nguồn tham chiếu:
+          <a href="{{ session.current_question.source.url }}" rel="noopener noreferrer" target="_blank">
+            {{ session.current_question.source.source_id }}
+          </a>
+        </p>
+      {% endif %}
+    </article>
+
+    {% if session.current_answer %}
+      <div class="alert alert--status" role="status">
+        <p class="alert__title">Câu trả lời đã được lưu trên máy chủ.</p>
+        <p class="alert__hint">Bạn có thể xem kết quả hoặc thử đánh giá lại bài đã lưu.</p>
+      </div>
+    {% endif %}
+
+    <form id="answer-form" class="workspace-answer-form" method="post" action="/sessions/{{ session.session_id }}" novalidate>
+      <div class="form-field">
+        <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
+        <p class="form-hint" id="answer-guidance">Trình bày cách suy nghĩ, các giả định và cách kiểm tra kết quả. Tối đa 20.000 ký tự.</p>
+        <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
+                  aria-describedby="answer-guidance answer-counter draft-label"
+                  {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% endif %}</textarea>
+        <p class="form-hint" id="draft-label" data-draft-label>
+          {% if session.current_answer %}Đã lưu câu trả lời trên máy chủ{% else %}Bản nháp trên trình duyệt (chưa lưu máy chủ){% endif %}
+        </p>
+        <p class="form-hint" id="answer-counter" aria-live="polite"></p>
+      </div>
+
+      <p class="alert alert--error" id="workspace-error" role="alert" tabindex="-1" hidden></p>
+      <p class="alert alert--status" id="workspace-status" role="status" aria-live="polite" hidden></p>
+
+      <div class="action-row">
+        {% if not session.current_answer %}
+          <button class="btn btn--primary" id="submit-answer" type="submit">Gửi câu trả lời</button>
+        {% endif %}
+        <button class="btn btn--secondary" id="retry-evaluation" type="button" hidden>Thử đánh giá lại</button>
+        {% if session.current_answer %}
+          <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}">Xem kết quả câu này</a>
+        {% endif %}
+        <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+      </div>
+    </form>
+  {% else %}
+    <div class="empty-state">
+      <h2>Không còn câu hỏi đang chờ</h2>
+      <p>Phiên đã lưu {{ session.progress.answered_count }} trên {{ session.progress.total_questions }} câu. Mở tổng kết để xem phần đã hoàn thành và câu còn thiếu.</p>
+      <a class="btn btn--primary" href="/sessions/{{ session.session_id }}/summary">Mở tổng kết phiên</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block extra_scripts %}<script src="/static/js/workspace.js" defer></script>{% endblock %}

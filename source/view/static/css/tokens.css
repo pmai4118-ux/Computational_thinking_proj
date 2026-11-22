@@ -1,34 +1,35 @@
-/* P06 Shared Design Tokens — interviewUS (Purple Glass UI/UX)
+/* Shared Design Tokens — interviewUS (Luminous Violet Glass, Stitch aligned)
  * Vietnamese-ready typography, high-contrast surfaces for reading prompts/answers,
  * evidence quote highlighting, and accessible keyboard focus states.
  */
 
 :root {
-  /* Core Palette (aligned with P02/P06 brief) */
-  --color-canvas: #F5F3FA;
+  /* Core Palette (aligned with Stitch: CT - Nhóm 5) */
+  --color-canvas: #FAF9FE;
   --color-surface: #FFFFFF;
-  --color-surface-elevated: #FAF8FF;
-  --color-subtle: #EDE9FE;
-  --color-border: #D8D0E8;
-  --color-border-strong: #B8A9D9;
+  --color-surface-elevated: #FBF9FF;
+  --color-subtle: #F0EAFE;
+  --color-border: #E4DDEF;
+  --color-border-strong: #C7B8E2;
 
   /* Brand & Interactive */
   --color-primary: #7C3AED;
   --color-primary-hover: #6D28D9;
   --color-primary-active: #5B21B6;
   --color-on-primary: #FFFFFF;
-  --color-accent-teal: #0D9488;
-  --color-accent-teal-subtle: #CCFBF1;
+  --color-accent-violet-subtle: #F0EAFE;
+  --color-hero-start: #F1EAFF;
+  --color-hero-end: #FBF9FF;
 
-  /* Text Hierarchy (WCAG AA contrast against #F5F3FA and #FFFFFF) */
+  /* Text Hierarchy (WCAG AA contrast against #FAF9FE and #FFFFFF) */
   --color-text: #211A32;
   --color-text-secondary: #584F6B;
   --color-text-muted: #6E6582;
 
   /* Criterion & Evaluation Status Semantics (always paired with text/icon labels) */
-  --color-status-met-bg: #ECFDF5;
-  --color-status-met-border: #059669;
-  --color-status-met-text: #065F46;
+  --color-status-met-bg: #F0EAFE;
+  --color-status-met-border: #7C3AED;
+  --color-status-met-text: #5227A8;
 
   --color-status-unmet-bg: #FEF2F2;
   --color-status-unmet-border: #DC2626;
@@ -47,10 +48,10 @@
   --color-evidence-highlight-active-bg: #DDD6FE;
   --color-evidence-highlight-border: #7C3AED;
 
-  /* Glass Chrome (reserved for header/toolbar only; prompts & textareas use solid surface) */
-  --surface-glass-bg: rgba(255, 255, 255, 0.84);
-  --surface-glass-border: rgba(124, 58, 237, 0.18);
-  --surface-glass-blur: 10px;
+  /* Glass chrome is reserved for navigation and results headers. */
+  --surface-glass-bg: rgba(255, 255, 255, 0.82);
+  --surface-glass-border: rgba(124, 58, 237, 0.2);
+  --surface-glass-blur: 12px;
 
   /* Typography — Full Vietnamese diacritic support */
   --font-sans: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
