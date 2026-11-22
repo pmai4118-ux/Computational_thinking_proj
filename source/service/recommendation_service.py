@@ -83,14 +83,22 @@ class RecommendationService:
     def get_reviewed_exercise(
         self, exercise_id: ExerciseId, version: int | None = None
     ) -> tuple[Exercise, SourceMetadata] | None:
-        for exercise in self._content_repo.list_approved_exercises():
-            if exercise.id != exercise_id or (version is not None and exercise.version != version):
-                continue
+        if version is None:
+            candidates = sorted(
+                (
+                    item for item in self._content_repo.list_approved_exercises()
+                    if item.id == exercise_id
+                ),
+                key=lambda item: item.version,
+                reverse=True,
+            )
+        else:
+            exact = self._content_repo.get_exercise(VersionedRef(exercise_id, version))
+            candidates = (exact,) if exact is not None else ()
+        for exercise in candidates:
             source = self._content_repo.get_source(exercise.source_id)
-            if (
-                source is not None
-                and source.license_status is LicenseStatus.VERIFIED
-                and exercise.review.status is ReviewStatus.APPROVED
+            if exercise.review.status is ReviewStatus.APPROVED and (
+                source is not None and source.license_status is LicenseStatus.VERIFIED
             ):
                 return exercise, source
         return None
@@ -100,11 +108,11 @@ class RecommendationService:
         blueprint = self._interview_service.find_blueprint(
             role=session.role, level=session.level, language=session.language
         )
-        slot_skills = {slot.category: slot.skill_id for slot in blueprint.slots}
+        slots = {slot.category: slot for slot in blueprint.slots}
         answers = self._session_repo.list_answers_for_session(session.id)
         latest_by_question = {}
         for answer in answers:
-            if answer.question_ref not in session.question_refs:
+            if answer.session_id != session.id or answer.question_ref not in session.question_refs:
                 continue
             previous = latest_by_question.get(answer.question_ref)
             if previous is None or answer.revision > previous.revision:
@@ -119,13 +127,21 @@ class RecommendationService:
             if result is None or result.status is not EvaluationStatus.COMPLETED:
                 continue
             question = self._content_repo.get_question(question_ref)
-            if question is None or result.question_ref != question_ref or result.rubric_ref != answer.rubric_ref:
+            if (
+                question is None
+                or result.answer_ref != answer.ref
+                or result.question_ref != question_ref
+                or result.rubric_ref != answer.rubric_ref
+            ):
                 continue
             rubric = self._content_repo.get_rubric(answer.rubric_ref)
             if rubric is None:
                 continue
-            skill_id = slot_skills.get(question.category)
-            if skill_id is None or skill_id not in question.skill_ids or skill_id not in skill_labels:
+            slot = slots.get(question.category)
+            if slot is None:
+                continue
+            skill_id = slot.skill_id
+            if skill_id not in question.skill_ids or skill_id not in skill_labels:
                 continue
             criteria = {criterion.id: criterion for criterion in rubric.criteria}
             for check in result.criterion_checks:
@@ -133,6 +149,7 @@ class RecommendationService:
                 if (
                     criterion is None
                     or not criterion.criterion_type
+                    or criterion.criterion_type not in slot.eligible_criterion_types
                     or check.status is not CriterionStatus.UNMET
                     or check.score is None
                     or check.score >= criterion.max_score
@@ -172,7 +189,11 @@ class RecommendationService:
                 or question.category != original.category
                 or gap.skill_id not in question.skill_ids
                 or question.difficulty not in blueprint.allowed_difficulties
+                or question.review.status is not ReviewStatus.APPROVED
             ):
+                continue
+            source = self._content_repo.get_source(question.source_id)
+            if source is None or source.license_status is not LicenseStatus.VERIFIED:
                 continue
             rubric = self._content_repo.get_rubric(question.rubric_ref)
             if rubric is None or not any(
@@ -218,10 +239,14 @@ class RecommendationService:
         if session.state is SessionState.EXPIRED:
             raise SessionExpiredError(f"Session '{session_id}' has expired.")
         gaps = self._confirmed_gaps(session)
-        catalog = {item.id: item for item in self._content_repo.list_approved_exercises()}
+        catalog = {
+            item.id: item
+            for item in self._content_repo.list_approved_exercises()
+            if self.get_reviewed_exercise(item.id, item.version) is not None
+        }
         suggestions: list[ExerciseSuggestion] = []
-        suggested_ids: set[ExerciseId] = set()
-        unmatched: list[SkillId] = []
+        suggested_keys: set[tuple[ExerciseId, AnswerRevisionRef, CriterionId]] = set()
+        matched_skills: set[SkillId] = set()
         for gap in gaps:
             matches = sorted(
                 (
@@ -233,29 +258,34 @@ class RecommendationService:
             )
             has_valid_match = False
             alternate = self._alternate_question(session, gap)
+            direct_match_ids = {item.id for item in matches}
             for match in matches:
                 chain = self._ordered_chain(match, catalog)
                 if chain is None:
                     continue
                 has_valid_match = True
                 for item in chain:
-                    if item.id in suggested_ids:
+                    key = (item.id, gap.answer_ref, gap.criterion_id)
+                    if key in suggested_keys:
                         continue
                     suggestions.append(
                         ExerciseSuggestion(
                             exercise=item,
                             gap=gap,
                             reason=(
-                                f"Prerequisite for {match.title}."
-                                if item.id != match.id
-                                else f"Addresses {gap.criterion_label}: {gap.reason}"
+                                f"Addresses {gap.criterion_label}: {gap.reason}"
+                                if item.id in direct_match_ids
+                                else f"Prerequisite for {match.title}."
                             ),
                             alternate_question=alternate,
                         )
                     )
-                    suggested_ids.add(item.id)
-            if not has_valid_match and gap.skill_id not in unmatched:
-                unmatched.append(gap.skill_id)
+                    suggested_keys.add(key)
+            if has_valid_match:
+                matched_skills.add(gap.skill_id)
+        unmatched = tuple(
+            dict.fromkeys(gap.skill_id for gap in gaps if gap.skill_id not in matched_skills)
+        )
         message = None
         if not gaps:
             message = "No confirmed gaps; unresolved criteria do not create recommendations."
@@ -263,7 +293,7 @@ class RecommendationService:
             message = "No reviewed exercise matches the confirmed gaps."
         elif unmatched:
             message = "Some confirmed gaps have no matching reviewed exercise."
-        return RecommendationSet(session.id, tuple(suggestions), tuple(unmatched), message)
+        return RecommendationSet(session.id, tuple(suggestions), unmatched, message)
 
     def start_practice(
         self,

@@ -18,6 +18,7 @@ from source.Model.evaluation import (
 )
 from source.Model.ids import AnswerId, CriterionId, EvaluationId, ExerciseId
 from source.Model.interview import Answer
+from source.Model.question import ReviewMetadata
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.main import create_app
 from source.service.recommendation_service import RecommendationService
@@ -69,6 +70,7 @@ def _evaluated_answer(
     store: InMemoryRepositoryStore,
     *,
     target_status: CriterionStatus = CriterionStatus.UNMET,
+    additional_unmet_types: tuple[str, ...] = (),
 ) -> tuple[str, AnswerRevisionRef, CriterionId]:
     response = client.post("/api/sessions", json={})
     assert response.status_code == 201
@@ -96,13 +98,30 @@ def _evaluated_answer(
     checks = tuple(
         CriterionCheck(
             criterion_id=item.id,
-            status=target_status if item.id == target.id else CriterionStatus.MET,
+            status=(
+                target_status
+                if item.id == target.id
+                else (
+                    CriterionStatus.UNMET
+                    if item.criterion_type in additional_unmet_types
+                    else CriterionStatus.MET
+                )
+            ),
             score=(
-                None if target_status is CriterionStatus.INSUFFICIENT_EVIDENCE
-                else 1
-            ) if item.id == target.id else item.max_score,
+                (None if target_status is CriterionStatus.INSUFFICIENT_EVIDENCE else 1)
+                if item.id == target.id
+                else (1 if item.criterion_type in additional_unmet_types else item.max_score)
+            ),
             evidence=(),
-            explanation="Rollback test is missing." if item.id == target.id else "Met.",
+            explanation=(
+                "Rollback test is missing."
+                if item.id == target.id
+                else (
+                    "Atomicity invariant is missing."
+                    if item.criterion_type in additional_unmet_types
+                    else "Met."
+                )
+            ),
             unresolved_reason=(
                 "The answer refers to unavailable material."
                 if item.id == target.id and target_status is CriterionStatus.INSUFFICIENT_EVIDENCE
@@ -182,6 +201,25 @@ def test_i06_unresolved_evidence_never_creates_a_gap(tmp_path: Path) -> None:
         assert "No confirmed gaps" in response.json()["message"]
 
 
+def test_i06_new_answer_revision_without_completed_evaluation_has_no_gap(tmp_path: Path) -> None:
+    store = InMemoryRepositoryStore()
+    app = _app(tmp_path, store)
+    with TestClient(app) as client:
+        session_id, answer_ref, _ = _evaluated_answer(client, store)
+        original = store.get_answer(answer_ref)
+        assert original is not None
+        store.save_answer(
+            replace(
+                original, revision=2, text="A revised answer awaiting evaluation.",
+                submitted_at=datetime.now(UTC),
+            )
+        )
+        response = client.get(f"/api/sessions/{session_id}/exercises")
+        assert response.status_code == 200
+        assert response.json()["recommendations"] == []
+        assert response.json()["unmatched_skill_ids"] == []
+
+
 def test_i06_no_reviewed_match_is_explicit_and_foreign_session_is_forbidden(tmp_path: Path) -> None:
     store = EmptyExerciseStore()
     app = _app(tmp_path, store)
@@ -251,3 +289,55 @@ def test_i06_sqlite_repository_serves_seeded_reviewed_exercises(tmp_path: Path) 
             item["exercise_id"] == "exercise.backend.rollback_invariant_test"
             for item in response.json()["recommendations"]
         )
+
+
+def test_i06_shared_exercise_keeps_each_gap_available_for_practice(tmp_path: Path) -> None:
+    store = InMemoryRepositoryStore()
+    app = _app(tmp_path, store)
+    with TestClient(app) as client:
+        session_id, answer_ref, _ = _evaluated_answer(
+            client, store, additional_unmet_types=("invariant_preservation",)
+        )
+        response = client.get(f"/api/sessions/{session_id}/exercises")
+        assert response.status_code == 200
+        shared = [
+            item for item in response.json()["recommendations"]
+            if item["exercise_id"] == "exercise.backend.rollback_invariant_test"
+        ]
+        assert {item["matched_gap"]["criterion_id"] for item in shared} == {
+            "c03.atomicity",
+            "c03.concurrent_tests",
+        }
+        for item in shared:
+            practice = client.post(
+                f"/api/sessions/{session_id}/answers/{answer_ref.id}/practice",
+                json={
+                    "answer_revision": answer_ref.revision,
+                    "criterion_id": item["matched_gap"]["criterion_id"],
+                    "exercise_id": item["exercise_id"],
+                },
+            )
+            assert practice.status_code == 201
+            assert practice.json()["progress"]["total_questions"] == 1
+
+
+def test_i06_detail_uses_requested_reviewed_version(tmp_path: Path) -> None:
+    store = InMemoryRepositoryStore()
+    app = _app(tmp_path, store)
+    exercise_ref = next(
+        item.ref for item in store.list_approved_exercises()
+        if item.id == "exercise.backend.rollback_invariant_test"
+    )
+    exercise = store.get_exercise(exercise_ref)
+    assert exercise is not None
+    store.save_exercise(replace(exercise, version=2, title="Revised rollback exercise"))
+    store.save_exercise(replace(exercise, version=3, review=ReviewMetadata()))
+    with TestClient(app) as client:
+        old = client.get(f"/api/exercises/{exercise.id}?version=1")
+        current = client.get(f"/api/exercises/{exercise.id}")
+        draft = client.get(f"/api/exercises/{exercise.id}?version=3")
+        assert old.status_code == current.status_code == 200
+        assert old.json()["version"] == 1
+        assert current.json()["version"] == 2
+        assert current.json()["title"] == "Revised rollback exercise"
+        assert draft.status_code == 404
