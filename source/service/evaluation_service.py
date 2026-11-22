@@ -20,7 +20,8 @@ from source.Model.ids import CriterionId, EvaluationId, VersionedRef
 from source.Model.interview import Answer
 from source.Model.question import Question, Rubric
 from source.Model.repositories.interfaces import (
-    ContentRepository, EvaluationRepository, RecordNotFoundError, SessionRepository,
+    ContentRepository, EvaluationRepository, RecordNotFoundError, RepositoryError,
+    SessionRepository,
 )
 from source.service.providers.interfaces import (
     CriterionObservation,
@@ -260,6 +261,19 @@ class EvaluationService:
             return None
         return cached, build_feedback(cached, rubric)
 
+    def get_latest_saved_answer(
+        self, answer_ref: AnswerRevisionRef,
+    ) -> tuple[EvaluationResult, EvaluationFeedback | None] | None:
+        """Return the latest attempt so clients can observe processing and failure."""
+        if self._evaluation_repo is None:
+            raise RuntimeError("Saved evaluation requires an evaluation repository.")
+        _answer, _question, rubric = self.get_saved_context(answer_ref)
+        latest = self._evaluation_repo.get_latest_evaluation_for_answer(answer_ref)
+        if latest is None:
+            return None
+        feedback = build_feedback(latest, rubric) if latest.status is EvaluationStatus.COMPLETED else None
+        return latest, feedback
+
     def evaluate_saved_answer(
         self, answer_ref: AnswerRevisionRef,
     ) -> tuple[EvaluationResult, EvaluationFeedback]:
@@ -267,15 +281,30 @@ class EvaluationService:
         if self._evaluation_repo is None or self._interpreter is None:
             raise RuntimeError("Saved evaluation requires a repository and an interpreter.")
         answer, question, rubric = self.get_saved_context(answer_ref)
-        cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer_ref)
-        if cached is not None:
-            return cached, build_feedback(cached, rubric)
-        result = self._compute_result(answer, question, rubric, self._interpreter, None)
-        feedback = build_feedback(result, rubric)
-        committed = self._evaluation_repo.save_evaluation(result, reuse_completed=True)
-        if committed != result:
-            feedback = build_feedback(committed, rubric)
-        return committed, feedback
+        claim = self._evaluation_repo.claim_evaluation(answer_ref, question.ref, answer.rubric_ref)
+        if claim.status is EvaluationStatus.COMPLETED:
+            return claim, build_feedback(claim, rubric)
+        try:
+            result = self._compute_result(answer, question, rubric, self._interpreter, None, claim)
+            feedback = build_feedback(result, rubric)
+            committed = self._evaluation_repo.complete_evaluation(claim, result)
+            return committed, feedback
+        except ProviderFailureError as error:
+            try:
+                self._evaluation_repo.fail_evaluation(
+                    claim, str(error.code), "The provider could not complete this evaluation."
+                )
+            except RepositoryError:
+                pass  # Preserve the original provider failure if the claim expired.
+            raise
+        except Exception:
+            try:
+                self._evaluation_repo.fail_evaluation(
+                    claim, "EVALUATION_FAILED", "Evaluation could not be completed."
+                )
+            except RepositoryError:
+                pass
+            raise
 
     def evaluate_answer(
         self,
@@ -307,10 +336,13 @@ class EvaluationService:
     def _compute_result(
         self, answer: Answer, question: Question, rubric: Rubric,
         interpreter: EvidenceInterpreter, evaluation_id: EvaluationId | None,
+        claim: EvaluationResult | None = None,
     ) -> EvaluationResult:
-        next_version = 1
-        resolved_eval_id = evaluation_id or EvaluationId(f"evaluation.{uuid4().hex[:12]}")
-        if self._evaluation_repo is not None:
+        next_version = claim.version if claim is not None else 1
+        resolved_eval_id = claim.id if claim is not None else (
+            evaluation_id or EvaluationId(f"evaluation.{uuid4().hex[:12]}")
+        )
+        if claim is None and self._evaluation_repo is not None:
             latest = self._evaluation_repo.get_latest_evaluation_for_answer(answer.ref)
             if latest is not None:
                 resolved_eval_id = latest.id

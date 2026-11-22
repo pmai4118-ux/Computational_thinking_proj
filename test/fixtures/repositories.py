@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+from threading import RLock
+from uuid import uuid4
 
 from source.Model.evaluation import AnswerRevisionRef, EvaluationResult, EvaluationStatus
 from source.Model.exercise import Exercise
@@ -29,7 +32,10 @@ from source.Model.question import (
 from source.Model.repositories.interfaces import (
     DuplicateRecordError,
     DuplicateSubmissionConflictError,
+    EvaluationInProgressError,
+    EvaluationRetryNotAllowedError,
     RecordNotFoundError,
+    RETRYABLE_EVALUATION_FAILURES,
 )
 
 
@@ -46,6 +52,7 @@ class InMemoryRepositoryStore:
         self._answers: dict[tuple[AnswerId, int], Answer] = {}
         self._submissions: dict[tuple[SessionId, str], tuple[AnswerId, int]] = {}
         self._evaluations: dict[tuple[EvaluationId, int], EvaluationResult] = {}
+        self._evaluation_lock = RLock()
 
     # ContentRepository
     def save_skill(self, skill: Skill) -> None:
@@ -202,6 +209,60 @@ class InMemoryRepositoryStore:
         return tuple(items)
 
     # EvaluationRepository
+    def claim_evaluation(
+        self, answer_ref: AnswerRevisionRef,
+        question_ref: VersionedRef[QuestionId], rubric_ref: VersionedRef[RubricId],
+    ) -> EvaluationResult:
+        with self._evaluation_lock:
+            completed = self.get_completed_evaluation_for_answer(answer_ref)
+            if completed is not None:
+                return completed
+            latest = self.get_latest_evaluation_for_answer(answer_ref)
+            now = datetime.now(UTC)
+            if latest is not None and latest.status is EvaluationStatus.PROCESSING:
+                if latest.evaluated_at is not None and now - latest.evaluated_at < timedelta(minutes=15):
+                    raise EvaluationInProgressError("Evaluation is already processing.")
+                self._evaluations[(latest.id, latest.version)] = replace(
+                    latest, status=EvaluationStatus.FAILED,
+                    failure_code="EVALUATION_INTERRUPTED",
+                    failure_message="The prior evaluation was interrupted.",
+                )
+            elif latest is not None and latest.status is EvaluationStatus.FAILED:
+                if latest.failure_code not in RETRYABLE_EVALUATION_FAILURES:
+                    raise EvaluationRetryNotAllowedError("This evaluation failure cannot be retried.")
+            claim = EvaluationResult(
+                id=latest.id if latest is not None else EvaluationId(f"evaluation.{uuid4().hex[:12]}"),
+                version=latest.version + 1 if latest is not None else 1,
+                status=EvaluationStatus.PROCESSING,
+                answer_ref=answer_ref, question_ref=question_ref, rubric_ref=rubric_ref,
+                evaluated_at=now,
+            )
+            self._evaluations[(claim.id, claim.version)] = claim
+            return claim
+
+    def complete_evaluation(self, claim: EvaluationResult, result: EvaluationResult) -> EvaluationResult:
+        with self._evaluation_lock:
+            if self._evaluations.get((claim.id, claim.version)) != claim:
+                raise EvaluationInProgressError("Evaluation claim is no longer active.")
+            if result.status is not EvaluationStatus.COMPLETED or (
+                result.id, result.version, result.answer_ref, result.question_ref, result.rubric_ref
+            ) != (
+                claim.id, claim.version, claim.answer_ref, claim.question_ref, claim.rubric_ref
+            ):
+                raise ValueError("Completed result must match the reserved attempt.")
+            self._evaluations[(claim.id, claim.version)] = result
+            return result
+
+    def fail_evaluation(self, claim: EvaluationResult, code: str, message: str) -> EvaluationResult:
+        with self._evaluation_lock:
+            if self._evaluations.get((claim.id, claim.version)) != claim:
+                raise EvaluationInProgressError("Evaluation claim is no longer active.")
+            failed = replace(claim, status=EvaluationStatus.FAILED,
+                             failure_code=code, failure_message=message,
+                             evaluated_at=datetime.now(UTC))
+            self._evaluations[(claim.id, claim.version)] = failed
+            return failed
+
     def save_evaluation(self, result: EvaluationResult, *, reuse_completed: bool = False) -> EvaluationResult:
         if reuse_completed:
             existing = self.get_completed_evaluation_for_answer(result.answer_ref)

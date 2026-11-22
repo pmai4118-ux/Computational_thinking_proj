@@ -4,14 +4,14 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, datetime
 import sqlite3
-from threading import Barrier
+from threading import Event
 from unittest.mock import Mock
 
 import pytest
 
-from source.Model.evaluation import CriterionStatus
+from source.Model.evaluation import CriterionStatus, EvaluationStatus
 from source.Model.interview import Answer, Session, SessionState
-from source.Model.repositories.interfaces import RepositoryError
+from source.Model.repositories.interfaces import EvaluationInProgressError, RepositoryError
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.service.evaluation_service import EvaluationService, EvidenceValidationError
 from source.service.providers.fixture_provider import FixtureProvider
@@ -75,8 +75,8 @@ def test_failure_preserves_submission_and_retry_recovers(tmp_path, failure):
         service(store, provider).evaluate_saved_answer(answer.ref)
     assert store.get_answer(answer.ref) == answer
     with sqlite3.connect(path) as db:
-        for table in ("evaluations", "evaluation_criterion_checks"):
-            assert db.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] == 0
+        assert db.execute("SELECT COUNT(*) FROM evaluations WHERE status='failed'").fetchone()[0] == 1
+        assert db.execute("SELECT COUNT(*) FROM evaluation_criterion_checks").fetchone()[0] == 0
         db.execute("DROP TRIGGER IF EXISTS reject_check")
     result, feedback = service(store, FixtureProvider()).evaluate_saved_answer(answer.ref)
     assert feedback.result_id == result.id
@@ -84,19 +84,27 @@ def test_failure_preserves_submission_and_retry_recovers(tmp_path, failure):
 
 def test_overlapping_submissions_return_one_committed_result(tmp_path):
     path, store, answer, _ = setup_submission(tmp_path)
-    barrier = Barrier(2)
+    started = Event()
+    release = Event()
 
     class ConcurrentFixture(FixtureProvider):
         def interpret(self, **kwargs):
-            barrier.wait(timeout=10)
+            started.set()
+            assert release.wait(timeout=10)
             return super().interpret(**kwargs)
 
     def run():
         return service(store, ConcurrentFixture()).evaluate_saved_answer(answer.ref)
 
     with ThreadPoolExecutor(max_workers=2) as executor:
-        futures = [executor.submit(run) for _ in range(2)]
-        assert futures[0].result() == futures[1].result()
+        first = executor.submit(run)
+        assert started.wait(timeout=10)
+        second = executor.submit(run)
+        with pytest.raises(EvaluationInProgressError):
+            second.result(timeout=10)
+        release.set()
+        completed = first.result(timeout=10)
+        assert service(store, FixtureProvider()).evaluate_saved_answer(answer.ref) == completed
     with sqlite3.connect(path) as db:
         assert db.execute("SELECT COUNT(*) FROM evaluations").fetchone() == (1,)
 
@@ -107,7 +115,7 @@ def test_feedback_failure_precedes_commit(tmp_path, monkeypatch):
     monkeypatch.setattr(evaluation_service, "build_feedback", Mock(side_effect=ValueError("feedback failed")))
     with pytest.raises(ValueError, match="feedback failed"):
         service(store, FixtureProvider()).evaluate_saved_answer(answer.ref)
-    assert store.get_latest_evaluation_for_answer(answer.ref) is None
+    assert store.get_latest_evaluation_for_answer(answer.ref).status is EvaluationStatus.FAILED
     assert store.get_answer(answer.ref) == answer
 
 

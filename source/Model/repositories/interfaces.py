@@ -32,6 +32,21 @@ class DuplicateRecordError(RepositoryError):
     """Raised when attempting to overwrite an immutable versioned record."""
 
 
+class EvaluationInProgressError(RepositoryError):
+    """Another worker already owns the active evaluation attempt."""
+
+
+class EvaluationRetryNotAllowedError(RepositoryError):
+    """The latest failed attempt has a permanent failure code."""
+
+
+RETRYABLE_EVALUATION_FAILURES = frozenset({
+    "PROVIDER_TIMEOUT", "PROVIDER_QUOTA_EXCEEDED", "PROVIDER_HTTP_ERROR",
+    "PROVIDER_NETWORK_ERROR", "PROVIDER_INCOMPLETE_RESPONSE",
+    "PROVIDER_OUTPUT_INVALID", "EVALUATION_INTERRUPTED", "EVALUATION_FAILED",
+})
+
+
 class DuplicateSubmissionConflictError(RepositoryError):
     """Raised when a client_submission_id is reused with different answer content."""
 
@@ -109,6 +124,12 @@ class EvaluationRepository(Protocol):
 
     def save_evaluation(self, result: EvaluationResult, *, reuse_completed: bool = False) -> EvaluationResult: ...
 
+    def claim_evaluation(self, answer_ref: AnswerRevisionRef, question_ref: VersionedRef[QuestionId], rubric_ref: VersionedRef[RubricId]) -> EvaluationResult: ...
+
+    def complete_evaluation(self, claim: EvaluationResult, result: EvaluationResult) -> EvaluationResult: ...
+
+    def fail_evaluation(self, claim: EvaluationResult, code: str, message: str) -> EvaluationResult: ...
+
     def get_evaluation(
         self,
         evaluation_id: EvaluationId,
@@ -130,9 +151,12 @@ __all__ = [
     "ContentRepository",
     "DuplicateRecordError",
     "DuplicateSubmissionConflictError",
+    "EvaluationInProgressError",
     "EvaluationRepository",
+    "EvaluationRetryNotAllowedError",
     "RecordNotFoundError",
     "RepositoryError",
+    "RETRYABLE_EVALUATION_FAILURES",
     "SessionRepository",
 ]
 

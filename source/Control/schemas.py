@@ -41,10 +41,17 @@ class ErrorCode(StrEnum):
     INVALID_STATE_TRANSITION = "INVALID_STATE_TRANSITION"
     INSUFFICIENT_QUESTION_BANK = "INSUFFICIENT_QUESTION_BANK"
     EVALUATION_IN_PROGRESS = "EVALUATION_IN_PROGRESS"
+    EVALUATION_RETRY_NOT_ALLOWED = "EVALUATION_RETRY_NOT_ALLOWED"
     PROVIDER_TIMEOUT = "PROVIDER_TIMEOUT"
     PROVIDER_QUOTA_EXCEEDED = "PROVIDER_QUOTA_EXCEEDED"
     PROVIDER_REFUSAL = "PROVIDER_REFUSAL"
     PROVIDER_OUTPUT_INVALID = "PROVIDER_OUTPUT_INVALID"
+    PROVIDER_CONFIG_ERROR = "PROVIDER_CONFIG_ERROR"
+    PROVIDER_INPUT_LIMIT = "PROVIDER_INPUT_LIMIT"
+    PROVIDER_BILLING_REQUIRED = "PROVIDER_BILLING_REQUIRED"
+    PROVIDER_INCOMPLETE_RESPONSE = "PROVIDER_INCOMPLETE_RESPONSE"
+    PROVIDER_HTTP_ERROR = "PROVIDER_HTTP_ERROR"
+    PROVIDER_NETWORK_ERROR = "PROVIDER_NETWORK_ERROR"
     EXERCISE_NOT_FOUND = "EXERCISE_NOT_FOUND"
 
 
@@ -249,7 +256,11 @@ class EvaluationResultDTO(BaseModel):
     demo_mode_label: str | None = None
     prompt_version: str | None = None
     model_id: str | None = None
+    processing_started_at: datetime | None = None
     evaluated_at: datetime | None = None
+    failure_code: str | None = None
+    failure_message: str | None = None
+    retryable: bool = False
 
     @model_validator(mode="after")
     def _validate_total_policy(self) -> EvaluationResultDTO:
