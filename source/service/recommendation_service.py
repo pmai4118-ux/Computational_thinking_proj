@@ -135,7 +135,7 @@ class RecommendationService:
             ):
                 continue
             rubric = self._content_repo.get_rubric(answer.rubric_ref)
-            if rubric is None:
+            if rubric is None or rubric.review.status is not ReviewStatus.APPROVED:
                 continue
             slot = slots.get(question.category)
             if slot is None:
@@ -196,7 +196,9 @@ class RecommendationService:
             if source is None or source.license_status is not LicenseStatus.VERIFIED:
                 continue
             rubric = self._content_repo.get_rubric(question.rubric_ref)
-            if rubric is None or not any(
+            if rubric is None or rubric.review.status is not ReviewStatus.APPROVED:
+                continue
+            if not any(
                 criterion.criterion_type == gap.criterion_type for criterion in rubric.criteria
             ):
                 continue
