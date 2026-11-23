@@ -1,0 +1,1 @@
+Python tạo list [] mới mỗi khi gọi hàm, vì vậy first_batch là ['login'] còn second_batch là ['export_report']. Có thể sửa bằng if not events: events=[]; cách này cũng sẽ giữ nguyên list rỗng do người gọi truyền. Chỉ cần chạy hai print để kiểm thử.

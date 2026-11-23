@@ -1,0 +1,1 @@
+Em biết đây là thuật toán tìm kiếm nhị phân và có thể áp dụng cho mảng đã sắp xếp. Em chưa chắc lo và hi có ý nghĩa gì, cũng chưa phân tích trường hợp trùng hoặc mảng rỗng.

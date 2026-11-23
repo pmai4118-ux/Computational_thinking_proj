@@ -1,0 +1,1 @@
+Cả hai lệnh print đều in ['login', 'export_report'] vì list mặc định được tạo một lần lúc def và cả hai lần gọi dùng chung nó. Em đổi events=None; trong hàm chỉ tạo events=[] khi events is None, rồi append và trả chính events. Test gọi hai lần không truyền tham số phải cho hai list độc lập. Với custom=[], em kiểm tra kết quả is custom và custom nhận phần tử mới.

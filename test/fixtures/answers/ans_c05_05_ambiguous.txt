@@ -1,0 +1,1 @@
+Em sẽ tối ưu hàm này bằng cách dùng thuật toán phù hợp hơn. Em chưa xác định dòng nào làm chậm, cũng chưa đưa ra bản sửa hoặc phép kiểm thử độc lập.

@@ -1,0 +1,1 @@
+Đây là tìm kiếm nhị phân, mỗi vòng bỏ khoảng một nửa nên chạy O(log n), chỉ dùng vài biến chỉ số nên O(1) bộ nhớ. Em chưa chứng minh vì sao vị trí trả về là vị trí đầu tiên khi có phần tử trùng nhau và chưa nêu các ca biên cụ thể.

@@ -1,0 +1,1 @@
+Em xem lo và hi như hai vách ngăn: bên trái lo chỉ có giá trị < item, từ hi về sau chỉ có giá trị >= item. Nhánh bằng kéo hi về mid nên không bỏ qua bản sao ở bên trái. Với lo<hi ta có lo<=mid<hi, do đó khoảng còn lại nhỏ dần tới lo==hi. Thuật toán tốn O(log n) thời gian, O(1) không gian thêm. Thử [] cho 0; [1,2,2,2,4] tìm 2 cho 1; tìm 9 cho len=5.

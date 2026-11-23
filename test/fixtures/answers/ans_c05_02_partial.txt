@@ -1,0 +1,1 @@
+Hàm đang quét pairwise trên toàn bộ dãy hợp lệ nên tổng thời gian là O(n), không đúng yêu cầu O(log n). Em chưa nêu cách bỏ kiểm tra khỏi hot path mà vẫn giữ biên trái, và cũng chưa thiết kế ca test.

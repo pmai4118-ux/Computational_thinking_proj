@@ -1,0 +1,1 @@
+pairwise chỉ đọc hai phần tử nên là O(log n); giữ nguyên kiểm tra sắp xếp ở mỗi lần tìm là an toàn. Khi thấy item thì return midpoint ngay, vì vị trí nào bằng item cũng đáp ứng yêu cầu đầu tiên bên trái. Không cần test dữ liệu trùng.

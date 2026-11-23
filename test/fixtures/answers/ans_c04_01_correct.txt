@@ -1,0 +1,1 @@
+Bất biến: mọi phần tử trước lo đều nhỏ hơn item, mọi phần tử từ hi trở đi đều lớn hơn hoặc bằng item. Khi gặp phần tử bằng item, gán hi=mid nên vẫn giữ các vị trí bằng ở bên trái; mỗi vòng làm hi-lo giảm, cuối cùng lo==hi là biên trái. Mỗi bước chia đôi khoảng nên O(log n) thời gian và O(1) bộ nhớ phụ. Test [1,2,2,2,4] với item=2 trả 1, [] trả 0, item lớn hơn mọi phần tử trả len.

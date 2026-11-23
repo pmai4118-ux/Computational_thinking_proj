@@ -1,0 +1,1 @@
+Giải pháp của em là sử dụng kiến trúc Message Queue như Kafka hoặc RabbitMQ kết hợp Redis distributed lock để khóa tài nguyên. Chi tiết cấu hình Spring Cloud, Docker Compose và kết quả test tải bằng JMeter em đã nén trong file zip đính kèm gửi thầy trên Google Drive môn học.
