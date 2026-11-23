@@ -65,6 +65,9 @@ The script checks that the selected Antigravity model is available and sets
 shown as errors; the app does not silently replace AI output with fixture data.
 For offline tests, construct the app with `ProviderMode.FIXTURE` explicitly.
 
+See [Demo handoff](docs/DEMO_HANDOFF.md) for the merged task IDs, working user flows,
+verification evidence, and remaining limits.
+
 ## Coding agent setup
 
 - [AGENTS.md](AGENTS.md) is the shared rulebook for task scope, MVC-S boundaries,
