@@ -111,17 +111,19 @@
   function renderExercise(item) {
     const card = node("article", "exercise-card");
     card.append(node("h2", "", item.title));
-    card.append(node("p", "", item.summary));
-    const meta = node("div", "exercise-meta");
-    meta.append(node("span", "badge", `Ước tính: ${item.estimated_duration_minutes == null ? "chưa có thời lượng" : `${item.estimated_duration_minutes} phút`}`));
-    for (const skill of item.related_skill_ids || []) meta.append(node("span", "badge", skill));
-    card.append(meta);
 
     const gap = item.matched_gap || {};
-    const gapSection = node("section", "exercise-card__section");
-    gapSection.append(node("h3", "", "Vì sao có bài tập này"));
+    const gapSection = node("section", "exercise-card__reason");
+    gapSection.append(node("h3", "", "Vì sao bài này phù hợp"));
     gapSection.append(node("p", "", `${gap.criterion_label || gap.skill_label || "Điểm thiếu đã xác nhận"}: ${gap.reason || "API chưa cung cấp lý do chi tiết."}`));
     card.append(gapSection);
+
+    card.append(node("p", "exercise-card__summary", item.summary));
+
+    const meta = node("div", "exercise-meta");
+    meta.append(node("span", "badge", `Thời lượng ước tính: ${item.estimated_duration_minutes == null ? "chưa có" : `${item.estimated_duration_minutes} phút`}`));
+    for (const skill of item.related_skill_ids || []) meta.append(node("span", "badge", skill));
+    card.append(meta);
 
     appendSection(card, "Bài cần học trước", item.prerequisite_ids, "Không yêu cầu bài tiên quyết.");
 

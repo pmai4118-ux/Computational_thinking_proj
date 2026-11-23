@@ -9,6 +9,11 @@
   box-sizing: border-box;
 }
 
+/* Author display rules on buttons and alerts must not override HTML hidden. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   font-size: 100%;
   -webkit-text-size-adjust: 100%;

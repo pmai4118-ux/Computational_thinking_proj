@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Làm câu hỏi — interviewUS{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css?v=20261123-u07">{% endblock %}
 
 {% block content %}
 <section class="card workspace-card" aria-labelledby="workspace-heading"
@@ -29,6 +29,7 @@
       <span>{{ session.progress.evaluated_count }} câu đã có kết quả</span>
     </div>
 
+    <div class="workspace-layout">
     <article class="workspace-question reading-measure" aria-labelledby="question-heading">
       <div class="workspace-tags">
         <span class="badge">
@@ -68,20 +69,23 @@
       {% endif %}
     </article>
 
-    {% if session.current_answer %}
-      <div class="alert alert--status" role="status">
-        <p class="alert__title">Câu trả lời đã được lưu trên máy chủ.</p>
-        <p class="alert__hint">Bạn có thể xem kết quả hoặc thử đánh giá lại bài đã lưu.</p>
-      </div>
-    {% endif %}
-
     <form id="answer-form" class="workspace-answer-form" method="post" action="/sessions/{{ session.session_id }}/answers" novalidate>
+      <div class="answer-panel-heading">
+        <h2>Trình bày cách giải</h2>
+        <p class="form-hint">Nêu cách suy nghĩ, giả định và cách kiểm tra kết quả.</p>
+      </div>
       <input type="hidden" name="question_id" value="{{ session.current_question.id }}">
       <input type="hidden" name="question_version" value="{{ session.current_question.version }}">
       <input type="hidden" name="client_submission_id" value="{{ submission_id }}">
+      {% if session.current_answer %}
+        <div class="alert alert--status" role="status">
+          <p class="alert__title">Câu trả lời đã được lưu trên máy chủ.</p>
+          <p class="alert__hint">Đang kiểm tra kết quả. Nếu đánh giá thất bại, bạn có thể thử lại với bài đã lưu.</p>
+        </div>
+      {% endif %}
       <div class="form-field">
         <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
-        <p class="form-hint" id="answer-guidance">Trình bày cách suy nghĩ, các giả định và cách kiểm tra kết quả. Tối đa 20.000 ký tự.</p>
+        <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự.</p>
         <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
                   aria-describedby="answer-guidance answer-counter draft-label"
                   {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% endif %}</textarea>
@@ -105,14 +109,16 @@
         <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
         <button class="btn btn--secondary" id="end-session" type="button">Kết thúc sớm</button>
       </div>
-      <div class="alert alert--status" id="end-session-confirmation" hidden>
-        <p>Các câu đã chấm vẫn có trong tổng kết. Câu trả lời chưa gửi và bản nháp sẽ không được tính.</p>
+      <div class="alert alert--status" id="end-session-confirmation" role="group" aria-labelledby="end-session-confirmation-title" hidden>
+        <p class="alert__title" id="end-session-confirmation-title">Kết thúc phiên bây giờ?</p>
+        <p class="alert__hint">Các câu đã gửi được giữ trong tổng kết. Bản nháp chưa gửi không được tính.</p>
         <div class="action-row">
           <button class="btn btn--primary" id="confirm-end-session" type="button">Xác nhận kết thúc</button>
           <button class="btn btn--secondary" id="cancel-end-session" type="button">Tiếp tục làm</button>
         </div>
       </div>
     </form>
+    </div>
   {% else %}
     <div class="empty-state">
       <h2>Không còn câu hỏi đang chờ</h2>
@@ -123,4 +129,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/workspace.js" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261123-u07" defer></script>{% endblock %}
