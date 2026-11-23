@@ -26,6 +26,7 @@
         "criterion_label": "Kiểm thử bất biến",
         "reason": "Chưa nêu kịch bản kiểm thử chèn lỗi tạo đơn để xác nhận rollback tồn kho."
       },
+      "recommendation_reason": "Addresses Kiểm thử bất biến: Chưa nêu kịch bản kiểm thử chèn lỗi tạo đơn để xác nhận rollback tồn kho.",
       "source": {
         "source_id": "source.c03.concurrent_inventory",
         "title": "PostgreSQL Documentation Chapter 13 — Concurrency Control (Read Committed & Row-Level Locking)",

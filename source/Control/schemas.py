@@ -291,6 +291,21 @@ class EvaluationResultDTO(BaseModel):
         return self
 
 
+class CriterionFeedbackDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    criterion_id: CriterionId = Field(min_length=1)
+    message: str = Field(min_length=1)
+    suggestion: str | None = None
+
+
+class EvaluationResponseDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    result: EvaluationResultDTO
+    feedback_items: tuple[CriterionFeedbackDTO, ...]
+
+
 class NextQuestionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -327,6 +342,7 @@ class ObservedGapDTO(BaseModel):
     skill_label: str = Field(min_length=1)
     question_ref: VersionedRefDTO
     evaluation_id: EvaluationId = Field(min_length=1)
+    answer_ref: AnswerRevisionRefDTO
     criterion_id: CriterionId = Field(min_length=1)
     criterion_label: str = Field(min_length=1)
     reason: str = Field(min_length=1)
@@ -357,6 +373,7 @@ class ExerciseRecommendationDTO(BaseModel):
     prerequisite_ids: tuple[ExerciseId, ...] = ()
     estimated_duration_minutes: int | None = Field(default=None, ge=1)
     matched_gap: ObservedGapDTO
+    recommendation_reason: str = Field(min_length=1)
     source: SourceAttributionDTO
     eligible_alternate_question_available: bool = False
 
@@ -369,6 +386,30 @@ class ExerciseRecommendationsResponse(BaseModel):
     recommendations: tuple[ExerciseRecommendationDTO, ...] = ()
     unmatched_skill_ids: tuple[SkillId, ...] = ()
     message: str | None = None
+
+
+class ExerciseDetailDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    exercise_id: ExerciseId = Field(min_length=1)
+    version: int = Field(ge=1)
+    title: str = Field(min_length=1)
+    summary: str = Field(min_length=1)
+    instructions: str = Field(min_length=1)
+    related_skill_ids: tuple[SkillId, ...] = Field(min_length=1)
+    prerequisite_ids: tuple[ExerciseId, ...] = ()
+    target_criterion_types: tuple[str, ...] = ()
+    estimated_duration_minutes: int | None = Field(default=None, ge=1)
+    observable_outcome: str | None = None
+    source: SourceAttributionDTO
+
+
+class StartPracticeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    answer_revision: int = Field(ge=1)
+    criterion_id: CriterionId = Field(min_length=1)
+    exercise_id: ExerciseId = Field(min_length=1)
 
 
 class ApiErrorResponse(BaseModel):
@@ -391,13 +432,16 @@ __all__ = [
     "ApiErrorResponse",
     "CreateSessionRequest",
     "CriterionCheckDTO",
+    "CriterionFeedbackDTO",
     "EndSessionRequest",
     "ErrorCode",
     "EvaluateAnswerRequest",
     "EvaluationResultDTO",
+    "EvaluationResponseDTO",
     "EvidenceItemDTO",
     "ExerciseRecommendationDTO",
     "ExerciseRecommendationsResponse",
+    "ExerciseDetailDTO",
     "NextQuestionRequest",
     "ObservedGapDTO",
     "QuestionOutcomeSummaryDTO",
@@ -405,6 +449,7 @@ __all__ = [
     "SavedAnswerDTO",
     "SessionProgressDTO",
     "SessionState",
+    "StartPracticeRequest",
     "SessionSummaryDTO",
     "SessionViewDTO",
     "SourceAttributionDTO",

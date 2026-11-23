@@ -70,7 +70,10 @@ async def _read_setup_body_with_limit(request: Request) -> bytes | None:
     return b"".join(chunks)
 
 
-def build_pages_router(controller: InterviewController) -> APIRouter:
+def build_pages_router(
+    controller: InterviewController,
+    _evaluation_controller: object | None = None,
+) -> APIRouter:
     """Mount welcome, setup, workspace, and task result pages."""
     router = APIRouter(tags=["pages"])
     env = create_template_environment()

@@ -35,4 +35,6 @@ def test_u06_renders_only_api_exercises_and_explains_missing_alternate_action() 
     assert "source.required_notice" in exercise_js
     assert "eligible_alternate_question_available" in exercise_js
     assert "Không tạo bài thay thế tự động" in exercise_js
-    assert "API hiện chưa có thao tác tạo lượt luyện lại" in exercise_js
+    assert "startPractice" in exercise_js
+    assert "item.matched_gap.answer_ref" in exercise_js
+    assert "/practice" in exercise_js

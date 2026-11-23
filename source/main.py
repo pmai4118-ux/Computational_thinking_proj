@@ -8,7 +8,12 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from source.config import ProviderMode, Settings, load_settings
+from source.config import Settings, load_settings
+from source.Control.saved_evaluation_controller import (
+    SavedEvaluationController,
+    build_saved_evaluation_router,
+)
+from source.Control.exercise_controller import ExerciseController, build_exercise_router
 from source.Control.interview_controller import (
     InterviewController,
     build_interview_router,
@@ -22,9 +27,8 @@ from source.Model.repositories.interfaces import (
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.service.evaluation_service import EvaluationService
 from source.service.interview_service import InterviewService
-from source.service.providers.antigravity_provider import AntigravityProvider
-from source.service.providers.fixture_provider import FixtureProvider
-from source.service.providers.gemini_provider import GeminiProvider
+from source.service.recommendation_service import RecommendationService
+from source.service.providers.factory import create_evidence_interpreter
 from source.service.providers.interfaces import EvidenceInterpreter
 from source.service.seed_loader import load_seed_catalog_into_repository
 from source.view.pages import build_pages_router
@@ -44,14 +48,9 @@ class AppContainer:
     interview_service: InterviewService
     evaluation_service: EvaluationService
     interview_controller: InterviewController
-
-
-def _build_interpreter(settings: Settings) -> EvidenceInterpreter:
-    if settings.provider is ProviderMode.FIXTURE:
-        return FixtureProvider()
-    if settings.provider is ProviderMode.ANTIGRAVITY:
-        return AntigravityProvider.from_settings(settings)
-    return GeminiProvider.from_settings(settings)
+    saved_evaluation_controller: SavedEvaluationController
+    recommendation_service: RecommendationService
+    exercise_controller: ExerciseController
 
 
 def create_app(
@@ -81,7 +80,7 @@ def create_app(
         load_seed_catalog_into_repository(resolved_content_repo)
 
     resolved_interpreter = (
-        interpreter if interpreter is not None else _build_interpreter(resolved_settings)
+        interpreter if interpreter is not None else create_evidence_interpreter(resolved_settings)
     )
 
     interview_service = InterviewService(
@@ -89,9 +88,27 @@ def create_app(
         session_repo=resolved_session_repo,
         evaluation_repo=resolved_eval_repo,
     )
-    evaluation_service = EvaluationService(evaluation_repo=resolved_eval_repo)
+    evaluation_service = EvaluationService(
+        evaluation_repo=resolved_eval_repo, session_repo=resolved_session_repo,
+        content_repo=resolved_content_repo, interpreter=resolved_interpreter,
+    )
     interview_controller = InterviewController(
         interview_service=interview_service,
+        demo_mode_label=resolved_settings.demo_label,
+    )
+
+    saved_evaluation_controller = SavedEvaluationController(
+        interview_controller, evaluation_service
+    )
+    recommendation_service = RecommendationService(
+        content_repo=resolved_content_repo,
+        session_repo=resolved_session_repo,
+        evaluation_repo=resolved_eval_repo,
+        interview_service=interview_service,
+    )
+    exercise_controller = ExerciseController(
+        service=recommendation_service,
+        interview_controller=interview_controller,
         demo_mode_label=resolved_settings.demo_label,
     )
 
@@ -108,12 +125,17 @@ def create_app(
         interview_service=interview_service,
         evaluation_service=evaluation_service,
         interview_controller=interview_controller,
+        saved_evaluation_controller=saved_evaluation_controller,
+        recommendation_service=recommendation_service,
+        exercise_controller=exercise_controller,
     )
 
     register_api_exception_handlers(app)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     app.include_router(build_interview_router(interview_controller))
-    app.include_router(build_pages_router(interview_controller))
+    app.include_router(build_saved_evaluation_router(saved_evaluation_controller))
+    app.include_router(build_exercise_router(exercise_controller))
+    app.include_router(build_pages_router(interview_controller, saved_evaluation_controller))
 
     @app.get("/health", tags=["system"])
     def health_check() -> dict[str, str | None]:
@@ -127,3 +149,9 @@ def create_app(
 
 
 __all__ = ["AppContainer", "STATIC_DIR", "create_app"]
+
+
+if __name__ == "__main__":
+    from source.view.evaluation_cli import run
+
+    raise SystemExit(run())

@@ -84,20 +84,49 @@
 
     const actionSection = node("section", "exercise-card__section");
     actionSection.append(node("h3", "", "Luyện lại bằng câu hỏi khác"));
-    if (item.eligible_alternate_question_available) {
-      const button = node("button", "btn btn--primary", "Biến thể đủ điều kiện đã có");
+    if (item.eligible_alternate_question_available && item.matched_gap && item.matched_gap.evaluation_id) {
+      const button = node("button", "btn btn--primary", "Luyện lại bằng biến thể khác");
       button.type = "button";
-      button.disabled = true;
-      const help = node("p", "form-hint", "API hiện chưa có thao tác tạo lượt luyện lại từ bài này. Không mở hoặc lặp câu hỏi giả; hãy quay lại tổng kết cho tới khi I06 cung cấp hành động bắt đầu biến thể.");
-      help.id = `alternate-help-${item.exercise_id}`;
-      button.setAttribute("aria-describedby", help.id);
+      button.dataset.exerciseId = item.exercise_id;
+      button.addEventListener("click", () => startPractice(button, item));
       actionSection.append(button);
-      actionSection.append(help);
+      actionSection.append(node("p", "form-hint", "Mở một phiên mới với câu hỏi đã duyệt cho đúng điểm cần luyện; câu cũ không bị lặp."));
     } else {
       actionSection.append(node("p", "form-hint", "Phiên này chưa có biến thể khác đủ điều kiện cho bài tập này."));
     }
     card.append(actionSection);
     return card;
+  }
+
+  async function startPractice(button, item) {
+    const answerRef = item.matched_gap && item.matched_gap.answer_ref;
+    const answerId = answerRef && answerRef.id;
+    if (!answerId || !item.matched_gap.criterion_id) return;
+    button.disabled = true;
+    const previous = button.textContent;
+    button.textContent = "Đang mở phiên…";
+    try {
+      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answerId)}/practice`, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          answer_revision: answerRef.revision,
+          criterion_id: item.matched_gap.criterion_id,
+          exercise_id: item.exercise_id,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.message || "Chưa thể mở phiên luyện lại.");
+      if (!payload.session_id) throw new Error("API không trả về phiên luyện lại.");
+      window.location.assign(`/sessions/${encodeURIComponent(payload.session_id)}`);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = previous;
+      errorBox.textContent = `${error.message || "Chưa thể mở phiên luyện lại."} Bài cũ vẫn được giữ nguyên.`;
+      errorBox.hidden = false;
+      errorBox.focus();
+    }
   }
 
   function renderRecommendations(data) {

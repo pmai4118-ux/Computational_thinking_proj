@@ -7,16 +7,21 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from source.Model.evaluation import (
+    AnswerRevisionRef,
     CriterionCheck,
+    CriterionFeedback,
+    EvaluationFeedback,
     CriterionStatus,
     EvaluationResult,
     EvaluationStatus,
     Evidence,
 )
-from source.Model.ids import CriterionId, EvaluationId
+from source.Model.ids import CriterionId, EvaluationId, VersionedRef
 from source.Model.interview import Answer
 from source.Model.question import Question, Rubric
-from source.Model.repositories.interfaces import EvaluationRepository
+from source.Model.repositories.interfaces import (
+    ContentRepository, EvaluationRepository, RecordNotFoundError, SessionRepository,
+)
 from source.service.providers.interfaces import (
     CriterionObservation,
     EvidenceInterpreter,
@@ -172,6 +177,39 @@ class EvidenceValidator:
         )
 
 
+def build_feedback(result: EvaluationResult, rubric: Rubric) -> EvaluationFeedback:
+    """Explain a completed evaluation using the exact rubric used to score it."""
+    if result.status is not EvaluationStatus.COMPLETED:
+        raise ValueError("Feedback requires a completed evaluation.")
+    if (rubric.id, rubric.version) != (result.rubric_ref.id, result.rubric_ref.version):
+        raise ValueError("Feedback requires the evaluated rubric version.")
+    by_id = {criterion.id: criterion for criterion in rubric.criteria}
+    if by_id.keys() != {check.criterion_id for check in result.criterion_checks}:
+        raise ValueError("Feedback criteria must match the evaluated rubric.")
+
+    items = []
+    for check in result.criterion_checks:
+        criterion = by_id[check.criterion_id]
+        suggestion = None
+        if check.status is CriterionStatus.INSUFFICIENT_EVIDENCE:
+            message = f"Chưa đủ căn cứ để cho điểm. {check.unresolved_reason}"
+        else:
+            level = next((level for level in criterion.levels if level.score == check.score), None)
+            if level is None:
+                raise ValueError(f"Unknown score level for {criterion.id}: {check.score}")
+            message = f"{check.score}/{criterion.max_score} điểm. {level.description} {check.explanation}"
+            if check.status is CriterionStatus.UNMET and check.evidence:
+                target = max(criterion.levels, key=lambda item: item.score)
+                suggestion = (
+                    f"Khi sửa phần {criterion.label} trong câu này, "
+                    f"hãy đối chiếu với yêu cầu sau: {target.description}"
+                )
+        items.append(CriterionFeedback(check, criterion.label, message, suggestion))
+    return EvaluationFeedback(
+        result.id, result.version, result.total_score, result.maximum_score, tuple(items)
+    )
+
+
 class EvaluationService:
     """Validates provider evidence, computes Python rubric scores, and persists results."""
 
@@ -179,12 +217,65 @@ class EvaluationService:
         self,
         *,
         evaluation_repo: EvaluationRepository | None = None,
+        session_repo: SessionRepository | None = None,
+        content_repo: ContentRepository | None = None,
+        interpreter: EvidenceInterpreter | None = None,
         validator: EvidenceValidator | None = None,
         scorer: RubricScoringService | None = None,
     ) -> None:
         self._evaluation_repo = evaluation_repo
+        self._session_repo = session_repo
+        self._content_repo = content_repo
+        self._interpreter = interpreter
         self.validator = validator or EvidenceValidator()
         self.scorer = scorer or RubricScoringService()
+
+    def get_saved_context(
+        self, answer_ref: AnswerRevisionRef,
+    ) -> tuple[Answer, Question, Rubric]:
+        """Load the immutable answer and the exact reviewed question/rubric versions."""
+        if self._session_repo is None or self._content_repo is None:
+            raise RuntimeError("Saved evaluation requires session and content repositories.")
+        answer = self._session_repo.get_answer(answer_ref)
+        if answer is None:
+            raise RecordNotFoundError("Answer revision not found.")
+        question = self._content_repo.get_question(answer.question_ref)
+        rubric = self._content_repo.get_rubric(answer.rubric_ref)
+        if question is None or rubric is None:
+            raise RecordNotFoundError("Question or rubric snapshot not found.")
+        expected_rubric_ref = VersionedRef(rubric.id, rubric.version)
+        if question.rubric_ref != expected_rubric_ref or answer.rubric_ref != expected_rubric_ref:
+            raise ValueError("Question and answer reference different rubric versions.")
+        return answer, question, rubric
+
+    def get_completed_saved_answer(
+        self, answer_ref: AnswerRevisionRef,
+    ) -> tuple[EvaluationResult, EvaluationFeedback] | None:
+        """Read a completed result without invoking a provider or changing saved data."""
+        if self._evaluation_repo is None:
+            raise RuntimeError("Saved evaluation requires an evaluation repository.")
+        _answer, _question, rubric = self.get_saved_context(answer_ref)
+        cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer_ref)
+        if cached is None:
+            return None
+        return cached, build_feedback(cached, rubric)
+
+    def evaluate_saved_answer(
+        self, answer_ref: AnswerRevisionRef,
+    ) -> tuple[EvaluationResult, EvaluationFeedback]:
+        """Evaluate an immutable submission or replay its committed result."""
+        if self._evaluation_repo is None or self._interpreter is None:
+            raise RuntimeError("Saved evaluation requires a repository and an interpreter.")
+        answer, question, rubric = self.get_saved_context(answer_ref)
+        cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer_ref)
+        if cached is not None:
+            return cached, build_feedback(cached, rubric)
+        result = self._compute_result(answer, question, rubric, self._interpreter, None)
+        feedback = build_feedback(result, rubric)
+        committed = self._evaluation_repo.save_evaluation(result, reuse_completed=True)
+        if committed != result:
+            feedback = build_feedback(committed, rubric)
+        return committed, feedback
 
     def evaluate_answer(
         self,
@@ -195,11 +286,28 @@ class EvaluationService:
         interpreter: EvidenceInterpreter,
         evaluation_id: EvaluationId | None = None,
     ) -> EvaluationResult:
+        expected_rubric_ref = VersionedRef(rubric.id, rubric.version)
+        if answer.question_ref != question.ref:
+            raise ValueError("answer.question_ref must match question.ref.")
+        if answer.rubric_ref != expected_rubric_ref:
+            raise ValueError("answer.rubric_ref must match the supplied rubric version.")
+        if question.rubric_ref != expected_rubric_ref:
+            raise ValueError("question.rubric_ref must match the supplied rubric version.")
+
         if self._evaluation_repo is not None:
             cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer.ref)
             if cached is not None:
                 return cached
 
+        result = self._compute_result(answer, question, rubric, interpreter, evaluation_id)
+        if self._evaluation_repo is not None:
+            return self._evaluation_repo.save_evaluation(result)
+        return result
+
+    def _compute_result(
+        self, answer: Answer, question: Question, rubric: Rubric,
+        interpreter: EvidenceInterpreter, evaluation_id: EvaluationId | None,
+    ) -> EvaluationResult:
         next_version = 1
         resolved_eval_id = evaluation_id or EvaluationId(f"evaluation.{uuid4().hex[:12]}")
         if self._evaluation_repo is not None:
@@ -259,13 +367,12 @@ class EvaluationService:
             model_id=batch.model_id,
             demo_mode_label=batch.demo_mode_label,
         )
-        if self._evaluation_repo is not None:
-            self._evaluation_repo.save_evaluation(result)
         return result
 
 
 __all__ = [
     "EvaluationService",
+    "build_feedback",
     "EvidenceValidationError",
     "EvidenceValidator",
     "ValidatedCriterionObservation",
