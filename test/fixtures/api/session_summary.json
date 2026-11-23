@@ -68,6 +68,10 @@
         "revision": 1
       },
       "evaluation_id": "evaluation.demo-20261118-01",
+      "answer_ref": {
+        "id": "answer.demo-20261118-01",
+        "revision": 1
+      },
       "criterion_id": "c03.concurrent_tests",
       "criterion_label": "Kiểm thử bất biến",
       "reason": "Chưa nêu kịch bản kiểm thử chèn lỗi tạo đơn để xác nhận rollback tồn kho."

@@ -100,7 +100,7 @@
         {% endif %}
         <button class="btn btn--secondary" id="retry-evaluation" type="button" hidden>Thử đánh giá lại</button>
         {% if session.current_answer %}
-          <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}">Xem kết quả câu này</a>
+          <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}&amp;revision={{ session.current_answer.revision }}">Xem kết quả câu này</a>
         {% endif %}
         <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
       </div>

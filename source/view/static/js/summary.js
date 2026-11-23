@@ -3,6 +3,7 @@
 
   const page = document.querySelector("[data-session-summary]");
   if (!page) return;
+  const api = window.InterviewApi;
   const sessionId = page.dataset.sessionId;
   const statusBox = document.querySelector("#summary-status");
   const errorBox = document.querySelector("#summary-error");
@@ -81,7 +82,10 @@
     const actions = node("div", "action-row");
     if (outcome.answer_ref && outcome.answer_ref.id) {
       const review = node("a", "btn btn--secondary", "Xem căn cứ và tiêu chí");
-      review.href = `/sessions/${encodeURIComponent(sessionId)}/review?answer_id=${encodeURIComponent(outcome.answer_ref.id)}`;
+      const reviewUrl = new URL(`/sessions/${encodeURIComponent(sessionId)}/review`, window.location.origin);
+      reviewUrl.searchParams.set("answer_id", outcome.answer_ref.id);
+      reviewUrl.searchParams.set("revision", String(outcome.answer_ref.revision));
+      review.href = reviewUrl.toString();
       actions.append(review);
     }
     if (outcome.confirmed_gap_criterion_ids && outcome.confirmed_gap_criterion_ids.length) {
@@ -128,20 +132,20 @@
     errorBox.hidden = true;
     content.hidden = true;
     try {
-      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/summary`, {
-        headers: { accept: "application/json" },
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.message || `Không tải được tổng kết (${response.status}).`);
+      const payload = await api.getSessionSummary(sessionId);
       renderSummary(payload);
     } catch (error) {
       statusBox.hidden = true;
-      errorBox.textContent = `${error.message || "Chưa tải được tổng kết."} Phiên vẫn được giữ nguyên.`;
+      const missingSummaryRoute = error.status === 404 && error.code === "HTTP_ERROR";
+      const message = missingSummaryRoute
+        ? "Máy chủ hiện chưa cung cấp API tổng kết phiên. Phiên vẫn được giữ nguyên. Bạn có thể mở bài tập hoặc thử tải lại sau."
+        : `${error.message || "Chưa tải được tổng kết."} ${error.recoveryAction || "Phiên vẫn được giữ nguyên."}`;
+      errorBox.textContent = message;
       errorBox.hidden = false;
       const retry = node("button", "btn btn--secondary", "Tải lại tổng kết");
       retry.type = "button";
       retry.addEventListener("click", loadSummary);
-      errorBox.replaceChildren(document.createTextNode(`${error.message || "Chưa tải được tổng kết."} Phiên vẫn được giữ nguyên. `), retry);
+      errorBox.replaceChildren(document.createTextNode(`${message} `), retry);
     }
   }
 

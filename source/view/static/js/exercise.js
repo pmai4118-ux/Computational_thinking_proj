@@ -3,6 +3,7 @@
 
   const page = document.querySelector("[data-exercise-page]");
   if (!page) return;
+  const api = window.InterviewApi;
   const sessionId = page.dataset.sessionId;
   const exerciseId = page.dataset.exerciseId;
   const skillId = page.dataset.skillId;
@@ -49,23 +50,12 @@
     card.append(section);
   }
 
-  async function responsePayload(response) {
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const recovery = payload.recovery_action ? ` ${payload.recovery_action}` : "";
-      throw new Error(`${payload.message || `Yêu cầu thất bại (${response.status}).`}${recovery}`);
-    }
-    return payload;
-  }
-
   async function loadExerciseDetail(item, button, detail) {
     button.disabled = true;
     button.textContent = "Đang tải hướng dẫn…";
     errorBox.hidden = true;
     try {
-      const url = `/api/exercises/${encodeURIComponent(item.exercise_id)}?version=${encodeURIComponent(item.version)}`;
-      const response = await fetch(url, { headers: { accept: "application/json" } });
-      const data = await responsePayload(response);
+      const data = await api.getExercise(item.exercise_id, item.version);
       if (data.exercise_id !== item.exercise_id || data.version !== item.version) {
         throw new Error("Nội dung bài tập không khớp phiên bản đã đề xuất.");
       }
@@ -79,7 +69,7 @@
       detail.hidden = false;
       button.hidden = true;
     } catch (error) {
-      errorBox.textContent = error.message || "Không tải được hướng dẫn bài tập.";
+      errorBox.textContent = [error.message || "Không tải được hướng dẫn bài tập.", error.recoveryAction].filter(Boolean).join(" ");
       errorBox.hidden = false;
       errorBox.focus();
       button.textContent = "Thử tải lại hướng dẫn";
@@ -98,23 +88,17 @@
     statusBox.textContent = "Đang chọn câu hỏi đã duyệt khác câu gốc…";
     statusBox.hidden = false;
     try {
-      const url = `/api/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answer.id)}/practice`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json", accept: "application/json" },
-        body: JSON.stringify({
-          answer_revision: answer.revision,
-          criterion_id: gap.criterion_id,
-          exercise_id: item.exercise_id,
-        }),
+      const created = await api.startPractice(sessionId, answer.id, {
+        answer_revision: answer.revision,
+        criterion_id: gap.criterion_id,
+        exercise_id: item.exercise_id,
       });
-      const created = await responsePayload(response);
       if (!created.session_id || !created.current_question) {
         throw new Error("Phiên luyện mới chưa có câu hỏi hợp lệ.");
       }
       window.location.assign(`/sessions/${encodeURIComponent(created.session_id)}`);
     } catch (error) {
-      errorBox.textContent = error.message || "Chưa thể tạo lượt luyện lại.";
+      errorBox.textContent = [error.message || "Chưa thể tạo lượt luyện lại.", error.recoveryAction].filter(Boolean).join(" ");
       errorBox.hidden = false;
       errorBox.focus();
       statusBox.hidden = true;
@@ -211,15 +195,11 @@
     errorBox.hidden = true;
     content.hidden = true;
     try {
-      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/exercises`, {
-        headers: { accept: "application/json" },
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.message || `Không tải được đề xuất (${response.status}).`);
+      const payload = await api.getExerciseRecommendations(sessionId);
       renderRecommendations(payload);
     } catch (error) {
       statusBox.hidden = true;
-      errorBox.textContent = `${error.message || "Chưa tải được bài tập."} Không có bài luyện thay thế nào được tự tạo.`;
+      errorBox.textContent = `${error.message || "Chưa tải được bài tập."} ${error.recoveryAction || "Không có bài luyện thay thế nào được tự tạo."}`;
       errorBox.hidden = false;
       const retry = node("button", "btn btn--secondary", "Tải lại đề xuất");
       retry.type = "button";

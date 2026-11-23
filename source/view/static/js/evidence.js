@@ -3,7 +3,10 @@
 
   const page = document.querySelector("[data-answer-review]");
   if (!page) return;
+  const sessionId = page.dataset.sessionId;
   const answerId = page.dataset.answerId;
+  const answerRevision = Number(page.dataset.answerRevision);
+  const api = window.InterviewApi;
   const statusBox = document.querySelector("#review-status");
   const errorBox = document.querySelector("#review-error");
   const retryButton = document.querySelector("#retry-review-load");
@@ -15,6 +18,7 @@
   const detail = document.querySelector("#evidence-detail");
   const explanation = document.querySelector("#selected-criterion-explanation");
   let evaluation = null;
+  let feedbackItems = [];
 
   const statusLabels = {
     met: "Đạt",
@@ -32,6 +36,13 @@
   function renderEvidence(check) {
     detail.replaceChildren();
     explanation.textContent = check.explanation;
+    const feedback = feedbackItems.find((item) => item.criterion_id === check.criterion_id);
+    if (feedback) {
+      detail.append(element("p", "evidence-observation", feedback.message));
+      if (feedback.suggestion) {
+        detail.append(element("p", "form-hint", `Gợi ý: ${feedback.suggestion}`));
+      }
+    }
     if (check.unresolved_reason) {
       detail.append(element("p", "evidence-observation", `Chưa đủ căn cứ: ${check.unresolved_reason}`));
     }
@@ -77,8 +88,11 @@
     answerSource.append(document.createTextNode(points.slice(cursor).join("")));
   }
 
-  function renderEvaluation(data) {
+  function renderEvaluation(response) {
+    const data = response && response.result;
+    if (!data) throw new Error("Máy chủ trả thiếu kết quả đánh giá theo DTO.");
     evaluation = data;
+    feedbackItems = response.feedback_items || [];
     criteriaList.replaceChildren();
     answerSource.textContent = data.answer_text;
     if (data.total_score === null || data.total_score === undefined) {
@@ -124,7 +138,7 @@
   }
 
   async function loadEvaluation() {
-    if (!answerId) {
+    if (!answerId || !Number.isInteger(answerRevision) || answerRevision < 1) {
       statusBox.textContent = "Chưa có bài đã lưu để đối chiếu. Hãy quay lại workspace và gửi câu trả lời trước.";
       return;
     }
@@ -134,15 +148,11 @@
     statusBox.hidden = false;
     statusBox.textContent = "Đang tải kết quả đã lưu…";
     try {
-      const response = await fetch(`/api/answers/${encodeURIComponent(answerId)}/evaluation`, {
-        headers: { accept: "application/json" },
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.message || `Không tải được kết quả (${response.status}).`);
-      renderEvaluation(payload);
+      const response = await api.getEvaluation(sessionId, answerId, answerRevision);
+      renderEvaluation(response);
     } catch (error) {
       statusBox.hidden = true;
-      errorBox.textContent = `${error.message || "Chưa tải được kết quả."} Bài trả lời gốc vẫn được giữ trên máy chủ.`;
+      errorBox.textContent = `${error.message || "Chưa tải được kết quả."} ${error.recoveryAction || "Bài trả lời gốc vẫn được giữ trên máy chủ."}`;
       errorBox.hidden = false;
       retryButton.hidden = false;
     }
