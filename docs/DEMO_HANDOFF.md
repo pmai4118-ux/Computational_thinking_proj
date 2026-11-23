@@ -1,6 +1,6 @@
 # Bàn giao nhánh `Demo`
 
-Cập nhật: 23/11/2026. Nhánh: `Demo`. Mốc mã chức năng của lần bàn giao này: `8ddebf6` (trước commit tài liệu).
+Cập nhật: 23/11/2026. Nhánh: `Demo`. Mốc mã chức năng của lần bàn giao này: `5d32ae4` (trước commit tài liệu).
 
 ## 1. Nguồn mã đã gộp
 
@@ -16,13 +16,16 @@ Cập nhật: 23/11/2026. Nhánh: `Demo`. Mốc mã chức năng của lần bà
 | 8 | `codex/i01-interview-service` | `e801fbc` → `a9eb06f` | Lấy đúng commit I01 chặn chỉ số chuyển câu âm. |
 | 9 | `codex/u07-api-client-integration` | `11a4f7c` → `85838e2` | Đưa phần U07 sang `Demo`, giữ luồng I06 và giải quyết xung đột ở bài tập/test. |
 | 10 | I05 viết trên `Demo` | `8ddebf6` | Thêm API và giao diện chuyển câu/kết thúc sớm, test phiên 4 câu. |
+| 11 | `codex/c07-demo-aligned-fixtures`, lấy chọn lọc từ `task3-answer-fixtures-Khoa` | `4d5fc33` → `2d41a25` → `5d32ae4` | C07: 24 câu trả lời tổng hợp khớp câu hỏi/rubric của Demo, chia calibration/held-out và kiểm tra cấu trúc. Nhãn còn tạm thời. |
 
 U07 trên `origin` có lịch sử Git không chung gốc với `Demo`, nên chỉ đưa commit U07 sang và xử lý xung đột; không gộp nguyên nhánh U03–U07. Các nguồn C02, F04, I01 cũng được lấy theo commit cụ thể để tránh kéo các merge commit cũ.
 
+Nhánh nguồn C07 chứa câu hỏi Java và một ứng dụng đánh giá khác; merge thử với `Demo` phát hiện 14 xung đột. Chỉ sáu văn bản trả lời C03 được chuyển nguyên từ nguồn; 18 văn bản còn lại được viết lại cho seed Demo. Không đưa code ứng dụng, seed Java hoặc nhãn review không còn hợp lệ từ nhánh đó vào `Demo`.
+
 Các mã nhiệm vụ có commit trong lịch sử `Demo`:
 
-- **Nội dung:** C01–C06, C08. C02–C05 cung cấp 8 câu hỏi đã duyệt, chia đều cho 4 dạng; C06 cung cấp 5 bài tập có nguồn và ánh xạ kỹ năng.
-- **Nền tảng và hợp đồng:** P02–P08, F02–F06. P04 định nghĩa DTO/API; F04 lưu SQLite; F05 ghép ứng dụng; P07 cung cấp lựa chọn Antigravity.
+- **Nội dung:** C01–C08. C02–C05 cung cấp 8 câu hỏi đã duyệt, chia đều cho 4 dạng; C06 cung cấp 5 bài tập có nguồn và ánh xạ kỹ năng; C07 có 24 ca tổng hợp **chưa được gán nhãn độc lập**; C08 kiểm tra seed.
+- **Nền tảng và hợp đồng:** P01–P08, F01–F06. P04 định nghĩa DTO/API; F04 lưu SQLite; F05 ghép ứng dụng; P07 cung cấp lựa chọn Antigravity.
 - **Đánh giá:** E01–E09, Q01. E04 có adapter AI, E05 kiểm tra bằng chứng, E06 tính điểm bằng mã Python, E09 điều phối và lưu kết quả.
 - **Phiên và API:** I01–I06. I03 lưu bài chống gửi trùng; I04 đánh giá/đọc lại/retry an toàn; I05 chuyển câu và kết thúc sớm; I06 đề xuất bài tập và tạo lượt luyện từ câu trả lời đã lưu.
 - **Giao diện:** U01–U07. U03 là nơi trả lời, U04 là trang căn cứ theo tiêu chí, U05 là trang tổng kết, U06 là trang bài tập, U07 dùng API client chung cho các màn hình.
@@ -55,6 +58,8 @@ Các điểm nối chính để tiếp tục phát triển:
 | Bài tập và luyện lại | `GET /api/sessions/{session_id}/exercises` trả bài đã duyệt gắn với điểm thiếu, lý do và prerequisite; `GET /api/exercises/{exercise_id}` trả hướng dẫn. Nút **Luyện lại với câu hỏi khác** trên U06 gọi `POST /api/sessions/{session_id}/answers/{answer_id}/practice`, rồi mở workspace của phiên mới. Nếu không có bài/biến thể hợp lệ, UI nêu rõ thay vì tạo đề xuất giả. | Trình duyệt đã mở hướng dẫn và tạo phiên luyện 1 câu bằng câu hỏi khác câu gốc; API trả `201 Created`. |
 | API client U07 | `api_client.js` gửi cookie cùng origin, dùng DTO chung và giữ `answer_revision` khi đọc kết quả; các màn hình trả lời, căn cứ, tổng kết, bài tập dùng chung xử lý lỗi. Không chứa SDK/key AI phía trình duyệt. | 10 test U07/U06/trang đánh giá đạt khi tích hợp; browser test xác nhận gửi bài, đọc kết quả và chuyển câu qua API. |
 
+Bộ C07 là tài sản **kiểm định**, không tham gia chấm điểm trong ứng dụng. [Quy trình C07](evaluation_protocol.md) mô tả câu hỏi/rubric, trạng thái nhãn, hai lượt review độc lập còn thiếu và quy tắc dùng bộ held-out. Không dùng `candidate_judgment` làm chuẩn vàng hoặc báo cáo độ chính xác AI.
+
 `fixture` là provider mẫu xác định để chạy test ngoại tuyến; kết quả mang nhãn **Dữ liệu minh họa**. Nhánh `Demo` dùng `EVALUATION_PROVIDER=antigravity` theo mặc định và [run_demo.ps1](../run_demo.ps1) ép dùng Antigravity. Khi AI lỗi, ứng dụng báo lỗi và giữ bài đã lưu; không tự đổi sang fixture. Điểm fixture chỉ kiểm tra luồng phần mềm, không chứng minh chất lượng AI.
 
 ## 3. Kiểm tra đã thực hiện
@@ -62,13 +67,24 @@ Các điểm nối chính để tiếp tục phát triển:
 Chạy từ thư mục gốc repository với môi trường `.venv`:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q --basetemp .local/pytest-demo-i05-u07 -p no:cacheprovider --tb=short
+.\.venv\Scripts\python.exe -m pytest -q --basetemp .local/pytest-demo-c07-full -p no:cacheprovider --tb=short
 ```
 
-Kết quả sau tích hợp: **205 passed, 3 skipped**. Ba ca skip theo mặc định là ca E09 qua Antigravity, ca Demo live end-to-end và ca Gemini API key tùy chọn. Đã bật lại ca Demo live sau tích hợp:
+Kết quả sau tích hợp C07: **206 passed, 3 skipped**. Ba ca skip theo mặc định là ca E09 qua Antigravity, ca Demo live end-to-end và ca Gemini API key tùy chọn. Đã bật lại hai ca Antigravity sau tích hợp:
 
-- `DEMO_LIVE_TEST=1` với `test/Control/test_demo_live_flow.py`: **1 passed trong 61,56 giây**. `agy` gọi model `gemini-3.8-flash-medium` thật, trả `completed`, **4/6**, một khuyến nghị và tạo lượt luyện với câu hỏi khác. Ca này dùng SQLite mới và gọi API từ tạo phiên tới luyện lại.
-- Các ca E09 live và Gemini API key từng đạt ở mốc `341e833`, nhưng **không chạy lại** trong lần tích hợp này; ca Demo live ở trên đã kiểm tra provider Antigravity chính.
+- `DEMO_LIVE_TEST=1` với `test/Control/test_demo_live_flow.py`: **1 passed trong 49,14 giây** khi chạy với quyền truy cập phiên đăng nhập `agy`. Antigravity gọi model `gemini-3.8-flash-medium` thật, trả `completed`, **4/6**, một khuyến nghị và tạo lượt luyện với câu hỏi khác. Ca này dùng SQLite mới và gọi API từ tạo phiên tới luyện lại. Lần chạy đầu trong sandbox bị `PROVIDER_TIMEOUT` vì không đọc được phiên đăng nhập Antigravity; API trả lỗi có thể retry và giữ bài gốc.
+- `E09_LIVE_TEST=1` với `test/service/test_evaluation_flow.py::test_live_agy_saved_answer`: **1 passed trong 45,81 giây**. Service gọi provider thật một lần, lưu kết quả và dùng lại kết quả khi gọi lại bản trả lời đã hoàn tất.
+- Test C07 mới xác nhận đủ 24 văn bản, 4 nhóm × 6 dạng, chia 12 calibration / 12 held-out, ID/phiên bản/fingerprint khớp seed đã duyệt và không có nhãn nào bị khai là adjudicated.
+- Ca Gemini API key tùy chọn từng đạt ở mốc `341e833`, nhưng **không chạy lại** trong lần tích hợp này vì `Demo` dùng Antigravity làm provider chính.
+
+Lệnh tái hiện hai ca Antigravity khi máy đã đăng nhập `agy`:
+
+```powershell
+$env:DEMO_LIVE_TEST = '1'
+.\.venv\Scripts\python.exe -m pytest -q test/Control/test_demo_live_flow.py
+$env:E09_LIVE_TEST = '1'
+.\.venv\Scripts\python.exe -m pytest -q test/service/test_evaluation_flow.py::test_live_agy_saved_answer
+```
 
 Browser test với server fixture sau tích hợp: thiết lập phiên → gửi câu 1 → xem điểm/căn cứ → bấm **Sang câu tiếp theo** → workspace hiện **câu 2/4**. Một phiên khác đã mở trang bài tập, tải hướng dẫn đã duyệt và bấm **Luyện lại với câu hỏi khác**; server trả `201` và mở phiên mới **1/1 câu** bằng câu hỏi khác. Phiên thứ ba bấm **Kết thúc sớm** → **Xác nhận kết thúc**; server trả `200` và trang tổng kết hiện **Đã kết thúc sớm**, **0/4** câu có kết quả. Test HTTP tự động đi hết 4 câu, kiểm tra retry chuyển câu, tổng kết và kết thúc sớm. Browser test fixture và ca Antigravity live dùng hai cấu hình riêng; chúng kiểm tra hai mặt của cùng hợp đồng API.
 
@@ -77,6 +93,7 @@ Browser test với server fixture sau tích hợp: thiết lập phiên → gử
 - **Kiểm tra UI:** browser test đã thao tác chuyển câu 1 → 2, lượt luyện lại và kết thúc sớm; toàn bộ 4 câu được kiểm tra qua API với fixture. Chưa có browser test tự động đi hết 4 câu với Antigravity thật.
 - **U08/Q02 chưa nghiệm thu đầy đủ:** các lỗi chính, retry và quyền sở hữu đã có test; chưa có bộ kiểm tra toàn diện mọi trạng thái giao diện và mọi trường hợp repository/API.
 - **Q03 chưa thực hiện trên nhánh này:** chưa có báo cáo so sánh nhiều câu trả lời với đánh giá chuyên gia; điểm 4/6 của ca tổng hợp chỉ chứng minh lời gọi và luồng dữ liệu hoạt động.
+- **C07 chưa đủ điều kiện nghiệm thu nhãn:** 24 ca đã tích hợp đúng đề/rubric, nhưng người dùng xác nhận chưa có hai bản review độc lập. Tất cả nhãn hiện là nháp; cần hai người gán nhãn và phân xử trước khi dùng cho Q03 hoặc tuyên bố độ chính xác của Antigravity.
 - **Seed trên SQLite cũ:** bản sửa C02 thay đổi mã ví dụ trong seed cùng phiên bản câu hỏi. Ứng dụng không ghi đè câu hỏi đã lưu trong database cũ. Dùng một `DATABASE_PATH` mới để nhận seed đã sửa, giữ nguyên dữ liệu phiên cũ; không xóa database của người học.
 - Vai trò/cấp độ/ngôn ngữ đang hỗ trợ: **Backend Developer · Intern/Fresher · tiếng Việt**. Lượt luyện lại do I06 tạo là phiên **1 câu** dựa trên điểm thiếu được xác nhận.
 
