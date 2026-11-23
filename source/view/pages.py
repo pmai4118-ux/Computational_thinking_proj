@@ -1,4 +1,4 @@
-"""Server-rendered page routes for Welcome, Session History, and Setup (F05/U02)."""
+"""Server-rendered page routes for the interview practice flow."""
 
 from __future__ import annotations
 
@@ -80,13 +80,17 @@ def build_pages_router(
     controller: InterviewController,
     evaluation_controller: SavedEvaluationController | None = None,
 ) -> APIRouter:
-    """Mount Welcome (`/`), Setup (`/setup`), and Session Shell (`/sessions/{id}`) routes."""
+    """Mount practice pages and retained server-rendered evaluation routes."""
     router = APIRouter(tags=["pages"])
     env = create_template_environment()
     welcome_template = env.get_template("welcome.html")
     setup_template = env.get_template("setup.html")
     session_template = env.get_template("session_shell.html")
     result_template = env.get_template("evaluation_result.html")
+    workspace_template = env.get_template("workspace.html")
+    answer_review_template = env.get_template("answer_review.html")
+    summary_template = env.get_template("summary.html")
+    exercise_template = env.get_template("exercise.html")
 
     @router.get("/", response_class=HTMLResponse)
     def welcome_page(request: Request) -> HTMLResponse:
@@ -157,8 +161,10 @@ def build_pages_router(
             apply_owner_cookie(redirect, token)
         return redirect
 
-    @router.get("/sessions/{session_id}", response_class=HTMLResponse)
-    def session_shell_page(session_id: str, request: Request) -> HTMLResponse:
+    def _get_owned_session_page_data(
+        session_id: str,
+        request: Request,
+    ):
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
         try:
             session_dto = controller.get_session(
@@ -173,9 +179,16 @@ def build_pages_router(
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
             )
-            return HTMLResponse(content=html, status_code=error.status_code)
+            return None, HTMLResponse(content=html, status_code=error.status_code)
 
-        html = session_template.render(
+        return session_dto, None
+
+    @router.get("/sessions/{session_id}", response_class=HTMLResponse)
+    def session_workspace_page(session_id: str, request: Request) -> HTMLResponse:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        html = workspace_template.render(
             demo_mode_label=controller.demo_mode_label,
             session=session_dto,
             submission_id=token_urlsafe(16),
@@ -317,6 +330,44 @@ def build_pages_router(
             url=f"/sessions/{session_id}/answers/{answer_id}/result?revision={revision}",
             status_code=status.HTTP_303_SEE_OTHER,
         )
+    @router.get("/sessions/{session_id}/review", response_class=HTMLResponse)
+    def answer_review_page(session_id: str, request: Request) -> HTMLResponse:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        answer_id = request.query_params.get("answer_id")
+        if not answer_id and session_dto.current_answer is not None:
+            answer_id = str(session_dto.current_answer.answer_id)
+        html = answer_review_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            session=session_dto,
+            answer_id=answer_id,
+        )
+        return HTMLResponse(content=html)
+
+    @router.get("/sessions/{session_id}/summary", response_class=HTMLResponse)
+    def session_summary_page(session_id: str, request: Request) -> HTMLResponse:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        html = summary_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            session=session_dto,
+        )
+        return HTMLResponse(content=html)
+
+    @router.get("/sessions/{session_id}/exercises", response_class=HTMLResponse)
+    def session_exercises_page(session_id: str, request: Request) -> HTMLResponse:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        html = exercise_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            session=session_dto,
+            exercise_id=request.query_params.get("exercise_id"),
+            skill_id=request.query_params.get("skill_id"),
+        )
+        return HTMLResponse(content=html)
 
     return router
 

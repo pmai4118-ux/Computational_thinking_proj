@@ -334,9 +334,9 @@ h3 {
 }
 
 .badge--demo {
-  background-color: var(--color-accent-teal-subtle);
-  border-color: var(--color-accent-teal);
-  color: #115E59;
+  background-color: var(--color-accent-violet-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary-active);
 }
 
 .badge--met {

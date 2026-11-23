@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Bài luyện tiếp theo — interviewUS{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/results.css">
+<link rel="stylesheet" href="/static/css/exercise.css">
+{% endblock %}
+
+{% block content %}
+<section class="card results-page" data-exercise-page
+         data-session-id="{{ session.session_id }}"
+         data-exercise-id="{{ exercise_id or '' }}"
+         data-skill-id="{{ skill_id or '' }}"
+         aria-labelledby="exercise-heading">
+  <div class="results-header">
+    <div>
+      <p class="eyebrow">Bài luyện theo điểm thiếu đã xác nhận</p>
+      <h1 id="exercise-heading">Bài tập và câu hỏi luyện lại</h1>
+    </div>
+    <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Về tổng kết</a>
+  </div>
+  <p class="text-secondary reading-measure">Bài tập chỉ xuất hiện khi dữ liệu đề xuất khớp với kỹ năng còn thiếu. Thời lượng hiển thị là ước tính.</p>
+  <div id="exercise-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
+  <p id="exercise-status" class="alert alert--status" role="status" aria-live="polite">Đang tải đề xuất từ phiên…</p>
+  <div id="exercise-content" hidden>
+    <p id="exercise-message" class="text-secondary"></p>
+    <div id="exercise-list" class="exercise-list"></div>
+    <div id="exercise-empty" class="empty-state" hidden>
+      <h2>Chưa có bài tập phù hợp</h2>
+      <p id="exercise-empty-reason">Không có đề xuất khớp với điểm thiếu đã xác nhận trong phiên này.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}<script src="/static/js/exercise.js" defer></script>{% endblock %}
