@@ -59,6 +59,6 @@ def test_u03_draft_and_idempotency_are_bound_to_session_and_question() -> None:
     assert "draft:${sessionId}:${questionId}" in workspace_js
     assert "client_submission_id: submissionFor(text)" in workspace_js
     assert "answer_id: submitted.answer.answer_id" in workspace_js
-    assert "api/sessions/${encodeURIComponent(sessionId)}/answers" in workspace_js
-    assert "api/answers/${encodeURIComponent(answer.answer_id)}/evaluate" in workspace_js
+    assert "api.submitAnswer(sessionId, requestBody)" in workspace_js
+    assert "api.evaluateAnswer(sessionId, answer.answer_id, answer.revision)" in workspace_js
     assert "@media (max-width: 48rem)" in workspace_css

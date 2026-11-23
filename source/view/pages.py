@@ -192,12 +192,18 @@ def build_pages_router(
         if error_response is not None:
             return error_response
         answer_id = request.query_params.get("answer_id")
-        if not answer_id and session_dto.current_answer is not None:
-            answer_id = str(session_dto.current_answer.answer_id)
+        answer_revision = request.query_params.get("revision")
+        current_answer = session_dto.current_answer
+        if current_answer is not None:
+            if not answer_id:
+                answer_id = str(current_answer.answer_id)
+            if not answer_revision and answer_id == str(current_answer.answer_id):
+                answer_revision = str(current_answer.revision)
         html = answer_review_template.render(
             demo_mode_label=controller.demo_mode_label,
             session=session_dto,
             answer_id=answer_id,
+            answer_revision=answer_revision,
         )
         return HTMLResponse(content=html)
 

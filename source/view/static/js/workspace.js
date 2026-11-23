@@ -12,6 +12,7 @@
   const statusBox = document.querySelector("#workspace-status");
   const submitButton = document.querySelector("#submit-answer");
   const retryButton = document.querySelector("#retry-evaluation");
+  const api = window.InterviewApi;
   const sessionId = workspace.dataset.sessionId;
   const questionId = workspace.dataset.questionId;
   const questionVersion = Number(workspace.dataset.questionVersion);
@@ -73,14 +74,8 @@
     return next.id;
   }
 
-  async function readResponse(response) {
-    let payload;
-    try { payload = await response.json(); } catch (_error) { payload = {}; }
-    if (!response.ok) {
-      const recovery = payload.recovery_action ? ` ${payload.recovery_action}` : "";
-      throw new Error(`${payload.message || `Yêu cầu thất bại (${response.status}).`}${recovery}`);
-    }
-    return payload;
+  function errorText(error) {
+    return [error.message, error.recoveryAction].filter(Boolean).join(" ");
   }
 
   async function evaluateSavedAnswer(answer) {
@@ -90,19 +85,17 @@
     setStatus("Bài đã lưu. Đang đánh giá theo rubric…");
     retryButton.hidden = true;
     try {
-      const response = await fetch(`/api/answers/${encodeURIComponent(answer.answer_id)}/evaluate`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ answer_revision: answer.revision }),
-      });
-      const result = await readResponse(response);
-      if (result.status !== "completed") {
+      const response = await api.evaluateAnswer(sessionId, answer.answer_id, answer.revision);
+      if (!response.result || response.result.status !== "completed") {
         throw new Error("Đánh giá chưa hoàn tất. Bài đã lưu; bạn có thể thử lại.");
       }
       storage.remove(answerKey);
-      window.location.assign(`/sessions/${encodeURIComponent(sessionId)}/review?answer_id=${encodeURIComponent(answer.answer_id)}`);
+      const reviewUrl = new URL(`/sessions/${encodeURIComponent(sessionId)}/review`, window.location.origin);
+      reviewUrl.searchParams.set("answer_id", answer.answer_id);
+      reviewUrl.searchParams.set("revision", String(answer.revision));
+      window.location.assign(reviewUrl.toString());
     } catch (error) {
-      setError(error.message || "Chưa thể đánh giá bài đã lưu.");
+      setError(errorText(error) || "Chưa thể đánh giá bài đã lưu.");
       setStatus("Câu trả lời đã lưu trên máy chủ; nội dung gốc được giữ nguyên.");
       errorBox.focus();
       retryButton.hidden = false;
@@ -159,12 +152,7 @@
     setError("");
     setStatus("Đang lưu nguyên văn câu trả lời…");
     try {
-      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/answers`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-      const submitted = await readResponse(response);
+      const submitted = await api.submitAnswer(sessionId, requestBody);
       pendingAnswer = {
         answer_id: submitted.answer.answer_id,
         revision: submitted.answer.revision,
@@ -178,7 +166,7 @@
       setBusy(false);
       await evaluateSavedAnswer(pendingAnswer);
     } catch (error) {
-      setError(error.message || "Chưa xác nhận được việc lưu bài. Bản nháp vẫn được giữ trên trình duyệt.");
+      setError(errorText(error) || "Chưa xác nhận được việc lưu bài. Bản nháp vẫn được giữ trên trình duyệt.");
       setStatus("Chưa xác nhận được bài đã lưu. Gửi lại sẽ dùng cùng mã gửi cho cùng nội dung.");
       answerField.focus();
     } finally {

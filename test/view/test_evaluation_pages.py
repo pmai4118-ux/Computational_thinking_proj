@@ -1,22 +1,20 @@
-"""Browser form and result page checks for the merged evaluation flow."""
+"""UI/API checks for the saved-answer evaluation flow."""
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 from unittest.mock import Mock
-from urllib.parse import urlencode
 
 from fastapi.testclient import TestClient
 
 from source.config import ProviderMode, Settings
+from source.Model.ids import SessionId
 from source.main import create_app
 from source.service.providers.fixture_provider import FixtureProvider
 from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
-from source.Model.ids import SessionId
 
 
-def test_web_form_saves_verbatim_answer_and_displays_cached_result(tmp_path: Path) -> None:
+def test_api_client_saves_verbatim_answer_reads_result_and_enforces_ownership(tmp_path: Path) -> None:
     provider = Mock(wraps=FixtureProvider())
     settings = Settings(
         provider=ProviderMode.FIXTURE,
@@ -36,32 +34,40 @@ def test_web_form_saves_verbatim_answer_and_displays_cached_result(tmp_path: Pat
         form = owner.get(f"/sessions/{session_id}")
         assert form.status_code == 200
         assert 'name="text"' in form.text
-        match = re.search(r'name="client_submission_id" value="([^"]+)"', form.text)
-        assert match is not None
+        assert "/static/js/api_client.js" in form.text
 
         submitted = owner.post(
-            f"/sessions/{session_id}/answers",
-            content=urlencode({
+            f"/api/sessions/{session_id}/answers",
+            json={
                 "question_id": question["id"],
                 "question_version": question["version"],
-                "client_submission_id": match.group(1),
+                "client_submission_id": "web-api-submit-verbatim-1",
                 "text": answer_text,
-            }),
-            headers={"content-type": "application/x-www-form-urlencoded"},
-            follow_redirects=True,
+            },
         )
-        assert submitted.status_code == 200
-        assert "Tổng điểm:" in submitted.text
-        assert answer_text in submitted.text
-        assert "Câu trả lời gốc" in submitted.text
-        assert "Điểm và căn cứ theo tiêu chí" in submitted.text
-        result_url = str(submitted.url)
-        assert owner.get(result_url).status_code == 200
+        assert submitted.status_code == 201
+        answer = submitted.json()["answer"]
+        assert answer["text"] == answer_text
+
+        evaluated = owner.post(
+            f"/api/sessions/{session_id}/answers/{answer['answer_id']}/evaluate",
+            json={"answer_revision": answer["revision"]},
+        )
+        assert evaluated.status_code == 200
+        assert evaluated.json()["result"]["status"] == "completed"
+
+        result_url = (
+            f"/api/sessions/{session_id}/answers/{answer['answer_id']}"
+            f"/evaluations/{answer['revision']}"
+        )
+        result = owner.get(result_url)
+        assert result.status_code == 200
+        assert result.json()["result"]["answer_text"] == answer_text
         assert stranger.get(result_url).status_code == 403
         provider.interpret.assert_called_once()
 
 
-def test_web_form_rejects_blank_answer_without_losing_draft(tmp_path: Path) -> None:
+def test_api_rejects_blank_answer_while_workspace_keeps_draft_support(tmp_path: Path) -> None:
     settings = Settings(
         provider=ProviderMode.FIXTURE,
         database_path=tmp_path / "invalid.sqlite3",
@@ -73,22 +79,24 @@ def test_web_form_rejects_blank_answer_without_losing_draft(tmp_path: Path) -> N
         session_id = created["session_id"]
         question = created["current_question"]
         response = client.post(
-            f"/sessions/{session_id}/answers",
-            content=urlencode({
+            f"/api/sessions/{session_id}/answers",
+            json={
                 "question_id": question["id"],
                 "question_version": question["version"],
                 "client_submission_id": "blank-answer-test",
                 "text": "   ",
-            }),
-            headers={"content-type": "application/x-www-form-urlencoded"},
+            },
         )
         assert response.status_code == 422
-        assert 'role="alert"' in response.text
-        assert 'name="text"' in response.text
-        assert ">   </textarea>" in response.text
+        assert response.json()["error_code"] == "INVALID_INPUT"
+        workspace = client.get(f"/sessions/{session_id}")
+        assert 'name="text"' in workspace.text
+        assert "/static/js/api_client.js" in workspace.text
+        workspace_js = (Path(__file__).resolve().parents[2] / "source/view/static/js/workspace.js").read_text(encoding="utf-8")
+        assert "storage.set(draftKey, answerField.value)" in workspace_js
 
 
-def test_web_provider_timeout_keeps_saved_answer_and_offers_retry(tmp_path: Path) -> None:
+def test_api_provider_timeout_keeps_saved_answer_and_offers_retry(tmp_path: Path) -> None:
     provider = Mock()
     provider.interpret.side_effect = ProviderFailureError(
         ProviderErrorKind.TIMEOUT, "Synthetic timeout", retryable=True
@@ -103,18 +111,27 @@ def test_web_provider_timeout_keeps_saved_answer_and_offers_retry(tmp_path: Path
         created = client.post("/api/sessions", json={}).json()
         session_id = created["session_id"]
         question = created["current_question"]
-        response = client.post(
-            f"/sessions/{session_id}/answers",
-            content=urlencode({
+        submitted = client.post(
+            f"/api/sessions/{session_id}/answers",
+            json={
                 "question_id": question["id"],
                 "question_version": question["version"],
                 "client_submission_id": "timeout-page-test",
                 "text": "Original answer remains saved.",
-            }),
-            headers={"content-type": "application/x-www-form-urlencoded"},
+            },
+        )
+        assert submitted.status_code == 201
+        answer = submitted.json()["answer"]
+        response = client.post(
+            f"/api/sessions/{session_id}/answers/{answer['answer_id']}/evaluate",
+            json={"answer_revision": answer["revision"]},
         )
         assert response.status_code == 504
-        assert 'role="alert"' in response.text
-        assert "Thử đánh giá lại" in response.text
-    [saved] = app.state.container.session_repo.list_answers_for_session(SessionId(session_id))
+        assert response.json()["error_code"] == "PROVIDER_TIMEOUT"
+        workspace = client.get(f"/sessions/{session_id}")
+        assert 'role="alert"' in workspace.text
+        assert "Thử đánh giá lại" in workspace.text
+    saved = app.state.container.session_repo.list_answers_for_session(SessionId(session_id))
+    assert len(saved) == 1
+    saved = saved[0]
     assert saved.text == "Original answer remains saved."

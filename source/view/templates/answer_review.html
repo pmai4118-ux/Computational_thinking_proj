@@ -7,6 +7,7 @@
 <section class="card results-page" data-answer-review
          data-session-id="{{ session.session_id }}"
          data-answer-id="{{ answer_id or '' }}"
+         data-answer-revision="{{ answer_revision or '' }}"
          aria-labelledby="review-heading">
   <div class="results-header">
     <div>
@@ -37,6 +38,9 @@
         <pre id="answer-source" class="answer-source"></pre>
       </section>
     </div>
+  </div>
+  <div class="action-row">
+    <a class="btn btn--primary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập theo điểm thiếu</a>
   </div>
 </section>
 {% endblock %}

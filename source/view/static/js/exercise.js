@@ -3,6 +3,7 @@
 
   const page = document.querySelector("[data-exercise-page]");
   if (!page) return;
+  const api = window.InterviewApi;
   const sessionId = page.dataset.sessionId;
   const exerciseId = page.dataset.exerciseId;
   const skillId = page.dataset.skillId;
@@ -57,6 +58,22 @@
     for (const skill of item.related_skill_ids || []) meta.append(node("span", "badge", skill));
     card.append(meta);
 
+    const instructionsSection = node("section", "exercise-card__section");
+    instructionsSection.append(node("h3", "", "Hướng dẫn thực hiện"));
+    const instructions = node("p", "form-hint", "Đang tải hướng dẫn bài tập…");
+    instructionsSection.append(instructions);
+    card.append(instructionsSection);
+    api.getExercise(item.exercise_id, item.version).then((detail) => {
+      instructions.textContent = detail.instructions;
+      if (detail.observable_outcome) {
+        instructionsSection.append(node("p", "form-hint", `Kết quả cần đạt: ${detail.observable_outcome}`));
+      }
+    }).catch((error) => {
+      instructions.textContent = error.status === 404
+        ? "Không tìm thấy nội dung chi tiết đã duyệt cho bài tập này."
+        : `${error.message || "Chưa tải được hướng dẫn."} Bài tập vẫn giữ nguyên trong danh sách.`;
+    });
+
     const gap = item.matched_gap || {};
     const gapSection = node("section", "exercise-card__section");
     gapSection.append(node("h3", "", "Vì sao có bài tập này"));
@@ -106,24 +123,17 @@
     const previous = button.textContent;
     button.textContent = "Đang mở phiên…";
     try {
-      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answerId)}/practice`, {
-        method: "POST",
-        headers: { "content-type": "application/json", accept: "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
+      const payload = await api.startPractice(sessionId, answerId, {
           answer_revision: answerRef.revision,
           criterion_id: item.matched_gap.criterion_id,
           exercise_id: item.exercise_id,
-        }),
       });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.message || "Chưa thể mở phiên luyện lại.");
       if (!payload.session_id) throw new Error("API không trả về phiên luyện lại.");
       window.location.assign(`/sessions/${encodeURIComponent(payload.session_id)}`);
     } catch (error) {
       button.disabled = false;
       button.textContent = previous;
-      errorBox.textContent = `${error.message || "Chưa thể mở phiên luyện lại."} Bài cũ vẫn được giữ nguyên.`;
+      errorBox.textContent = `${error.message || "Chưa thể mở phiên luyện lại."} ${error.recoveryAction || "Bài cũ vẫn được giữ nguyên."}`;
       errorBox.hidden = false;
       errorBox.focus();
     }
@@ -157,15 +167,11 @@
     errorBox.hidden = true;
     content.hidden = true;
     try {
-      const response = await fetch(`/api/sessions/${encodeURIComponent(sessionId)}/exercises`, {
-        headers: { accept: "application/json" },
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.message || `Không tải được đề xuất (${response.status}).`);
+      const payload = await api.getExerciseRecommendations(sessionId);
       renderRecommendations(payload);
     } catch (error) {
       statusBox.hidden = true;
-      errorBox.textContent = `${error.message || "Chưa tải được bài tập."} Không có bài luyện thay thế nào được tự tạo.`;
+      errorBox.textContent = `${error.message || "Chưa tải được bài tập."} ${error.recoveryAction || "Không có bài luyện thay thế nào được tự tạo."}`;
       errorBox.hidden = false;
       const retry = node("button", "btn btn--secondary", "Tải lại đề xuất");
       retry.type = "button";

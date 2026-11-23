@@ -37,4 +37,6 @@ def test_u06_renders_only_api_exercises_and_explains_missing_alternate_action() 
     assert "Không tạo bài thay thế tự động" in exercise_js
     assert "startPractice" in exercise_js
     assert "item.matched_gap.answer_ref" in exercise_js
-    assert "/practice" in exercise_js
+    assert "api.startPractice(sessionId, answerId" in exercise_js
+    api_client = (ROOT_DIR / "source" / "view" / "static" / "js" / "api_client.js").read_text(encoding="utf-8")
+    assert "}/practice`" in api_client

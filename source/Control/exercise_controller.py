@@ -12,6 +12,7 @@ from source.Control.interview_controller import (
 )
 from source.Control.schemas import (
     ApiErrorResponse,
+    AnswerRevisionRefDTO,
     ErrorCode,
     ExerciseDetailDTO,
     ExerciseRecommendationDTO,
