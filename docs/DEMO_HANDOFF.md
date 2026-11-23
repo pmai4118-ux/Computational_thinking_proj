@@ -62,6 +62,12 @@ Bộ C07 là tài sản **kiểm định**, không tham gia chấm điểm trong
 
 `fixture` là provider mẫu xác định để chạy test ngoại tuyến; kết quả mang nhãn **Dữ liệu minh họa**. Nhánh `Demo` dùng `EVALUATION_PROVIDER=antigravity` theo mặc định và [run_demo.ps1](../run_demo.ps1) ép dùng Antigravity. Khi AI lỗi, ứng dụng báo lỗi và giữ bài đã lưu; không tự đổi sang fixture. Điểm fixture chỉ kiểm tra luồng phần mềm, không chứng minh chất lượng AI.
 
+### Khi Antigravity phản hồi chậm
+
+Câu trả lời được lưu trước khi gọi AI. Màn hình báo đang đối chiếu rubric, cập nhật thời gian chờ sau 20 giây; nếu tải lại trang, UI đọc trạng thái đã lưu và kiểm tra lại mỗi 5 giây. Khi hoàn tất, UI mở điểm và căn cứ. `run_demo.ps1` mặc định không tự gọi AI lần hai: mỗi lần chờ tối đa 120 giây theo cấu hình Antigravity (cộng thời gian khởi chạy/dọn tiến trình); người dùng có thể đặt `GEMINI_MAX_RETRIES=1` nếu muốn tự thử lại một lần. Nếu hết hạn, API trả `504 PROVIDER_TIMEOUT`, ghi `failed` có thể retry, giữ nguyên bài gốc và **không tạo điểm**. Nút **Thử đánh giá lại** gửi lại đúng bản trả lời đã lưu; lần gọi sau khi đã `completed` chỉ đọc kết quả cũ.
+
+Ngày 23/11/2026, bài kiểm tra end-to-end gọi Antigravity thật hoàn tất trong **74,82 giây**, chấm **4/6**, trả một khuyến nghị và tạo lượt luyện lại. Một phép thử Antigravity thật khác đặt timeout 1 giây xác nhận `504 PROVIDER_TIMEOUT`, `retryable=true`, kết quả lưu `failed` với `total_score=null`, văn bản bài gốc còn nguyên. Bộ kiểm thử giao diện bằng Node xác nhận thông báo chờ lâu, đọc lại kết quả sau khi mở lại trang, và chỉ hiện retry khi lỗi cho phép (`4 passed`). Các thời gian trên là số đo từng lần chạy, không phải cam kết độ trễ.
+
 ## 3. Kiểm tra đã thực hiện
 
 Chạy từ thư mục gốc repository với môi trường `.venv`:

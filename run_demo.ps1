@@ -19,5 +19,7 @@ if ($modelCheckExitCode -ne 0 -or -not ($modelList | Select-String -SimpleMatch 
 }
 
 $env:EVALUATION_PROVIDER = 'antigravity'
-Write-Host "Starting Demo with live Antigravity model $selectedModel"
+if (-not $env:GEMINI_MAX_RETRIES) { $env:GEMINI_MAX_RETRIES = '0' }
+$selectedTimeout = if ($env:ANTIGRAVITY_TIMEOUT_SECONDS) { $env:ANTIGRAVITY_TIMEOUT_SECONDS } else { '120' }
+Write-Host "Starting Demo with live Antigravity model $selectedModel (timeout ${selectedTimeout}s per attempt, automatic retries $env:GEMINI_MAX_RETRIES)"
 & $python -m uvicorn source.main:create_app --factory --host 127.0.0.1 --port 8000

@@ -40,6 +40,7 @@ local `.env` file. `source.config.load_settings()` reads the process environment
 | `EVALUATION_PROVIDER` | `antigravity` | Gọi AI thật qua phiên đăng nhập `agy`. `fixture` chỉ dùng khi chọn tường minh cho kiểm thử offline và gắn nhãn **Dữ liệu minh họa**. |
 | `ANTIGRAVITY_MODEL` | `gemini-3.8-flash-medium` | Model hiện dùng cho đánh giá bằng AI. |
 | `ANTIGRAVITY_TIMEOUT_SECONDS` | `120` | Giới hạn thời gian một lần gọi Antigravity. |
+| `GEMINI_MAX_RETRIES` | `1` trong cấu hình chung; `0` khi dùng `run_demo.ps1` | Demo trả lỗi timeout sau một lần gọi để người dùng tự quyết định thử lại. Đặt `1` nếu muốn tự gọi lại một lần. |
 | `GEMINI_API_KEY` | Unset | Required for `gemini`. Inject it as a server secret. |
 | `GEMINI_MODEL` | Unset | Required for `gemini`. Use the model selected in P07. |
 | `GEMINI_TIMEOUT_SECONDS` | `30` | A finite positive number of seconds. |

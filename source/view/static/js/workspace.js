@@ -26,6 +26,9 @@
   const submissionKey = `submission:${sessionId}:${questionId}`;
   const answerKey = `saved-answer:${sessionId}:${questionId}`;
   let busy = false;
+  let statusPoll = null;
+  let waitNotice = null;
+  let waitStartedAt = 0;
   let pendingAnswer = savedAnswerId
     ? { answer_id: savedAnswerId, revision: savedAnswerRevision }
     : null;
@@ -82,32 +85,129 @@
   }
 
   function errorText(error) {
+    if (error.code === "PROVIDER_TIMEOUT") {
+      return "AI phản hồi quá thời gian. Bài đã lưu nguyên vẹn và chưa bị chấm điểm; bạn có thể thử đánh giá lại.";
+    }
+    if (error.code === "EVALUATION_IN_PROGRESS") {
+      return "Bài này đang được AI đánh giá. Hãy chờ kết quả của lượt đang chạy.";
+    }
+    if (error.code === "EVALUATION_INTERRUPTED") {
+      return "Lượt đánh giá trước bị gián đoạn. Bài đã lưu và bạn có thể thử đánh giá lại.";
+    }
+    if (typeof error.code === "string" && error.code.startsWith("PROVIDER_")) {
+      return error.retryable === false
+        ? "Dịch vụ AI hiện chưa thể đánh giá bài này. Bài đã lưu; cần khắc phục lỗi dịch vụ trước khi tiếp tục."
+        : "Dịch vụ AI chưa hoàn tất đánh giá. Bài đã lưu và bạn có thể thử lại.";
+    }
     return [error.message, error.recoveryAction].filter(Boolean).join(" ");
+  }
+
+  function reviewAnswer(answer) {
+    storage.remove(answerKey);
+    const reviewUrl = new URL(`/sessions/${encodeURIComponent(sessionId)}/review`, window.location.origin);
+    reviewUrl.searchParams.set("answer_id", answer.answer_id);
+    reviewUrl.searchParams.set("revision", String(answer.revision));
+    window.location.assign(reviewUrl.toString());
+  }
+
+  function stopWaiting() {
+    if (statusPoll !== null) window.clearInterval(statusPoll);
+    if (waitNotice !== null) window.clearInterval(waitNotice);
+    statusPoll = null;
+    waitNotice = null;
+  }
+
+  function showWaiting() {
+    waitStartedAt = Date.now();
+    setStatus("Bài đã lưu. AI đang đối chiếu câu trả lời với rubric; việc này có thể mất hơn một phút. Bạn có thể quay lại trang này để xem kết quả.");
+    waitNotice = window.setInterval(() => {
+      const seconds = Math.floor((Date.now() - waitStartedAt) / 1000);
+      if (seconds >= 20) {
+        setStatus(`Bài đã lưu. AI vẫn đang đánh giá (đã chờ khoảng ${seconds} giây). Bạn có thể quay lại trang này để xem kết quả.`);
+      }
+    }, 10000);
+  }
+
+  function showFailure(error, canRetry = error.retryable !== false) {
+    stopWaiting();
+    setBusy(false);
+    setError(errorText(error) || "Chưa thể đánh giá bài đã lưu.");
+    setStatus("Câu trả lời đã lưu trên máy chủ; chưa có điểm đánh giá.");
+    retryButton.hidden = !canRetry;
+    errorBox.focus();
+  }
+
+  async function readSavedEvaluation(answer) {
+    const response = await api.getEvaluation(sessionId, answer.answer_id, answer.revision);
+    if (response.result.status === "completed") {
+      stopWaiting();
+      reviewAnswer(answer);
+      return "completed";
+    }
+    if (response.result.status === "failed") {
+      const failure = new Error(response.result.failure_message || "AI chưa hoàn tất đánh giá.");
+      failure.code = response.result.failure_code;
+      failure.retryable = response.result.retryable;
+      showFailure(failure);
+      return "failed";
+    }
+    return "processing";
+  }
+
+  function watchEvaluation(answer) {
+    if (statusPoll !== null) return;
+    setBusy(true);
+    retryButton.hidden = true;
+    showWaiting();
+    let reading = false;
+    statusPoll = window.setInterval(async () => {
+      if (reading) return;
+      reading = true;
+      try {
+        await readSavedEvaluation(answer);
+      } catch (error) {
+        // A temporary read error must not start another evaluation.
+        setStatus("Bài đã lưu. Chưa đọc được trạng thái AI; hệ thống sẽ kiểm tra lại.");
+      } finally {
+        reading = false;
+      }
+    }, 5000);
   }
 
   async function evaluateSavedAnswer(answer) {
     if (busy || !answer) return;
+    stopWaiting();
     setBusy(true);
     setError("");
-    setStatus("Bài đã lưu. Đang đánh giá theo rubric…");
+    showWaiting();
     retryButton.hidden = true;
     try {
       const response = await api.evaluateAnswer(sessionId, answer.answer_id, answer.revision);
       if (!response.result || response.result.status !== "completed") {
         throw new Error("Đánh giá chưa hoàn tất. Bài đã lưu; bạn có thể thử lại.");
       }
-      storage.remove(answerKey);
-      const reviewUrl = new URL(`/sessions/${encodeURIComponent(sessionId)}/review`, window.location.origin);
-      reviewUrl.searchParams.set("answer_id", answer.answer_id);
-      reviewUrl.searchParams.set("revision", String(answer.revision));
-      window.location.assign(reviewUrl.toString());
+      stopWaiting();
+      reviewAnswer(answer);
     } catch (error) {
-      setError(errorText(error) || "Chưa thể đánh giá bài đã lưu.");
-      setStatus("Câu trả lời đã lưu trên máy chủ; nội dung gốc được giữ nguyên.");
-      errorBox.focus();
-      retryButton.hidden = false;
+      if (error.code === "EVALUATION_IN_PROGRESS" || error.code === "NETWORK_ERROR") {
+        try {
+          const state = await readSavedEvaluation(answer);
+          if (state === "processing") {
+            stopWaiting();
+            watchEvaluation(answer);
+          }
+          return;
+        } catch (_readError) {
+          if (error.code === "EVALUATION_IN_PROGRESS") {
+            stopWaiting();
+            watchEvaluation(answer);
+            return;
+          }
+        }
+      }
+      showFailure(error, error.code !== "EVALUATION_IN_PROGRESS" && error.retryable !== false);
     } finally {
-      setBusy(false);
+      if (statusPoll === null) setBusy(false);
     }
   }
 
@@ -126,8 +226,17 @@
       setError("");
     });
   } else {
-    retryButton.hidden = false;
-    setStatus("Bài đã lưu. Nếu chưa có kết quả, hãy thử đánh giá lại bài đã lưu.");
+    setStatus("Bài đã lưu. Đang kiểm tra kết quả đánh giá gần nhất…");
+    readSavedEvaluation(pendingAnswer).then((state) => {
+      if (state === "processing") watchEvaluation(pendingAnswer);
+    }).catch((error) => {
+      if (error.status === 404) {
+        retryButton.hidden = false;
+        setStatus("Bài đã lưu nhưng chưa được đánh giá. Bạn có thể bắt đầu đánh giá bài đã lưu.");
+      } else {
+        showFailure(error);
+      }
+    });
   }
 
   updateCounter();
@@ -204,7 +313,7 @@
       setStatus("Chưa xác nhận được bài đã lưu. Gửi lại sẽ dùng cùng mã gửi cho cùng nội dung.");
       answerField.focus();
     } finally {
-      setBusy(false);
+      if (statusPoll === null) setBusy(false);
     }
   });
 })();
