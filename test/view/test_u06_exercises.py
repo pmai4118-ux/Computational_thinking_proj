@@ -23,7 +23,7 @@ def test_u06_exercise_page_accepts_session_skill_and_exercise_filters(
     assert 'data-skill-id="skill.backend.data_consistency"' in response.text
     assert 'data-exercise-id="exercise.backend.rollback_invariant_test"' in response.text
     assert "/static/js/exercise.js" in response.text
-    assert "Vì sao có bài tập này" in exercise_js
+    assert "Vì sao bài này phù hợp" in exercise_js
 
 
 def test_u06_renders_only_api_exercises_and_explains_missing_alternate_action() -> None:

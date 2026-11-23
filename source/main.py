@@ -14,6 +14,10 @@ from source.Control.saved_evaluation_controller import (
     build_saved_evaluation_router,
 )
 from source.Control.exercise_controller import ExerciseController, build_exercise_router
+from source.Control.session_summary_controller import (
+    SessionSummaryController,
+    build_session_summary_router,
+)
 from source.Control.interview_controller import (
     InterviewController,
     build_interview_router,
@@ -51,6 +55,7 @@ class AppContainer:
     saved_evaluation_controller: SavedEvaluationController
     recommendation_service: RecommendationService
     exercise_controller: ExerciseController
+    session_summary_controller: SessionSummaryController
 
 
 def create_app(
@@ -111,6 +116,14 @@ def create_app(
         interview_controller=interview_controller,
         demo_mode_label=resolved_settings.demo_label,
     )
+    session_summary_controller = SessionSummaryController(
+        interview_controller=interview_controller,
+        interview_service=interview_service,
+        recommendation_service=recommendation_service,
+        content_repo=resolved_content_repo,
+        session_repo=resolved_session_repo,
+        evaluation_repo=resolved_eval_repo,
+    )
 
     app = FastAPI(
         title="interviewUS — Luyện phỏng vấn kỹ thuật Backend",
@@ -128,6 +141,7 @@ def create_app(
         saved_evaluation_controller=saved_evaluation_controller,
         recommendation_service=recommendation_service,
         exercise_controller=exercise_controller,
+        session_summary_controller=session_summary_controller,
     )
 
     register_api_exception_handlers(app)
@@ -135,6 +149,7 @@ def create_app(
     app.include_router(build_interview_router(interview_controller))
     app.include_router(build_saved_evaluation_router(saved_evaluation_controller))
     app.include_router(build_exercise_router(exercise_controller))
+    app.include_router(build_session_summary_router(session_summary_controller))
     app.include_router(build_pages_router(interview_controller, saved_evaluation_controller))
 
     @app.get("/health", tags=["system"])

@@ -103,7 +103,7 @@ class RecommendationService:
                 return exercise, source
         return None
 
-    def _confirmed_gaps(self, session: Session) -> tuple[ConfirmedGap, ...]:
+    def confirmed_gaps(self, session: Session) -> tuple[ConfirmedGap, ...]:
         skill_labels = {skill.id: skill.label for skill in self._content_repo.list_skills()}
         blueprint = self._interview_service.find_blueprint(
             role=session.role, level=session.level, language=session.language
@@ -240,7 +240,7 @@ class RecommendationService:
         session = snapshot.session
         if session.state is SessionState.EXPIRED:
             raise SessionExpiredError(f"Session '{session_id}' has expired.")
-        gaps = self._confirmed_gaps(session)
+        gaps = self.confirmed_gaps(session)
         catalog = {
             item.id: item
             for item in self._content_repo.list_approved_exercises()

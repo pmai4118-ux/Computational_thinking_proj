@@ -29,79 +29,96 @@
       <span>{{ session.progress.evaluated_count }} câu đã có kết quả</span>
     </div>
 
-    <article class="workspace-question reading-measure" aria-labelledby="question-heading">
-      <div class="workspace-tags">
-        <span class="badge">
-          {% if session.current_question.category == "programming_knowledge" %}Kiến thức lập trình
-          {% elif session.current_question.category == "technical_case" %}Tình huống kỹ thuật
-          {% elif session.current_question.category == "algorithm_explanation" %}Giải thích thuật toán
-          {% elif session.current_question.category == "ai_code_review" %}Đánh giá mã nguồn
-          {% else %}{{ session.current_question.category }}{% endif %}
-        </span>
-        {% if session.current_question.source.license_spdx %}
-          <span class="badge">Nguồn mở · {{ session.current_question.source.license_spdx }}</span>
-        {% endif %}
-      </div>
-      <h2 id="question-heading">Đề bài</h2>
-      <p>{{ session.current_question.prompt }}</p>
-
-      {% if session.current_question.code %}
-        <pre class="code-block"><code>{{ session.current_question.code }}</code></pre>
-      {% endif %}
-
-      {% if session.current_question.constraints %}
-        <div>
-          <h3>Ràng buộc cần lưu ý</h3>
-          <ul class="constraint-list">
-            {% for item in session.current_question.constraints %}<li>{{ item }}</li>{% endfor %}
-          </ul>
+    <div class="workspace-layout">
+      <article class="workspace-question reading-measure" aria-labelledby="question-heading">
+        <div class="workspace-tags">
+          <span class="badge">
+            {% if session.current_question.category == "programming_knowledge" %}Kiến thức lập trình
+            {% elif session.current_question.category == "technical_case" %}Tình huống kỹ thuật
+            {% elif session.current_question.category == "algorithm_explanation" %}Giải thích thuật toán
+            {% elif session.current_question.category == "ai_code_review" %}Đánh giá mã nguồn
+            {% else %}{{ session.current_question.category }}{% endif %}
+          </span>
+          {% if session.current_question.source.license_spdx %}
+            <span class="badge">Nguồn mở · {{ session.current_question.source.license_spdx }}</span>
+          {% endif %}
         </div>
-      {% endif %}
+        <h2 id="question-heading">Đề bài</h2>
+        <p>{{ session.current_question.prompt }}</p>
 
-      {% if session.current_question.source.url %}
-        <p class="form-hint">
-          Nguồn tham chiếu:
-          <a href="{{ session.current_question.source.url }}" rel="noopener noreferrer" target="_blank">
-            {{ session.current_question.source.source_id }}
-          </a>
-        </p>
-      {% endif %}
-    </article>
-
-    {% if session.current_answer %}
-      <div class="alert alert--status" role="status">
-        <p class="alert__title">Câu trả lời đã được lưu trên máy chủ.</p>
-        <p class="alert__hint">Bạn có thể xem kết quả hoặc thử đánh giá lại bài đã lưu.</p>
-      </div>
-    {% endif %}
-
-    <form id="answer-form" class="workspace-answer-form" method="post" action="/sessions/{{ session.session_id }}" novalidate>
-      <div class="form-field">
-        <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
-        <p class="form-hint" id="answer-guidance">Trình bày cách suy nghĩ, các giả định và cách kiểm tra kết quả. Tối đa 20.000 ký tự.</p>
-        <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
-                  aria-describedby="answer-guidance answer-counter draft-label"
-                  {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% endif %}</textarea>
-        <p class="form-hint" id="draft-label" data-draft-label>
-          {% if session.current_answer %}Đã lưu câu trả lời trên máy chủ{% else %}Bản nháp trên trình duyệt (chưa lưu máy chủ){% endif %}
-        </p>
-        <p class="form-hint" id="answer-counter" aria-live="polite"></p>
-      </div>
-
-      <p class="alert alert--error" id="workspace-error" role="alert" tabindex="-1" hidden></p>
-      <p class="alert alert--status" id="workspace-status" role="status" aria-live="polite" hidden></p>
-
-      <div class="action-row">
-        {% if not session.current_answer %}
-          <button class="btn btn--primary" id="submit-answer" type="submit">Gửi câu trả lời</button>
+        {% if session.current_question.code %}
+          <pre class="code-block"><code>{{ session.current_question.code }}</code></pre>
         {% endif %}
-        <button class="btn btn--secondary" id="retry-evaluation" type="button" hidden>Thử đánh giá lại</button>
+
+        {% if session.current_question.constraints %}
+          <div>
+            <h3>Ràng buộc cần lưu ý</h3>
+            <ul class="constraint-list">
+              {% for item in session.current_question.constraints %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if session.current_question.source.url %}
+          <p class="form-hint">
+            Nguồn tham chiếu:
+            <a href="{{ session.current_question.source.url }}" rel="noopener noreferrer" target="_blank">
+              {{ session.current_question.source.source_id }}
+            </a>
+          </p>
+        {% endif %}
+      </article>
+
+      <form id="answer-form" class="workspace-answer-form" method="post" action="/sessions/{{ session.session_id }}" novalidate>
+        <div class="answer-panel-heading">
+          <h2>Trình bày cách giải</h2>
+          <p class="form-hint">Nêu cách suy nghĩ, giả định và cách kiểm tra kết quả.</p>
+        </div>
+
         {% if session.current_answer %}
-          <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}&amp;revision={{ session.current_answer.revision }}">Xem kết quả câu này</a>
+          <div class="alert alert--status" role="status">
+            <p class="alert__title">Câu trả lời đã được lưu trên máy chủ.</p>
+            <p class="alert__hint">Bạn có thể xem kết quả hoặc thử đánh giá lại bài đã lưu.</p>
+          </div>
         {% endif %}
-        <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
-      </div>
-    </form>
+
+        <div class="form-field">
+          <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
+          <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự.</p>
+          <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
+                    aria-describedby="answer-guidance answer-counter draft-label"
+                    {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% endif %}</textarea>
+          <p class="form-hint" id="draft-label" data-draft-label>
+            {% if session.current_answer %}Đã lưu câu trả lời trên máy chủ{% else %}Bản nháp trên trình duyệt (chưa lưu máy chủ){% endif %}
+          </p>
+          <p class="form-hint" id="answer-counter" aria-live="polite"></p>
+        </div>
+
+        <p class="alert alert--error" id="workspace-error" role="alert" tabindex="-1" hidden></p>
+        <p class="alert alert--status" id="workspace-status" role="status" aria-live="polite" hidden></p>
+
+        <div class="action-row">
+          {% if not session.current_answer %}
+            <button class="btn btn--primary" id="submit-answer" type="submit">Gửi câu trả lời</button>
+          {% endif %}
+          <button class="btn btn--secondary" id="retry-evaluation" type="button" hidden>Thử đánh giá lại</button>
+          {% if session.current_answer %}
+            <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}&amp;revision={{ session.current_answer.revision }}">Xem kết quả câu này</a>
+          {% endif %}
+          <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+          <button class="btn btn--secondary" id="end-session" type="button">Kết thúc sớm</button>
+        </div>
+
+        <div class="alert alert--status" id="end-session-confirmation" role="group" aria-labelledby="end-session-confirmation-title" hidden>
+          <p class="alert__title" id="end-session-confirmation-title">Kết thúc phiên bây giờ?</p>
+          <p class="alert__hint">Các câu đã gửi sẽ được giữ trong tổng kết. Bản nháp chưa gửi không được tính.</p>
+          <div class="action-row">
+            <button class="btn btn--primary" id="confirm-end-session" type="button">Xác nhận kết thúc</button>
+            <button class="btn btn--secondary" id="cancel-end-session" type="button">Tiếp tục luyện</button>
+          </div>
+        </div>
+      </form>
+    </div>
   {% else %}
     <div class="empty-state">
       <h2>Không còn câu hỏi đang chờ</h2>

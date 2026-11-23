@@ -52,11 +52,14 @@
   function renderExercise(item) {
     const card = node("article", "exercise-card");
     card.append(node("h2", "", item.title));
-    card.append(node("p", "", item.summary));
-    const meta = node("div", "exercise-meta");
-    meta.append(node("span", "badge", `Ước tính: ${item.estimated_duration_minutes == null ? "chưa có thời lượng" : `${item.estimated_duration_minutes} phút`}`));
-    for (const skill of item.related_skill_ids || []) meta.append(node("span", "badge", skill));
-    card.append(meta);
+
+    const gap = item.matched_gap || {};
+    const gapSection = node("section", "exercise-card__reason");
+    gapSection.append(node("h3", "", "Vì sao bài này phù hợp"));
+    gapSection.append(node("p", "", `${gap.criterion_label || gap.skill_label || "Điểm thiếu đã xác nhận"}: ${gap.reason || "API chưa cung cấp lý do chi tiết."}`));
+    card.append(gapSection);
+
+    card.append(node("p", "exercise-card__summary", item.summary));
 
     const instructionsSection = node("section", "exercise-card__section");
     instructionsSection.append(node("h3", "", "Hướng dẫn thực hiện"));
@@ -74,13 +77,12 @@
         : `${error.message || "Chưa tải được hướng dẫn."} Bài tập vẫn giữ nguyên trong danh sách.`;
     });
 
-    const gap = item.matched_gap || {};
-    const gapSection = node("section", "exercise-card__section");
-    gapSection.append(node("h3", "", "Vì sao có bài tập này"));
-    gapSection.append(node("p", "", `${gap.criterion_label || gap.skill_label || "Điểm thiếu đã xác nhận"}: ${gap.reason || "API chưa cung cấp lý do chi tiết."}`));
-    card.append(gapSection);
-
     appendSection(card, "Bài cần học trước", item.prerequisite_ids, "Không yêu cầu bài tiên quyết.");
+
+    const meta = node("div", "exercise-meta");
+    meta.append(node("span", "badge", `Thời lượng ước tính: ${item.estimated_duration_minutes == null ? "chưa có" : `${item.estimated_duration_minutes} phút`}`));
+    for (const skill of item.related_skill_ids || []) meta.append(node("span", "badge", skill));
+    card.append(meta);
 
     const source = item.source || {};
     const sourceSection = node("section", "exercise-card__section");

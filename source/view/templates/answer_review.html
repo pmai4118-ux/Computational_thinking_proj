@@ -8,6 +8,9 @@
          data-session-id="{{ session.session_id }}"
          data-answer-id="{{ answer_id or '' }}"
          data-answer-revision="{{ answer_revision or '' }}"
+         data-current-index="{{ session.progress.current_index }}"
+         data-current-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"
+         data-current-answer-revision="{{ session.current_answer.revision if session.current_answer else '' }}"
          aria-labelledby="review-heading">
   <div class="results-header">
     <div>
@@ -40,6 +43,11 @@
     </div>
   </div>
   <div class="action-row">
+    {% if session.state == "in_progress" and session.current_answer and answer_id == session.current_answer.answer_id and answer_revision|int == session.current_answer.revision %}
+      <button id="next-question" class="btn btn--primary" type="button" hidden>
+        {% if session.progress.current_index + 1 == session.progress.total_questions %}Hoàn tất phiên{% else %}Sang câu tiếp theo{% endif %}
+      </button>
+    {% endif %}
     <a class="btn btn--primary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập theo điểm thiếu</a>
   </div>
 </section>
