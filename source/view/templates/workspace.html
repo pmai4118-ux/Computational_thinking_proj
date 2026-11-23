@@ -103,6 +103,14 @@
           <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}&amp;revision={{ session.current_answer.revision }}">Xem kết quả câu này</a>
         {% endif %}
         <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+        <button class="btn btn--secondary" id="end-session" type="button">Kết thúc sớm</button>
+      </div>
+      <div class="alert alert--status" id="end-session-confirmation" hidden>
+        <p>Các câu đã chấm vẫn có trong tổng kết. Câu trả lời chưa gửi và bản nháp sẽ không được tính.</p>
+        <div class="action-row">
+          <button class="btn btn--primary" id="confirm-end-session" type="button">Xác nhận kết thúc</button>
+          <button class="btn btn--secondary" id="cancel-end-session" type="button">Tiếp tục làm</button>
+        </div>
       </div>
     </form>
   {% else %}

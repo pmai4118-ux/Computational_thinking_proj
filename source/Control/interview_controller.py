@@ -15,6 +15,7 @@ from source.Control.schemas import (
     ApiErrorResponse,
     CreateSessionRequest,
     ErrorCode,
+    NextQuestionRequest,
     QuestionPromptDTO,
     SavedAnswerDTO,
     SessionProgressDTO,
@@ -290,6 +291,88 @@ class InterviewController:
             views.append(self._snapshot_to_dto(snap))
         return tuple(views)
 
+    def next_question(
+        self,
+        session_id: SessionId,
+        request_dto: NextQuestionRequest,
+        *,
+        owner_token: str | None,
+    ) -> SessionViewDTO:
+        """Advance only when the server confirms the active answer was evaluated."""
+        owner_hash = hash_owner_token(owner_token) if owner_token else ""
+        try:
+            snapshot = self._service.advance_question(
+                session_id=session_id,
+                owner_token_hash=owner_hash,
+                from_question_index=request_dto.from_question_index,
+            )
+        except (SessionNotFoundError, SessionForbiddenError, SessionExpiredError,
+                InvalidSessionStateError) as error:
+            raise self._session_action_error(error, session_id) from error
+        return self._snapshot_to_dto(snapshot)
+
+    def end_session(
+        self,
+        session_id: SessionId,
+        *,
+        owner_token: str | None,
+        reason: str,
+    ) -> None:
+        """End an owned session early while preserving all saved answers."""
+        if reason != "student_requested":
+            raise ApiControllerError(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.INVALID_INPUT,
+                    message="Lý do kết thúc phiên chưa được hỗ trợ.",
+                    session_id=session_id,
+                    field_errors={"reason": "Chỉ hỗ trợ student_requested."},
+                    recovery_action="Gửi reason=student_requested để kết thúc sớm.",
+                ),
+            )
+        owner_hash = hash_owner_token(owner_token) if owner_token else ""
+        try:
+            self._service.end_session(
+                session_id=session_id,
+                owner_token_hash=owner_hash,
+            )
+        except (SessionNotFoundError, SessionForbiddenError, SessionExpiredError,
+                InvalidSessionStateError) as error:
+            raise self._session_action_error(error, session_id) from error
+
+    @staticmethod
+    def _session_action_error(error: Exception, session_id: SessionId) -> ApiControllerError:
+        if isinstance(error, SessionNotFoundError):
+            code = ErrorCode.SESSION_NOT_FOUND
+            http_status = status.HTTP_404_NOT_FOUND
+            message = "Không tìm thấy phiên luyện tập yêu cầu."
+            recovery = "Mở phiên mới từ màn hình bắt đầu."
+        elif isinstance(error, SessionForbiddenError):
+            code = ErrorCode.SESSION_FORBIDDEN
+            http_status = status.HTTP_403_FORBIDDEN
+            message = "Phiên luyện tập này không thuộc trình duyệt hiện tại."
+            recovery = "Mở phiên của bạn hoặc bắt đầu phiên mới."
+        elif isinstance(error, SessionExpiredError):
+            code = ErrorCode.SESSION_EXPIRED
+            http_status = status.HTTP_410_GONE
+            message = "Phiên luyện tập đã hết hạn khả dụng."
+            recovery = "Bắt đầu phiên luyện tập mới."
+        else:
+            code = ErrorCode.INVALID_STATE_TRANSITION
+            http_status = status.HTTP_409_CONFLICT
+            message = str(error)
+            recovery = "Tải lại trạng thái phiên và hoàn tất đánh giá câu hiện tại trước khi chuyển câu."
+        return ApiControllerError(
+            http_status,
+            ApiErrorResponse(
+                error_code=code,
+                message=message,
+                retryable=False,
+                session_id=session_id,
+                recovery_action=recovery,
+            ),
+        )
+
     def submit_answer(
         self,
         session_id: SessionId,
@@ -525,6 +608,17 @@ def build_interview_router(controller: InterviewController) -> APIRouter:
         if result.idempotent_replay:
             response.status_code = status.HTTP_200_OK
         return result
+
+    @router.post("/{session_id}/next", response_model=SessionViewDTO)
+    def next_question_endpoint(
+        session_id: str,
+        payload: NextQuestionRequest,
+        request: Request,
+    ) -> SessionViewDTO:
+        return controller.next_question(
+            SessionId(session_id), payload,
+            owner_token=request.cookies.get(OWNER_COOKIE_NAME),
+        )
 
     return router
 

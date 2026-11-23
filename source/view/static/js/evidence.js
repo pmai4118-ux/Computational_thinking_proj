@@ -10,6 +10,7 @@
   const statusBox = document.querySelector("#review-status");
   const errorBox = document.querySelector("#review-error");
   const retryButton = document.querySelector("#retry-review-load");
+  const nextButton = document.querySelector("#next-question");
   const content = document.querySelector("#review-content");
   const criteriaList = document.querySelector("#criteria-list");
   const total = document.querySelector("#evaluation-total");
@@ -133,6 +134,10 @@
     statusBox.hidden = true;
     errorBox.hidden = true;
     retryButton.hidden = true;
+    if (nextButton && data.status === "completed" && answerId === page.dataset.currentAnswerId
+        && answerRevision === Number(page.dataset.currentAnswerRevision)) {
+      nextButton.hidden = false;
+    }
     const firstButton = criteriaList.querySelector(".criterion-button");
     if (firstButton) firstButton.click();
   }
@@ -159,5 +164,26 @@
   }
 
   retryButton.addEventListener("click", loadEvaluation);
+  if (nextButton) {
+    nextButton.addEventListener("click", async () => {
+      nextButton.disabled = true;
+      errorBox.hidden = true;
+      statusBox.textContent = "Đang chuyển câu theo kết quả đã lưu…";
+      statusBox.hidden = false;
+      try {
+        const session = await api.nextQuestion(sessionId, Number(page.dataset.currentIndex));
+        const destination = session.state === "completed"
+          ? `/sessions/${encodeURIComponent(sessionId)}/summary`
+          : `/sessions/${encodeURIComponent(sessionId)}`;
+        window.location.assign(destination);
+      } catch (error) {
+        statusBox.hidden = true;
+        errorBox.textContent = `${error.message || "Chưa thể chuyển câu."} ${error.recoveryAction || "Kết quả đã lưu vẫn được giữ nguyên."}`;
+        errorBox.hidden = false;
+        errorBox.focus();
+        nextButton.disabled = false;
+      }
+    });
+  }
   loadEvaluation();
 })();

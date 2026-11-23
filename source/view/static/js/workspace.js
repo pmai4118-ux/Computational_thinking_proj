@@ -12,6 +12,10 @@
   const statusBox = document.querySelector("#workspace-status");
   const submitButton = document.querySelector("#submit-answer");
   const retryButton = document.querySelector("#retry-evaluation");
+  const endButton = document.querySelector("#end-session");
+  const endConfirmation = document.querySelector("#end-session-confirmation");
+  const confirmEndButton = document.querySelector("#confirm-end-session");
+  const cancelEndButton = document.querySelector("#cancel-end-session");
   const api = window.InterviewApi;
   const sessionId = workspace.dataset.sessionId;
   const questionId = workspace.dataset.questionId;
@@ -52,6 +56,9 @@
     busy = value;
     if (submitButton) submitButton.disabled = value;
     retryButton.disabled = value;
+    if (endButton) endButton.disabled = value;
+    if (confirmEndButton) confirmEndButton.disabled = value;
+    if (cancelEndButton) cancelEndButton.disabled = value;
   }
 
   function updateCounter() {
@@ -126,6 +133,33 @@
   updateCounter();
 
   retryButton.addEventListener("click", () => evaluateSavedAnswer(pendingAnswer));
+
+  if (endButton) {
+    endButton.addEventListener("click", () => {
+      if (busy) return;
+      endConfirmation.hidden = false;
+      confirmEndButton.focus();
+    });
+    cancelEndButton.addEventListener("click", () => {
+      endConfirmation.hidden = true;
+      endButton.focus();
+    });
+    confirmEndButton.addEventListener("click", async () => {
+      if (busy) return;
+      setBusy(true);
+      setError("");
+      setStatus("Đang kết thúc phiên và lưu tổng kết…");
+      try {
+        await api.endSession(sessionId);
+        window.location.assign(`/sessions/${encodeURIComponent(sessionId)}/summary`);
+      } catch (error) {
+        setError(errorText(error) || "Chưa thể kết thúc phiên.");
+        errorBox.focus();
+      } finally {
+        setBusy(false);
+      }
+    });
+  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();

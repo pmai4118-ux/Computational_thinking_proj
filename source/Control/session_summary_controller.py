@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request
 from source.Control.interview_controller import InterviewController, OWNER_COOKIE_NAME
 from source.Control.schemas import (
     AnswerRevisionRefDTO,
+    EndSessionRequest,
     ObservedGapDTO,
     QuestionOutcomeSummaryDTO,
     SessionSummaryDTO,
@@ -122,6 +123,14 @@ class SessionSummaryController:
             ) for gap in gaps),
         )
 
+    def end_and_summarize(
+        self, session_id: SessionId, *, owner_token: str | None, reason: str
+    ) -> SessionSummaryDTO:
+        self._interview_controller.end_session(
+            session_id, owner_token=owner_token, reason=reason
+        )
+        return self.get_summary(session_id, owner_token=owner_token)
+
 
 def build_session_summary_router(controller: SessionSummaryController) -> APIRouter:
     router = APIRouter(prefix="/api/sessions", tags=["sessions"])
@@ -130,6 +139,16 @@ def build_session_summary_router(controller: SessionSummaryController) -> APIRou
     def get_summary(session_id: str, request: Request) -> SessionSummaryDTO:
         return controller.get_summary(
             SessionId(session_id), owner_token=request.cookies.get(OWNER_COOKIE_NAME)
+        )
+
+    @router.post("/{session_id}/end", response_model=SessionSummaryDTO)
+    def end_session(
+        session_id: str, payload: EndSessionRequest, request: Request
+    ) -> SessionSummaryDTO:
+        return controller.end_and_summarize(
+            SessionId(session_id),
+            owner_token=request.cookies.get(OWNER_COOKIE_NAME),
+            reason=payload.reason,
         )
 
     return router

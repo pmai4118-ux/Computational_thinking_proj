@@ -89,6 +89,11 @@
 - Nếu client gửi lặp lại cùng `from_question_index` sau khi server đã chuyển sang `from_question_index + 1`, server trả lại `SessionViewDTO` hiện tại mà không nhảy cách qua hai câu (`W05`).
 - Nếu câu hiện tại chưa được đánh giá xong (`pending`/`processing`/`failed`), server từ chối chuyển câu với `409 Conflict` (`error_code: "INVALID_STATE_TRANSITION"`).
 
+### Quy tắc kết thúc sớm (`POST /api/sessions/{session_id}/end`)
+- Chỉ cookie sở hữu phiên mới được kết thúc; request hiện hỗ trợ `reason: "student_requested"`.
+- Gọi lại sau khi đã kết thúc trả cùng trạng thái và báo cáo, không xóa bài làm hay kết quả đã lưu. Phiên kết thúc sớm không nhận thêm câu trả lời hoặc yêu cầu chuyển câu.
+- `SessionSummaryDTO` giữ kết quả và liên kết căn cứ của các câu đã chấm, nêu những nhóm chưa làm/chưa đủ căn cứ; không tự tính một điểm tổng năng lực từ phiên chưa đầy đủ.
+
 ---
 
 ## 4. Bảng mã lỗi chuẩn (`ApiErrorResponse`)
