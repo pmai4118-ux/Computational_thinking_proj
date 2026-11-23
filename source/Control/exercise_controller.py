@@ -11,6 +11,7 @@ from source.Control.interview_controller import (
     hash_owner_token,
 )
 from source.Control.schemas import (
+    AnswerRevisionRefDTO,
     ApiErrorResponse,
     ErrorCode,
     ExerciseDetailDTO,
@@ -103,6 +104,9 @@ class ExerciseController:
                         skill_label=gap.skill_label,
                         question_ref=VersionedRefDTO(
                             id=gap.question_ref.id, version=gap.question_ref.version
+                        ),
+                        answer_ref=AnswerRevisionRefDTO(
+                            id=gap.answer_ref.id, revision=gap.answer_ref.revision
                         ),
                         evaluation_id=gap.evaluation_id,
                         criterion_id=gap.criterion_id,

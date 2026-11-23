@@ -280,7 +280,7 @@ def test_e04_live_gemini_request_returns_structured_e01_observations() -> None:
     if not api_key:
         pytest.skip("GEMINI_API_KEY is unavailable in this process.")
 
-    model_id = os.environ.get("E04_GEMINI_LIVE_MODEL", "gemini-2.5-flash").strip()
+    model_id = os.environ.get("E04_GEMINI_LIVE_MODEL", "gemini-3.5-flash").strip()
     question, rubric = _sample_question_and_rubric()
     answer_text = "Hai yêu cầu cùng đọc stock=1 trước khi ghi."
     provider = GeminiProvider(api_key=api_key, model_id=model_id)

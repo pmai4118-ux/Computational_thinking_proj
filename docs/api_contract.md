@@ -77,6 +77,7 @@
 | **S06 · Luyện lại từ bài đã chấm** | `POST /api/sessions/{session_id}/answers/{answer_id}/practice` | `StartPracticeRequest` (`answer_revision`, `criterion_id`, `exercise_id`) | `SessionViewDTO` (`201 Created`) | Tạo phiên một câu bằng biến thể đã duyệt khác câu gốc |
 
 ### Quy tắc đề xuất và luyện lại (I06)
+- Mỗi `matched_gap` trong đề xuất trả `answer_ref` (`id`, `revision`) của bài đã chấm để giao diện gọi thao tác luyện lại đúng bản trả lời; không suy đoán từ câu hiện tại của phiên.
 - Chỉ tiêu chí `unmet` có điểm dưới mức tối đa trong kết quả `completed` của bản trả lời mới nhất mới tạo điểm thiếu; `insufficient_evidence`, lỗi provider và câu chưa trả lời không tạo khuyến nghị.
 - Bài tập phải có trạng thái duyệt `approved`, nguồn có giấy phép đã xác minh, cùng `skill_id` và `criterion_type` với điểm thiếu. Bài tiên quyết được đưa trước bài phụ thuộc; chuỗi tiên quyết thiếu hoặc có vòng lặp bị bỏ qua. `recommendation_reason` giải thích trực tiếp điểm thiếu hoặc quan hệ tiên quyết.
 - Khi không có điểm thiếu hoặc không có bài phù hợp, `recommendations` rỗng và `message` nêu rõ lý do; `unmatched_skill_ids` liệt kê kỹ năng có điểm thiếu nhưng không có bài hợp lệ.

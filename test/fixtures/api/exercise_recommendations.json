@@ -21,6 +21,10 @@
           "id": "case.c03.inventory_race.v1",
           "version": 1
         },
+        "answer_ref": {
+          "id": "answer.demo-20261118-01",
+          "revision": 1
+        },
         "evaluation_id": "evaluation.demo-20261118-01",
         "criterion_id": "c03.concurrent_tests",
         "criterion_label": "Kiểm thử bất biến",

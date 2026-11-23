@@ -7,14 +7,21 @@ import pytest
 from source.config import ConfigurationError, ProviderMode, load_settings
 
 
-def test_fixture_defaults_keep_live_credentials_out_of_settings() -> None:
+def test_demo_defaults_to_real_antigravity_without_api_key() -> None:
     settings = load_settings({"GEMINI_API_KEY": "synthetic-key", "GEMINI_MODEL": "unused"})
 
-    assert settings.provider is ProviderMode.FIXTURE
-    assert settings.demo_label == "Dữ liệu minh họa"
+    assert settings.provider is ProviderMode.ANTIGRAVITY
+    assert settings.demo_label is None
     assert settings.database_path == Path(".local/interview.sqlite3")
     assert settings.gemini_api_key is None
     assert settings.gemini_model is None
+
+
+def test_fixture_mode_is_explicit_and_labels_sample_results() -> None:
+    settings = load_settings({"EVALUATION_PROVIDER": "fixture"})
+
+    assert settings.provider is ProviderMode.FIXTURE
+    assert settings.demo_label == "Dữ liệu minh họa"
 
 
 def test_live_mode_requires_a_key_and_a_model() -> None:

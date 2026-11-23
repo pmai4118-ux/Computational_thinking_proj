@@ -32,7 +32,8 @@ Từ quá trình thử nghiệm trên nhánh tham khảo `evaluateAnswer`, nhóm
 | Hạng mục | Quyết định cho dự án |
 | --- | --- |
 | **Gói tài khoản & chi phí** | Nhóm sử dụng phiên đăng nhập **Antigravity (`agy`)** với model `gemini-3.8-flash-medium` (không giả định ngân sách Paid API Tier); nếu chạy chế độ API key (`gemini`) chỉ giả định **Google AI Studio Free Tier** cục bộ. |
-| **Chế độ mặc định khi phát triển / CI** | `EVALUATION_PROVIDER=fixture` trong [`.env.example`](../.env.example). Toàn bộ luồng UI, Controller và kiểm thử tự động chạy ngoại tuyến không cần đăng nhập `agy` hay `GEMINI_API_KEY`, gắn nhãn **`Dữ liệu minh họa`**. |
+| **Chế độ chạy nhánh Demo** | `EVALUATION_PROVIDER=antigravity` là mặc định; đánh giá phải gọi `agy` đã đăng nhập. Bộ test dùng `EVALUATION_PROVIDER=fixture` một cách tường minh để chạy ngoại tuyến và gắn nhãn **`Dữ liệu minh họa`**. |
+| **Kiểm tra adapter API key ngày 23/11/2026** | API trả `404` cho `gemini-2.5-flash` với tài khoản thử nghiệm dù model còn trong danh sách; `gemini-3.5-flash` chạy thành công bài kiểm tra live E04. Nếu chọn provider `gemini`, cấu hình `GEMINI_MODEL=gemini-3.5-flash` hoặc một model `generateContent` hiện khả dụng cho tài khoản. Demo chính vẫn dùng Antigravity. |
 | **Giới hạn kích thước & Timeout** | Antigravity: input tối đa `250 KB`, stdout tối đa `2 MB`, `ANTIGRAVITY_TIMEOUT_SECONDS = 120` (hợp lệ `1–300s`).<br>Gemini REST: request `250 KB`, response `1 MB`, `GEMINI_TIMEOUT_SECONDS = 30` (`1–120s`). |
 | **Ngân sách gọi AI khi kiểm định (`Q03`)** | Tối đa `1` lần gọi cho mỗi mẫu trong bộ giữ lại (`held-out` của `C07`), retry tối đa `1` lần cho lỗi tạm thời (`timeout` / `RESOURCE_EXHAUSTED` / `429`). Không tự động fallback sang API key khi `antigravity` hết quota. |
 | **Bảo mật (`F06`)** | Không lưu khóa API, token hay dữ liệu bài làm riêng vào Git, client JS hoặc log lỗi. Adapter Antigravity loại bỏ hoàn toàn các biến `GEMINI_API_KEY` trước khi gọi `agy` và không đưa văn bản bài làm vào tham số dòng lệnh (truyền qua `stdin`). |
@@ -49,7 +50,7 @@ Từ quá trình thử nghiệm trên nhánh tham khảo `evaluateAnswer`, nhóm
 2. **Kiểm tra hợp đồng cấu hình và bộ giả lập (`test/test_config.py`, `test/test_antigravity_provider.py`, `test/test_gemini_provider.py`):**
    - Kiểm tra cấu hình `EVALUATION_PROVIDER=antigravity` mặc định `ANTIGRAVITY_MODEL=gemini-3.8-flash-medium` không đòi `GEMINI_API_KEY` và trả `demo_label=None`.
    - Kiểm tra `AntigravityProvider` tạo schema JSON không chứa từ khóa cấm (`prefixItems`, `allOf`, `const`), gửi bài làm qua `stdin`, từ chối tool call ngoài `finish`, xử lý `AGY_ERROR:` vượt mặt `SUCCESS` khi hết `--print-timeout`, và giải mã đúng offset cho câu trích dẫn duy nhất.
-   - Chế độ mặc định khi phát triển và chạy CI vẫn là `EVALUATION_PROVIDER=fixture` (`FixtureProvider`) để không phụ thuộc mạng hay tài khoản cá nhân.
+   - Bộ test offline chọn `EVALUATION_PROVIDER=fixture` (`FixtureProvider`) tường minh; ứng dụng Demo mặc định dùng Antigravity.
 
 ```powershell
 uv run --locked python -m pytest test/test_config.py test/test_antigravity_provider.py test/test_gemini_provider.py -q

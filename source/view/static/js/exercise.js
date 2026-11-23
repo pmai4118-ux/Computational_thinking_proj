@@ -13,6 +13,7 @@
   const list = document.querySelector("#exercise-list");
   const empty = document.querySelector("#exercise-empty");
   const emptyReason = document.querySelector("#exercise-empty-reason");
+  let startingPractice = false;
 
   function node(tag, className, text) {
     const item = document.createElement(tag);
@@ -48,6 +49,81 @@
     card.append(section);
   }
 
+  async function responsePayload(response) {
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const recovery = payload.recovery_action ? ` ${payload.recovery_action}` : "";
+      throw new Error(`${payload.message || `Yêu cầu thất bại (${response.status}).`}${recovery}`);
+    }
+    return payload;
+  }
+
+  async function loadExerciseDetail(item, button, detail) {
+    button.disabled = true;
+    button.textContent = "Đang tải hướng dẫn…";
+    errorBox.hidden = true;
+    try {
+      const url = `/api/exercises/${encodeURIComponent(item.exercise_id)}?version=${encodeURIComponent(item.version)}`;
+      const response = await fetch(url, { headers: { accept: "application/json" } });
+      const data = await responsePayload(response);
+      if (data.exercise_id !== item.exercise_id || data.version !== item.version) {
+        throw new Error("Nội dung bài tập không khớp phiên bản đã đề xuất.");
+      }
+      detail.replaceChildren();
+      detail.append(node("h3", "", "Hướng dẫn thực hiện"));
+      detail.append(node("p", "", data.instructions));
+      if (data.observable_outcome) {
+        detail.append(node("h3", "", "Kết quả cần đạt"));
+        detail.append(node("p", "", data.observable_outcome));
+      }
+      detail.hidden = false;
+      button.hidden = true;
+    } catch (error) {
+      errorBox.textContent = error.message || "Không tải được hướng dẫn bài tập.";
+      errorBox.hidden = false;
+      errorBox.focus();
+      button.textContent = "Thử tải lại hướng dẫn";
+      button.disabled = false;
+    }
+  }
+
+  async function startPractice(item, button) {
+    const gap = item.matched_gap || {};
+    const answer = gap.answer_ref;
+    if (startingPractice || !answer || !answer.id || !answer.revision) return;
+    startingPractice = true;
+    button.disabled = true;
+    button.textContent = "Đang tạo lượt luyện…";
+    errorBox.hidden = true;
+    statusBox.textContent = "Đang chọn câu hỏi đã duyệt khác câu gốc…";
+    statusBox.hidden = false;
+    try {
+      const url = `/api/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answer.id)}/practice`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json" },
+        body: JSON.stringify({
+          answer_revision: answer.revision,
+          criterion_id: gap.criterion_id,
+          exercise_id: item.exercise_id,
+        }),
+      });
+      const created = await responsePayload(response);
+      if (!created.session_id || !created.current_question) {
+        throw new Error("Phiên luyện mới chưa có câu hỏi hợp lệ.");
+      }
+      window.location.assign(`/sessions/${encodeURIComponent(created.session_id)}`);
+    } catch (error) {
+      errorBox.textContent = error.message || "Chưa thể tạo lượt luyện lại.";
+      errorBox.hidden = false;
+      errorBox.focus();
+      statusBox.hidden = true;
+      button.textContent = "Thử tạo lượt luyện lại";
+      button.disabled = false;
+      startingPractice = false;
+    }
+  }
+
   function renderExercise(item) {
     const card = node("article", "exercise-card");
     card.append(node("h2", "", item.title));
@@ -64,6 +140,15 @@
     card.append(gapSection);
 
     appendSection(card, "Bài cần học trước", item.prerequisite_ids, "Không yêu cầu bài tiên quyết.");
+
+    const detailSection = node("section", "exercise-card__section");
+    const detailButton = node("button", "btn btn--secondary", "Xem hướng dẫn bài tập");
+    detailButton.type = "button";
+    const detail = node("div", "exercise-card__detail");
+    detail.hidden = true;
+    detailButton.addEventListener("click", () => loadExerciseDetail(item, detailButton, detail));
+    detailSection.append(detailButton, detail);
+    card.append(detailSection);
 
     const source = item.source || {};
     const sourceSection = node("section", "exercise-card__section");
@@ -84,15 +169,13 @@
 
     const actionSection = node("section", "exercise-card__section");
     actionSection.append(node("h3", "", "Luyện lại bằng câu hỏi khác"));
-    if (item.eligible_alternate_question_available) {
-      const button = node("button", "btn btn--primary", "Biến thể đủ điều kiện đã có");
+    if (item.eligible_alternate_question_available && gap.answer_ref && gap.answer_ref.id) {
+      const button = node("button", "btn btn--primary", "Luyện lại với câu hỏi khác");
       button.type = "button";
-      button.disabled = true;
-      const help = node("p", "form-hint", "API hiện chưa có thao tác tạo lượt luyện lại từ bài này. Không mở hoặc lặp câu hỏi giả; hãy quay lại tổng kết cho tới khi I06 cung cấp hành động bắt đầu biến thể.");
-      help.id = `alternate-help-${item.exercise_id}`;
-      button.setAttribute("aria-describedby", help.id);
+      button.addEventListener("click", () => startPractice(item, button));
       actionSection.append(button);
-      actionSection.append(help);
+    } else if (item.eligible_alternate_question_available) {
+      actionSection.append(node("p", "form-hint", "Chưa có mã bài trả lời đã chấm để bắt đầu lượt luyện lại."));
     } else {
       actionSection.append(node("p", "form-hint", "Phiên này chưa có biến thể khác đủ điều kiện cho bài tập này."));
     }

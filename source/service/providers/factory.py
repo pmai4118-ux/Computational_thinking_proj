@@ -14,7 +14,7 @@ def create_evidence_interpreter(settings: Settings) -> EvidenceInterpreter:
 
     Antigravity mode uses the user's signed-in local ``agy`` session and does not
     require a Gemini API key. Gemini API mode continues to require its own key.
-    Fixture mode stays offline by default.
+    Fixture mode is available explicitly for deterministic offline tests.
     """
     if settings.provider is ProviderMode.ANTIGRAVITY:
         return AntigravityProvider.from_settings(settings)

@@ -26,7 +26,7 @@ def test_u06_exercise_page_accepts_session_skill_and_exercise_filters(
     assert "Vì sao có bài tập này" in exercise_js
 
 
-def test_u06_renders_only_api_exercises_and_explains_missing_alternate_action() -> None:
+def test_u06_renders_api_exercises_and_starts_reviewed_practice() -> None:
     exercise_js = (ROOT_DIR / "source" / "view" / "static" / "js" / "exercise.js").read_text(encoding="utf-8")
 
     assert "estimated_duration_minutes" in exercise_js
@@ -35,4 +35,6 @@ def test_u06_renders_only_api_exercises_and_explains_missing_alternate_action() 
     assert "source.required_notice" in exercise_js
     assert "eligible_alternate_question_available" in exercise_js
     assert "Không tạo bài thay thế tự động" in exercise_js
-    assert "API hiện chưa có thao tác tạo lượt luyện lại" in exercise_js
+    assert "/api/exercises/" in exercise_js
+    assert "/practice" in exercise_js
+    assert "Luyện lại với câu hỏi khác" in exercise_js

@@ -129,7 +129,7 @@ def load_settings(variables: Mapping[str, str] | None = None) -> Settings:
     """Validate process environment settings without opening files or clients."""
     env = environ if variables is None else variables
     try:
-        provider = ProviderMode(env.get("EVALUATION_PROVIDER", "fixture").strip())
+        provider = ProviderMode(env.get("EVALUATION_PROVIDER", "antigravity").strip())
     except ValueError:
         raise ConfigurationError(
             "Set EVALUATION_PROVIDER to fixture, antigravity, or gemini."

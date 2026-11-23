@@ -166,6 +166,10 @@ def test_i06_orders_prerequisites_and_exposes_reviewed_detail_and_alternate(tmp_
         assert ids.index(prerequisite_id) < ids.index(target_id)
         target = next(item for item in suggestions if item["exercise_id"] == target_id)
         assert target["matched_gap"]["criterion_id"] == criterion_id
+        assert target["matched_gap"]["answer_ref"] == {
+            "id": answer_ref.id,
+            "revision": answer_ref.revision,
+        }
         assert target["recommendation_reason"]
         assert target["eligible_alternate_question_available"] is True
 

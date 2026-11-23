@@ -352,6 +352,7 @@ class ObservedGapDTO(BaseModel):
     skill_id: SkillId = Field(min_length=1)
     skill_label: str = Field(min_length=1)
     question_ref: VersionedRefDTO
+    answer_ref: AnswerRevisionRefDTO
     evaluation_id: EvaluationId = Field(min_length=1)
     criterion_id: CriterionId = Field(min_length=1)
     criterion_label: str = Field(min_length=1)

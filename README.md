@@ -37,7 +37,9 @@ local `.env` file. `source.config.load_settings()` reads the process environment
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `EVALUATION_PROVIDER` | `fixture` | Demo mode supplies the label **Dữ liệu minh họa**. Set `gemini` to require live settings. |
+| `EVALUATION_PROVIDER` | `antigravity` | Gọi AI thật qua phiên đăng nhập `agy`. `fixture` chỉ dùng khi chọn tường minh cho kiểm thử offline và gắn nhãn **Dữ liệu minh họa**. |
+| `ANTIGRAVITY_MODEL` | `gemini-3.8-flash-medium` | Model hiện dùng cho đánh giá bằng AI. |
+| `ANTIGRAVITY_TIMEOUT_SECONDS` | `120` | Giới hạn thời gian một lần gọi Antigravity. |
 | `GEMINI_API_KEY` | Unset | Required for `gemini`. Inject it as a server secret. |
 | `GEMINI_MODEL` | Unset | Required for `gemini`. Use the model selected in P07. |
 | `GEMINI_TIMEOUT_SECONDS` | `30` | A finite positive number of seconds. |
@@ -46,14 +48,22 @@ local `.env` file. `source.config.load_settings()` reads the process environment
 Keep generated databases, logs, and private student records in the ignored
 `.local/` directory. A database path inside the checkout must point to a file
 under `.local/` or a filename ending in `.sqlite3`. An absolute path outside the
-checkout can use any SQLite filename. F04 will own database initialization and
-F05 will call `load_settings()` when it builds the app.
+checkout can use any SQLite filename. The app imports only reviewed seed records
+into a fresh database and reports invalid records instead of using them.
 
 ### Application entry point
 
-`source/main.py` is reserved for the F05 app factory. Once F05 provides an ASGI
-factory named `create_app`, the launch command will be
-`uv run --locked uvicorn source.main:create_app --factory --reload`.
+Sign in to the local Antigravity CLI once (`agy`), then start the live AI demo
+from the repository root:
+
+```powershell
+.\run_demo.ps1
+```
+
+The script checks that the selected Antigravity model is available and sets
+`EVALUATION_PROVIDER=antigravity` for the server process. Evaluation errors are
+shown as errors; the app does not silently replace AI output with fixture data.
+For offline tests, construct the app with `ProviderMode.FIXTURE` explicitly.
 
 ## Coding agent setup
 
