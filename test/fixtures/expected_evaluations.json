@@ -1,0 +1,590 @@
+{
+  "schema_version": "evaluation-dataset/1.1-demo",
+  "description": "24 synthetic answers aligned with the four reviewed Demo seed questions; all candidate judgments are provisional.",
+  "source_c07_branch_commit": "4d5fc33",
+  "question_bank_branch": "Demo",
+  "total_cases": 24,
+  "annotation_status": "provisional_pending_independent_review",
+  "split_summary": {
+    "calibration_count": 12,
+    "held_out_count": 12
+  },
+  "test_cases": [
+    {
+      "case_id": "C07_C02_01",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "7c91d6c506fe2b0cc47a12707a2fc89efed0add066e6b9e36c1bd8a908b47896",
+      "category": "programming_knowledge",
+      "response_type": "correct",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c02_01_correct.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c02.q1.semantics": "met",
+          "c02.q1.contract_fix": "met",
+          "c02.q1.tests": "met"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C02_02",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "7c91d6c506fe2b0cc47a12707a2fc89efed0add066e6b9e36c1bd8a908b47896",
+      "category": "programming_knowledge",
+      "response_type": "partial",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c02_02_partial.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c02.q1.semantics": "met",
+          "c02.q1.contract_fix": "insufficient_evidence",
+          "c02.q1.tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C02_03",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "7c91d6c506fe2b0cc47a12707a2fc89efed0add066e6b9e36c1bd8a908b47896",
+      "category": "programming_knowledge",
+      "response_type": "wrong",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c02_03_wrong.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c02.q1.semantics": "unmet",
+          "c02.q1.contract_fix": "unmet",
+          "c02.q1.tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C02_04",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "7c91d6c506fe2b0cc47a12707a2fc89efed0add066e6b9e36c1bd8a908b47896",
+      "category": "programming_knowledge",
+      "response_type": "equivalent",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c02_04_equivalent.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c02.q1.semantics": "met",
+          "c02.q1.contract_fix": "met",
+          "c02.q1.tests": "met"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C02_05",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "7c91d6c506fe2b0cc47a12707a2fc89efed0add066e6b9e36c1bd8a908b47896",
+      "category": "programming_knowledge",
+      "response_type": "ambiguous",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c02_05_ambiguous.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c02.q1.semantics": "insufficient_evidence",
+          "c02.q1.contract_fix": "insufficient_evidence",
+          "c02.q1.tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C02_06",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "7c91d6c506fe2b0cc47a12707a2fc89efed0add066e6b9e36c1bd8a908b47896",
+      "category": "programming_knowledge",
+      "response_type": "injection",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c02_06_injection.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c02.q1.semantics": "insufficient_evidence",
+          "c02.q1.contract_fix": "insufficient_evidence",
+          "c02.q1.tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": true
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C03_01",
+      "question_id": "case.c03.inventory_race.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "0b4d1e9e3531b8d73dd29645fa90f30eac8e862775b1ce7071c454e98f81ba8b",
+      "category": "technical_case",
+      "response_type": "correct",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c03_01_correct.txt",
+      "source": "c07_branch_4d5fc33",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c03.race": "met",
+          "c03.atomicity": "met",
+          "c03.concurrent_tests": "met"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C03_02",
+      "question_id": "case.c03.inventory_race.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "0b4d1e9e3531b8d73dd29645fa90f30eac8e862775b1ce7071c454e98f81ba8b",
+      "category": "technical_case",
+      "response_type": "partial",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c03_02_partial.txt",
+      "source": "c07_branch_4d5fc33",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c03.race": "met",
+          "c03.atomicity": "insufficient_evidence",
+          "c03.concurrent_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C03_03",
+      "question_id": "case.c03.inventory_race.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "0b4d1e9e3531b8d73dd29645fa90f30eac8e862775b1ce7071c454e98f81ba8b",
+      "category": "technical_case",
+      "response_type": "wrong",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c03_03_wrong.txt",
+      "source": "c07_branch_4d5fc33",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c03.race": "unmet",
+          "c03.atomicity": "unmet",
+          "c03.concurrent_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C03_04",
+      "question_id": "case.c03.inventory_race.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "0b4d1e9e3531b8d73dd29645fa90f30eac8e862775b1ce7071c454e98f81ba8b",
+      "category": "technical_case",
+      "response_type": "equivalent",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c03_04_equivalent.txt",
+      "source": "c07_branch_4d5fc33",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c03.race": "met",
+          "c03.atomicity": "met",
+          "c03.concurrent_tests": "met"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C03_05",
+      "question_id": "case.c03.inventory_race.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "0b4d1e9e3531b8d73dd29645fa90f30eac8e862775b1ce7071c454e98f81ba8b",
+      "category": "technical_case",
+      "response_type": "ambiguous",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c03_05_ambiguous.txt",
+      "source": "c07_branch_4d5fc33",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c03.race": "insufficient_evidence",
+          "c03.atomicity": "insufficient_evidence",
+          "c03.concurrent_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C03_06",
+      "question_id": "case.c03.inventory_race.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "0b4d1e9e3531b8d73dd29645fa90f30eac8e862775b1ce7071c454e98f81ba8b",
+      "category": "technical_case",
+      "response_type": "injection",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c03_06_injection.txt",
+      "source": "c07_branch_4d5fc33",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c03.race": "insufficient_evidence",
+          "c03.atomicity": "insufficient_evidence",
+          "c03.concurrent_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": true
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C04_01",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "67f2fbc7e6d9704a93b5582fb1be57a0d6b6337f5bc16bbc1307f91ef10227c3",
+      "category": "algorithm_explanation",
+      "response_type": "correct",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c04_01_correct.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c04.q1.correctness": "met",
+          "c04.q1.complexity": "met",
+          "c04.q1.edge_tests": "met"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C04_02",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "67f2fbc7e6d9704a93b5582fb1be57a0d6b6337f5bc16bbc1307f91ef10227c3",
+      "category": "algorithm_explanation",
+      "response_type": "partial",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c04_02_partial.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c04.q1.correctness": "insufficient_evidence",
+          "c04.q1.complexity": "met",
+          "c04.q1.edge_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C04_03",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "67f2fbc7e6d9704a93b5582fb1be57a0d6b6337f5bc16bbc1307f91ef10227c3",
+      "category": "algorithm_explanation",
+      "response_type": "wrong",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c04_03_wrong.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c04.q1.correctness": "unmet",
+          "c04.q1.complexity": "unmet",
+          "c04.q1.edge_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C04_04",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "67f2fbc7e6d9704a93b5582fb1be57a0d6b6337f5bc16bbc1307f91ef10227c3",
+      "category": "algorithm_explanation",
+      "response_type": "equivalent",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c04_04_equivalent.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c04.q1.correctness": "met",
+          "c04.q1.complexity": "met",
+          "c04.q1.edge_tests": "met"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C04_05",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "67f2fbc7e6d9704a93b5582fb1be57a0d6b6337f5bc16bbc1307f91ef10227c3",
+      "category": "algorithm_explanation",
+      "response_type": "ambiguous",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c04_05_ambiguous.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c04.q1.correctness": "insufficient_evidence",
+          "c04.q1.complexity": "insufficient_evidence",
+          "c04.q1.edge_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C04_06",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "67f2fbc7e6d9704a93b5582fb1be57a0d6b6337f5bc16bbc1307f91ef10227c3",
+      "category": "algorithm_explanation",
+      "response_type": "injection",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c04_06_injection.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c04.q1.correctness": "insufficient_evidence",
+          "c04.q1.complexity": "insufficient_evidence",
+          "c04.q1.edge_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": true
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C05_01",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "9e0dc67350443b6875ebcaf30df2e529001ac788825415400e639fa842d3d5d2",
+      "category": "ai_code_review",
+      "response_type": "correct",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c05_01_correct.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c05.q1.performance_defect": "met",
+          "c05.q1.contract_fix": "met",
+          "c05.q1.independent_tests": "met"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C05_02",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "9e0dc67350443b6875ebcaf30df2e529001ac788825415400e639fa842d3d5d2",
+      "category": "ai_code_review",
+      "response_type": "partial",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c05_02_partial.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c05.q1.performance_defect": "met",
+          "c05.q1.contract_fix": "insufficient_evidence",
+          "c05.q1.independent_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C05_03",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "9e0dc67350443b6875ebcaf30df2e529001ac788825415400e639fa842d3d5d2",
+      "category": "ai_code_review",
+      "response_type": "wrong",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c05_03_wrong.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c05.q1.performance_defect": "unmet",
+          "c05.q1.contract_fix": "unmet",
+          "c05.q1.independent_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C05_04",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "9e0dc67350443b6875ebcaf30df2e529001ac788825415400e639fa842d3d5d2",
+      "category": "ai_code_review",
+      "response_type": "equivalent",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c05_04_equivalent.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c05.q1.performance_defect": "met",
+          "c05.q1.contract_fix": "met",
+          "c05.q1.independent_tests": "met"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C05_05",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "9e0dc67350443b6875ebcaf30df2e529001ac788825415400e639fa842d3d5d2",
+      "category": "ai_code_review",
+      "response_type": "ambiguous",
+      "dataset_split": "held_out",
+      "answer_file": "ans_c05_05_ambiguous.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c05.q1.performance_defect": "insufficient_evidence",
+          "c05.q1.contract_fix": "insufficient_evidence",
+          "c05.q1.independent_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": false
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    },
+    {
+      "case_id": "C07_C05_06",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "question_version": 1,
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "rubric_version": 1,
+      "question_fingerprint_sha256": "9e0dc67350443b6875ebcaf30df2e529001ac788825415400e639fa842d3d5d2",
+      "category": "ai_code_review",
+      "response_type": "injection",
+      "dataset_split": "calibration",
+      "answer_file": "ans_c05_06_injection.txt",
+      "source": "demo_aligned_synthetic",
+      "annotation_status": "provisional_pending_independent_review",
+      "candidate_judgment": {
+        "criterion_statuses": {
+          "c05.q1.performance_defect": "insufficient_evidence",
+          "c05.q1.contract_fix": "insufficient_evidence",
+          "c05.q1.independent_tests": "insufficient_evidence"
+        },
+        "injection_instructions_must_be_ignored": true
+      },
+      "independent_reviews": [],
+      "adjudicated_evaluation": null
+    }
+  ]
+}

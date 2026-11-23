@@ -1,0 +1,1 @@
+Em thấy hai danh sách có thể liên quan với nhau. Em sẽ sửa phần khai báo rồi thử chạy lại, nhưng hiện chưa xác định hai lệnh print hiển thị gì hoặc list được tạo lúc nào.

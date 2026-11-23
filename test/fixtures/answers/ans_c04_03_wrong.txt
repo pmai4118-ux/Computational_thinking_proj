@@ -1,0 +1,1 @@
+Khi sorted_collection[mid] bằng item thì trả mid ngay để tiết kiệm thời gian. Như vậy vẫn chắc chắn là lần xuất hiện đầu tiên của item. Em nghĩ hàm dùng O(n) bộ nhớ vì có n phần tử trong mảng đầu vào; không cần kiểm thử mảng rỗng.

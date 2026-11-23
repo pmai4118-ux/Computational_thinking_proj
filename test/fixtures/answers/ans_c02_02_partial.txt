@@ -1,0 +1,1 @@
+Hai lệnh print cùng thấy ['login', 'export_report'] do giá trị mặc định là cùng một list qua nhiều lần gọi. Em sẽ đổi tham số mặc định thành None. Em chưa mô tả xử lý list rỗng được truyền tường minh hoặc viết test cho danh tính đối tượng.
