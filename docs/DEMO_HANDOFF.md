@@ -1,6 +1,6 @@
 # Bàn giao nhánh `Demo`
 
-Cập nhật: 23/11/2026. Nhánh: `Demo`. Mốc mã chức năng của lần bàn giao này: `5d32ae4` (trước commit tài liệu).
+Cập nhật: 23/11/2026. Nhánh: `Demo`. Mốc mã chức năng của lần tích hợp U07 mới nhất: `3610618` (trước commit tài liệu).
 
 ## 1. Nguồn mã đã gộp
 
@@ -17,8 +17,9 @@ Cập nhật: 23/11/2026. Nhánh: `Demo`. Mốc mã chức năng của lần bà
 | 9 | `codex/u07-api-client-integration` | `11a4f7c` → `85838e2` | Đưa phần U07 sang `Demo`, giữ luồng I06 và giải quyết xung đột ở bài tập/test. |
 | 10 | I05 viết trên `Demo` | `8ddebf6` | Thêm API và giao diện chuyển câu/kết thúc sớm, test phiên 4 câu. |
 | 11 | `codex/c07-demo-aligned-fixtures`, lấy chọn lọc từ `task3-answer-fixtures-Khoa` | `4d5fc33` → `2d41a25` → `5d32ae4` | C07: 24 câu trả lời tổng hợp khớp câu hỏi/rubric của Demo, chia calibration/held-out và kiểm tra cấu trúc. Nhãn còn tạm thời. |
+| 12 | `codex/u07-api-client-integration` mới nhất | `ad9b9ba` → `71b13ff` → `3610618` | Đưa bố cục workspace, nhấn mạnh lý do đề xuất bài tập vào Demo; ghi nhận lịch sử nhánh U07 sau khi giữ nguyên backend và các bản sửa mới hơn của Demo. |
 
-U07 trên `origin` có lịch sử Git không chung gốc với `Demo`, nên chỉ đưa commit U07 sang và xử lý xung đột; không gộp nguyên nhánh U03–U07. Các nguồn C02, F04, I01 cũng được lấy theo commit cụ thể để tránh kéo các merge commit cũ.
+Trước lần tích hợp mới nhất, U07 trên `origin` có lịch sử Git không chung gốc với `Demo`, nên đã đưa các commit chức năng U07 sang và xử lý xung đột, không gộp nguyên nhánh U03–U07. Lần này, các phần giao diện hữu ích còn thiếu được chuyển vào Demo trước rồi mới ghi nhận toàn bộ lịch sử U07 bằng merge commit `3610618`; nội dung nhánh cũ không ghi đè các phần mới hơn của Demo. Các nguồn C02, F04, I01 cũng được lấy theo commit cụ thể để tránh kéo các merge commit cũ.
 
 Nhánh nguồn C07 chứa câu hỏi Java và một ứng dụng đánh giá khác; merge thử với `Demo` phát hiện 14 xung đột. Chỉ sáu văn bản trả lời C03 được chuyển nguyên từ nguồn; 18 văn bản còn lại được viết lại cho seed Demo. Không đưa code ứng dụng, seed Java hoặc nhãn review không còn hợp lệ từ nhánh đó vào `Demo`.
 
@@ -62,6 +63,12 @@ Bộ C07 là tài sản **kiểm định**, không tham gia chấm điểm trong
 
 `fixture` là provider mẫu xác định để chạy test ngoại tuyến; kết quả mang nhãn **Dữ liệu minh họa**. Nhánh `Demo` dùng `EVALUATION_PROVIDER=antigravity` theo mặc định và [run_demo.ps1](../run_demo.ps1) ép dùng Antigravity. Khi AI lỗi, ứng dụng báo lỗi và giữ bài đã lưu; không tự đổi sang fixture. Điểm fixture chỉ kiểm tra luồng phần mềm, không chứng minh chất lượng AI.
 
+### Tích hợp nhánh U07 mới nhất
+
+Đã fetch `origin/codex/u07-api-client-integration` tại `ad9b9ba` và ghi nhận nhánh này là cha của `Demo`. Hai lịch sử Git không có merge base, trong khi `Demo` đã có API U07/I05 cùng các phần mới hơn như I04, C08 và phục hồi timeout. Vì vậy, những thay đổi giao diện còn hữu ích của U07 (bố cục đề bài và form, nhấn mạnh lý do chọn bài tập) được đưa vào `Demo` trước; merge commit dùng chiến lược `ours` để không thay thế các phần backend/kiểm thử mới bằng bản cũ. Bản tích hợp cũng sửa thuộc tính `hidden` bị CSS nút ghi đè và đổi URL tài nguyên tĩnh để trình duyệt nhận CSS/JS mới. Không lấy dữ liệu chấm từ fixture khi chạy Demo thật.
+
+Trong browser test sau merge, trang thiết lập tạo phiên 4 câu; workspace hiển thị đề và form ở bố cục mới, tự xếp một cột trên màn hình hẹp; gửi câu 1 mở căn cứ chấm và nút chuyển sang câu 2. Câu trả lời thiếu bằng chứng ở câu 2 mở trang bài tập, xem hướng dẫn và tạo phiên luyện 1 câu bằng biến thể khác. Nút retry được ẩn khi chưa có lỗi có thể thử lại.
+
 ### Khi Antigravity phản hồi chậm
 
 Câu trả lời được lưu trước khi gọi AI. Màn hình báo đang đối chiếu rubric, cập nhật thời gian chờ sau 20 giây; nếu tải lại trang, UI đọc trạng thái đã lưu và kiểm tra lại mỗi 5 giây. Khi hoàn tất, UI mở điểm và căn cứ. `run_demo.ps1` mặc định không tự gọi AI lần hai: mỗi lần chờ tối đa 120 giây theo cấu hình Antigravity (cộng thời gian khởi chạy/dọn tiến trình); người dùng có thể đặt `GEMINI_MAX_RETRIES=1` nếu muốn tự thử lại một lần. Nếu hết hạn, API trả `504 PROVIDER_TIMEOUT`, ghi `failed` có thể retry, giữ nguyên bài gốc và **không tạo điểm**. Nút **Thử đánh giá lại** gửi lại đúng bản trả lời đã lưu; lần gọi sau khi đã `completed` chỉ đọc kết quả cũ.
@@ -82,6 +89,8 @@ Kết quả sau tích hợp C07: **206 passed, 3 skipped**. Ba ca skip theo mặ
 - `E09_LIVE_TEST=1` với `test/service/test_evaluation_flow.py::test_live_agy_saved_answer`: **1 passed trong 45,81 giây**. Service gọi provider thật một lần, lưu kết quả và dùng lại kết quả khi gọi lại bản trả lời đã hoàn tất.
 - Test C07 mới xác nhận đủ 24 văn bản, 4 nhóm × 6 dạng, chia 12 calibration / 12 held-out, ID/phiên bản/fingerprint khớp seed đã duyệt và không có nhãn nào bị khai là adjudicated.
 - Ca Gemini API key tùy chọn từng đạt ở mốc `341e833`, nhưng **không chạy lại** trong lần tích hợp này vì `Demo` dùng Antigravity làm provider chính.
+
+Kiểm tra lại sau merge U07 tại `3610618`: bộ pytest ngoại tuyến **206 passed, 3 skipped**; `test/view/test_u03_workspace.py`, `test/view/test_u06_exercises.py`, `test/view/test_u07_api_client.py`, `test/Control/test_session_summary.py` **11 passed**; Node kiểm tra giao diện phục hồi chấm điểm **4 passed**. Hai ca skip Antigravity đã được bật và chạy thật: Demo end-to-end **1 passed trong 78,80 giây**, kết quả **4/6**, một bài đề xuất và một phiên luyện khác; E09 service **1 passed trong 53,20 giây**, xác nhận lưu và dùng lại kết quả hoàn tất. Ca Gemini API key tùy chọn vẫn chưa chạy lại. Một phép thử timeout với Antigravity thật ở hạn 1 giây trả `504 PROVIDER_TIMEOUT`, `retryable=true`, giữ nguyên bài và không lưu điểm. Browser test fixture sau merge đã đi qua gửi bài, đọc căn cứ, chuyển câu, mở bài tập và tạo phiên luyện lại. Fixture chỉ dùng cho các ca giao diện ngoại tuyến.
 
 Lệnh tái hiện hai ca Antigravity khi máy đã đăng nhập `agy`:
 
