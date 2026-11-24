@@ -17,7 +17,10 @@
       <p class="eyebrow">Kết quả một câu</p>
       <h1 id="review-heading">Đối chiếu câu trả lời theo tiêu chí</h1>
     </div>
-    <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}">Về câu hỏi</a>
+    <div class="action-row">
+      <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}">Về câu hỏi</a>
+      <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+    </div>
   </div>
   <p class="text-secondary reading-measure">Chọn một tiêu chí để xem đúng đoạn trích trong bài đã gửi. “Chưa đủ bằng chứng” không được tính thành 0 điểm.</p>
   <div id="review-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
@@ -45,12 +48,13 @@
   <div class="action-row">
     {% if session.state == "in_progress" and session.current_answer and answer_id == session.current_answer.answer_id and answer_revision|int == session.current_answer.revision %}
       <button id="next-question" class="btn btn--primary" type="button" hidden>
-        {% if session.progress.current_index + 1 == session.progress.total_questions %}Hoàn tất phiên{% else %}Sang câu tiếp theo{% endif %}
+        {% if session.progress.current_index + 1 == session.progress.total_questions %}Hoàn tất phiên{% else %}Câu tiếp theo{% endif %}
       </button>
     {% endif %}
-    <a class="btn btn--primary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập theo điểm thiếu</a>
+    <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập theo điểm thiếu</a>
+    <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
   </div>
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/evidence.js" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261124-q05" defer></script>{% endblock %}

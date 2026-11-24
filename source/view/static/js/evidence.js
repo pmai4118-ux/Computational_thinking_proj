@@ -144,7 +144,7 @@
 
   async function loadEvaluation() {
     if (!answerId || !Number.isInteger(answerRevision) || answerRevision < 1) {
-      statusBox.textContent = "Chưa có bài đã lưu để đối chiếu. Hãy quay lại workspace và gửi câu trả lời trước.";
+      statusBox.textContent = "Chưa có bài đã lưu để đối chiếu. Hãy quay lại trang câu hỏi và gửi câu trả lời trước.";
       return;
     }
     retryButton.hidden = true;

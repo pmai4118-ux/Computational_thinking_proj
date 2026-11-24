@@ -25,7 +25,9 @@
   const draftKey = `draft:${sessionId}:${questionId}`;
   const submissionKey = `submission:${sessionId}:${questionId}`;
   const answerKey = `saved-answer:${sessionId}:${questionId}`;
+  const LEAVE_CONFIRM_MESSAGE = "Bạn có chắc chắn muốn rời khỏi phiên làm bài? Bản nháp chưa gửi chưa được lưu trên máy chủ.";
   let busy = false;
+  let allowingNavigation = false;
   let statusPoll = null;
   let waitNotice = null;
   let waitStartedAt = 0;
@@ -44,6 +46,41 @@
       try { window.sessionStorage.removeItem(key); } catch (_error) { /* Storage can be disabled. */ }
     },
   };
+
+  function hasUnsavedWork() {
+    if (allowingNavigation) return false;
+    if (busy) return true;
+    return !pendingAnswer && Boolean(answerField && answerField.value && answerField.value.trim());
+  }
+
+  function setupNavigationGuard() {
+    const nav = document.querySelector(".site-nav");
+    if (nav && nav.classList && typeof nav.classList.add === "function") {
+      nav.classList.add("site-nav--in-session");
+    }
+    if (typeof document.querySelectorAll === "function") {
+      const links = document.querySelectorAll(".site-nav__link, .site-brand__link");
+      for (const link of links) {
+        if (link && typeof link.addEventListener === "function") {
+          link.addEventListener("click", (event) => {
+            if (!hasUnsavedWork()) return;
+            if (typeof window.confirm === "function" && !window.confirm(LEAVE_CONFIRM_MESSAGE)) {
+              event.preventDefault();
+            } else {
+              allowingNavigation = true;
+            }
+          });
+        }
+      }
+    }
+    if (typeof window.addEventListener === "function") {
+      window.addEventListener("beforeunload", (event) => {
+        if (!hasUnsavedWork()) return;
+        event.preventDefault();
+        event.returnValue = LEAVE_CONFIRM_MESSAGE;
+      });
+    }
+  }
 
   function setStatus(message) {
     statusBox.textContent = message;
@@ -103,6 +140,7 @@
   }
 
   function reviewAnswer(answer) {
+    allowingNavigation = true;
     storage.remove(answerKey);
     const reviewUrl = new URL(`/sessions/${encodeURIComponent(sessionId)}/review`, window.location.origin);
     reviewUrl.searchParams.set("answer_id", answer.answer_id);
@@ -211,6 +249,8 @@
     }
   }
 
+  setupNavigationGuard();
+
   if (!savedAnswerId) {
     const restoredDraft = storage.get(draftKey);
     if (restoredDraft !== null) {
@@ -260,6 +300,7 @@
       setStatus("Đang kết thúc phiên và lưu tổng kết…");
       try {
         await api.endSession(sessionId);
+        allowingNavigation = true;
         window.location.assign(`/sessions/${encodeURIComponent(sessionId)}/summary`);
       } catch (error) {
         setError(errorText(error) || "Chưa thể kết thúc phiên.");
@@ -302,7 +343,7 @@
       };
       storage.set(answerKey, JSON.stringify(pendingAnswer));
       storage.remove(draftKey);
-      draftLabel.textContent = "Đã lưu trên máy chủ";
+      draftLabel.textContent = "Đã lưu câu trả lời trên máy chủ";
       answerField.readOnly = true;
       submitButton.hidden = true;
       retryButton.hidden = false;
