@@ -311,6 +311,19 @@ h3 {
   resize: vertical;
 }
 
+.form-input:focus-visible,
+.form-select:focus-visible,
+.form-textarea:focus-visible {
+  border-color: var(--color-primary);
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
 .form-input[aria-invalid="true"],
 .form-select[aria-invalid="true"],
 .form-textarea[aria-invalid="true"] {

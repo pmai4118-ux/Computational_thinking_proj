@@ -253,6 +253,12 @@
       endConfirmation.hidden = true;
       endButton.focus();
     });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !endConfirmation.hidden) {
+        endConfirmation.hidden = true;
+        endButton.focus();
+      }
+    });
     confirmEndButton.addEventListener("click", async () => {
       if (busy) return;
       setBusy(true);

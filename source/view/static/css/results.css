@@ -95,6 +95,12 @@
   background: var(--color-subtle);
 }
 
+.criterion-button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+  border-color: var(--color-primary);
+}
+
 .criterion-button__title {
   font-weight: 700;
 }
