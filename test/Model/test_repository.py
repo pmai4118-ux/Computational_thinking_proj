@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Barrier
 
 import pytest
 
@@ -322,3 +324,61 @@ def test_f04_idempotent_duplicate_submission_and_mid_transaction_rollback(
             "SELECT COUNT(*) FROM evaluation_criterion_checks WHERE evaluation_id = 'eval.orphan';"
         ).fetchone()[0]
         assert count == 0
+
+
+def test_f04_concurrent_identical_submission_ids_return_one_saved_answer(
+    tmp_path: Path,
+) -> None:
+    now = datetime(2026, 11, 18, 5, 30, tzinfo=UTC)
+    db_file = tmp_path / "concurrent-submissions.sqlite3"
+    setup_store = SQLiteRepositoryStore(db_file)
+    question, rubric = _seed_question(setup_store, now)
+    session = Session(
+        id=SessionId("session.concurrent.01"),
+        owner_token_hash="owner-hash-concurrent",
+        role="backend_developer",
+        level="intern_fresher",
+        language="vi",
+        state=SessionState.IN_PROGRESS,
+        question_refs=(question.ref,),
+        created_at=now,
+        updated_at=now,
+    )
+    setup_store.create_session(session)
+
+    answers = (
+        Answer(
+            id=AnswerId("answer.concurrent.01"),
+            revision=1,
+            session_id=session.id,
+            question_ref=question.ref,
+            rubric_ref=VersionedRef(rubric.id, rubric.version),
+            text="Same verbatim response",
+            submitted_at=now,
+            client_submission_id="subm-concurrent-01",
+        ),
+        Answer(
+            id=AnswerId("answer.concurrent.02"),
+            revision=1,
+            session_id=session.id,
+            question_ref=question.ref,
+            rubric_ref=VersionedRef(rubric.id, rubric.version),
+            text="Same verbatim response",
+            submitted_at=now,
+            client_submission_id="subm-concurrent-01",
+        ),
+    )
+    stores = (SQLiteRepositoryStore(db_file), SQLiteRepositoryStore(db_file))
+    start_together = Barrier(2)
+
+    def submit(index: int) -> tuple[Answer, bool]:
+        start_together.wait(timeout=5)
+        return stores[index].save_answer(answers[index])
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(submit, index) for index in range(2)]
+        results = [future.result(timeout=10) for future in futures]
+
+    assert sorted(replayed for _, replayed in results) == [False, True]
+    assert results[0][0] == results[1][0]
+    assert setup_store.list_answers_for_session(session.id) == (results[0][0],)

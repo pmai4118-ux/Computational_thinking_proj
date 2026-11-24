@@ -147,7 +147,7 @@
     ],
     "source_id": "source.cpython.faq.late_binding_closures",
     "prompt": "Đoạn mã dưới đây tạo danh sách các hàm tính bình phương trong vòng lặp. Kết quả của `validators[1]()` và `validators[3]()` là bao nhiêu? Giải thích cơ chế tra cứu biến của closure trong Python gây ra kết quả đó, đề xuất cách sửa để mỗi phần tử `validators[i]()` trả về đúng `i ** 2`, và nêu kiểm thử xác nhận.",
-    "code": "validators = []\nfor step in range(5):\n    validators.append(lambda: step ** 2)\n\nprint(validators[1]())\nprint(validators[3]())",
+    "code": "def build_validators():\n    validators = []\n    for step in range(5):\n        validators.append(lambda: step ** 2)\n    return validators\n\nvalidators = build_validators()\n\nprint(validators[1]())\nprint(validators[3]())",
     "code_language": "python",
     "constraints": [
       "Chạy trên Python 3.11.",
