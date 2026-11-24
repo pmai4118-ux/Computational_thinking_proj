@@ -594,6 +594,9 @@ class SQLiteRepositoryStore:
         with self._connect() as conn:
             try:
                 with conn:
+                    # Reserve SQLite's single-writer slot before checking idempotency;
+                    # otherwise concurrent retries can both observe no saved answer.
+                    conn.execute("BEGIN IMMEDIATE;")
                     session_row = conn.execute(
                         "SELECT * FROM sessions WHERE id = ?;", (answer.session_id,)
                     ).fetchone()

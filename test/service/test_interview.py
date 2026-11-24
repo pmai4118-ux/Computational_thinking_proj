@@ -188,3 +188,15 @@ def test_i01_enforces_ordered_question_transitions_and_completed_evaluation_gate
     assert final_snap.current_question is None
     assert final_snap.answered_count == 4
     assert final_snap.evaluated_count == 4
+
+
+def test_i01_rejects_negative_retry_index_before_first_question() -> None:
+    _store, service = _make_seeded_service()
+    snapshot = service.open_session(owner_token_hash="owner-hash-negative-index")
+
+    with pytest.raises(InvalidSessionStateError, match="Expected from_question_index=0, got -1"):
+        service.advance_question(
+            session_id=snapshot.session.id,
+            owner_token_hash="owner-hash-negative-index",
+            from_question_index=-1,
+        )

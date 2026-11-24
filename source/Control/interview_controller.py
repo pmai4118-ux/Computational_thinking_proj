@@ -8,6 +8,7 @@ import secrets
 from fastapi import APIRouter, FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from source.Control.schemas import (
     AnswerRevisionRefDTO,
@@ -178,6 +179,41 @@ class InterviewController:
                 ),
             ) from error
         return self._snapshot_to_dto(snapshot)
+
+    def create_session_from_form(
+        self,
+        *,
+        role: str,
+        level: str,
+        language: str,
+        owner_token: str,
+    ) -> SessionViewDTO:
+        """Validate setup form values, then coordinate session creation."""
+        try:
+            request_dto = CreateSessionRequest(
+                role=role,
+                level=level,
+                language=language,
+            )
+        except ValidationError as error:
+            field_errors = {
+                str(err["loc"][0]): err["msg"]
+                for err in error.errors()
+                if err.get("loc")
+            }
+            raise ApiControllerError(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.INVALID_INPUT,
+                    message="Thông tin thiết lập phiên chưa hợp lệ.",
+                    retryable=False,
+                    field_errors=field_errors,
+                    recovery_action=(
+                        "Vui lòng chọn vai trò và cấp độ hợp lệ rồi bấm Xác nhận bắt đầu."
+                    ),
+                ),
+            ) from error
+        return self.create_session(request_dto, owner_token=owner_token)
 
     def get_session(
         self,
