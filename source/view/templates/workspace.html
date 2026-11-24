@@ -98,6 +98,11 @@
       <p class="alert alert--error" id="workspace-error" role="alert" tabindex="-1" hidden></p>
       <p class="alert alert--status" id="workspace-status" role="status" aria-live="polite" hidden></p>
 
+      <div class="action-row" id="session-expired-recovery" hidden>
+        <a class="btn btn--primary" id="restart-session-link" href="/setup">Bắt đầu phiên luyện tập mới</a>
+        <a class="btn btn--secondary" href="/">Về trang danh sách phiên</a>
+      </div>
+
       <div class="action-row">
         {% if not session.current_answer %}
           <button class="btn btn--primary" id="submit-answer" type="submit">Gửi câu trả lời</button>

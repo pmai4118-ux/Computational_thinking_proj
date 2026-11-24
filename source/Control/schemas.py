@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from source.Model.evaluation import CriterionStatus, EvaluationStatus
 from source.Model.ids import (
@@ -42,6 +42,8 @@ class ErrorCode(StrEnum):
     INSUFFICIENT_QUESTION_BANK = "INSUFFICIENT_QUESTION_BANK"
     EVALUATION_IN_PROGRESS = "EVALUATION_IN_PROGRESS"
     EVALUATION_RETRY_NOT_ALLOWED = "EVALUATION_RETRY_NOT_ALLOWED"
+    EVALUATION_INTERRUPTED = "EVALUATION_INTERRUPTED"
+    EVALUATION_FAILED = "EVALUATION_FAILED"
     PROVIDER_TIMEOUT = "PROVIDER_TIMEOUT"
     PROVIDER_QUOTA_EXCEEDED = "PROVIDER_QUOTA_EXCEEDED"
     PROVIDER_REFUSAL = "PROVIDER_REFUSAL"
@@ -154,13 +156,19 @@ class SubmitAnswerRequest(BaseModel):
     client_submission_id: str = Field(min_length=1, max_length=128)
     text: str = Field(min_length=1, max_length=20000)
 
-    @model_validator(mode="after")
-    def _reject_blank_text(self) -> SubmitAnswerRequest:
-        if not self.text.strip():
+    @field_validator("text")
+    @classmethod
+    def _reject_blank_text(cls, v: str) -> str:
+        if not v.strip():
             raise ValueError("Answer text must not be blank.")
-        if not self.client_submission_id.strip():
+        return v
+
+    @field_validator("client_submission_id")
+    @classmethod
+    def _reject_blank_client_submission_id(cls, v: str) -> str:
+        if not v.strip():
             raise ValueError("client_submission_id must not be blank.")
-        return self
+        return v
 
 
 class SubmitAnswerResponse(BaseModel):

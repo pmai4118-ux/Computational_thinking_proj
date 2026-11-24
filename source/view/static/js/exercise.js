@@ -102,8 +102,9 @@
       errorBox.hidden = false;
       errorBox.focus();
       statusBox.hidden = true;
-      button.textContent = "Thử tạo lượt luyện lại";
-      button.disabled = false;
+      const canRetry = error.code !== "SESSION_EXPIRED" && error.code !== "SESSION_FORBIDDEN" && error.status !== 410 && error.status !== 403;
+      button.textContent = canRetry ? "Thử tạo lượt luyện lại" : "Không thể tạo lượt luyện";
+      button.disabled = !canRetry;
       startingPractice = false;
     }
   }
@@ -203,10 +204,14 @@
       statusBox.hidden = true;
       errorBox.textContent = `${error.message || "Chưa tải được bài tập."} ${error.recoveryAction || "Không có bài luyện thay thế nào được tự tạo."}`;
       errorBox.hidden = false;
-      const retry = node("button", "btn btn--secondary", "Tải lại đề xuất");
-      retry.type = "button";
-      retry.addEventListener("click", loadRecommendations);
-      errorBox.replaceChildren(document.createTextNode(`${error.message || "Chưa tải được bài tập."} `), retry);
+      const canRetry = error.status !== 403 && error.code !== "SESSION_FORBIDDEN";
+      if (canRetry) {
+        const retry = node("button", "btn btn--secondary", "Tải lại đề xuất");
+        retry.type = "button";
+        retry.addEventListener("click", loadRecommendations);
+        errorBox.replaceChildren(document.createTextNode(`${error.message || "Chưa tải được bài tập."} `), retry);
+      }
+      errorBox.focus();
     }
   }
 

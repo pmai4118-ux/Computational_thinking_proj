@@ -5,7 +5,7 @@
 {% block content %}
 <div class="grid-two">
   <section class="card" aria-labelledby="setup-heading">
-    <form method="post" action="/setup" class="stack" novalidate>
+    <form method="post" action="/setup" class="stack" novalidate id="setup-form">
       <div>
         <h1 id="setup-heading">Thiết lập phiên luyện tập</h1>
         <p class="text-secondary reading-measure">
@@ -79,4 +79,20 @@
     </div>
   </aside>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (() => {
+    const form = document.querySelector("#setup-form");
+    if (!form) return;
+    form.addEventListener("submit", () => {
+      const btn = form.querySelector("button[type=submit]");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Đang khởi tạo phiên…";
+      }
+    });
+  })();
+</script>
 {% endblock %}
