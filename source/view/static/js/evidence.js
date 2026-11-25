@@ -157,9 +157,11 @@
       renderEvaluation(response);
     } catch (error) {
       statusBox.hidden = true;
+      const canRetry = error.code !== "SESSION_EXPIRED" && error.code !== "SESSION_FORBIDDEN" && error.status !== 410 && error.status !== 403 && error.retryable !== false;
       errorBox.textContent = `${error.message || "Chưa tải được kết quả."} ${error.recoveryAction || "Bài trả lời gốc vẫn được giữ trên máy chủ."}`;
       errorBox.hidden = false;
-      retryButton.hidden = false;
+      retryButton.hidden = !canRetry;
+      errorBox.focus();
     }
   }
 
@@ -181,7 +183,8 @@
         errorBox.textContent = `${error.message || "Chưa thể chuyển câu."} ${error.recoveryAction || "Kết quả đã lưu vẫn được giữ nguyên."}`;
         errorBox.hidden = false;
         errorBox.focus();
-        nextButton.disabled = false;
+        const canRetryNext = error.code !== "SESSION_EXPIRED" && error.code !== "SESSION_FORBIDDEN" && error.status !== 410 && error.status !== 403;
+        nextButton.disabled = !canRetryNext;
       }
     });
   }

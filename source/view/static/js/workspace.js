@@ -16,6 +16,7 @@
   const endConfirmation = document.querySelector("#end-session-confirmation");
   const confirmEndButton = document.querySelector("#confirm-end-session");
   const cancelEndButton = document.querySelector("#cancel-end-session");
+  const sessionExpiredRecovery = document.querySelector("#session-expired-recovery");
   const api = window.InterviewApi;
   const sessionId = workspace.dataset.sessionId;
   const questionId = workspace.dataset.questionId;
@@ -25,6 +26,7 @@
   const draftKey = `draft:${sessionId}:${questionId}`;
   const submissionKey = `submission:${sessionId}:${questionId}`;
   const answerKey = `saved-answer:${sessionId}:${questionId}`;
+  const MAX_POLLING_DURATION_MS = 150000;
   let busy = false;
   let statusPoll = null;
   let waitNotice = null;
@@ -85,6 +87,24 @@
   }
 
   function errorText(error) {
+    if (error.code === "SESSION_EXPIRED" || error.status === 410) {
+      return [
+        error.message || "Phiên luyện tập đã hết hạn khả dụng.",
+        error.recoveryAction || "Bản nháp được giữ nguyên trên ô nhập. Vui lòng sao chép và bắt đầu phiên mới.",
+      ].filter(Boolean).join(" ");
+    }
+    if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
+      return [
+        error.message || "Phiên luyện tập này không thuộc trình duyệt hiện tại.",
+        error.recoveryAction || "Bản nháp được giữ nguyên để bạn sao chép và mở phiên hợp lệ.",
+      ].filter(Boolean).join(" ");
+    }
+    if (error.code === "SUBMISSION_CONFLICT" || error.status === 409) {
+      return [
+        error.message || "Mã gửi bài đã được dùng cho một nội dung khác.",
+        error.recoveryAction || "Tải lại câu trả lời đã lưu hoặc tạo mã gửi mới.",
+      ].filter(Boolean).join(" ");
+    }
     if (error.code === "PROVIDER_TIMEOUT") {
       return "AI phản hồi quá thời gian. Bài đã lưu nguyên vẹn và chưa bị chấm điểm; bạn có thể thử đánh giá lại.";
     }
@@ -100,6 +120,30 @@
         : "Dịch vụ AI chưa hoàn tất đánh giá. Bài đã lưu và bạn có thể thử lại.";
     }
     return [error.message, error.recoveryAction].filter(Boolean).join(" ");
+  }
+
+  function showSessionExpired(error) {
+    stopWaiting();
+    setBusy(false);
+    setError(errorText(error) || "Phiên luyện tập đã hết hạn khả dụng.");
+    setStatus("Phiên đã hết hạn; câu trả lời chưa thể ghi vào phiên cũ. Hãy sao chép nội dung và bắt đầu phiên mới.");
+    if (submitButton) submitButton.hidden = true;
+    if (retryButton) retryButton.hidden = true;
+    if (endButton) endButton.hidden = true;
+    if (sessionExpiredRecovery) sessionExpiredRecovery.hidden = false;
+    errorBox.focus();
+  }
+
+  function showSessionForbidden(error) {
+    stopWaiting();
+    setBusy(false);
+    setError(errorText(error) || "Phiên luyện tập này không thuộc trình duyệt hiện tại.");
+    setStatus("Bạn không có quyền gửi vào phiên này. Hãy sao chép nội dung và mở phiên của bạn.");
+    if (submitButton) submitButton.hidden = true;
+    if (retryButton) retryButton.hidden = true;
+    if (endButton) endButton.hidden = true;
+    if (sessionExpiredRecovery) sessionExpiredRecovery.hidden = false;
+    errorBox.focus();
   }
 
   function reviewAnswer(answer) {
@@ -162,10 +206,27 @@
     let reading = false;
     statusPoll = window.setInterval(async () => {
       if (reading) return;
+      if (Date.now() - waitStartedAt >= MAX_POLLING_DURATION_MS) {
+        stopWaiting();
+        setBusy(false);
+        setError("Lượt đánh giá mất nhiều thời gian hơn dự kiến. Bài trả lời của bạn đã được lưu an toàn trên máy chủ (chưa bị tính điểm). Bạn có thể thử đánh giá lại hoặc tải lại trang.");
+        setStatus("Câu trả lời đã lưu trên máy chủ; chưa có điểm đánh giá.");
+        retryButton.hidden = false;
+        errorBox.focus();
+        return;
+      }
       reading = true;
       try {
         await readSavedEvaluation(answer);
       } catch (error) {
+        if (error.code === "SESSION_EXPIRED" || error.status === 410) {
+          showSessionExpired(error);
+          return;
+        }
+        if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
+          showSessionForbidden(error);
+          return;
+        }
         // A temporary read error must not start another evaluation.
         setStatus("Bài đã lưu. Chưa đọc được trạng thái AI; hệ thống sẽ kiểm tra lại.");
       } finally {
@@ -189,6 +250,14 @@
       stopWaiting();
       reviewAnswer(answer);
     } catch (error) {
+      if (error.code === "SESSION_EXPIRED" || error.status === 410) {
+        showSessionExpired(error);
+        return;
+      }
+      if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
+        showSessionForbidden(error);
+        return;
+      }
       if (error.code === "EVALUATION_IN_PROGRESS" || error.code === "NETWORK_ERROR") {
         try {
           const state = await readSavedEvaluation(answer);
@@ -197,7 +266,15 @@
             watchEvaluation(answer);
           }
           return;
-        } catch (_readError) {
+        } catch (readError) {
+          if (readError.code === "SESSION_EXPIRED" || readError.status === 410) {
+            showSessionExpired(readError);
+            return;
+          }
+          if (readError.code === "SESSION_FORBIDDEN" || readError.status === 403) {
+            showSessionForbidden(readError);
+            return;
+          }
           if (error.code === "EVALUATION_IN_PROGRESS") {
             stopWaiting();
             watchEvaluation(answer);
@@ -207,7 +284,7 @@
       }
       showFailure(error, error.code !== "EVALUATION_IN_PROGRESS" && error.retryable !== false);
     } finally {
-      if (statusPoll === null) setBusy(false);
+      if (statusPoll === null && (!submitButton || !submitButton.hidden)) setBusy(false);
     }
   }
 
@@ -233,6 +310,10 @@
       if (error.status === 404) {
         retryButton.hidden = false;
         setStatus("Bài đã lưu nhưng chưa được đánh giá. Bạn có thể bắt đầu đánh giá bài đã lưu.");
+      } else if (error.code === "SESSION_EXPIRED" || error.status === 410) {
+        showSessionExpired(error);
+      } else if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
+        showSessionForbidden(error);
       } else {
         showFailure(error);
       }
@@ -262,8 +343,14 @@
         await api.endSession(sessionId);
         window.location.assign(`/sessions/${encodeURIComponent(sessionId)}/summary`);
       } catch (error) {
-        setError(errorText(error) || "Chưa thể kết thúc phiên.");
-        errorBox.focus();
+        if (error.code === "SESSION_EXPIRED" || error.status === 410) {
+          showSessionExpired(error);
+        } else if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
+          showSessionForbidden(error);
+        } else {
+          setError(errorText(error) || "Chưa thể kết thúc phiên.");
+          errorBox.focus();
+        }
       } finally {
         setBusy(false);
       }
@@ -309,11 +396,21 @@
       setBusy(false);
       await evaluateSavedAnswer(pendingAnswer);
     } catch (error) {
-      setError(errorText(error) || "Chưa xác nhận được việc lưu bài. Bản nháp vẫn được giữ trên trình duyệt.");
-      setStatus("Chưa xác nhận được bài đã lưu. Gửi lại sẽ dùng cùng mã gửi cho cùng nội dung.");
-      answerField.focus();
+      if (error.code === "SESSION_EXPIRED" || error.status === 410) {
+        showSessionExpired(error);
+      } else if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
+        showSessionForbidden(error);
+      } else if (error.code === "SUBMISSION_CONFLICT" || error.status === 409) {
+        setError(errorText(error) || "Xung đột mã gửi bài. Hãy tải lại câu trả lời đã lưu.");
+        setStatus("Mã gửi đã được dùng cho nội dung khác. Nội dung hiện tại vẫn được giữ trên ô nhập.");
+        errorBox.focus();
+      } else {
+        setError(errorText(error) || "Chưa xác nhận được việc lưu bài. Bản nháp vẫn được giữ trên trình duyệt.");
+        setStatus("Chưa xác nhận được bài đã lưu. Bạn có thể kiểm tra mạng rồi bấm gửi lại.");
+        answerField.focus();
+      }
     } finally {
-      if (statusPoll === null) setBusy(false);
+      if (statusPoll === null && submitButton && !submitButton.hidden) setBusy(false);
     }
   });
 })();

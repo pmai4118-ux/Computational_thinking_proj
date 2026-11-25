@@ -142,10 +142,14 @@
         : `${error.message || "Chưa tải được tổng kết."} ${error.recoveryAction || "Phiên vẫn được giữ nguyên."}`;
       errorBox.textContent = message;
       errorBox.hidden = false;
-      const retry = node("button", "btn btn--secondary", "Tải lại tổng kết");
-      retry.type = "button";
-      retry.addEventListener("click", loadSummary);
-      errorBox.replaceChildren(document.createTextNode(`${message} `), retry);
+      const canRetry = error.status !== 403 && error.code !== "SESSION_FORBIDDEN";
+      if (canRetry) {
+        const retry = node("button", "btn btn--secondary", "Tải lại tổng kết");
+        retry.type = "button";
+        retry.addEventListener("click", loadSummary);
+        errorBox.replaceChildren(document.createTextNode(`${message} `), retry);
+      }
+      errorBox.focus();
     }
   }
 

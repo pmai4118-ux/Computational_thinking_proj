@@ -138,3 +138,43 @@ test("slow live request keeps saved-answer progress visible and opens its result
   await pending;
   assert.match(page.navigation, /\/sessions\/session-1\/review\?answer_id=answer-1/);
 });
+
+test("polling times out after 150s and enables retry without an infinite spinner", async () => {
+  const page = browser({
+    savedAnswerId: "answer-1",
+    api: {
+      getEvaluation: async () => ({ result: { status: "processing" } }),
+    },
+  });
+  await flush();
+  assert.equal(page.element("#retry-evaluation").hidden, true);
+  const poll = [...page.intervals.values()].find((item) => item.delay === 5000);
+  assert.ok(poll);
+  page.setNow(160000);
+  await poll.callback();
+  await flush();
+  assert.equal(page.element("#retry-evaluation").hidden, false);
+  assert.match(page.element("#workspace-error").textContent, /nhiều thời gian hơn dự kiến/);
+  assert.equal(page.intervals.size, 0);
+});
+
+test("expired session on submit keeps answer text and shows restart link", async () => {
+  const page = browser({
+    api: {
+      submitAnswer: async () => {
+        const error = new Error("Phiên luyện tập đã hết hạn khả dụng.");
+        error.code = "SESSION_EXPIRED";
+        error.status = 410;
+        throw error;
+      },
+    },
+  });
+  page.element("#answer-text").value = "Bản nháp cần bảo toàn";
+  const submit = page.handlers.get("#answer-form:submit");
+  await submit({ preventDefault() {} });
+  await flush();
+  assert.equal(page.element("#answer-text").value, "Bản nháp cần bảo toàn");
+  assert.equal(page.element("#submit-answer").hidden, true);
+  assert.equal(page.element("#session-expired-recovery").hidden, false);
+  assert.match(page.element("#workspace-error").textContent, /hết hạn/);
+});
