@@ -12,8 +12,17 @@
          aria-labelledby="summary-heading">
   <div class="results-header">
     <div>
-      <p class="eyebrow">Phiên {{ session.session_id }}</p>
+      <p class="eyebrow">
+        {% if session_display is defined and session_display %}
+          {{ session_display.title }}
+        {% elif session.progress.total_questions == 1 %}
+          Lượt luyện bổ trợ (1 câu)
+        {% else %}
+          Phiên luyện phỏng vấn ({{ session.progress.total_questions }} câu)
+        {% endif %}
+      </p>
       <h1 id="summary-heading">Tổng kết phiên luyện tập</h1>
+      <p class="form-hint">Mã tham chiếu phiên: <code>{{ session.session_id }}</code></p>
     </div>
     <a class="btn btn--secondary" href="/">Về trang bắt đầu</a>
   </div>
@@ -48,4 +57,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/summary.js?v=20261124-q05" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/summary.js?v=20261125-q05" defer></script>{% endblock %}

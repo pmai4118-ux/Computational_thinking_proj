@@ -107,7 +107,90 @@ def test_q05_observation_and_usability_docs_exist_without_pii() -> None:
     usability = (ROOT_DIR / "docs" / "usability_check.md").read_text(encoding="utf-8")
 
     assert "P1" in observations
+    assert "P2" in observations
     assert "Hoàn thành có vướng mắc" in observations
+    assert "UI-01" in observations
+    assert "UI-07" in observations
     assert "Q05-01" in observations
     assert "Q05-05" in usability
+    assert "Q05-11" in usability
+    assert "Q05-17" in usability
     assert "Phần B — Biên bản kiểm tra Q04" in usability
+
+
+def test_q05_review_page_links_to_summary_instead_of_empty_workspace_when_session_ended(
+    ui_client: TestClient,
+    ui_session: dict[str, object],
+) -> None:
+    session_id = ui_session["session_id"]
+    question = ui_session["current_question"]
+    submitted = ui_client.post(
+        f"/api/sessions/{session_id}/answers",
+        json={
+            "question_id": question["id"],
+            "question_version": question["version"],
+            "client_submission_id": "q05-ui02-submit-1",
+            "text": "Câu trả lời tổng hợp trước khi kết thúc phiên sớm.",
+        },
+    )
+    assert submitted.status_code == 201
+    answer = submitted.json()["answer"]
+
+    in_progress_review = ui_client.get(
+        f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}"
+    )
+    assert in_progress_review.status_code == 200
+    assert "Về câu hỏi" in in_progress_review.text
+
+    ended = ui_client.post(
+        f"/api/sessions/{session_id}/end",
+        json={"reason": "student_requested"},
+    )
+    assert ended.status_code == 200
+
+    ended_review = ui_client.get(
+        f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}"
+    )
+    assert ended_review.status_code == 200
+    assert "Về câu hỏi" not in ended_review.text
+    assert f'class="btn btn--secondary" href="/sessions/{session_id}/summary">Về tổng kết</a>' in ended_review.text
+
+
+def test_q05_welcome_and_summary_use_readable_session_labels_instead_of_raw_id_headings(
+    ui_client: TestClient,
+    ui_session: dict[str, object],
+) -> None:
+    session_id = ui_session["session_id"]
+
+    welcome = ui_client.get("/")
+    assert welcome.status_code == 200
+    assert f"<strong>Phiên {session_id}</strong>" not in welcome.text
+    assert "Phiên luyện phỏng vấn" in welcome.text
+    assert f"<code>{session_id}</code>" in welcome.text
+
+    summary = ui_client.get(f"/sessions/{session_id}/summary")
+    assert summary.status_code == 200
+    assert f'<p class="eyebrow">Phiên {session_id}</p>' not in summary.text
+    assert "Phiên luyện phỏng vấn" in summary.text
+    assert f'data-session-id="{session_id}"' in summary.text
+
+
+def test_q05_workspace_clarifies_tab_only_draft_and_scripts_remove_api_jargon(
+    ui_client: TestClient,
+    ui_session: dict[str, object],
+) -> None:
+    session_id = ui_session["session_id"]
+    workspace = ui_client.get(f"/sessions/{session_id}")
+    assert workspace.status_code == 200
+    assert "trong tab trình duyệt hiện tại" in workspace.text
+
+    exercise_js = (STATIC_JS_DIR / "exercise.js").read_text(encoding="utf-8")
+    summary_js = (STATIC_JS_DIR / "summary.js").read_text(encoding="utf-8")
+    evidence_js = (STATIC_JS_DIR / "evidence.js").read_text(encoding="utf-8")
+
+    assert "groupRecommendations" in exercise_js
+    assert "phản hồi API" not in exercise_js
+    assert "API chưa cung cấp" not in exercise_js
+    assert "API chưa cung cấp" not in summary_js
+    assert "scrollToHighlight: false" in evidence_js
+    assert "scrollToHighlight: true" in evidence_js

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from secrets import token_urlsafe
 from urllib.parse import parse_qs
@@ -27,6 +28,58 @@ from source.Model.ids import SessionId
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 MAX_SETUP_FORM_BODY_BYTES = 8 * 1024
 MAX_SETUP_FORM_FIELDS = 8
+VIETNAM_TZ = timezone(timedelta(hours=7))
+
+
+def _format_session_display(
+    session_dto,
+    *,
+    created_at: datetime | None,
+    index: int | None = None,
+) -> dict[str, str]:
+    """Build learner-friendly Vietnamese labels while keeping technical IDs secondary."""
+    is_practice = (
+        str(session_dto.session_id).startswith("session.practice.")
+        or session_dto.progress.total_questions == 1
+    )
+    kind_label = "Lượt luyện bổ trợ" if is_practice else "Phiên luyện phỏng vấn"
+    ordinal = f" #{index}" if index is not None else ""
+    created_label = ""
+    if created_at is not None:
+        aware = (
+            created_at.replace(tzinfo=timezone.utc)
+            if created_at.tzinfo is None
+            else created_at
+        )
+        created_label = aware.astimezone(VIETNAM_TZ).strftime("%d/%m/%Y %H:%M")
+        title = f"{kind_label}{ordinal} · {created_label}"
+    else:
+        title = f"{kind_label}{ordinal} ({session_dto.progress.total_questions} câu)"
+    return {
+        "title": title,
+        "kind_label": kind_label,
+        "created_label": created_label,
+    }
+
+
+def _build_session_labels(
+    controller: InterviewController,
+    sessions,
+    *,
+    owner_token: str | None,
+) -> dict[str, dict[str, str]]:
+    created_map = controller.list_session_created_at_for_owner(owner_token=owner_token)
+    total = len(sessions)
+    labels: dict[str, dict[str, str]] = {}
+    for position, item in enumerate(sessions):
+        # Assign chronological ordinal (oldest = #1) when newest-first ordering is used.
+        ordinal = total - position if total > 1 else 1
+        labels[str(item.session_id)] = _format_session_display(
+            item,
+            created_at=created_map.get(item.session_id),
+            index=ordinal,
+        )
+    return labels
 
 
 def create_template_environment() -> Environment:
@@ -96,9 +149,13 @@ def build_pages_router(
     def welcome_page(request: Request) -> HTMLResponse:
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
         sessions = controller.list_sessions_for_owner(owner_token=owner_token)
+        session_labels = _build_session_labels(
+            controller, sessions, owner_token=owner_token
+        )
         html = welcome_template.render(
             demo_mode_label=controller.demo_mode_label,
             sessions=sessions,
+            session_labels=session_labels,
         )
         return HTMLResponse(content=html)
 
@@ -173,9 +230,13 @@ def build_pages_router(
             )
         except ApiControllerError as error:
             sessions = controller.list_sessions_for_owner(owner_token=owner_token)
+            session_labels = _build_session_labels(
+                controller, sessions, owner_token=owner_token
+            )
             html = welcome_template.render(
                 demo_mode_label=controller.demo_mode_label,
                 sessions=sessions,
+                session_labels=session_labels,
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
             )
@@ -356,9 +417,18 @@ def build_pages_router(
         session_dto, error_response = _get_owned_session_page_data(session_id, request)
         if error_response is not None:
             return error_response
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        created_at = controller.get_session_created_at(
+            SessionId(session_id),
+            owner_token=owner_token,
+        )
         html = summary_template.render(
             demo_mode_label=controller.demo_mode_label,
             session=session_dto,
+            session_display=_format_session_display(
+                session_dto,
+                created_at=created_at,
+            ),
         )
         return HTMLResponse(content=html)
 

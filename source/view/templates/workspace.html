@@ -92,7 +92,7 @@
       {% endif %}
       <div class="form-field">
         <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
-        <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự.</p>
+        <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự. Bản nháp chưa gửi chỉ được giữ trong tab trình duyệt hiện tại.</p>
         <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
                   aria-describedby="answer-guidance answer-counter draft-label"
                   {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% endif %}</textarea>

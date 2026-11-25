@@ -114,7 +114,7 @@
     const item = node("li", "gap-card");
     item.append(node("h3", "", gap.criterion_label || gap.skill_label || "Điểm cần luyện"));
     if (gap.skill_label) item.append(node("p", "", `Kỹ năng: ${gap.skill_label}`));
-    item.append(node("p", "", gap.reason || "API chưa cung cấp lý do chi tiết cho điểm thiếu này."));
+    item.append(node("p", "", gap.reason || "Chưa có mô tả chi tiết cho điểm thiếu này."));
     const link = node("a", "btn btn--secondary", "Tìm bài tập cho kỹ năng này");
     link.href = `/sessions/${encodeURIComponent(sessionId)}/exercises?skill_id=${encodeURIComponent(gap.skill_id || "")}`;
     item.append(link);

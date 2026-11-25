@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import hashlib
 import secrets
 
@@ -290,6 +291,37 @@ class InterviewController:
             )
             views.append(self._snapshot_to_dto(snap))
         return tuple(views)
+
+    def list_session_created_at_for_owner(
+        self,
+        *,
+        owner_token: str | None,
+    ) -> dict[SessionId, datetime]:
+        """Return creation timestamps for an owner's sessions for page presentation."""
+        if not owner_token or not owner_token.strip():
+            return {}
+        owner_hash = hash_owner_token(owner_token.strip())
+        sessions = self._service.list_owner_sessions(owner_token_hash=owner_hash)
+        return {sess.id: sess.created_at for sess in sessions}
+
+    def get_session_created_at(
+        self,
+        session_id: SessionId,
+        *,
+        owner_token: str | None,
+    ) -> datetime | None:
+        """Return creation timestamp for an owned session without changing API DTOs."""
+        if not owner_token or not owner_token.strip():
+            return None
+        owner_hash = hash_owner_token(owner_token.strip())
+        try:
+            snapshot = self._service.get_owned_session(
+                session_id=session_id,
+                owner_token_hash=owner_hash,
+            )
+        except (SessionNotFoundError, SessionForbiddenError, SessionExpiredError):
+            return None
+        return snapshot.session.created_at
 
     def next_question(
         self,

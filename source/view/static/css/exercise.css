@@ -38,6 +38,20 @@
   margin: 0;
 }
 
+.exercise-card__reasons {
+  margin: var(--space-1) 0 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.exercise-card__practice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .exercise-card .exercise-card__summary {
   margin: 0 0 var(--space-3);
   color: var(--color-text-secondary);

@@ -18,8 +18,12 @@
       <h1 id="review-heading">Đối chiếu câu trả lời theo tiêu chí</h1>
     </div>
     <div class="action-row">
-      <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}">Về câu hỏi</a>
-      <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+      {% if session.state == "in_progress" and session.current_question %}
+        <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}">Về câu hỏi</a>
+        <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+      {% else %}
+        <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Về tổng kết</a>
+      {% endif %}
     </div>
   </div>
   <p class="text-secondary reading-measure">Chọn một tiêu chí để xem đúng đoạn trích trong bài đã gửi. “Chưa đủ bằng chứng” không được tính thành 0 điểm.</p>
@@ -57,4 +61,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261124-q05" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261125-q05" defer></script>{% endblock %}

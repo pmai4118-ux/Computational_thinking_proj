@@ -34,7 +34,7 @@
     return node;
   }
 
-  function renderEvidence(check) {
+  function renderEvidence(check, { scrollToHighlight = false } = {}) {
     detail.replaceChildren();
     explanation.textContent = check.explanation;
     const feedback = feedbackItems.find((item) => item.criterion_id === check.criterion_id);
@@ -65,10 +65,10 @@
     if (!quotes.length && !(check.evidence || []).some((item) => item.observation)) {
       detail.append(element("p", "text-secondary", "Chưa có đoạn trích hoặc quan sát gắn với tiêu chí này."));
     }
-    renderAnswerWithHighlights(evaluation.answer_text, quotes);
+    renderAnswerWithHighlights(evaluation.answer_text, quotes, { scrollToHighlight });
   }
 
-  function renderAnswerWithHighlights(text, evidenceItems) {
+  function renderAnswerWithHighlights(text, evidenceItems, { scrollToHighlight = false } = {}) {
     answerSource.replaceChildren();
     const points = Array.from(text);
     const ranges = evidenceItems
@@ -78,15 +78,27 @@
       .sort((left, right) => left.start - right.start);
 
     let cursor = 0;
+    let scrolled = false;
     for (const range of ranges) {
       if (range.start < cursor || points.slice(range.start, range.end).join("") !== range.quote) continue;
       answerSource.append(document.createTextNode(points.slice(cursor, range.start).join("")));
       const mark = element("mark", "", points.slice(range.start, range.end).join(""));
       answerSource.append(mark);
-      mark.scrollIntoView({ block: "nearest" });
+      if (scrollToHighlight && !scrolled && typeof mark.scrollIntoView === "function") {
+        mark.scrollIntoView({ block: "nearest" });
+        scrolled = true;
+      }
       cursor = range.end;
     }
     answerSource.append(document.createTextNode(points.slice(cursor).join("")));
+  }
+
+  function selectCriterion(button, check, { scrollToHighlight = false } = {}) {
+    for (const active of criteriaList.querySelectorAll(".criterion-button")) {
+      active.setAttribute("aria-pressed", "false");
+    }
+    button.setAttribute("aria-pressed", "true");
+    renderEvidence(check, { scrollToHighlight });
   }
 
   function renderEvaluation(response) {
@@ -106,6 +118,7 @@
     }
     evaluationState.textContent = data.status === "completed" ? "Đã đánh giá" : "Chưa hoàn tất đánh giá";
 
+    let firstSelection = null;
     for (const check of data.criterion_checks || []) {
       const card = element("article", "criterion-card");
       const button = element("button", "criterion-button");
@@ -121,12 +134,9 @@
       const scoreLine = element("p", "form-hint", score);
       card.append(button, scoreLine);
       button.addEventListener("click", () => {
-        for (const active of criteriaList.querySelectorAll(".criterion-button")) {
-          active.setAttribute("aria-pressed", "false");
-        }
-        button.setAttribute("aria-pressed", "true");
-        renderEvidence(check);
+        selectCriterion(button, check, { scrollToHighlight: true });
       });
+      if (!firstSelection) firstSelection = { button, check };
       criteriaList.append(card);
     }
 
@@ -138,8 +148,9 @@
         && answerRevision === Number(page.dataset.currentAnswerRevision)) {
       nextButton.hidden = false;
     }
-    const firstButton = criteriaList.querySelector(".criterion-button");
-    if (firstButton) firstButton.click();
+    if (firstSelection) {
+      selectCriterion(firstSelection.button, firstSelection.check, { scrollToHighlight: false });
+    }
   }
 
   async function loadEvaluation() {
