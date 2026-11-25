@@ -64,6 +64,10 @@
                   <span class="badge">
                     Đã kết thúc sớm · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu có kết quả
                   </span>
+                {% elif item.state.value == "expired" %}
+                  <span class="badge badge--error">
+                    Đã hết hạn · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu có kết quả
+                  </span>
                 {% else %}
                   <span class="badge">
                     Đã lưu · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu

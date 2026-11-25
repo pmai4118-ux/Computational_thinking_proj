@@ -27,6 +27,7 @@
     completed: "Đã hoàn thành",
     ended_early: "Đã kết thúc sớm",
     in_progress: "Đang thực hiện",
+    expired: "Đã hết hạn",
   };
   const evaluationNames = {
     completed: "Đã có kết quả",

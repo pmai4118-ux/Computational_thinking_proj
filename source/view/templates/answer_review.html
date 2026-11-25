@@ -29,7 +29,10 @@
   <p class="text-secondary reading-measure">Chọn một tiêu chí để xem đúng đoạn trích trong bài đã gửi. “Chưa đủ bằng chứng” không được tính thành 0 điểm.</p>
   <div id="review-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
   <p id="review-status" class="alert alert--status" role="status" aria-live="polite">{% if answer_id %}Đang tải kết quả đã lưu…{% else %}Chưa có bài đã lưu để hiển thị kết quả.{% endif %}</p>
-  <button id="retry-review-load" class="btn btn--secondary" type="button" hidden>Tải lại kết quả</button>
+  <div class="action-row" id="review-recovery-actions">
+    <button id="retry-review-evaluation" class="btn btn--primary" type="button" hidden>Thử đánh giá lại</button>
+    <button id="retry-review-load" class="btn btn--secondary" type="button" hidden>Tải lại kết quả</button>
+  </div>
   <div id="review-content" hidden>
     <section class="score-summary" aria-label="Tổng điểm câu trả lời">
       <div><span class="score-summary__label">Điểm câu này</span><strong id="evaluation-total"></strong></div>
@@ -61,4 +64,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261125-q05" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261125-q06" defer></script>{% endblock %}

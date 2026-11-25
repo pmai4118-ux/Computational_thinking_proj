@@ -12,6 +12,7 @@
   const statusBox = document.querySelector("#workspace-status");
   const submitButton = document.querySelector("#submit-answer");
   const retryButton = document.querySelector("#retry-evaluation");
+  const openReviewLink = document.querySelector("#open-review");
   const endButton = document.querySelector("#end-session");
   const endConfirmation = document.querySelector("#end-session-confirmation");
   const confirmEndButton = document.querySelector("#confirm-end-session");
@@ -159,9 +160,14 @@
     return [error.message, error.recoveryAction].filter(Boolean).join(" ");
   }
 
+  function hideOpenReview() {
+    if (openReviewLink) openReviewLink.hidden = true;
+  }
+
   function showSessionExpired(error) {
     stopWaiting();
     setBusy(false);
+    hideOpenReview();
     setError(errorText(error) || "Phiên luyện tập đã hết hạn khả dụng.");
     setStatus("Phiên đã hết hạn; câu trả lời chưa thể ghi vào phiên cũ. Hãy sao chép nội dung và bắt đầu phiên mới.");
     if (submitButton) submitButton.hidden = true;
@@ -174,6 +180,7 @@
   function showSessionForbidden(error) {
     stopWaiting();
     setBusy(false);
+    hideOpenReview();
     setError(errorText(error) || "Phiên luyện tập này không thuộc trình duyệt hiện tại.");
     setStatus("Bạn không có quyền gửi vào phiên này. Hãy sao chép nội dung và mở phiên của bạn.");
     if (submitButton) submitButton.hidden = true;
@@ -200,6 +207,7 @@
   }
 
   function showWaiting() {
+    hideOpenReview();
     waitStartedAt = Date.now();
     setStatus("Bài đã lưu. AI đang đối chiếu câu trả lời với rubric; việc này có thể mất hơn một phút. Bạn có thể quay lại trang này để xem kết quả.");
     waitNotice = window.setInterval(() => {
@@ -213,6 +221,7 @@
   function showFailure(error, canRetry = error.retryable !== false) {
     stopWaiting();
     setBusy(false);
+    hideOpenReview();
     setError(errorText(error) || "Chưa thể đánh giá bài đã lưu.");
     setStatus("Câu trả lời đã lưu trên máy chủ; chưa có điểm đánh giá.");
     retryButton.hidden = !canRetry;
@@ -343,6 +352,7 @@
       setError("");
     });
   } else {
+    hideOpenReview();
     setStatus("Bài đã lưu. Đang kiểm tra kết quả đánh giá gần nhất…");
     readSavedEvaluation(pendingAnswer).then((state) => {
       if (state === "processing") watchEvaluation(pendingAnswer);

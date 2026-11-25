@@ -10,6 +10,7 @@
   const statusBox = document.querySelector("#review-status");
   const errorBox = document.querySelector("#review-error");
   const retryButton = document.querySelector("#retry-review-load");
+  const retryEvalButton = document.querySelector("#retry-review-evaluation");
   const nextButton = document.querySelector("#next-question");
   const content = document.querySelector("#review-content");
   const criteriaList = document.querySelector("#criteria-list");
@@ -20,6 +21,7 @@
   const explanation = document.querySelector("#selected-criterion-explanation");
   let evaluation = null;
   let feedbackItems = [];
+  let retryingEvaluation = false;
 
   const statusLabels = {
     met: "Đạt",
@@ -101,6 +103,19 @@
     renderEvidence(check, { scrollToHighlight });
   }
 
+  function failureMessageFor(data) {
+    if (data.failure_code === "PROVIDER_TIMEOUT") {
+      return "AI phản hồi quá thời gian. Câu trả lời gốc vẫn được lưu nguyên vẹn và chưa bị chấm điểm; bạn có thể thử đánh giá lại.";
+    }
+    if (data.failure_code === "EVALUATION_INTERRUPTED") {
+      return "Lượt đánh giá trước bị gián đoạn. Câu trả lời gốc đã được lưu và bạn có thể thử đánh giá lại.";
+    }
+    if (data.retryable) {
+      return "Chưa thể hoàn tất đánh giá cho bài đã lưu. Câu trả lời gốc vẫn còn nguyên và chưa có điểm; bạn có thể thử đánh giá lại.";
+    }
+    return "Dịch vụ AI hiện chưa thể đánh giá bài này. Câu trả lời gốc vẫn được giữ; cần khắc phục lỗi dịch vụ trước khi tiếp tục.";
+  }
+
   function renderEvaluation(response) {
     const data = response && response.result;
     if (!data) throw new Error("Máy chủ trả thiếu kết quả đánh giá theo DTO.");
@@ -108,6 +123,34 @@
     feedbackItems = response.feedback_items || [];
     criteriaList.replaceChildren();
     answerSource.textContent = data.answer_text;
+
+    if (data.status === "failed") {
+      content.hidden = true;
+      if (nextButton) nextButton.hidden = true;
+      retryButton.hidden = true;
+      errorBox.textContent = failureMessageFor(data);
+      errorBox.hidden = false;
+      statusBox.textContent = "Câu trả lời gốc đã được lưu trên máy chủ; chưa có điểm đánh giá.";
+      statusBox.hidden = false;
+      if (retryEvalButton) {
+        retryEvalButton.hidden = !data.retryable;
+        retryEvalButton.disabled = false;
+      }
+      errorBox.focus();
+      return;
+    }
+
+    if (data.status === "processing" || data.status === "pending") {
+      content.hidden = true;
+      if (nextButton) nextButton.hidden = true;
+      errorBox.hidden = true;
+      if (retryEvalButton) retryEvalButton.hidden = true;
+      statusBox.textContent = "Bài trả lời đã lưu và đang được AI đối chiếu rubric. Hãy bấm Tải lại kết quả sau ít giây.";
+      statusBox.hidden = false;
+      retryButton.hidden = false;
+      return;
+    }
+
     if (data.total_score === null || data.total_score === undefined) {
       const hasUnresolved = (data.criterion_checks || []).some((check) => check.status === "insufficient_evidence");
       total.textContent = data.status === "completed" && hasUnresolved
@@ -144,6 +187,7 @@
     statusBox.hidden = true;
     errorBox.hidden = true;
     retryButton.hidden = true;
+    if (retryEvalButton) retryEvalButton.hidden = true;
     if (nextButton && data.status === "completed" && answerId === page.dataset.currentAnswerId
         && answerRevision === Number(page.dataset.currentAnswerRevision)) {
       nextButton.hidden = false;
@@ -153,12 +197,47 @@
     }
   }
 
+  async function retrySavedEvaluation() {
+    if (retryingEvaluation || !answerId || !Number.isInteger(answerRevision) || answerRevision < 1) return;
+    retryingEvaluation = true;
+    if (retryEvalButton) retryEvalButton.disabled = true;
+    retryButton.hidden = true;
+    errorBox.hidden = true;
+    statusBox.textContent = "Đang gửi yêu cầu đánh giá lại bài đã lưu…";
+    statusBox.hidden = false;
+    try {
+      const response = await api.evaluateAnswer(sessionId, answerId, answerRevision);
+      renderEvaluation(response);
+    } catch (error) {
+      if (error.code === "EVALUATION_IN_PROGRESS") {
+        statusBox.textContent = "Bài này đang được AI đánh giá. Hãy bấm Tải lại kết quả sau ít giây.";
+        statusBox.hidden = false;
+        if (retryEvalButton) retryEvalButton.hidden = true;
+        retryButton.hidden = false;
+      } else {
+        const canRetry = error.code !== "SESSION_EXPIRED" && error.code !== "SESSION_FORBIDDEN" && error.status !== 410 && error.status !== 403 && error.retryable !== false;
+        errorBox.textContent = `${error.message || "Chưa thể đánh giá lại bài đã lưu."} ${error.recoveryAction || "Bài trả lời gốc vẫn được giữ trên máy chủ."}`;
+        errorBox.hidden = false;
+        statusBox.textContent = "Câu trả lời gốc đã được lưu trên máy chủ; chưa có điểm đánh giá.";
+        statusBox.hidden = false;
+        if (retryEvalButton) {
+          retryEvalButton.hidden = !canRetry;
+          retryEvalButton.disabled = !canRetry;
+        }
+        errorBox.focus();
+      }
+    } finally {
+      retryingEvaluation = false;
+    }
+  }
+
   async function loadEvaluation() {
     if (!answerId || !Number.isInteger(answerRevision) || answerRevision < 1) {
       statusBox.textContent = "Chưa có bài đã lưu để đối chiếu. Hãy quay lại trang câu hỏi và gửi câu trả lời trước.";
       return;
     }
     retryButton.hidden = true;
+    if (retryEvalButton) retryEvalButton.hidden = true;
     errorBox.hidden = true;
     content.hidden = true;
     statusBox.hidden = false;
@@ -177,6 +256,7 @@
   }
 
   retryButton.addEventListener("click", loadEvaluation);
+  if (retryEvalButton) retryEvalButton.addEventListener("click", retrySavedEvaluation);
   if (nextButton) {
     nextButton.addEventListener("click", async () => {
       nextButton.disabled = true;
