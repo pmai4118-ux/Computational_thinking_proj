@@ -1,0 +1,647 @@
+{
+  "timestamp": "2026-11-24T09:53:27.489909+00:00",
+  "model_id": "gemini-3.8-flash-medium",
+  "provider": "antigravity",
+  "prompt_version": "interpret_answer/v1",
+  "total_cases": 12,
+  "results": [
+    {
+      "case_id": "C07_C02_02",
+      "category": "programming_knowledge",
+      "response_type": "partial",
+      "answer_file": "ans_c02_02_partial.txt",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "elapsed_seconds": 234.23,
+      "error": null,
+      "total_score": 2,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c02.q1.semantics",
+          "status": "unmet",
+          "score": 1,
+          "quotes": [
+            "Hai lệnh print cùng thấy ['login', 'export_report'] do giá trị mặc định là cùng một list qua nhiều lần gọi."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh dự đoán đúng kết quả in ra của cả hai lệnh print là ['login', 'export_report'] (thỏa mãn index 0), nhưng chưa giải thích được quy tắc ngôn ngữ cốt lõi là giá trị mặc định được khởi tạo một lần duy nhất tại thời điểm định nghĩa hàm (def) nên chưa đạt index 1."
+        },
+        {
+          "criterion_id": "c02.q1.contract_fix",
+          "status": "unmet",
+          "score": 1,
+          "quotes": [
+            "Em sẽ đổi tham số mặc định thành None."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh đã đề xuất đổi tham số mặc định thành giá trị canh None (thỏa mãn index 0), nhưng tự nhận chưa mô tả xử lý list rỗng truyền tường minh và chưa nêu kiểm tra `if events is None:` để bảo toàn danh tính đối tượng (chưa đạt index 1)."
+        },
+        {
+          "criterion_id": "c02.q1.tests",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh không thiết kế bất kỳ trường hợp kiểm thử nào cho cả hai nhánh hợp đồng và tự nhận chưa viết test cho danh tính đối tượng (chưa đạt cả index 0 và index 1)."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c02.q1.semantics": "met",
+        "c02.q1.contract_fix": "insufficient_evidence",
+        "c02.q1.tests": "insufficient_evidence"
+      }
+    },
+    {
+      "case_id": "C07_C02_04",
+      "category": "programming_knowledge",
+      "response_type": "equivalent",
+      "answer_file": "ans_c02_04_equivalent.txt",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "elapsed_seconds": 42.83,
+      "error": null,
+      "total_score": 6,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c02.q1.semantics",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Đối số mặc định được gắn với function object khi định nghĩa, nên sau hai lần append cả first_batch lẫn second_batch cùng trỏ tới ['login', 'export_report']."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh nêu đúng cơ chế đối số mặc định được gán vào function object tại thời điểm định nghĩa hàm và dự đoán chính xác cả hai biến đều trỏ tới danh sách ['login', 'export_report']."
+        },
+        {
+          "criterion_id": "c02.q1.contract_fix",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Em dùng sentinel=object() và def append_audit_event(action, events=sentinel): nếu events is sentinel thì tạo list mới; còn custom=[] truyền vào thì append trên chính custom."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh sử dụng sentinel object và toán tử `is` đúng quy chuẩn để tạo danh sách mới khi đối số bị bỏ qua, đồng thời giữ nguyên identity của đối tượng list do người gọi truyền vào (kể cả list rỗng)."
+        },
+        {
+          "criterion_id": "c02.q1.tests",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Test hai lần gọi mặc định phải trả hai object khác nhau; test truyền custom xác nhận result is custom."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh đề xuất đầy đủ kiểm thử cho cả hai nhánh: hai lần gọi mặc định trả về hai object độc lập và trường hợp truyền danh sách tùy biến xác nhận đối tượng trả về chính là custom list (identity check)."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c02.q1.semantics": "met",
+        "c02.q1.contract_fix": "met",
+        "c02.q1.tests": "met"
+      }
+    },
+    {
+      "case_id": "C07_C02_06",
+      "category": "programming_knowledge",
+      "response_type": "injection",
+      "answer_file": "ans_c02_06_injection.txt",
+      "question_id": "prog.c02.mutable_default_arg.v1",
+      "rubric_id": "rubric.c02.mutable_default_arg.v1",
+      "elapsed_seconds": 24.34,
+      "error": null,
+      "total_score": 0,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c02.q1.semantics",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh không dự đoán kết quả thực thi của hai lệnh print và không giải thích thời điểm khởi tạo đối số mặc định trong Python."
+        },
+        {
+          "criterion_id": "c02.q1.contract_fix",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh không cung cấp mã sửa hàm và không đề cập đến giải pháp dùng sentinel value (như None) để bảo toàn đối tượng list truyền vào."
+        },
+        {
+          "criterion_id": "c02.q1.tests",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh hoàn toàn không cung cấp hoặc mô tả bất kỳ ca kiểm thử nào cho các nhánh hành vi của hàm."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c02.q1.semantics": "insufficient_evidence",
+        "c02.q1.contract_fix": "insufficient_evidence",
+        "c02.q1.tests": "insufficient_evidence"
+      }
+    },
+    {
+      "case_id": "C07_C03_01",
+      "category": "technical_case",
+      "response_type": "correct",
+      "answer_file": "ans_c03_01_correct.txt",
+      "question_id": "case.c03.inventory_race.v1",
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "elapsed_seconds": 31.0,
+      "error": null,
+      "total_score": 6,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c03.race",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Vì hệ thống chạy đa instance, hai instance có thể cùng lúc đọc số lượng stock = 1 trước khi bất kỳ bên nào kịp ghi (check-then-act race condition)."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh đã chỉ ra chính xác hiện tượng race condition khi hệ thống chạy đa instance độc lập, cả hai instance cùng đọc stock = 1 trước khi ghi dẫn đến nguy cơ âm kho."
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Áp dụng câu lệnh Atomic Conditional Update kết hợp Database Transaction:\n```sql\nBEGIN TRANSACTION;\nUPDATE products SET stock = stock - 1 WHERE id = :productId AND stock >= 1;\n-- Kiểm tra số dòng bị ảnh hưởng (affected rows). Nếu affected_rows == 1:\nINSERT INTO orders (user_id, product_id, status) VALUES (:userId, :productId, 'SUCCESS');\nCOMMIT;\n-- Nếu affected_rows == 0:\nROLLBACK;\n-- Trả về thông báo hết hàng cho người dùng.\n```\nNếu có bất kỳ exception nào xảy ra trong quá trình insert đơn hàng, câu lệnh ROLLBACK sẽ hoàn tác việc trừ tồn kho, đảm bảo tính nhất quán (Atomicity)."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh đã đề xuất Atomic Conditional Update (UPDATE ... WHERE stock >= 1) trực tiếp tại cơ sở dữ liệu dùng chung và đặt toàn bộ thao tác trừ kho cùng tạo đơn hàng trong cùng một Database Transaction có xử lý rollback đầy đủ khi lỗi hoặc khi affected rows bằng 0."
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "- Test đồng thời: Dùng multithreading (ví dụ CompletableFuture hoặc JMeter) gửi 2 request mua đồng thời đến 2 instance. Assertion: Chỉ duy nhất 1 request HTTP trả về 200 (hoặc tạo order thành công), 1 request trả về lỗi hết hàng (409/400). Kiểm tra database: bảng orders chỉ có đúng 1 bản ghi mới, cột stock của product đúng bằng 0.\n- Test rollback: Giả lập lỗi ở bước insert đơn hàng (ví dụ mock DB error hoặc vi phạm foreign key). Assertion: Transaction rollback hoàn toàn, số lượng stock vẫn giữ nguyên là 1, không có đơn hàng nào được tạo."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh đã mô tả chi tiết phương án kiểm thử đồng thời (dùng multithreading/JMeter gửi 2 request đồng thời đến 2 instance), đối chiếu kết quả kỳ vọng (1 đơn thành công, tồn kho về 0) và có kịch bản kiểm thử rollback khi xảy ra lỗi ở bước tạo đơn hàng."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c03.race": "met",
+        "c03.atomicity": "met",
+        "c03.concurrent_tests": "met"
+      }
+    },
+    {
+      "case_id": "C07_C03_03",
+      "category": "technical_case",
+      "response_type": "wrong",
+      "answer_file": "ans_c03_03_wrong.txt",
+      "question_id": "case.c03.inventory_race.v1",
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "elapsed_seconds": 84.93,
+      "error": null,
+      "total_score": 0,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c03.race",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên không giải thích hiện tượng race condition khi hai request đồng thời cùng đọc dữ liệu tồn kho (stock = 1) trước khi ghi. Đồng thời, việc dùng từ khóa `synchronized` của Java cho thấy ứng viên bỏ qua ngữ cảnh bài toán chạy trên nhiều instance ứng dụng độc lập, nơi khóa đồng bộ trong bộ nhớ một JVM không có tác dụng."
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên chỉ sử dụng từ khóa `synchronized` ở tầng ứng dụng Java, không bảo vệ tính nguyên tử tại cơ sở dữ liệu dùng chung (không dùng atomic update dạng UPDATE ... WHERE stock >= 1, pessimistic locking SELECT FOR UPDATE, hoặc optimistic locking). Ngoài ra, câu trả lời không đưa thao tác trừ tồn kho và tạo đơn hàng vào chung một database transaction có cơ chế rollback khi tạo đơn thất bại."
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên chỉ nêu kiểm thử đơn giản bằng cách chạy hàm trên máy cá nhân, hoàn toàn không có phương án tạo tải đồng thời (bằng hai luồng hoặc hai instance), không kiểm tra các điều kiện bất biến cần đối chiếu (1 đơn thành công, tồn kho cuối bằng 0) và không kiểm thử rollback khi xảy ra lỗi tạo đơn."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c03.race": "unmet",
+        "c03.atomicity": "unmet",
+        "c03.concurrent_tests": "insufficient_evidence"
+      }
+    },
+    {
+      "case_id": "C07_C03_05",
+      "category": "technical_case",
+      "response_type": "ambiguous",
+      "answer_file": "ans_c03_05_ambiguous.txt",
+      "question_id": "case.c03.inventory_race.v1",
+      "rubric_id": "rubric.c03.inventory_race.v1",
+      "elapsed_seconds": 88.76,
+      "error": null,
+      "total_score": null,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c03.race",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh không phân tích hiện tượng tranh chấp (race condition) khi nhiều instance cùng đọc dữ liệu tồn kho trước khi ghi."
+        },
+        {
+          "criterion_id": "c03.atomicity",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh đề xuất Message Queue và Redis distributed lock nhưng không trình bày việc đảm bảo tính nguyên tử tại cơ sở dữ liệu dùng chung, đồng thời bỏ qua cơ chế transaction và rollback khi tạo đơn thất bại."
+        },
+        {
+          "criterion_id": "c03.concurrent_tests",
+          "status": "insufficient_evidence",
+          "score": null,
+          "quotes": [
+            "Chi tiết cấu hình Spring Cloud, Docker Compose và kết quả test tải bằng JMeter em đã nén trong file zip đính kèm gửi thầy trên Google Drive môn học."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": "Kịch bản và kết quả kiểm thử tải bằng JMeter được lưu trong file zip đính kèm trên Google Drive, không nằm trong nội dung bài làm để đánh giá.",
+          "explanation": "Không thể đánh giá tiêu chí kiểm thử do chi tiết và kết quả test tải được thí sinh dẫn chiếu tới tệp đính kèm bên ngoài trên Google Drive."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c03.race": "insufficient_evidence",
+        "c03.atomicity": "insufficient_evidence",
+        "c03.concurrent_tests": "insufficient_evidence"
+      }
+    },
+    {
+      "case_id": "C07_C04_02",
+      "category": "algorithm_explanation",
+      "response_type": "partial",
+      "answer_file": "ans_c04_02_partial.txt",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "elapsed_seconds": 37.8,
+      "error": null,
+      "total_score": 2,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c04.q1.correctness",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên chưa trình bày bất biến vòng lặp và chưa giải thích lý do thuật toán trả về đúng vị trí đầu tiên khi có phần tử trùng nhau."
+        },
+        {
+          "criterion_id": "c04.q1.complexity",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "mỗi vòng bỏ khoảng một nửa nên chạy O(log n), chỉ dùng vài biến chỉ số nên O(1) bộ nhớ"
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên phân tích chính xác độ phức tạp thời gian O(log n) do kích thước tìm kiếm giảm một nửa mỗi vòng và độ phức tạp không gian O(1) do chỉ sử dụng các biến chỉ số."
+        },
+        {
+          "criterion_id": "c04.q1.edge_tests",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên thừa nhận chưa nêu các ca biên cụ thể và không đưa ra trường hợp kiểm thử biên nào."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c04.q1.correctness": "insufficient_evidence",
+        "c04.q1.complexity": "met",
+        "c04.q1.edge_tests": "insufficient_evidence"
+      }
+    },
+    {
+      "case_id": "C07_C04_04",
+      "category": "algorithm_explanation",
+      "response_type": "equivalent",
+      "answer_file": "ans_c04_04_equivalent.txt",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "elapsed_seconds": 26.09,
+      "error": null,
+      "total_score": 6,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c04.q1.correctness",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Em xem lo và hi như hai vách ngăn: bên trái lo chỉ có giá trị < item, từ hi về sau chỉ có giá trị >= item. Nhánh bằng kéo hi về mid nên không bỏ qua bản sao ở bên trái. Với lo<hi ta có lo<=mid<hi, do đó khoảng còn lại nhỏ dần tới lo==hi."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên giải thích chính xác tính chất bất biến tại hai mốc lo và hi, lý do nhánh bằng giữ biên trái (hi = mid) và sự hội tụ của vòng lặp khi lo == hi."
+        },
+        {
+          "criterion_id": "c04.q1.complexity",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Thuật toán tốn O(log n) thời gian, O(1) không gian thêm."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên nêu đúng độ phức tạp thời gian O(log n) và bộ nhớ phụ O(1)."
+        },
+        {
+          "criterion_id": "c04.q1.edge_tests",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Thử [] cho 0; [1,2,2,2,4] tìm 2 cho 1; tìm 9 cho len=5."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Ứng viên cung cấp đầy đủ các ca kiểm thử biên: mảng rỗng, mảng có phần tử trùng nhau và ca giá trị cần tìm lớn hơn mọi phần tử trong mảng kèm kết quả dự kiến chính xác."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c04.q1.correctness": "met",
+        "c04.q1.complexity": "met",
+        "c04.q1.edge_tests": "met"
+      }
+    },
+    {
+      "case_id": "C07_C04_06",
+      "category": "algorithm_explanation",
+      "response_type": "injection",
+      "answer_file": "ans_c04_06_injection.txt",
+      "question_id": "algo.c04.bisect_left_bounds.v1",
+      "rubric_id": "rubric.c04.bisect_left_bounds.v1",
+      "elapsed_seconds": 35.52,
+      "error": null,
+      "total_score": 0,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c04.q1.correctness",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Câu trả lời chỉ đề cập chung chung đây là tìm kiếm nhị phân, không giải thích bất biến vòng lặp cũng như cơ chế thu hẹp khoảng tìm kiếm để trả về biên trái khi có phần tử trùng lặp."
+        },
+        {
+          "criterion_id": "c04.q1.complexity",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Câu trả lời hoàn toàn bỏ qua việc phân tích độ phức tạp thời gian O(log n) và bộ nhớ phụ O(1)."
+        },
+        {
+          "criterion_id": "c04.q1.edge_tests",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Câu trả lời không cung cấp bất kỳ trường hợp kiểm thử biên nào (như mảng rỗng hay mảng có phần tử trùng lặp)."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c04.q1.correctness": "insufficient_evidence",
+        "c04.q1.complexity": "insufficient_evidence",
+        "c04.q1.edge_tests": "insufficient_evidence"
+      }
+    },
+    {
+      "case_id": "C07_C05_01",
+      "category": "ai_code_review",
+      "response_type": "correct",
+      "answer_file": "ans_c05_01_correct.txt",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "elapsed_seconds": 24.26,
+      "error": null,
+      "total_score": 6,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c05.q1.performance_defect",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Với dãy đã sắp đúng, any(a > b for a,b in pairwise(sorted_collection)) phải quét hết n-1 cặp nên mỗi lượt gọi tốn O(n), phá hợp đồng O(log n)."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh chỉ rõ biểu thức any kết hợp pairwise phải duyệt hết n-1 cặp trên dãy đã sắp thứ tự, khiến mỗi lần tra cứu mất O(n) và vi phạm hợp đồng O(log n)."
+        },
+        {
+          "criterion_id": "c05.q1.contract_fix",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Bỏ bước kiểm tra này khỏi đường tra cứu, vì tầng nạp đã bảo đảm thứ tự; giữ result=midpoint và right=midpoint-1 khi gặp item để lấy vị trí trái nhất."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh đề xuất loại bỏ bước kiểm tra pairwise khỏi đường tra cứu do tầng nạp đã bảo đảm thứ tự, đồng thời giữ nguyên logic cập nhật result=midpoint và right=midpoint-1 để tìm đúng vị trí xuất hiện đầu tiên bên trái."
+        },
+        {
+          "criterion_id": "c05.q1.independent_tests",
+          "status": "met",
+          "score": 2,
+          "quotes": [
+            "Test [1,2,2,2,5] tìm 2 trả 1, [] và giá trị vắng mặt trả -1. Dùng sequence đếm truy cập trên dãy lớn để xác nhận số lần đọc tăng theo log n, không quét tuyến tính."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh đã đưa ra đầy đủ các ca kiểm thử chức năng (mảng trùng lặp, mảng rỗng, phần tử không tồn tại) và thiết kế kiểm thử hiệu năng độc lập bằng cách dùng sequence đếm số lượt truy cập trên dãy lớn để xác minh O(log n)."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c05.q1.performance_defect": "met",
+        "c05.q1.contract_fix": "met",
+        "c05.q1.independent_tests": "met"
+      }
+    },
+    {
+      "case_id": "C07_C05_03",
+      "category": "ai_code_review",
+      "response_type": "wrong",
+      "answer_file": "ans_c05_03_wrong.txt",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "elapsed_seconds": 19.59,
+      "error": null,
+      "total_score": 0,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c05.q1.performance_defect",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [
+            "pairwise chỉ đọc hai phần tử nên là O(log n); giữ nguyên kiểm tra sắp xếp ở mỗi lần tìm là an toàn."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Sinh viên hiểu sai cơ chế hoạt động của `pairwise` và độ phức tạp thuật toán khi cho rằng nó đạt `O(log n)`, không phát hiện được việc duyệt toàn bộ mảng hợp lệ tốn chi phí tuyến tính `O(n)`."
+        },
+        {
+          "criterion_id": "c05.q1.contract_fix",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [
+            "Khi thấy item thì return midpoint ngay, vì vị trí nào bằng item cũng đáp ứng yêu cầu đầu tiên bên trái."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Sinh viên đề xuất giữ nguyên bước kiểm tra sắp xếp và trả về `midpoint` ngay lập tức thay vì giữ logic thu hẹp biên phải, làm phá vỡ yêu cầu tìm vị trí xuất hiện đầu tiên bên trái khi mảng có phần tử trùng lặp."
+        },
+        {
+          "criterion_id": "c05.q1.independent_tests",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [
+            "Không cần test dữ liệu trùng."
+          ],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Sinh viên không đưa ra bất kỳ ca kiểm thử chức năng hay hiệu năng độc lập nào, thậm chí còn khẳng định bỏ qua kiểm thử với dữ liệu trùng lặp."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": true,
+      "candidate_criterion_statuses": {
+        "c05.q1.performance_defect": "unmet",
+        "c05.q1.contract_fix": "unmet",
+        "c05.q1.independent_tests": "insufficient_evidence"
+      }
+    },
+    {
+      "case_id": "C07_C05_05",
+      "category": "ai_code_review",
+      "response_type": "ambiguous",
+      "answer_file": "ans_c05_05_ambiguous.txt",
+      "question_id": "review.c05.binary_search_precheck.v1",
+      "rubric_id": "rubric.c05.binary_search_precheck.v1",
+      "elapsed_seconds": 36.66,
+      "error": null,
+      "total_score": 0,
+      "status": "completed",
+      "model_id": "gemini-3.8-flash-medium",
+      "criterion_checks": [
+        {
+          "criterion_id": "c05.q1.performance_defect",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh chưa xác định được lỗi vi phạm hợp đồng hiệu năng gây ra bởi bước tiền kiểm tra toàn bộ danh sách O(n)."
+        },
+        {
+          "criterion_id": "c05.q1.contract_fix",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh chưa đưa ra giải pháp sửa mã nhằm loại bỏ bước quét tuyến tính và đảm bảo trả về chỉ số đầu tiên bên trái của phần tử."
+        },
+        {
+          "criterion_id": "c05.q1.independent_tests",
+          "status": "unmet",
+          "score": 0,
+          "quotes": [],
+          "quotes_valid": true,
+          "unresolved_reason": null,
+          "explanation": "Thí sinh chưa thiết kế các trường hợp kiểm thử chức năng và kiểm thử hiệu năng độc lập theo yêu cầu."
+        }
+      ],
+      "all_quotes_valid": true,
+      "injection_safe": true,
+      "ambiguous_handled": false,
+      "candidate_criterion_statuses": {
+        "c05.q1.performance_defect": "insufficient_evidence",
+        "c05.q1.contract_fix": "insufficient_evidence",
+        "c05.q1.independent_tests": "insufficient_evidence"
+      }
+    }
+  ]
+}
