@@ -50,7 +50,17 @@
     if (!values || values.length === 0) list.append(node("li", "", "Không có"));
   }
 
-  function renderOutcome(outcome) {
+  function buildCriterionLabelMap(observedGaps) {
+    const labels = new Map();
+    for (const gap of observedGaps || []) {
+      if (gap.criterion_id && gap.criterion_label) {
+        labels.set(gap.criterion_id, gap.criterion_label);
+      }
+    }
+    return labels;
+  }
+
+  function renderOutcome(outcome, criterionLabels) {
     const item = node("li", "outcome-card");
     const heading = node("h3", "", outcome.question_prompt || categoryNames[outcome.category] || outcome.category);
     item.append(heading);
@@ -76,7 +86,10 @@
       item.append(node("p", "", `${outcome.unresolved_criteria_count} tiêu chí chưa đủ bằng chứng.`));
     }
     if (outcome.confirmed_gap_criterion_ids && outcome.confirmed_gap_criterion_ids.length) {
-      item.append(node("p", "", `Điểm thiếu đã xác nhận: ${outcome.confirmed_gap_criterion_ids.join(", ")}`));
+      const gapNames = outcome.confirmed_gap_criterion_ids.map(
+        (criterionId) => criterionLabels.get(criterionId) || criterionId
+      );
+      item.append(node("p", "", `Điểm thiếu đã xác nhận: ${gapNames.join(", ")}`));
     }
 
     const actions = node("div", "action-row");
@@ -114,8 +127,11 @@
     appendValues(unanswered, data.unanswered_categories);
     appendValues(unresolved, data.unresolved_categories);
 
+    const criterionLabels = buildCriterionLabelMap(data.observed_gaps);
     outcomesList.replaceChildren();
-    for (const outcome of data.outcomes || []) outcomesList.append(renderOutcome(outcome));
+    for (const outcome of data.outcomes || []) {
+      outcomesList.append(renderOutcome(outcome, criterionLabels));
+    }
     outcomesEmpty.hidden = Boolean(data.outcomes && data.outcomes.length);
 
     gapsList.replaceChildren();

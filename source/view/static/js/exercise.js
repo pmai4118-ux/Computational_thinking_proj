@@ -16,11 +16,22 @@
   const emptyReason = document.querySelector("#exercise-empty-reason");
   let startingPractice = false;
 
+  const skillLabels = {
+    "skill.programming.code_semantics": "Ngữ nghĩa mã nguồn & ngôn ngữ lập trình",
+    "skill.backend.data_consistency": "Nhất quán dữ liệu & giao dịch Backend",
+    "skill.algorithms.correctness_and_complexity": "Tính đúng đắn & độ phức tạp thuật toán",
+    "skill.engineering.code_review_and_verification": "Đánh giá mã nguồn & kiểm chứng",
+  };
+
   function node(tag, className, text) {
     const item = document.createElement(tag);
     if (className) item.className = className;
     if (text !== undefined) item.textContent = text;
     return item;
+  }
+
+  function formatSkillLabel(id) {
+    return skillLabels[id] || id;
   }
 
   function safeExternalUrl(value) {
@@ -48,6 +59,16 @@
     }
     section.append(listNode);
     card.append(section);
+  }
+
+  function ensureFilterResetLink(container) {
+    const existing = container.querySelector("[data-reset-exercise-filter]");
+    if (existing) existing.remove();
+    if (!exerciseId && !skillId) return;
+    const resetLink = node("a", "btn btn--secondary", "Xem toàn bộ bài tập của phiên");
+    resetLink.href = `/sessions/${encodeURIComponent(sessionId)}/exercises`;
+    resetLink.setAttribute("data-reset-exercise-filter", "true");
+    container.append(resetLink);
   }
 
   async function loadExerciseDetail(item, button, detail) {
@@ -123,7 +144,7 @@
 
     const meta = node("div", "exercise-meta");
     meta.append(node("span", "badge", `Thời lượng ước tính: ${item.estimated_duration_minutes == null ? "chưa có" : `${item.estimated_duration_minutes} phút`}`));
-    for (const skill of item.related_skill_ids || []) meta.append(node("span", "badge", skill));
+    for (const skill of item.related_skill_ids || []) meta.append(node("span", "badge", formatSkillLabel(skill)));
     card.append(meta);
 
     appendSection(card, "Bài cần học trước", item.prerequisite_ids, "Không yêu cầu bài tiên quyết.");
@@ -182,12 +203,13 @@
     empty.hidden = !noMatches;
     list.hidden = noMatches;
     if (noMatches && data.unmatched_skill_ids && data.unmatched_skill_ids.length) {
-      emptyReason.textContent = `Chưa tìm thấy bài đã duyệt cho kỹ năng: ${data.unmatched_skill_ids.join(", ")}. Không tạo bài thay thế tự động.`;
+      emptyReason.textContent = `Chưa tìm thấy bài đã duyệt cho kỹ năng: ${data.unmatched_skill_ids.map(formatSkillLabel).join(", ")}. Không tạo bài thay thế tự động.`;
     } else if (noMatches && (exerciseId || skillId)) {
-      emptyReason.textContent = "Không có bài tập trong phản hồi API khớp với lựa chọn này. Hãy xem toàn bộ bài tập của phiên.";
+      emptyReason.textContent = "Không có bài tập trong phản hồi API khớp với lựa chọn này. Bạn có thể mở toàn bộ bài tập của phiên.";
     } else if (noMatches) {
       emptyReason.textContent = data.message || "Không có bài tập khớp với điểm thiếu đã xác nhận trong phiên.";
     }
+    ensureFilterResetLink(noMatches ? empty : content);
     content.hidden = false;
     statusBox.hidden = true;
   }

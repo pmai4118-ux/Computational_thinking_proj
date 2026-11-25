@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Làm câu hỏi — interviewUS{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css?v=20261123-u07">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css?v=20261124-q05">{% endblock %}
 
 {% block content %}
 <section class="card workspace-card" aria-labelledby="workspace-heading"
@@ -12,23 +12,30 @@
          data-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"
          data-answer-revision="{{ session.current_answer.revision if session.current_answer else '' }}">
   <div class="workspace-topline">
-    <div>
-      <p class="eyebrow">Luyện phỏng vấn Backend · Fresher</p>
+    <div class="workspace-topline__title">
+      <p class="eyebrow">Luyện phỏng vấn Backend · Intern / Fresher</p>
       <h1 id="workspace-heading">{% if session.current_question %}Không gian trả lời{% else %}Phiên luyện tập{% endif %}</h1>
     </div>
-    <span class="badge badge--unresolved" id="question-progress-label">
-      {% if session.current_question %}Câu {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}{% else %}Đã lưu {{ session.progress.answered_count }} / {{ session.progress.total_questions }} câu{% endif %}
-    </span>
+    {% if session.current_question %}
+      <div class="workspace-progress" aria-label="Tiến độ phiên">
+        <div class="workspace-progress__row">
+          <span class="badge badge--unresolved" id="question-progress-label">
+            Câu {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
+          </span>
+          <progress aria-label="Tiến độ phiên" max="{{ session.progress.total_questions }}" value="{{ session.progress.current_index + 1 }}">
+            {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
+          </progress>
+        </div>
+        <span class="workspace-progress__meta">{{ session.progress.evaluated_count }} câu đã có kết quả</span>
+      </div>
+    {% else %}
+      <span class="badge badge--unresolved" id="question-progress-label">
+        Đã lưu {{ session.progress.answered_count }} / {{ session.progress.total_questions }} câu
+      </span>
+    {% endif %}
   </div>
 
   {% if session.current_question %}
-    <div class="workspace-progress" aria-label="Tiến độ phiên">
-      <progress aria-label="Tiến độ phiên" max="{{ session.progress.total_questions }}" value="{{ session.progress.current_index + 1 }}">
-        {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
-      </progress>
-      <span>{{ session.progress.evaluated_count }} câu đã có kết quả</span>
-    </div>
-
     <div class="workspace-layout">
     <article class="workspace-question reading-measure" aria-labelledby="question-heading">
       <div class="workspace-tags">
@@ -103,7 +110,7 @@
         <a class="btn btn--secondary" href="/">Về trang danh sách phiên</a>
       </div>
 
-      <div class="action-row">
+      <div class="action-row workspace-primary-actions">
         {% if not session.current_answer %}
           <button class="btn btn--primary" id="submit-answer" type="submit">Gửi câu trả lời</button>
         {% endif %}
@@ -111,9 +118,13 @@
         {% if session.current_answer %}
           <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}&amp;revision={{ session.current_answer.revision }}">Xem kết quả câu này</a>
         {% endif %}
-        <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
-        <button class="btn btn--secondary" id="end-session" type="button">Kết thúc sớm</button>
       </div>
+
+      <div class="workspace-secondary-actions" aria-label="Tùy chọn phiên">
+        <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+        <button class="btn btn--ghost btn--danger-subtle" id="end-session" type="button">Kết thúc sớm</button>
+      </div>
+
       <div class="alert alert--status" id="end-session-confirmation" role="group" aria-labelledby="end-session-confirmation-title" hidden>
         <p class="alert__title" id="end-session-confirmation-title">Kết thúc phiên bây giờ?</p>
         <p class="alert__hint">Các câu đã gửi được giữ trong tổng kết. Bản nháp chưa gửi không được tính.</p>
@@ -134,4 +145,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261123-u07" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261124-q05" defer></script>{% endblock %}
