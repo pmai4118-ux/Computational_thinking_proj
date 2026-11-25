@@ -1,6 +1,6 @@
 # Bàn giao nhánh `Demo`
 
-Cập nhật: 23/11/2026. Nhánh: `Demo`. Mốc mã chức năng của lần tích hợp U07 mới nhất: `3610618` (trước commit tài liệu).
+Cập nhật: 25/11/2026. Nhánh đích: `Demo`. Các số liệu kiểm tra cũ bên dưới được giữ làm lịch sử; kết quả của bản tích hợp tuần 3 nằm ở mục 3.
 
 ## 1. Nguồn mã đã gộp
 
@@ -18,6 +18,12 @@ Cập nhật: 23/11/2026. Nhánh: `Demo`. Mốc mã chức năng của lần tí
 | 10 | I05 viết trên `Demo` | `8ddebf6` | Thêm API và giao diện chuyển câu/kết thúc sớm, test phiên 4 câu. |
 | 11 | `codex/c07-demo-aligned-fixtures`, lấy chọn lọc từ `task3-answer-fixtures-Khoa` | `4d5fc33` → `2d41a25` → `5d32ae4` | C07: 24 câu trả lời tổng hợp khớp câu hỏi/rubric của Demo, chia calibration/held-out và kiểm tra cấu trúc. Nhãn còn tạm thời. |
 | 12 | `codex/u07-api-client-integration` mới nhất | `ad9b9ba` → `71b13ff` → `3610618` | Đưa bố cục workspace, nhấn mạnh lý do đề xuất bài tập vào Demo; ghi nhận lịch sử nhánh U07 sau khi giữ nguyên backend và các bản sửa mới hơn của Demo. |
+| 13 | `codex/u08-loading-error-states` | `5104fa5` → `ec2cac7` | U08: trạng thái đang chấm, phản hồi chậm, lỗi, retry và phiên hết hạn trên giao diện. |
+| 14 | `codex/q02-repository-api-checks` | `8c9aa46` → `22b6cae` | Q02: kiểm tra repository, API, quyền sở hữu và trường hợp cạnh tranh; nhánh nguồn đã chứa U08. |
+| 15 | `codex/q05-ui-ux` | `f20dbd8` → `2577cc8` | Q05: quan sát một người dùng, sửa bố cục, điều hướng, hành động chính và nhãn tiếng Việt. Giải quyết xung đột với U08 bằng cách giữ cả phục hồi phiên và xác nhận rời trang. |
+| 16 | `codex/q03-live-provider-evaluation` | `2e0b466` → `171d431` | Q03: chạy Antigravity trên 12 ca held-out và lưu kết quả thô. Báo cáo đã sửa để không coi nhãn C07 tạm thời là chuẩn vàng. |
+| 17 | `codex/q04-usability-checks` | `d8a5341` → `4fcca63` | Q04: biên bản màn hình hẹp, bàn phím, focus và phục hồi lỗi. Hợp nhất tài liệu với Q05; kiểm tra lại bản tích hợp. |
+| 18 | `docs/q07-setup-demo-guide` | `3b86b88` → `3fddd45` | Q07: README, hướng dẫn chạy demo và danh sách kiểm tra cài đặt trên máy sạch. Bước xác nhận bởi thành viên khác còn chờ. |
 
 Trước lần tích hợp mới nhất, U07 trên `origin` có lịch sử Git không chung gốc với `Demo`, nên đã đưa các commit chức năng U07 sang và xử lý xung đột, không gộp nguyên nhánh U03–U07. Lần này, các phần giao diện hữu ích còn thiếu được chuyển vào Demo trước rồi mới ghi nhận toàn bộ lịch sử U07 bằng merge commit `3610618`; nội dung nhánh cũ không ghi đè các phần mới hơn của Demo. Các nguồn C02, F04, I01 cũng được lấy theo commit cụ thể để tránh kéo các merge commit cũ.
 
@@ -29,7 +35,8 @@ Các mã nhiệm vụ có commit trong lịch sử `Demo`:
 - **Nền tảng và hợp đồng:** P01–P08, F01–F06. P04 định nghĩa DTO/API; F04 lưu SQLite; F05 ghép ứng dụng; P07 cung cấp lựa chọn Antigravity.
 - **Đánh giá:** E01–E09, Q01. E04 có adapter AI, E05 kiểm tra bằng chứng, E06 tính điểm bằng mã Python, E09 điều phối và lưu kết quả.
 - **Phiên và API:** I01–I06. I03 lưu bài chống gửi trùng; I04 đánh giá/đọc lại/retry an toàn; I05 chuyển câu và kết thúc sớm; I06 đề xuất bài tập và tạo lượt luyện từ câu trả lời đã lưu.
-- **Giao diện:** U01–U07. U03 là nơi trả lời, U04 là trang căn cứ theo tiêu chí, U05 là trang tổng kết, U06 là trang bài tập, U07 dùng API client chung cho các màn hình.
+- **Giao diện:** U01–U08. U03 là nơi trả lời, U04 là trang căn cứ theo tiêu chí, U05 là trang tổng kết, U06 là trang bài tập, U07 dùng API client chung, U08 xử lý trạng thái chờ/lỗi/retry/hết phiên.
+- **Kiểm tra và tài liệu tuần 3:** Q02–Q05 và Q07 đã có mã/tài liệu trên nhánh. Q03 chưa thể nghiệm thu độ chính xác nếu thiếu nhãn phân xử C07; Q05 mới có một người thử; Q07 chưa được thành viên khác kiểm tra trên máy sạch. Q06 và Q08 chưa được gộp.
 
 Đây là danh sách **mã đã hiện diện trong lịch sử nhánh**, không có nghĩa toàn bộ tiêu chí nghiệm thu của mọi mã đều đã được kiểm định đầy đủ. Phần 2 ghi chính xác những luồng đã chạy.
 
@@ -77,6 +84,23 @@ Ngày 23/11/2026, bài kiểm tra end-to-end gọi Antigravity thật hoàn tấ
 
 ## 3. Kiểm tra đã thực hiện
 
+### Bản tích hợp tuần 3 ngày 25/11/2026
+
+| Phép kiểm tra | Kết quả và phạm vi |
+| --- | --- |
+| Toàn bộ pytest ngoại tuyến | **231 passed, 3 skipped** trong 13,55 giây. Các ca skip là hai ca Antigravity cần `agy` đăng nhập và một ca Gemini REST cần API key; đây là cách chạy mặc định của **test**, không phải chế độ mặc định của ứng dụng. |
+| Import ngân hàng seed C08 | Chạy CLI trên SQLite mới: `blocked=false`, nhập 4 kỹ năng, 9 nguồn, 8 rubric, 8 câu hỏi, 5 bài tập; `excluded=0`, `issues=[]`. |
+| Antigravity end-to-end | Bật `DEMO_LIVE_TEST=1`: **1 passed** trong 42,82 giây; API tạo phiên 4 câu, lưu câu trả lời, gọi `agy`/`gemini-3.8-flash-medium`, chấm **4/6**, đọc lại cùng kết quả, trả 1 đề xuất và tạo lượt luyện bằng câu hỏi khác. Không có nhãn **Dữ liệu minh họa**. |
+| Antigravity E09 | Bật `E09_LIVE_TEST=1`: **1 passed** trong 26,65 giây; chấm bài đã lưu bằng provider thật, lưu kết quả và không gọi AI thêm khi đọc lại kết quả hoàn tất. |
+| Gemini REST dự phòng | Bật `RUN_GEMINI_LIVE_TEST=1` với API key có sẵn trong môi trường: **1 passed** trong 15,62 giây; kiểm tra provider trả quan sát có cấu trúc và đoạn trích hợp lệ. Không dùng ca này thay kết quả Antigravity của Demo. |
+| Timeout Antigravity thật | Hạn 1 giây: `504 PROVIDER_TIMEOUT`, `retryable=true`, bài gốc còn nguyên trên SQLite, trạng thái `failed`, `total_score=null`. Retry UI được kiểm tra bằng test Node; phép thử này không tự gọi lại provider sau timeout. |
+| Giao diện và JavaScript | Với fixture có nhãn minh họa, trình duyệt đi qua thiết lập → nộp bài → xem rubric/căn cứ → xem và chọn bài tập → lượt luyện biến thể khác → chuyển câu → kết thúc sớm → lịch sử phiên. Viewport 320/640px không tràn ngang; Escape trả focus và xác nhận rời trang giữ bản nháp. `node --test test/view/workspace_recovery.test.cjs`: **7 passed**. |
+| Giao diện Antigravity thật | Server cục bộ chạy `EVALUATION_PROVIDER=antigravity`: trang không hiện nhãn fixture; bấm **Gửi câu trả lời** hiện **Đã lưu câu trả lời trên máy chủ** và trạng thái AI đang đối chiếu. Sau khi `POST /evaluate` trả `200`, trang review hiện **4/6**, ba tiêu chí và trích dẫn nguyên văn. Nút bài tập mở đề xuất từ tiêu chí chưa đạt, bấm luyện lại trả `201` và mở câu hỏi khác trong phiên **1/1**. |
+
+Các phép gọi Antigravity thật kiểm tra rằng luồng provider, lưu bài và rubric chạy; chúng **không chứng minh độ chính xác chấm điểm**. Báo cáo Q03 lưu 12 kết quả Antigravity held-out nhưng C07 chưa có nhãn của hai người review và phân xử, nên chưa thể tính độ đồng thuận đáng tin cậy. [Chi tiết Q03](evaluation_report.md) và [biên bản UI](usability_check.md) nêu rõ phạm vi.
+
+### Bằng chứng các lần tích hợp trước (lưu để đối chiếu)
+
 Chạy từ thư mục gốc repository với môi trường `.venv`:
 
 ```powershell
@@ -105,10 +129,11 @@ Browser test với server fixture sau tích hợp: thiết lập phiên → gử
 
 ## 4. Giới hạn và việc cần làm tiếp
 
-- **Kiểm tra UI:** browser test đã thao tác chuyển câu 1 → 2, lượt luyện lại và kết thúc sớm; toàn bộ 4 câu được kiểm tra qua API với fixture. Chưa có browser test tự động đi hết 4 câu với Antigravity thật.
-- **U08/Q02 chưa nghiệm thu đầy đủ:** các lỗi chính, retry và quyền sở hữu đã có test; chưa có bộ kiểm tra toàn diện mọi trạng thái giao diện và mọi trường hợp repository/API.
-- **Q03 chưa thực hiện trên nhánh này:** chưa có báo cáo so sánh nhiều câu trả lời với đánh giá chuyên gia; điểm 4/6 của ca tổng hợp chỉ chứng minh lời gọi và luồng dữ liệu hoạt động.
+- **Kiểm tra UI:** trình duyệt đã thao tác toàn bộ các màn hình chính bằng fixture; API đi hết 4 câu qua test tự động. Chưa có browser test đi hết 4 câu với Antigravity thật hoặc kiểm thử trên mọi thiết bị/trình duyệt.
+- **U08/Q02:** các trạng thái chính, retry, quyền sở hữu, repository/API và giao diện đã có test sau merge; không suy ra mọi tình huống mạng/thiết bị đều đã được bao phủ.
+- **Q03:** 12 lượt held-out đã gọi Antigravity và có báo cáo quan sát. Chưa thể hoàn tất phần **độ chính xác so với chuyên gia** do thiếu nhãn C07 đã phân xử.
 - **C07 chưa đủ điều kiện nghiệm thu nhãn:** 24 ca đã tích hợp đúng đề/rubric, nhưng người dùng xác nhận chưa có hai bản review độc lập. Tất cả nhãn hiện là nháp; cần hai người gán nhãn và phân xử trước khi dùng cho Q03 hoặc tuyên bố độ chính xác của Antigravity.
+- **Q05/Q07:** mới có một người chưa quen UI thử; cần thêm người để xác nhận sửa lỗi Q05. Bước cài đặt trên checkout/máy sạch bởi thành viên khác của Q07 vẫn chờ. Q06 và Q08 chưa gộp vào `Demo`.
 - **Seed trên SQLite cũ:** bản sửa C02 thay đổi mã ví dụ trong seed cùng phiên bản câu hỏi. Ứng dụng không ghi đè câu hỏi đã lưu trong database cũ. Dùng một `DATABASE_PATH` mới để nhận seed đã sửa, giữ nguyên dữ liệu phiên cũ; không xóa database của người học.
 - Vai trò/cấp độ/ngôn ngữ đang hỗ trợ: **Backend Developer · Intern/Fresher · tiếng Việt**. Lượt luyện lại do I06 tạo là phiên **1 câu** dựa trên điểm thiếu được xác nhận.
 

@@ -23,7 +23,9 @@ uv run --locked python -m source.service.question_bank_service --database .local
 
 `uv sync --locked` creates `.venv`, installs the exact dependency versions locked in [uv.lock](uv.lock) (FastAPI, Pydantic, Jinja2, Uvicorn, pytest, httpx), and installs the local `source` package in editable mode.
 
-> **Verified locally on Windows x64 (CPython 3.11):** locked install, `uv pip check`, seed import validator, and the offline pytest suite (`212 passed, 3 skipped` after Q05). Clean-machine verification by a separate teammate is tracked in [docs/demo_script.md](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
+> **Verified locally on Windows x64 (CPython 3.11):** locked install, `uv pip check`, seed import validator, and the integrated offline pytest suite (`231 passed, 3 skipped` on 25/11/2026). The three opt-in live tests are described in [Demo handoff](docs/DEMO_HANDOFF.md). Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
+
+The normal application defaults to live `antigravity`; only the offline pytest suite skips two Antigravity calls and one optional Gemini API-key call until explicitly enabled. This keeps the repeatable code tests usable without an authenticated AI account or network. It does not establish grading accuracy; see the [held-out evaluation report](docs/evaluation_report.md) for current evidence and its limits.
 
 Use imports with the existing MVC-S package capitalization (`source.Model`, `source.Control`, `source.service`, `source.view`). When intentionally changing dependencies, edit [pyproject.toml](pyproject.toml), run `uv lock`, re-run `uv sync --locked`, `uv pip check`, and `uv run --locked python -m pytest`, and commit both `pyproject.toml` and `uv.lock`.
 
