@@ -166,9 +166,14 @@
     return [error.message, error.recoveryAction].filter(Boolean).join(" ");
   }
 
+  function hideOpenReview() {
+    if (openReviewLink) openReviewLink.hidden = true;
+  }
+
   function showSessionExpired(error) {
     stopWaiting();
     setBusy(false);
+    hideOpenReview();
     setError(errorText(error) || "Phiên luyện tập đã hết hạn khả dụng.");
     setStatus("Phiên đã hết hạn; câu trả lời chưa thể ghi vào phiên cũ. Hãy sao chép nội dung và bắt đầu phiên mới.");
     if (submitButton) submitButton.hidden = true;
@@ -181,6 +186,7 @@
   function showSessionForbidden(error) {
     stopWaiting();
     setBusy(false);
+    hideOpenReview();
     setError(errorText(error) || "Phiên luyện tập này không thuộc trình duyệt hiện tại.");
     setStatus("Bạn không có quyền gửi vào phiên này. Hãy sao chép nội dung và mở phiên của bạn.");
     if (submitButton) submitButton.hidden = true;
@@ -207,6 +213,7 @@
   }
 
   function showWaiting() {
+    hideOpenReview();
     waitStartedAt = Date.now();
     setStatus("Bài đã lưu. AI đang đối chiếu câu trả lời với rubric; việc này có thể mất hơn một phút. Bạn có thể quay lại trang này để xem kết quả.");
     waitNotice = window.setInterval(() => {
@@ -220,6 +227,7 @@
   function showFailure(error, canRetry = error.retryable !== false) {
     stopWaiting();
     setBusy(false);
+    hideOpenReview();
     setError(errorText(error) || "Chưa thể đánh giá bài đã lưu.");
     retryButton.hidden = !canRetry;
     if (!canRetry) {
@@ -228,7 +236,6 @@
         submitButton.textContent = "Gửi bản trả lời mới";
         submitButton.hidden = false;
       }
-      if (openReviewLink) openReviewLink.hidden = true;
       draftLabel.textContent = "Bài trước đã lưu trên máy chủ; bạn có thể chỉnh sửa và gửi bản mới";
       setStatus("Phiên bản trước vẫn được lưu nguyên vẹn (chưa có điểm). Sau khi khắc phục lỗi hoặc điều chỉnh nội dung, hãy bấm Gửi bản trả lời mới hoặc Kết thúc sớm.");
     } else {
@@ -353,6 +360,7 @@
       setStatus("Đã khôi phục bản nháp trên trình duyệt. Bản nháp chưa được lưu trên máy chủ.");
     }
   } else {
+    hideOpenReview();
     setStatus("Bài đã lưu. Đang kiểm tra kết quả đánh giá gần nhất…");
     readSavedEvaluation(pendingAnswer).then((state) => {
       if (state === "processing") watchEvaluation(pendingAnswer);

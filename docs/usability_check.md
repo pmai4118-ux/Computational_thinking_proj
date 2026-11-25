@@ -19,6 +19,13 @@ Phần A ghi các vấn đề Q05 từ một lượt thử người dùng và c�
 | `Q05-08` | P2 (TB) | Audit | View: `exercise.js`, `exercise.html` | Mở `/sessions/{id}/exercises?skill_id=...` với kỹ năng không có bài khớp; thông báo nhắc xem toàn bộ nhưng không có liên kết quay lại; badge kỹ năng hiển thị `skill.*`. | Bổ sung liên kết **Xem toàn bộ bài tập của phiên** khi đang lọc hoặc rỗng do bộ lọc; ánh xạ `skill.*` đã biết sang tên kỹ năng tiếng Việt dễ hiểu (giữ fallback nếu gặp mã mới). | Đã sửa + test hồi quy |
 | `Q05-09` | P2 (TB) | Audit | View: `summary.js`, `summary.html` | Mở `/sessions/{id}/summary` khi có điểm thiếu; danh sách từng câu in mã kỹ thuật thô `confirmed_gap_criterion_ids`. | Đối chiếu tên tiêu chí tiếng Việt từ `observed_gaps` để hiển thị dễ đọc trong thẻ từng câu (vẫn giữ `confirmed_gap_criterion_ids` làm nguồn ánh xạ). | Đã sửa + test hồi quy |
 | `Q05-10` | P2 (TB) | Audit | View: `workspace.js`, `evidence.js` | Thông báo trống ở `evidence.js` chứa từ `"workspace"`; nhãn sau khi lưu ở `workspace.js` thiếu đồng nhất với `docs/ui_direction.md`. | Chuẩn hóa thành `"trang câu hỏi"` và `"Đã lưu câu trả lời trên máy chủ"`. | Đã sửa + test hồi quy |
+| `Q05-11` (`UI-01`) | P2 (TB) | `P2` | View: `exercise.js`, `exercise.css`, `exercise.html` | Trả lời ngắn câu closure Python thiếu 3 tiêu chí cùng trỏ về 1 bài tập; mở `/sessions/{id}/exercises` hiện 3 thẻ trùng tiêu đề, hướng dẫn, nguồn và nút *"Luyện lại với câu hỏi khác"*. | Gom các đề xuất theo `(exercise_id, version)` giữ nguyên thứ tự tiên quyết từ `I06`, liệt kê đủ các lý do khớp tiêu chí trong một thẻ và chống lặp nút luyện lại cùng câu trả lời. | Đã sửa + test hồi quy |
+| `Q05-12` (`UI-02`) | P2 (TB) | `P2` | View: `answer_review.html` | Kết thúc phiên sớm (hoặc hoàn tất phiên), mở *"Xem căn cứ và tiêu chí"* từ tổng kết rồi bấm *"Về câu hỏi"* dẫn tới workspace báo *"Không còn câu hỏi đang chờ"*. | Khi phiên không còn `in_progress` (hoặc không có `current_question`), đổi liên kết đầu trang thành *"Về tổng kết"* dẫn thẳng về `/sessions/{id}/summary`. | Đã sửa + test hồi quy |
+| `Q05-13` (`UI-03`) | P3 (Thấp) | `P2` | View/Control: `interview_controller.py`, `pages.py`, `welcome.html`, `summary.html` | Lịch sử và trang tổng kết hiển thị `Phiên session.a851...` / `Phiên session.practice.73eb...` làm nhãn chính, thiếu thời điểm tạo và ngữ cảnh phân biệt. | Hiển thị nhãn dễ đọc (*"Phiên luyện phỏng vấn"* / *"Lượt luyện bổ trợ"*, kèm số thứ tự và thời điểm tạo UTC+7); đưa mã phiên xuống thông tin tham chiếu phụ mà không thay đổi DTO P04. | Đã sửa + test hồi quy |
+| `Q05-14` (`UI-04`) | P3 (Thấp) | `P2` | View: `exercise.js`, `summary.js` | Mở `/sessions/{id}/exercises?skill_id=skill.unknown` hiện *"Không có bài tập trong phản hồi API khớp với lựa chọn này"*. | Thay bằng thông báo ngôn ngữ người học (*"Chưa có bài tập phù hợp với kỹ năng đã chọn trong phiên này..."*) và chuẩn hóa các chuỗi fallback bỏ từ *"API"*. | Đã sửa + test hồi quy |
+| `Q05-15` (`UI-05`) | P2 (TB) | `P2` | View: `evidence.js`, `answer_review.html` | Từ tổng kết bấm *"Xem căn cứ và tiêu chí"*, trang review đôi lúc cuộn xuống giữa trang (`scrollY ~1825px` ở 320px) do `renderEvaluation()` tự kích hoạt `firstButton.click()` gọi `mark.scrollIntoView(...)`. | Tách chọn tiêu chí mặc định khi tải trang (`scrollToHighlight: false`) khỏi thao tác người học bấm/chọn tiêu chí (`scrollToHighlight: true`, chỉ cuộn tới `<mark>` đầu tiên). Cần xác nhận thêm trên Chrome/Edge độc lập. | Đã sửa + test hồi quy |
+| `Q05-16` (`UI-06`) | Giới hạn thiết kế | `P2` | View/Docs: `workspace.html`, `docs/user_observations.md` | Nhập bản nháp ở tab A rồi mở cùng phiên ở tab B thấy ô trả lời trống do thiết kế dùng `sessionStorage` theo `docs/api_contract.md`. | Giữ `sessionStorage` đúng thiết kế MVP và ghi chú rõ ngay cạnh ô nhập: *"Bản nháp chưa gửi chỉ được giữ trong tab trình duyệt hiện tại."* | Đã làm rõ (Giới hạn MVP) |
+| `Q05-17` (`UI-07`) | Chỉ ở `fixture` | `P2` | Docs: `docs/user_observations.md`, `docs/usability_check.md` | Trong chế độ `fixture`, câu trả lời ngắn tự do có thể nhận `0/6` cùng giải thích không sát đoạn trích đã nhập. | Ghi nhận trung thực là giới hạn của heuristic `fixture` (*Dữ liệu minh họa*), không phải lỗi Antigravity; khi demo offline sử dụng bộ câu trả lời mẫu khớp kịch bản trong `docs/demo_script.md`. | Ghi nhận giới hạn (`fixture`) |
 | `Q05-01` | Hoãn (Post-MVP) | `P1` | Scope / Content / API (`P01`, `C01`, `P04`, `X01`) | Người thử muốn tùy chọn 4/6/8/10 câu thay vì cố định 4 câu. | **Không thay đổi trong MVP:** phạm vi `P01` cố định 4 câu phủ 4 nhóm với ngân hàng seed hiện tại gồm 8 câu đã duyệt. Chuyển sang backlog mở rộng sau cổng release (`X01+`). | Hoãn rõ ràng (Ngoài MVP) |
 
 ### Lệnh kiểm tra sau khi sửa (Q05)
@@ -27,12 +34,14 @@ Chạy tại thư mục gốc repository:
 
 ```powershell
 uv run --locked python -m pytest test/view/test_q05_usability_fixes.py test/view/ -q
-node --test test/view/workspace_recovery.test.cjs
+node --test test/view/workspace_recovery.test.cjs test/view/q05_ui_interactions.test.cjs
 uv run --locked python -m pytest -q
 ```
 
 ### Giới hạn còn lại của Q05
-- Hiện mới có **1 biên bản thực tế (`P1`)**; cần thêm ít nhất 1–2 người chưa quen giao diện (`P2`, `P3`) thử lại trên bản đã sửa để xác nhận các điểm vướng mắc của `P1` đã được giải quyết hoàn toàn và không phát sinh hiểu nhầm mới.
+- Đã ghi nhận **2 biên bản thực tế (`P1` và `P2`)** và đóng toàn bộ các lỗi giao diện đã tái hiện (`Q05-02`–`Q05-15`); lượt `P3` tùy chọn vẫn để mở nếu nhóm muốn kiểm tra thêm trước Q08.
+- Phản hồi `UI-05` đã được xử lý tận gốc trong `evidence.js` và kiểm chứng bằng test tự động Node; cần xác nhận lại hành vi khôi phục vị trí cuộn trên Chrome/Edge độc lập khi tổng duyệt Q08.
+- Bản nháp cục bộ giữ nguyên thiết kế `sessionStorage` theo tab (`UI-06`), và heuristic chế độ `fixture` (`UI-07`) không đại diện cho chất lượng chấm của Antigravity thật.
 - Không thay đổi hợp đồng API (`source/Control/schemas.py`), không thay đổi quy tắc tính điểm Python (`E05`/`E06`), giữ nguyên ngữ nghĩa `score: null` khác `0`.
 
 ---

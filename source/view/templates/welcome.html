@@ -42,7 +42,16 @@
           <li class="session-item">
             <div class="stack" style="gap: var(--space-1);">
               <div>
-                <strong>Phiên {{ item.session_id }}</strong>
+                {% set display = (session_labels.get(item.session_id) if session_labels is defined else None) %}
+                <strong>
+                  {% if display %}
+                    {{ display.title }}
+                  {% elif item.progress.total_questions == 1 %}
+                    Lượt luyện bổ trợ (1 câu)
+                  {% else %}
+                    Phiên luyện phỏng vấn ({{ item.progress.total_questions }} câu)
+                  {% endif %}
+                </strong>
                 {% if item.state.value == "in_progress" %}
                   <span class="badge badge--unresolved">
                     Đang thực hiện · Câu {{ item.progress.current_index + 1 }}/{{ item.progress.total_questions }}
@@ -55,6 +64,10 @@
                   <span class="badge">
                     Đã kết thúc sớm · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu có kết quả
                   </span>
+                {% elif item.state.value == "expired" %}
+                  <span class="badge badge--error">
+                    Đã hết hạn · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu có kết quả
+                  </span>
                 {% else %}
                   <span class="badge">
                     Đã lưu · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu
@@ -62,7 +75,10 @@
                 {% endif %}
               </div>
               <span class="text-secondary" style="font-size: var(--font-size-sm);">
-                Vai trò: Backend Developer (Intern / Fresher) · Ngôn ngữ: Tiếng Việt
+                Vai trò: Backend Developer (Intern / Fresher) · Tiếng Việt · {{ item.progress.total_questions }} câu
+              </span>
+              <span class="form-hint" style="font-size: var(--font-size-xs);">
+                Mã tham chiếu: <code>{{ item.session_id }}</code>
               </span>
             </div>
 

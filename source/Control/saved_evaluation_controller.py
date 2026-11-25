@@ -48,8 +48,10 @@ class SavedEvaluationController:
 
     def _owned_context(
         self, session_id: SessionId, answer_ref: AnswerRevisionRef, owner_token: str | None,
-    ) -> tuple[Answer, Rubric]:
-        self._interview_controller.get_session(session_id, owner_token=owner_token)
+    ) -> tuple[object, Answer, Rubric]:
+        session_view = self._interview_controller.get_session(
+            session_id, owner_token=owner_token
+        )
         try:
             answer, _question, rubric = self._evaluation_service.get_saved_context(answer_ref)
         except RecordNotFoundError as error:
@@ -73,12 +75,24 @@ class SavedEvaluationController:
                     recovery_action="Kiểm tra lại liên kết câu trả lời trong phiên hiện tại.",
                 ),
             )
-        return answer, rubric
+        return session_view, answer, rubric
 
     def evaluate(
         self, session_id: SessionId, answer_ref: AnswerRevisionRef, owner_token: str | None,
     ) -> EvaluationResponseDTO:
-        answer, rubric = self._owned_context(session_id, answer_ref, owner_token)
+        session_view, answer, rubric = self._owned_context(session_id, answer_ref, owner_token)
+        if session_view.state.value == "expired":
+            raise ApiControllerError(
+                status.HTTP_410_GONE,
+                ApiErrorResponse(
+                    error_code=ErrorCode.SESSION_EXPIRED,
+                    message="Phiên luyện tập đã hết hạn khả dụng.",
+                    retryable=False,
+                    session_id=session_id,
+                    answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
+                    recovery_action="Bắt đầu phiên luyện tập mới.",
+                ),
+            )
         try:
             result, feedback = self._evaluation_service.evaluate_saved_answer(answer_ref)
         except EvaluationInProgressError as error:
@@ -134,12 +148,24 @@ class SavedEvaluationController:
                     ),
                 ),
             ) from error
+        except Exception as error:
+            raise ApiControllerError(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                ApiErrorResponse(
+                    error_code=ErrorCode.EVALUATION_FAILED,
+                    message="Chưa thể hoàn tất đánh giá cho bài đã lưu.",
+                    retryable=True,
+                    session_id=session_id,
+                    answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
+                    recovery_action="Bài trả lời gốc vẫn được giữ trên máy chủ; bạn có thể thử đánh giá lại sau.",
+                ),
+            ) from error
         return self._to_response(result, feedback, answer, rubric)
 
     def read(
         self, session_id: SessionId, answer_ref: AnswerRevisionRef, owner_token: str | None,
     ) -> EvaluationResponseDTO:
-        answer, rubric = self._owned_context(session_id, answer_ref, owner_token)
+        _session_view, answer, rubric = self._owned_context(session_id, answer_ref, owner_token)
         saved = self._evaluation_service.get_latest_saved_answer(answer_ref)
         if saved is None:
             raise ApiControllerError(
@@ -184,7 +210,7 @@ class SavedEvaluationController:
         checks = tuple(
             CriterionCheckDTO(
                 criterion_id=check.criterion_id,
-                criterion_label=labels[check.criterion_id],
+                criterion_label=labels.get(check.criterion_id, criteria[check.criterion_id].label),
                 status=check.status,
                 score=check.score,
                 max_score=criteria[check.criterion_id].max_score,

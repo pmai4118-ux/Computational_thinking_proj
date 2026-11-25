@@ -130,21 +130,75 @@
     }
   }
 
-  function renderExercise(item) {
+  function groupRecommendations(recommendations) {
+    const groups = new Map();
+    for (const item of recommendations || []) {
+      const key = `${item.exercise_id}@${item.version}`;
+      let group = groups.get(key);
+      if (!group) {
+        group = {
+          primary: item,
+          items: [],
+          skillIds: [],
+          reasons: [],
+          reasonKeys: new Set(),
+          practiceTargets: [],
+          practiceKeys: new Set(),
+          hasEligibleAlternate: false,
+        };
+        groups.set(key, group);
+      }
+      group.items.push(item);
+      for (const skill of item.related_skill_ids || []) {
+        if (!group.skillIds.includes(skill)) group.skillIds.push(skill);
+      }
+      const gap = item.matched_gap || {};
+      const label = gap.criterion_label || gap.skill_label || "Điểm thiếu đã xác nhận";
+      const detailText = gap.reason || item.recommendation_reason || "Liên quan tới tiêu chí chưa đạt trong phiên.";
+      const reasonText = `${label}: ${detailText}`;
+      const reasonKey = `${gap.criterion_id || ""}|${(gap.answer_ref && gap.answer_ref.id) || ""}|${reasonText}`;
+      if (!group.reasonKeys.has(reasonKey)) {
+        group.reasonKeys.add(reasonKey);
+        group.reasons.push(reasonText);
+      }
+      if (item.eligible_alternate_question_available) {
+        group.hasEligibleAlternate = true;
+        const answer = gap.answer_ref;
+        if (answer && answer.id) {
+          const practiceKey = `${answer.id}@${answer.revision || 1}`;
+          if (!group.practiceKeys.has(practiceKey)) {
+            group.practiceKeys.add(practiceKey);
+            group.practiceTargets.push(item);
+          }
+        }
+      }
+    }
+    return Array.from(groups.values());
+  }
+
+  function renderExercise(group) {
+    const item = group.primary;
     const card = node("article", "exercise-card");
     card.append(node("h2", "", item.title));
 
-    const gap = item.matched_gap || {};
     const gapSection = node("section", "exercise-card__reason");
     gapSection.append(node("h3", "", "Vì sao bài này phù hợp"));
-    gapSection.append(node("p", "", `${gap.criterion_label || gap.skill_label || "Điểm thiếu đã xác nhận"}: ${gap.reason || "API chưa cung cấp lý do chi tiết."}`));
+    if (group.reasons.length > 1) {
+      const reasonList = node("ul", "exercise-card__reasons");
+      for (const reasonText of group.reasons) {
+        reasonList.append(node("li", "", reasonText));
+      }
+      gapSection.append(reasonList);
+    } else {
+      gapSection.append(node("p", "", group.reasons[0] || "Liên quan tới tiêu chí chưa đạt trong phiên."));
+    }
     card.append(gapSection);
 
     card.append(node("p", "exercise-card__summary", item.summary));
 
     const meta = node("div", "exercise-meta");
     meta.append(node("span", "badge", `Thời lượng ước tính: ${item.estimated_duration_minutes == null ? "chưa có" : `${item.estimated_duration_minutes} phút`}`));
-    for (const skill of item.related_skill_ids || []) meta.append(node("span", "badge", formatSkillLabel(skill)));
+    for (const skill of group.skillIds) meta.append(node("span", "badge", formatSkillLabel(skill)));
     card.append(meta);
 
     appendSection(card, "Bài cần học trước", item.prerequisite_ids, "Không yêu cầu bài tiên quyết.");
@@ -169,7 +223,7 @@
       link.rel = "noopener noreferrer";
       sourceSection.append(link);
     } else {
-      sourceSection.append(node("p", "", source.title || source.source_id || "API chưa cung cấp nguồn tham khảo."));
+      sourceSection.append(node("p", "", source.title || source.source_id || "Chưa có nguồn tham khảo đi kèm."));
     }
     if (source.license_spdx) sourceSection.append(node("p", "form-hint", `Giấy phép: ${source.license_spdx}`));
     if (source.required_notice) sourceSection.append(node("p", "form-hint", source.required_notice));
@@ -177,12 +231,20 @@
 
     const actionSection = node("section", "exercise-card__section");
     actionSection.append(node("h3", "", "Luyện lại bằng câu hỏi khác"));
-    if (item.eligible_alternate_question_available && gap.answer_ref && gap.answer_ref.id) {
-      const button = node("button", "btn btn--primary", "Luyện lại với câu hỏi khác");
-      button.type = "button";
-      button.addEventListener("click", () => startPractice(item, button));
-      actionSection.append(button);
-    } else if (item.eligible_alternate_question_available) {
+    if (group.practiceTargets.length > 0) {
+      const actions = node("div", "exercise-card__practice-actions");
+      for (const target of group.practiceTargets) {
+        const targetGap = target.matched_gap || {};
+        const label = group.practiceTargets.length > 1 && targetGap.criterion_label
+          ? `Luyện lại với câu hỏi khác (${targetGap.criterion_label})`
+          : "Luyện lại với câu hỏi khác";
+        const button = node("button", "btn btn--primary", label);
+        button.type = "button";
+        button.addEventListener("click", () => startPractice(target, button));
+        actions.append(button);
+      }
+      actionSection.append(actions);
+    } else if (group.hasEligibleAlternate) {
       actionSection.append(node("p", "form-hint", "Chưa có mã bài trả lời đã chấm để bắt đầu lượt luyện lại."));
     } else {
       actionSection.append(node("p", "form-hint", "Phiên này chưa có biến thể khác đủ điều kiện cho bài tập này."));
@@ -198,16 +260,19 @@
     if (exerciseId) recommendations = recommendations.filter((item) => item.exercise_id === exerciseId);
     if (skillId) recommendations = recommendations.filter((item) => (item.related_skill_ids || []).includes(skillId));
 
-    for (const recommendation of recommendations) list.append(renderExercise(recommendation));
-    const noMatches = recommendations.length === 0;
+    const grouped = groupRecommendations(recommendations);
+    for (const group of grouped) list.append(renderExercise(group));
+    const noMatches = grouped.length === 0;
     empty.hidden = !noMatches;
     list.hidden = noMatches;
     if (noMatches && data.unmatched_skill_ids && data.unmatched_skill_ids.length) {
       emptyReason.textContent = `Chưa tìm thấy bài đã duyệt cho kỹ năng: ${data.unmatched_skill_ids.map(formatSkillLabel).join(", ")}. Không tạo bài thay thế tự động.`;
-    } else if (noMatches && (exerciseId || skillId)) {
-      emptyReason.textContent = "Không có bài tập trong phản hồi API khớp với lựa chọn này. Bạn có thể mở toàn bộ bài tập của phiên.";
+    } else if (noMatches && skillId) {
+      emptyReason.textContent = "Chưa có bài tập phù hợp với kỹ năng đã chọn trong phiên này. Bạn có thể mở toàn bộ bài tập của phiên.";
+    } else if (noMatches && exerciseId) {
+      emptyReason.textContent = "Chưa tìm thấy bài tập đã chọn trong danh sách đề xuất của phiên này. Bạn có thể mở toàn bộ bài tập của phiên.";
     } else if (noMatches) {
-      emptyReason.textContent = data.message || "Không có bài tập khớp với điểm thiếu đã xác nhận trong phiên.";
+      emptyReason.textContent = data.message || "Chưa có bài tập phù hợp với điểm thiếu đã xác nhận trong phiên.";
     }
     ensureFilterResetLink(noMatches ? empty : content);
     content.hidden = false;
