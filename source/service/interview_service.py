@@ -114,14 +114,20 @@ def load_session_blueprints(
 ) -> tuple[SessionBlueprint, ...]:
     """Load session blueprints from `data/seed/session_blueprints.json`."""
     raw = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(raw, list):
+        raise ValueError("session_blueprints.json must contain a JSON array.")
     blueprints: list[SessionBlueprint] = []
     for item in raw:
+        if not isinstance(item, dict) or not isinstance(item.get("slots"), list):
+            raise ValueError("Each session blueprint must be an object with a slots array.")
         slots = tuple(
             BlueprintSlot(
                 category=slot["category"],
                 skill_id=SkillId(slot["skill_id"]),
                 eligible_criterion_types=tuple(slot["eligible_criterion_types"]),
             )
+            if isinstance(slot, dict)
+            else (_ for _ in ()).throw(ValueError("Each blueprint slot must be an object."))
             for slot in item["slots"]
         )
         blueprints.append(

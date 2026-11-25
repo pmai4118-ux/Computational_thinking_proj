@@ -234,3 +234,40 @@ def test_import_command_prints_machine_readable_blocked_report(tmp_path: Path, c
     assert report["blocked"] is True
     assert report["imported"]["questions"] == 0
     assert any(issue["file"] == "questions/algorithms.json" for issue in report["issues"])
+
+
+def test_non_object_seed_records_are_rejected_without_aborting_validation(tmp_path: Path) -> None:
+    seed = _seed_copy(tmp_path)
+    _edit(seed / "skills.json", lambda records: records.extend([None, ["not-an-object"]]))
+    _edit(seed / "source_registry.json", lambda records: records.append(None))
+    _edit(seed / "exercises.json", lambda records: records.append(None))
+
+    def add_malformed_questions(records):
+        records.append(None)
+        bad_criteria = json.loads(json.dumps(records[0]))
+        bad_criteria["id"] = "prog.c02.null_criterion.v1"
+        bad_criteria["rubric"]["id"] = "rubric.c02.null_criterion.v1"
+        bad_criteria["rubric"]["criteria"] = [None]
+        records.append(bad_criteria)
+
+    _edit(seed / "questions" / "programming.json", add_malformed_questions)
+
+    store = SQLiteRepositoryStore(tmp_path / "non_object_records.sqlite3")
+    report = QuestionBankService().import_seed(store, seed)
+    assert report.blocked is False
+    assert report.imported == {
+        "skills": 4,
+        "sources": 9,
+        "rubrics": 8,
+        "questions": 8,
+        "exercises": 5,
+    }
+    assert {(issue.code, issue.file, issue.index, issue.record_id) for issue in report.issues} == {
+        ("INVALID_SKILL", "skills.json", 4, None),
+        ("INVALID_SKILL", "skills.json", 5, None),
+        ("INVALID_SOURCE", "source_registry.json", 9, None),
+        ("INVALID_EXERCISE", "exercises.json", 5, None),
+        ("INVALID_QUESTION", "questions/programming.json", 2, None),
+        ("INVALID_QUESTION", "questions/programming.json", 3, "prog.c02.null_criterion.v1"),
+    }
+

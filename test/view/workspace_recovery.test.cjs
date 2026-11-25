@@ -10,7 +10,7 @@ const script = fs.readFileSync(
   path.join(__dirname, "../../source/view/static/js/workspace.js"), "utf8"
 );
 
-function browser({ savedAnswerId = "", api }) {
+function browser({ savedAnswerId = "", initialAnswerText = "", initialDraft = null, api }) {
   const handlers = new Map();
   const intervals = new Map();
   const elements = new Map();
@@ -34,7 +34,14 @@ function browser({ savedAnswerId = "", api }) {
     sessionId: "session-1", questionId: "question-1", questionVersion: "1",
     answerId: savedAnswerId, answerRevision: "1",
   };
+  if (initialAnswerText) {
+    element("#answer-text").value = initialAnswerText;
+    element("#answer-text").readOnly = true;
+  }
   const storage = new Map();
+  if (initialDraft !== null) {
+    storage.set("draft:session-1:question-1", initialDraft);
+  }
   const window = {
     InterviewApi: api,
     crypto: { randomUUID: () => "submission-1" },
@@ -208,4 +215,38 @@ test("Escape dismisses the end-session confirmation and restores focus", () => {
   page.handlers.get("document:keydown")({ key: "Escape" });
   assert.equal(confirmation.hidden, true);
   assert.equal(page.element("#end-session").focused, true);
+});
+
+test("reopening a non-retryable failed answer restores unsent replacement draft while keeping committed baseline", async () => {
+  let confirmCalls = 0;
+  const submissions = [];
+  const page = browser({
+    savedAnswerId: "answer-1",
+    initialAnswerText: "Bài gốc đã lưu ở revision 1",
+    initialDraft: "Bản nháp thay thế đang viết dở cho revision 2",
+    api: {
+      getEvaluation: async () => ({ result: {
+        status: "failed", failure_code: "PROVIDER_CONFIG_ERROR", retryable: false,
+      } }),
+      submitAnswer: async (_sessionId, body) => {
+        submissions.push(body);
+        return { answer: { answer_id: "answer-1", revision: 2 } };
+      },
+      evaluateAnswer: async () => ({ result: { status: "completed" } }),
+    },
+  });
+  await flush();
+
+  assert.equal(page.element("#answer-text").readOnly, false);
+  assert.equal(page.element("#answer-text").value, "Bản nháp thay thế đang viết dở cho revision 2");
+  assert.match(page.element("[data-draft-label]").textContent, /khôi phục bản nháp thay thế/);
+  assert.match(page.element("#answer-counter").textContent, /45/);
+  assert.equal(confirmCalls, 0);
+
+  const submit = page.handlers.get("#answer-form:submit");
+  await submit({ preventDefault() {} });
+  await flush();
+  assert.equal(submissions.length, 1);
+  assert.equal(submissions[0].text, "Bản nháp thay thế đang viết dở cho revision 2");
+  assert.match(page.navigation, /\/sessions\/session-1\/review\?answer_id=answer-1&revision=2/);
 });

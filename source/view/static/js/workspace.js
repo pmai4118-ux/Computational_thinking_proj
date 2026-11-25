@@ -236,8 +236,16 @@
         submitButton.textContent = "Gửi bản trả lời mới";
         submitButton.hidden = false;
       }
-      draftLabel.textContent = "Bài trước đã lưu trên máy chủ; bạn có thể chỉnh sửa và gửi bản mới";
-      setStatus("Phiên bản trước vẫn được lưu nguyên vẹn (chưa có điểm). Sau khi khắc phục lỗi hoặc điều chỉnh nội dung, hãy bấm Gửi bản trả lời mới hoặc Kết thúc sớm.");
+      const restoredDraft = storage.get(draftKey);
+      if (restoredDraft && restoredDraft !== committedText) {
+        answerField.value = restoredDraft;
+        updateCounter();
+        draftLabel.textContent = "Đã khôi phục bản nháp thay thế (bài gốc trước đó vẫn được lưu trên máy chủ)";
+        setStatus("Đã khôi phục bản nháp bạn đang chỉnh sửa. Phiên bản trước vẫn được lưu nguyên vẹn trên máy chủ (chưa có điểm); hãy bấm Gửi bản trả lời mới hoặc Kết thúc sớm.");
+      } else {
+        draftLabel.textContent = "Bài trước đã lưu trên máy chủ; bạn có thể chỉnh sửa và gửi bản mới";
+        setStatus("Phiên bản trước vẫn được lưu nguyên vẹn (chưa có điểm). Sau khi khắc phục lỗi hoặc điều chỉnh nội dung, hãy bấm Gửi bản trả lời mới hoặc Kết thúc sớm.");
+      }
     } else {
       setStatus("Câu trả lời đã lưu trên máy chủ; chưa có điểm đánh giá.");
     }

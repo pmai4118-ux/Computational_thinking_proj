@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
+import threading
 from pathlib import Path
 from unittest.mock import Mock
 from urllib.parse import urlencode
@@ -235,3 +237,115 @@ def test_web_permanent_failure_does_not_offer_retry(tmp_path: Path) -> None:
         assert page.status_code == 200
         assert "PROVIDER_CONFIG_ERROR" in page.text
         assert "Thử đánh giá lại" not in page.text
+
+
+async def _asgi_request(
+    app,
+    *,
+    method: str,
+    path: str,
+    headers: list[tuple[bytes, bytes]] | None = None,
+    body: bytes = b"",
+) -> tuple[int, bytes]:
+    sent_body = False
+    status_code = 500
+    chunks: list[bytes] = []
+
+    async def receive() -> dict[str, object]:
+        nonlocal sent_body
+        if not sent_body:
+            sent_body = True
+            return {"type": "http.request", "body": body, "more_body": False}
+        return {"type": "http.disconnect"}
+
+    async def send(message: dict[str, object]) -> None:
+        nonlocal status_code
+        if message["type"] == "http.response.start":
+            status_code = int(message["status"])
+        elif message["type"] == "http.response.body":
+            chunks.append(bytes(message.get("body", b"")))
+
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": method,
+        "scheme": "http",
+        "path": path,
+        "raw_path": path.encode("ascii"),
+        "query_string": b"",
+        "headers": headers or [],
+        "client": ("127.0.0.1", 50000),
+        "server": ("testserver", 80),
+    }
+    await app(scope, receive, send)
+    return status_code, b"".join(chunks)
+
+
+def test_web_form_evaluation_runs_off_event_loop_keeping_health_responsive(
+    tmp_path: Path,
+) -> None:
+    eval_started = threading.Event()
+    release_eval = threading.Event()
+    worker_threads: list[threading.Thread] = []
+    delegate = FixtureProvider()
+
+    def blocking_interpret(**kwargs):
+        worker_threads.append(threading.current_thread())
+        eval_started.set()
+        assert release_eval.wait(timeout=3.0), "Event loop was blocked; /health never ran."
+        return delegate.interpret(**kwargs)
+
+    delegate_interpreter = Mock()
+    delegate_interpreter.interpret = Mock(side_effect=blocking_interpret)
+    app = create_app(
+        settings=Settings(
+            provider=ProviderMode.FIXTURE,
+            database_path=tmp_path / "nonblocking.sqlite3",
+            gemini_timeout_seconds=30.0,
+        ),
+        interpreter=delegate_interpreter,
+    )
+
+    with TestClient(app) as setup_client:
+        created = setup_client.post("/api/sessions", json={}).json()
+        owner_cookie = setup_client.cookies.get("interview_owner_id")
+    assert owner_cookie is not None
+    session_id = created["session_id"]
+    question = created["current_question"]
+    encoded_form = urlencode({
+        "question_id": question["id"],
+        "question_version": question["version"],
+        "client_submission_id": "async-nonblocking-test",
+        "text": "Atomic transaction locks row before decrementing stock.",
+    }).encode("utf-8")
+
+    async def exercise() -> None:
+        loop_thread = threading.current_thread()
+        submit_task = asyncio.create_task(
+            _asgi_request(
+                app,
+                method="POST",
+                path=f"/sessions/{session_id}/answers",
+                headers=[
+                    (b"content-type", b"application/x-www-form-urlencoded"),
+                    (b"content-length", str(len(encoded_form)).encode("ascii")),
+                    (b"cookie", f"interview_owner_id={owner_cookie}".encode("utf-8")),
+                ],
+                body=encoded_form,
+            )
+        )
+        await asyncio.to_thread(eval_started.wait, 3.0)
+        assert eval_started.is_set()
+        assert worker_threads and worker_threads[0] is not loop_thread
+
+        health_status, health_body = await _asgi_request(app, method="GET", path="/health")
+        assert health_status == 200
+        assert b'"status":"ok"' in health_body
+
+        release_eval.set()
+        submit_status, _ = await submit_task
+        assert submit_status == 303
+
+    asyncio.run(exercise())
+

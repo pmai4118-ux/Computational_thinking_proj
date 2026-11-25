@@ -39,7 +39,7 @@ Các mã nhiệm vụ có commit trong lịch sử `Demo`:
 - **Đánh giá:** E01–E09, Q01. E04 có adapter AI, E05 kiểm tra bằng chứng, E06 tính điểm bằng mã Python, E09 điều phối và lưu kết quả.
 - **Phiên và API:** I01–I06. I03 lưu bài chống gửi trùng; I04 đánh giá/đọc lại/retry an toàn; I05 chuyển câu và kết thúc sớm; I06 đề xuất bài tập và tạo lượt luyện từ câu trả lời đã lưu.
 - **Giao diện:** U01–U08. U03 là nơi trả lời, U04 là trang căn cứ theo tiêu chí, U05 là trang tổng kết, U06 là trang bài tập, U07 dùng API client chung, U08 xử lý trạng thái chờ/lỗi/retry/hết phiên.
-- **Kiểm tra và tài liệu tuần 3:** Q01–Q08 đã có mã/tài liệu trên nhánh (`248 passed, 3 skipped` trong `pytest` và `15 passed` trong `node --test`). Q03 chưa thể nghiệm thu độ chính xác do thiếu nhãn phân xử C07; Q05 đã ghi nhận 2 người thử (`P1`, `P2`); Q07 Bước 3 (thành viên khác kiểm tra trên máy sạch) và tổng duyệt trực tiếp Q08 vẫn ở trạng thái chờ chốt.
+- **Kiểm tra và tài liệu tuần 3:** Q01–Q08 đã có mã/tài liệu trên nhánh (`250 passed, 3 skipped` trong `pytest` và `16 passed` trong `node --test`). Q03 chưa thể nghiệm thu độ chính xác do thiếu nhãn phân xử C07; Q05 đã ghi nhận 2 người thử (`P1`, `P2`); Q07 Bước 3 (thành viên khác kiểm tra trên máy sạch) và tổng duyệt trực tiếp Q08 vẫn ở trạng thái chờ chốt.
 
 Đây là danh sách **mã đã hiện diện trong lịch sử nhánh**, không có nghĩa toàn bộ tiêu chí nghiệm thu của mọi mã đều đã được kiểm định đầy đủ. Phần 2 ghi chính xác những luồng đã chạy.
 

@@ -8,6 +8,7 @@ from secrets import token_urlsafe
 from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Query, Request, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import ValidationError
@@ -197,7 +198,8 @@ def build_pages_router(
             request.cookies.get(OWNER_COOKIE_NAME)
         )
         try:
-            created = controller.create_session_from_form(
+            created = await run_in_threadpool(
+                controller.create_session_from_form,
                 role=role,
                 level=level,
                 language=language,
@@ -277,7 +279,9 @@ def build_pages_router(
             except ValueError:
                 parsed = None
         if parsed is None:
-            session_dto, error_response = _get_owned_session_page_data(session_id, request)
+            session_dto, error_response = await run_in_threadpool(
+                _get_owned_session_page_data, session_id, request
+            )
             if error_response is not None:
                 return error_response
             html = workspace_template.render(
@@ -301,11 +305,16 @@ def build_pages_router(
                 client_submission_id=submission_id,
                 text=answer_text,
             )
-            saved = controller.submit_answer(
-                SessionId(session_id), payload, owner_token=owner_token
+            saved = await run_in_threadpool(
+                controller.submit_answer,
+                SessionId(session_id),
+                payload,
+                owner_token=owner_token,
             )
         except (ApiControllerError, ValidationError, ValueError) as error:
-            session_dto, error_response = _get_owned_session_page_data(session_id, request)
+            session_dto, error_response = await run_in_threadpool(
+                _get_owned_session_page_data, session_id, request
+            )
             if error_response is not None:
                 return error_response
             if isinstance(error, ApiControllerError):
@@ -331,7 +340,8 @@ def build_pages_router(
         result_url = f"/sessions/{session_id}/answers/{answer_id}/result?revision={revision}"
         if evaluation_controller is not None:
             try:
-                evaluation_controller.evaluate(
+                await run_in_threadpool(
+                    evaluation_controller.evaluate,
                     SessionId(session_id),
                     AnswerRevisionRef(AnswerId(answer_id), revision),
                     owner_token,

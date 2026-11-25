@@ -23,7 +23,7 @@ uv run --locked python -m source.service.question_bank_service --database .local
 
 `uv sync --locked` creates `.venv`, installs the exact dependency versions locked in [uv.lock](uv.lock) (FastAPI, Pydantic, Jinja2, Uvicorn, pytest, httpx), and installs the local `source` package in editable mode.
 
-> **Verified locally on Windows x64 (CPython 3.11):** locked install, `uv pip check`, seed import validator, the integrated offline pytest suite (`248 passed, 3 skipped` on 25/11/2026), and all three Node UI suites (`15 passed`). The three opt-in live tests are described in [Demo handoff](docs/DEMO_HANDOFF.md). Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
+> **Verified locally on Windows x64 (CPython 3.11):** locked install, `uv pip check`, seed import validator, the integrated offline pytest suite (`250 passed, 3 skipped` on 25/11/2026), and all three Node UI suites (`16 passed`). The three opt-in live tests are described in [Demo handoff](docs/DEMO_HANDOFF.md). Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
 
 The normal application defaults to live `antigravity`; only the offline pytest suite skips two Antigravity calls and one optional Gemini API-key call until explicitly enabled. This keeps the repeatable code tests usable without an authenticated AI account or network. It does not establish grading accuracy; see the [held-out evaluation report](docs/evaluation_report.md) for current evidence and its limits.
 

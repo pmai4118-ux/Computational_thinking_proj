@@ -91,8 +91,8 @@ uv run --locked python -m source.service.question_bank_service --database .local
 | Hạng mục chốt release | Trạng thái | Ghi nhận thực tế (điền khi chốt) |
 | --- | :---: | --- |
 | Commit demo đã chốt (`git rev-parse --short HEAD`) | Chờ chốt | Điền mã SHA sau khi merge PR vào `main` |
-| Toàn bộ `uv run --locked python -m pytest -q` trên commit nhánh tích hợp | **Đạt** (trên `Demo-fix`) | `248 passed, 3 skipped` (chạy lại lần cuối sau khi merge PR) |
-| Toàn bộ 3 tệp `node --test` (`workspace_recovery`, `q05_ui_interactions`, `q06_recovery`) | **Đạt** (trên `Demo-fix`) | `15 passed, 0 failed` |
+| Toàn bộ `uv run --locked python -m pytest -q` trên commit nhánh tích hợp | **Đạt** (trên `Demo-fix`) | `250 passed, 3 skipped` (chạy lại lần cuối sau khi merge PR) |
+| Toàn bộ 3 tệp `node --test` (`workspace_recovery`, `q05_ui_interactions`, `q06_recovery`) | **Đạt** (trên `Demo-fix`) | `16 passed, 0 failed` |
 | Kiểm tra import seed `C08` trên SQLite mới (`blocked: false`) | **Đạt** (trên `Demo-fix`) | `4 skills, 9 sources, 8 rubrics, 8 questions, 5 exercises`, `issues: []` |
 | Kiểm tra live Antigravity (`DEMO_LIVE_TEST=1`, `E09_LIVE_TEST=1`) trên máy trình chiếu | Chờ chốt | Chạy xác nhận ngay trước giờ trình chiếu |
 | Kiểm tra `git status --short` sạch (không track `.local/`, `.env`, `*.sqlite3`) | **Đạt** (trên `Demo-fix`) | Không có khóa API hay cơ sở dữ liệu cục bộ nào bị theo dõi |

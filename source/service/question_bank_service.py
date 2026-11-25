@@ -106,9 +106,17 @@ def _optional_text_list(value: Any, name: str) -> tuple[str, ...]:
     return tuple(_nonempty(item, f"{name}[]") for item in value)
 
 
-def _real_record(item: dict[str, Any]) -> None:
-    if item.get("example_only") is not False:
+def _object(value: Any, name: str) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise ValueError(f"{name} must be a JSON object")
+    return value
+
+
+def _real_record(item: Any) -> dict[str, Any]:
+    record = _object(item, "record")
+    if record.get("example_only") is not False:
         raise ValueError("example_only must be false for reviewed content")
+    return record
 
 
 def _review(raw: Any) -> ReviewMetadata:
@@ -158,8 +166,8 @@ def _is_example(item: Any, file: str, index: int, issues: list[SeedIssue]) -> bo
     return False
 
 
-def _source(item: dict[str, Any]) -> tuple[SourceMetadata, str]:
-    _real_record(item)
+def _source(item: Any) -> tuple[SourceMetadata, str]:
+    item = _real_record(item)
     if item.get("schema_version") != "source-record/0.1-proposal":
         raise ValueError("Unsupported source schema_version")
     lic = item["license"]
@@ -193,9 +201,9 @@ def _source(item: dict[str, Any]) -> tuple[SourceMetadata, str]:
     ), original_text
 
 
-def _question(item: dict[str, Any], *, category: str, skills: set[SkillId],
+def _question(item: Any, *, category: str, skills: set[SkillId],
               sources: dict[SourceId, str]) -> tuple[Rubric, Question]:
-    _real_record(item)
+    item = _real_record(item)
     if item.get("schema_version") != "question-record/0.1-proposal":
         raise ValueError("Unsupported question schema_version")
     if item.get("category") != category:
@@ -207,21 +215,32 @@ def _question(item: dict[str, Any], *, category: str, skills: set[SkillId],
     source_id = SourceId(_nonempty(item["source_id"], "question.source_id"))
     if source_id not in sources:
         raise ValueError("question.source_id has no verified source")
-    raw_rubric = item["rubric"]
+    raw_rubric = _object(item.get("rubric"), "question.rubric")
+    raw_criteria = raw_rubric.get("criteria")
+    if not isinstance(raw_criteria, list) or not raw_criteria:
+        raise ValueError("rubric.criteria must be a non-empty array")
     criteria = []
-    for raw in raw_rubric["criteria"]:
-        if not isinstance(raw.get("levels"), list):
+    for raw in raw_criteria:
+        raw_criterion = _object(raw, "rubric.criteria[]")
+        raw_levels = raw_criterion.get("levels")
+        if not isinstance(raw_levels, list):
             raise ValueError("rubric criterion levels must be an array")
-        levels = tuple(CriterionLevel(score=level["score"], description=level["description"])
-                       for level in raw["levels"])
+        levels = tuple(
+            CriterionLevel(
+                score=_object(level, "criterion.levels[]")["score"],
+                description=_object(level, "criterion.levels[]")["description"],
+            )
+            for level in raw_levels
+        )
         if tuple(level.score for level in levels) != (0, 1, 2):
             raise ValueError("rubric criterion levels must be 0, 1, 2")
         criteria.append(Criterion(
-            id=CriterionId(_nonempty(raw["id"], "criterion.id")),
-            label=raw["label"], expected_evidence=_text_list(raw["expected_evidence"], "criterion.expected_evidence"),
+            id=CriterionId(_nonempty(raw_criterion["id"], "criterion.id")),
+            label=raw_criterion["label"],
+            expected_evidence=_text_list(raw_criterion["expected_evidence"], "criterion.expected_evidence"),
             levels=levels,
-            equivalent_answers_note=_nonempty(raw.get("equivalent_answers"), "criterion.equivalent_answers"),
-            criterion_type=_nonempty(raw.get("criterion_type"), "criterion.criterion_type"),
+            equivalent_answers_note=_nonempty(raw_criterion.get("equivalent_answers"), "criterion.equivalent_answers"),
+            criterion_type=_nonempty(raw_criterion.get("criterion_type"), "criterion.criterion_type"),
         ))
     rubric = Rubric(id=RubricId(_nonempty(raw_rubric["id"], "rubric.id")),
                     version=_version(raw_rubric["version"]), criteria=tuple(criteria), review=review)
@@ -246,8 +265,8 @@ def _question(item: dict[str, Any], *, category: str, skills: set[SkillId],
     return rubric, question
 
 
-def _exercise(item: dict[str, Any], skills: set[SkillId], sources: set[SourceId]) -> Exercise:
-    _real_record(item)
+def _exercise(item: Any, skills: set[SkillId], sources: set[SourceId]) -> Exercise:
+    item = _real_record(item)
     if item.get("schema_version") != "exercise-record/0.1-proposal":
         raise ValueError("Unsupported exercise schema_version")
     review = _review(item.get("review"))
@@ -298,8 +317,9 @@ class QuestionBankService:
             try:
                 if _is_example(item, "skills.json", index, issues):
                     continue
-                skill = Skill(SkillId(_nonempty(item["id"], "skill.id")),
-                              _nonempty(item["label"], "skill.label"), item.get("description"))
+                record = _object(item, "skill record")
+                skill = Skill(SkillId(_nonempty(record["id"], "skill.id")),
+                              _nonempty(record["label"], "skill.label"), record.get("description"))
                 if skill.id in skills:
                     _record_error(issues, "CORE_ID_CONFLICT", "skills.json", index, item, "duplicate skill ID")
                     continue
