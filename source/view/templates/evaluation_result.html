@@ -52,7 +52,7 @@
       {% for check, feedback in rows %}
         <article class="card card--subtle stack">
           <h3>{{ check.criterion_label }}</h3>
-          <p>Trạng thái: {{ check.status.value }} · Điểm: {% if check.score is not none %}{{ check.score }}/{{ check.max_score }}{% else %}chưa đủ căn cứ{% endif %}</p>
+          <p>Trạng thái: {% if check.status.value == "met" %}Đạt{% elif check.status.value == "unmet" %}Chưa đạt{% elif check.status.value == "insufficient_evidence" %}Chưa đủ bằng chứng{% else %}{{ check.status.value }}{% endif %} · Điểm: {% if check.score is not none %}{{ check.score }}/{{ check.max_score }}{% else %}chưa đủ căn cứ{% endif %}</p>
           <p>{{ feedback.message }}</p>
           {% if feedback.suggestion %}<p>{{ feedback.suggestion }}</p>{% endif %}
           {% for item in check.evidence %}

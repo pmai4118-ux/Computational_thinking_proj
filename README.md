@@ -23,7 +23,7 @@ uv run --locked python -m source.service.question_bank_service --database .local
 
 `uv sync --locked` creates `.venv`, installs the exact dependency versions locked in [uv.lock](uv.lock) (FastAPI, Pydantic, Jinja2, Uvicorn, pytest, httpx), and installs the local `source` package in editable mode.
 
-> **Verified locally on Windows x64 (CPython 3.11):** locked install, `uv pip check`, seed import validator, and the integrated offline pytest suite (`231 passed, 3 skipped` on 25/11/2026). The three opt-in live tests are described in [Demo handoff](docs/DEMO_HANDOFF.md). Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
+> **Verified locally on Windows x64 (CPython 3.11):** locked install, `uv pip check`, seed import validator, the integrated offline pytest suite (`248 passed, 3 skipped` on 25/11/2026), and all three Node UI suites (`15 passed`). The three opt-in live tests are described in [Demo handoff](docs/DEMO_HANDOFF.md). Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
 
 The normal application defaults to live `antigravity`; only the offline pytest suite skips two Antigravity calls and one optional Gemini API-key call until explicitly enabled. This keeps the repeatable code tests usable without an authenticated AI account or network. It does not establish grading accuracy; see the [held-out evaluation report](docs/evaluation_report.md) for current evidence and its limits.
 
@@ -130,10 +130,10 @@ Run all offline automated tests (no network, uses temporary SQLite databases):
 uv run --locked python -m pytest -q
 ```
 
-If Node.js is installed, also run the workspace recovery UI test:
+If Node.js is installed, also run the frontend UI and recovery test suites:
 
 ```powershell
-node --test test/view/workspace_recovery.test.cjs
+node --test test/view/workspace_recovery.test.cjs test/view/q05_ui_interactions.test.cjs test/view/q06_recovery.test.cjs
 ```
 
 Run opt-in live Antigravity end-to-end checks (requires an active `agy` sign-in; each test creates a fresh temporary SQLite DB):
@@ -152,11 +152,14 @@ Remove-Item Env:E09_LIVE_TEST
 
 ## 6. Demo Walkthrough & Troubleshooting
 
+- **Final Computational Thinking & Architecture Report (Q08):** [docs/final_report.md](docs/final_report.md)
+- **Release Gate & Rehearsal Checklist (Q06/Q08):** [docs/release_checklist.md](docs/release_checklist.md)
 - **Step-by-step live demo guide:** [docs/demo_script.md](docs/demo_script.md)
 - **Merged features, test evidence, and current limits:** [docs/DEMO_HANDOFF.md](docs/DEMO_HANDOFF.md)
 
 | Symptom | Cause & Fix |
 | --- | --- |
+| `PSSecurityException` (`running scripts is disabled`) on `.\run_demo.ps1` | Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\run_demo.ps1`. |
 | `Python environment missing. Run uv sync --locked first.` | Run `uv sync --locked` from the repository root to create `.venv`. |
 | `Antigravity CLI (agy) is missing` or model unavailable | Install/sign in via `agy`, run `agy models`, or set `$env:ANTIGRAVITY_EXECUTABLE = "$env:LOCALAPPDATA\agy\bin\agy.exe"`. |
 | `ConfigurationError: Set GEMINI_API_KEY...` | You selected `EVALUATION_PROVIDER=gemini` without exporting `GEMINI_API_KEY` and `GEMINI_MODEL`. Export both or switch back to `antigravity` / `fixture`. |

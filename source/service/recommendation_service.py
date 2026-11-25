@@ -332,8 +332,6 @@ class RecommendationService:
             session_id=session_id, owner_token_hash=owner_token_hash
         )
         session = snapshot.session
-        if session.state is SessionState.EXPIRED:
-            raise SessionExpiredError(f"Session '{session_id}' has expired.")
         blueprint = self._interview_service.find_blueprint(
             role=session.role, level=session.level, language=session.language
         )

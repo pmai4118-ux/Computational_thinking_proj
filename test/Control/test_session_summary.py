@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from source.Model.ids import SessionId
+from source.Model.interview import SessionState
 from source.config import load_settings
 from source.main import create_app
 
@@ -181,3 +184,46 @@ def test_session_summary_controller_delegates_persistence_to_service(tmp_path: P
     summary_controller = app.state.container.session_summary_controller
     for forbidden_attr in ("_content_repo", "_session_repo", "_evaluation_repo"):
         assert not hasattr(summary_controller, forbidden_attr)
+
+
+def test_expired_session_summary_remains_readable_while_end_returns_410(tmp_path: Path) -> None:
+    app = _fixture_app(tmp_path, "expired-summary.sqlite3")
+    with TestClient(app) as owner:
+        session = owner.post("/api/sessions", json={}).json()
+        session_id = session["session_id"]
+        question = session["current_question"]
+        saved = owner.post(f"/api/sessions/{session_id}/answers", json={
+            "question_id": question["id"],
+            "question_version": question["version"],
+            "client_submission_id": "expired-summary-answer",
+            "text": "Bài trả lời đã lưu trước khi phiên hết hạn.",
+        }).json()["answer"]
+        evaluated = owner.post(
+            f"/api/sessions/{session_id}/answers/{saved['answer_id']}/evaluate",
+            json={"answer_revision": saved["revision"]},
+        )
+        assert evaluated.status_code == 200
+
+        session_repo = app.state.container.session_repo
+        stored = session_repo.get_session(SessionId(session_id))
+        assert stored is not None
+        session_repo.update_session(replace(stored, state=SessionState.EXPIRED))
+
+        summary_page = owner.get(f"/sessions/{session_id}/summary")
+        assert summary_page.status_code == 200
+
+        summary_api = owner.get(f"/api/sessions/{session_id}/summary")
+        assert summary_api.status_code == 200
+        report = summary_api.json()
+        assert report["state"] == "expired"
+        assert report["completed_question_count"] == 1
+        assert len(report["outcomes"]) == 1
+        assert report["outcomes"][0]["answer_ref"]["id"] == saved["answer_id"]
+
+        end_attempt = owner.post(
+            f"/api/sessions/{session_id}/end",
+            json={"reason": "student_requested"},
+        )
+        assert end_attempt.status_code == 410
+        assert end_attempt.json()["error_code"] == "SESSION_EXPIRED"
+

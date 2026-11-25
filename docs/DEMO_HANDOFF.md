@@ -24,6 +24,9 @@ Cập nhật: 25/11/2026. Nhánh đích: `Demo`. Các số liệu kiểm tra cũ
 | 16 | `codex/q03-live-provider-evaluation` | `2e0b466` → `171d431` | Q03: chạy Antigravity trên 12 ca held-out và lưu kết quả thô. Báo cáo đã sửa để không coi nhãn C07 tạm thời là chuẩn vàng. |
 | 17 | `codex/q04-usability-checks` | `d8a5341` → `4fcca63` | Q04: biên bản màn hình hẹp, bàn phím, focus và phục hồi lỗi. Hợp nhất tài liệu với Q05; kiểm tra lại bản tích hợp. |
 | 18 | `docs/q07-setup-demo-guide` | `3b86b88` → `3fddd45` | Q07: README, hướng dẫn chạy demo và danh sách kiểm tra cài đặt trên máy sạch. Bước xác nhận bởi thành viên khác còn chờ. |
+| 19 | `Demo-fix` (audit fixes) | `ae9f7ff` → `157727a` | Đồng bộ `main` (`94ab5a2`), sửa ranh giới MVC-S ở `SessionSummaryController`, giới hạn body form 256 KB, Việt hóa thông báo lỗi và mở khóa gửi bản mới (`revision=2`) khi AI lỗi vĩnh viễn. |
+| 20 | `fix/q06-release-blocking-failures` | `1bab728`, `7024c05` → `7077c82` | Q05 (bổ sung quan sát `P2` + gom thẻ bài tập, sửa cuộn trang review) và Q06 (`Q06-01`–`Q06-04`: chặn chấm phiên `expired`, phục hồi lỗi trên trang review, nhãn `Đã hết hạn`, tự dò `agy.exe` trong `run_demo.ps1`). |
+| 21 | `docs/q08-release-freeze-report` | `13dfa19` → `245ab6e` | Q08: đóng gói `docs/final_report.md`, cập nhật `docs/release_checklist.md`, lịch trình tổng duyệt `docs/demo_script.md` và test kiểm chứng gói bàn giao. |
 
 Trước lần tích hợp mới nhất, U07 trên `origin` có lịch sử Git không chung gốc với `Demo`, nên đã đưa các commit chức năng U07 sang và xử lý xung đột, không gộp nguyên nhánh U03–U07. Lần này, các phần giao diện hữu ích còn thiếu được chuyển vào Demo trước rồi mới ghi nhận toàn bộ lịch sử U07 bằng merge commit `3610618`; nội dung nhánh cũ không ghi đè các phần mới hơn của Demo. Các nguồn C02, F04, I01 cũng được lấy theo commit cụ thể để tránh kéo các merge commit cũ.
 
@@ -36,7 +39,7 @@ Các mã nhiệm vụ có commit trong lịch sử `Demo`:
 - **Đánh giá:** E01–E09, Q01. E04 có adapter AI, E05 kiểm tra bằng chứng, E06 tính điểm bằng mã Python, E09 điều phối và lưu kết quả.
 - **Phiên và API:** I01–I06. I03 lưu bài chống gửi trùng; I04 đánh giá/đọc lại/retry an toàn; I05 chuyển câu và kết thúc sớm; I06 đề xuất bài tập và tạo lượt luyện từ câu trả lời đã lưu.
 - **Giao diện:** U01–U08. U03 là nơi trả lời, U04 là trang căn cứ theo tiêu chí, U05 là trang tổng kết, U06 là trang bài tập, U07 dùng API client chung, U08 xử lý trạng thái chờ/lỗi/retry/hết phiên.
-- **Kiểm tra và tài liệu tuần 3:** Q02–Q05 và Q07 đã có mã/tài liệu trên nhánh. Q03 chưa thể nghiệm thu độ chính xác nếu thiếu nhãn phân xử C07; Q05 mới có một người thử; Q07 chưa được thành viên khác kiểm tra trên máy sạch. Q06 và Q08 chưa được gộp.
+- **Kiểm tra và tài liệu tuần 3:** Q01–Q08 đã có mã/tài liệu trên nhánh (`248 passed, 3 skipped` trong `pytest` và `15 passed` trong `node --test`). Q03 chưa thể nghiệm thu độ chính xác do thiếu nhãn phân xử C07; Q05 đã ghi nhận 2 người thử (`P1`, `P2`); Q07 Bước 3 (thành viên khác kiểm tra trên máy sạch) và tổng duyệt trực tiếp Q08 vẫn ở trạng thái chờ chốt.
 
 Đây là danh sách **mã đã hiện diện trong lịch sử nhánh**, không có nghĩa toàn bộ tiêu chí nghiệm thu của mọi mã đều đã được kiểm định đầy đủ. Phần 2 ghi chính xác những luồng đã chạy.
 
@@ -133,7 +136,7 @@ Browser test với server fixture sau tích hợp: thiết lập phiên → gử
 - **U08/Q02:** các trạng thái chính, retry, quyền sở hữu, repository/API và giao diện đã có test sau merge; không suy ra mọi tình huống mạng/thiết bị đều đã được bao phủ.
 - **Q03:** 12 lượt held-out đã gọi Antigravity và có báo cáo quan sát. Chưa thể hoàn tất phần **độ chính xác so với chuyên gia** do thiếu nhãn C07 đã phân xử.
 - **C07 chưa đủ điều kiện nghiệm thu nhãn:** 24 ca đã tích hợp đúng đề/rubric, nhưng người dùng xác nhận chưa có hai bản review độc lập. Tất cả nhãn hiện là nháp; cần hai người gán nhãn và phân xử trước khi dùng cho Q03 hoặc tuyên bố độ chính xác của Antigravity.
-- **Q05/Q07:** mới có một người chưa quen UI thử; cần thêm người để xác nhận sửa lỗi Q05. Bước cài đặt trên checkout/máy sạch bởi thành viên khác của Q07 vẫn chờ. Q06 và Q08 chưa gộp vào `Demo`.
+- **Q05/Q06/Q07/Q08:** Q05 đã có hai biên bản người dùng (`P1`, `P2`) và sửa các lỗi tái hiện; Q06 đã đóng các lỗi chặn bàn giao (`Q06-01`–`Q06-04`); Q08 đã đóng gói [báo cáo tổng kết](final_report.md) và [danh sách chốt release](release_checklist.md). Bước cài đặt trên checkout/máy sạch bởi thành viên khác của Q07 và buổi tổng duyệt trực tiếp của Q08 vẫn chờ chốt.
 - **Seed trên SQLite cũ:** bản sửa C02 thay đổi mã ví dụ trong seed cùng phiên bản câu hỏi. Ứng dụng không ghi đè câu hỏi đã lưu trong database cũ. Dùng một `DATABASE_PATH` mới để nhận seed đã sửa, giữ nguyên dữ liệu phiên cũ; không xóa database của người học.
 - Vai trò/cấp độ/ngôn ngữ đang hỗ trợ: **Backend Developer · Intern/Fresher · tiếng Việt**. Lượt luyện lại do I06 tạo là phiên **1 câu** dựa trên điểm thiếu được xác nhận.
 
