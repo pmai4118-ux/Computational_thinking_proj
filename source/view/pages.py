@@ -27,6 +27,8 @@ from source.Model.ids import SessionId
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 MAX_SETUP_FORM_BODY_BYTES = 8 * 1024
 MAX_SETUP_FORM_FIELDS = 8
+MAX_ANSWER_FORM_BODY_BYTES = 256 * 1024
+MAX_ANSWER_FORM_FIELDS = 8
 
 
 def create_template_environment() -> Environment:
@@ -56,12 +58,12 @@ def _setup_payload_too_large(controller: InterviewController) -> HTMLResponse:
     return HTMLResponse(content=html, status_code=status.HTTP_413_CONTENT_TOO_LARGE)
 
 
-async def _read_setup_body_with_limit(request: Request) -> bytes | None:
-    """Read at most the setup form limit, including for chunked requests."""
+async def _read_body_with_limit(request: Request, *, max_bytes: int) -> bytes | None:
+    """Read at most ``max_bytes``, including for chunked requests."""
     content_length = request.headers.get("content-length")
     if content_length is not None:
         try:
-            if int(content_length) > MAX_SETUP_FORM_BODY_BYTES:
+            if int(content_length) > max_bytes:
                 return None
         except ValueError:
             return None
@@ -70,10 +72,14 @@ async def _read_setup_body_with_limit(request: Request) -> bytes | None:
     total_bytes = 0
     async for chunk in request.stream():
         total_bytes += len(chunk)
-        if total_bytes > MAX_SETUP_FORM_BODY_BYTES:
+        if total_bytes > max_bytes:
             return None
         chunks.append(chunk)
     return b"".join(chunks)
+
+
+async def _read_setup_body_with_limit(request: Request) -> bytes | None:
+    return await _read_body_with_limit(request, max_bytes=MAX_SETUP_FORM_BODY_BYTES)
 
 
 def build_pages_router(
@@ -85,7 +91,6 @@ def build_pages_router(
     env = create_template_environment()
     welcome_template = env.get_template("welcome.html")
     setup_template = env.get_template("setup.html")
-    session_template = env.get_template("session_shell.html")
     result_template = env.get_template("evaluation_result.html")
     workspace_template = env.get_template("workspace.html")
     answer_review_template = env.get_template("answer_review.html")
@@ -199,8 +204,31 @@ def build_pages_router(
     @router.post("/sessions/{session_id}/answers", response_model=None)
     async def submit_answer_page(session_id: str, request: Request) -> Response:
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
-        raw_body = (await request.body()).decode("utf-8", errors="replace")
-        parsed = parse_qs(raw_body, keep_blank_values=True)
+        body = await _read_body_with_limit(request, max_bytes=MAX_ANSWER_FORM_BODY_BYTES)
+        parsed: dict[str, list[str]] | None = None
+        if body is not None:
+            try:
+                parsed = parse_qs(
+                    body.decode("utf-8", errors="replace"),
+                    keep_blank_values=True,
+                    max_num_fields=MAX_ANSWER_FORM_FIELDS,
+                )
+            except ValueError:
+                parsed = None
+        if parsed is None:
+            session_dto, error_response = _get_owned_session_page_data(session_id, request)
+            if error_response is not None:
+                return error_response
+            html = workspace_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                session=session_dto,
+                submission_id=token_urlsafe(16),
+                answer_text="",
+                error_message="Yêu cầu gửi câu trả lời quá lớn hoặc có quá nhiều trường.",
+                recovery_action="Vui lòng rút gọn nội dung (tối đa 20.000 ký tự) rồi gửi lại.",
+            )
+            return HTMLResponse(content=html, status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+
         question_id = _first_form_value(parsed, "question_id", "")
         question_version = _first_form_value(parsed, "question_version", "")
         submission_id = _first_form_value(parsed, "client_submission_id", "")
@@ -216,28 +244,25 @@ def build_pages_router(
                 SessionId(session_id), payload, owner_token=owner_token
             )
         except (ApiControllerError, ValidationError, ValueError) as error:
-            try:
-                session_dto = controller.get_session(
-                    SessionId(session_id), owner_token=owner_token
-                )
-            except ApiControllerError as access_error:
-                return HTMLResponse(
-                    content=env.get_template("welcome.html").render(
-                        demo_mode_label=controller.demo_mode_label,
-                        sessions=(),
-                        error_message=access_error.payload.message,
-                    ),
-                    status_code=access_error.status_code,
-                )
-            message = error.payload.message if isinstance(error, ApiControllerError) else str(error)
-            html = session_template.render(
+            session_dto, error_response = _get_owned_session_page_data(session_id, request)
+            if error_response is not None:
+                return error_response
+            if isinstance(error, ApiControllerError):
+                message = error.payload.message
+                recovery = error.payload.recovery_action
+                code = error.status_code
+            else:
+                message = "Câu trả lời chưa hợp lệ (không được để trống và tối đa 20.000 ký tự)."
+                recovery = "Giữ nguyên bản nháp tại ô nhập và chỉnh sửa nội dung trước khi gửi lại."
+                code = status.HTTP_422_UNPROCESSABLE_CONTENT
+            html = workspace_template.render(
                 demo_mode_label=controller.demo_mode_label,
                 session=session_dto,
                 submission_id=submission_id or token_urlsafe(16),
                 answer_text=answer_text,
                 error_message=message,
+                recovery_action=recovery,
             )
-            code = error.status_code if isinstance(error, ApiControllerError) else status.HTTP_422_UNPROCESSABLE_CONTENT
             return HTMLResponse(content=html, status_code=code)
 
         answer_id = saved.answer.answer_id

@@ -95,7 +95,7 @@
         <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự.</p>
         <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
                   aria-describedby="answer-guidance answer-counter draft-label"
-                  {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% endif %}</textarea>
+                  {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% elif answer_text %}{{ answer_text }}{% endif %}</textarea>
         <p class="form-hint" id="draft-label" data-draft-label>
           {% if session.current_answer %}Đã lưu câu trả lời trên máy chủ{% else %}Bản nháp trên trình duyệt (chưa lưu máy chủ){% endif %}
         </p>
@@ -111,9 +111,7 @@
       </div>
 
       <div class="action-row workspace-primary-actions">
-        {% if not session.current_answer %}
-          <button class="btn btn--primary" id="submit-answer" type="submit">Gửi câu trả lời</button>
-        {% endif %}
+        <button class="btn btn--primary" id="submit-answer" type="submit" {% if session.current_answer %}hidden{% endif %}>Gửi câu trả lời</button>
         <button class="btn btn--secondary" id="retry-evaluation" type="button" hidden>Thử đánh giá lại</button>
         {% if session.current_answer %}
           <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}&amp;revision={{ session.current_answer.revision }}">Xem kết quả câu này</a>
@@ -145,4 +143,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261124-q05" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261125-fix" defer></script>{% endblock %}

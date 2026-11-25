@@ -119,11 +119,7 @@ def create_app(
     )
     session_summary_controller = SessionSummaryController(
         interview_controller=interview_controller,
-        interview_service=interview_service,
         recommendation_service=recommendation_service,
-        content_repo=resolved_content_repo,
-        session_repo=resolved_session_repo,
-        evaluation_repo=resolved_eval_repo,
     )
 
     app = FastAPI(

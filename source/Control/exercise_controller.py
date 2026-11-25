@@ -13,7 +13,6 @@ from source.Control.interview_controller import (
 from source.Control.schemas import (
     AnswerRevisionRefDTO,
     ApiErrorResponse,
-    AnswerRevisionRefDTO,
     ErrorCode,
     ExerciseDetailDTO,
     ExerciseRecommendationDTO,
@@ -69,9 +68,9 @@ class ExerciseController:
                 status.HTTP_410_GONE,
                 ApiErrorResponse(
                     error_code=ErrorCode.SESSION_EXPIRED,
-                    message="This practice session has expired.",
+                    message="Phiên luyện tập đã hết hạn khả dụng.",
                     session_id=session_id,
-                    recovery_action="Start a new interview session.",
+                    recovery_action="Bắt đầu phiên luyện tập mới.",
                 ),
             )
 
@@ -134,8 +133,8 @@ class ExerciseController:
                 status.HTTP_404_NOT_FOUND,
                 ApiErrorResponse(
                     error_code=ErrorCode.EXERCISE_NOT_FOUND,
-                    message="No reviewed exercise was found for this ID and version.",
-                    recovery_action="Return to the recommended exercise list.",
+                    message="Không tìm thấy bài tập đã duyệt cho mã và phiên bản yêu cầu.",
+                    recovery_action="Quay lại danh sách bài tập được đề xuất của phiên.",
                 ),
             )
         exercise, source = reviewed
@@ -178,7 +177,7 @@ class ExerciseController:
                     error_code=ErrorCode.INVALID_INPUT,
                     message=str(error),
                     session_id=session_id,
-                    recovery_action="Select an exercise linked to a confirmed gap in this answer.",
+                    recovery_action="Chọn một bài tập gắn với điểm thiếu đã xác nhận trong câu trả lời này.",
                 ),
             ) from error
         except AlternativeQuestionUnavailableError as error:
@@ -188,7 +187,7 @@ class ExerciseController:
                     error_code=ErrorCode.INVALID_STATE_TRANSITION,
                     message=str(error),
                     session_id=session_id,
-                    recovery_action="Use the exercise instructions while another reviewed question is unavailable.",
+                    recovery_action="Hãy thực hành theo hướng dẫn bài tập khi chưa có câu hỏi biến thể khác.",
                 ),
             ) from error
         return self._interview_controller.get_session(session.id, owner_token=owner_token)

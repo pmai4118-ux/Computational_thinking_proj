@@ -25,6 +25,8 @@
         <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}">
           <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
         </form>
+      {% else %}
+        <p class="form-hint">Lượt gửi này không thể chấm lại trực tiếp. Hãy quay lại phiên để chỉnh sửa và gửi bản trả lời mới sau khi khắc phục lỗi, hoặc kết thúc sớm phiên.</p>
       {% endif %}
     {% else %}
       <p>Chưa có kết quả đánh giá hoàn tất cho bài này. Bài gốc vẫn được lưu.</p>
@@ -32,6 +34,8 @@
         <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}">
           <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
         </form>
+      {% else %}
+        <p class="form-hint">Hãy quay lại phiên để chỉnh sửa và gửi bản trả lời mới sau khi khắc phục lỗi, hoặc kết thúc sớm phiên.</p>
       {% endif %}
     {% endif %}
   </div>

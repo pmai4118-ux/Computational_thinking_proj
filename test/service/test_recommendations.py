@@ -206,7 +206,7 @@ def test_i06_unresolved_evidence_never_creates_a_gap(tmp_path: Path) -> None:
         assert response.status_code == 200
         assert response.json()["recommendations"] == []
         assert response.json()["unmatched_skill_ids"] == []
-        assert "No confirmed gaps" in response.json()["message"]
+        assert "Chưa ghi nhận điểm thiếu" in response.json()["message"]
 
 
 def test_i06_new_answer_revision_without_completed_evaluation_has_no_gap(tmp_path: Path) -> None:

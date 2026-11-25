@@ -86,15 +86,34 @@ test("a timed-out saved answer stays available for retry without a score", async
 });
 
 test("a permanent provider failure does not invite an impossible retry", async () => {
+  const submissions = [];
   const page = browser({
     savedAnswerId: "answer-1",
-    api: { getEvaluation: async () => ({ result: {
-      status: "failed", failure_code: "PROVIDER_CONFIG_ERROR", retryable: false,
-    } }) },
+    api: {
+      getEvaluation: async () => ({ result: {
+        status: "failed", failure_code: "PROVIDER_CONFIG_ERROR", retryable: false,
+      } }),
+      submitAnswer: async (_sessionId, body) => {
+        submissions.push(body);
+        return { answer: { answer_id: "answer-1", revision: 2 } };
+      },
+      evaluateAnswer: async () => ({ result: { status: "completed" } }),
+    },
   });
+  page.element("#answer-text").value = "Bài gốc đã lưu";
+  page.element("#answer-text").readOnly = true;
   await flush();
   assert.equal(page.element("#retry-evaluation").hidden, true);
+  assert.equal(page.element("#submit-answer").hidden, false);
+  assert.equal(page.element("#submit-answer").textContent, "Gửi bản trả lời mới");
+  assert.equal(page.element("#answer-text").readOnly, false);
   assert.match(page.element("#workspace-error").textContent, /khắc phục lỗi dịch vụ/);
+
+  const submit = page.handlers.get("#answer-form:submit");
+  await submit({ preventDefault() {} });
+  await flush();
+  assert.equal(submissions.length, 1);
+  assert.match(page.navigation, /\/sessions\/session-1\/review\?answer_id=answer-1&revision=2/);
 });
 
 test("reopened processing answer polls the saved result without another AI call", async () => {

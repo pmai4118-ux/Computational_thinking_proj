@@ -64,6 +64,34 @@ class RecommendationSet:
     message: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class QuestionOutcomeRecord:
+    slot_index: int
+    category: str
+    skill_id: SkillId
+    question_ref: VersionedRef[QuestionId]
+    question_prompt: str
+    answer_ref: AnswerRevisionRef | None
+    evaluation_id: EvaluationId | None
+    evaluation_status: EvaluationStatus
+    total_score: int | None
+    maximum_score: int | None
+    unresolved_criteria_count: int
+    confirmed_gap_criterion_ids: tuple[CriterionId, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class SessionSummaryRecord:
+    session_id: SessionId
+    state: SessionState
+    completed_question_count: int
+    total_question_count: int
+    unanswered_categories: tuple[str, ...]
+    unresolved_categories: tuple[str, ...]
+    outcomes: tuple[QuestionOutcomeRecord, ...]
+    observed_gaps: tuple[ConfirmedGap, ...]
+
+
 class RecommendationService:
     """Map scored gaps to reviewed content without inventing missing evidence."""
 
@@ -275,9 +303,9 @@ class RecommendationService:
                             exercise=item,
                             gap=gap,
                             reason=(
-                                f"Addresses {gap.criterion_label}: {gap.reason}"
+                                f"Khắc phục tiêu chí {gap.criterion_label}: {gap.reason}"
                                 if item.id in direct_match_ids
-                                else f"Prerequisite for {match.title}."
+                                else f"Bài nền tảng cần làm trước cho: {match.title}."
                             ),
                             alternate_question=alternate,
                         )
@@ -290,12 +318,91 @@ class RecommendationService:
         )
         message = None
         if not gaps:
-            message = "No confirmed gaps; unresolved criteria do not create recommendations."
+            message = "Chưa ghi nhận điểm thiếu đã xác nhận; các tiêu chí chưa đủ bằng chứng không tạo đề xuất bài tập."
         elif not suggestions:
-            message = "No reviewed exercise matches the confirmed gaps."
+            message = "Chưa có bài tập đã duyệt phù hợp với các điểm thiếu đã xác nhận."
         elif unmatched:
-            message = "Some confirmed gaps have no matching reviewed exercise."
+            message = "Một số kỹ năng có điểm thiếu hiện chưa có bài tập đã duyệt tương ứng."
         return RecommendationSet(session.id, tuple(suggestions), unmatched, message)
+
+    def summarize_session(
+        self, *, session_id: SessionId, owner_token_hash: str
+    ) -> SessionSummaryRecord:
+        snapshot = self._interview_service.get_owned_session(
+            session_id=session_id, owner_token_hash=owner_token_hash
+        )
+        session = snapshot.session
+        if session.state is SessionState.EXPIRED:
+            raise SessionExpiredError(f"Session '{session_id}' has expired.")
+        blueprint = self._interview_service.find_blueprint(
+            role=session.role, level=session.level, language=session.language
+        )
+        skills_by_category = {slot.category: slot.skill_id for slot in blueprint.slots}
+        latest_answers = {}
+        for answer in self._session_repo.list_answers_for_session(session.id):
+            if answer.session_id != session.id:
+                continue
+            previous = latest_answers.get(answer.question_ref)
+            if previous is None or answer.revision > previous.revision:
+                latest_answers[answer.question_ref] = answer
+
+        gaps = self.confirmed_gaps(session)
+        gap_ids_by_question: dict[VersionedRef[QuestionId], list[CriterionId]] = {}
+        for gap in gaps:
+            gap_ids_by_question.setdefault(gap.question_ref, []).append(gap.criterion_id)
+
+        outcomes: list[QuestionOutcomeRecord] = []
+        unanswered_categories: list[str] = []
+        unresolved_categories: list[str] = []
+        completed_count = 0
+        for index, question_ref in enumerate(session.question_refs):
+            question = self._content_repo.get_question(question_ref)
+            if question is None:
+                raise RuntimeError(f"Saved session references missing question {question_ref}.")
+            answer = latest_answers.get(question_ref)
+            if answer is None:
+                unanswered_categories.append(question.category)
+                continue
+            evaluation = self._evaluation_repo.get_latest_evaluation_for_answer(answer.ref)
+            if evaluation is not None and evaluation.status is EvaluationStatus.COMPLETED:
+                completed_count += 1
+            unresolved_count = 0
+            if evaluation is not None:
+                unresolved_count = sum(
+                    check.status is CriterionStatus.INSUFFICIENT_EVIDENCE
+                    for check in evaluation.criterion_checks
+                )
+                if unresolved_count:
+                    unresolved_categories.append(question.category)
+            outcomes.append(
+                QuestionOutcomeRecord(
+                    slot_index=index,
+                    category=question.category,
+                    skill_id=skills_by_category.get(question.category, question.skill_ids[0]),
+                    question_ref=question_ref,
+                    question_prompt=question.prompt,
+                    answer_ref=answer.ref,
+                    evaluation_id=evaluation.id if evaluation is not None else None,
+                    evaluation_status=(
+                        evaluation.status if evaluation is not None else EvaluationStatus.PENDING
+                    ),
+                    total_score=evaluation.total_score if evaluation is not None else None,
+                    maximum_score=evaluation.maximum_score if evaluation is not None else None,
+                    unresolved_criteria_count=unresolved_count,
+                    confirmed_gap_criterion_ids=tuple(gap_ids_by_question.get(question_ref, ())),
+                )
+            )
+
+        return SessionSummaryRecord(
+            session_id=session.id,
+            state=session.state,
+            completed_question_count=completed_count,
+            total_question_count=len(session.question_refs),
+            unanswered_categories=tuple(unanswered_categories),
+            unresolved_categories=tuple(unresolved_categories),
+            outcomes=tuple(outcomes),
+            observed_gaps=gaps,
+        )
 
     def start_practice(
         self,
@@ -320,11 +427,11 @@ class RecommendationService:
         )
         if selected is None:
             raise RecommendationNotFoundError(
-                "The selected exercise is not linked to a confirmed gap in this saved answer."
+                "Bài tập đã chọn không gắn với điểm thiếu đã xác nhận của câu trả lời này."
             )
         if selected.alternate_question is None:
             raise AlternativeQuestionUnavailableError(
-                "No different reviewed question is available for this gap."
+                "Hiện chưa có câu hỏi đã duyệt khác câu gốc cho điểm thiếu này."
             )
         original = self._session_repo.get_session(session_id)
         assert original is not None
@@ -347,7 +454,9 @@ __all__ = [
     "AlternativeQuestionUnavailableError",
     "ConfirmedGap",
     "ExerciseSuggestion",
+    "QuestionOutcomeRecord",
     "RecommendationNotFoundError",
     "RecommendationService",
     "RecommendationSet",
+    "SessionSummaryRecord",
 ]

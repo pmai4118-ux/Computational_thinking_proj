@@ -84,9 +84,38 @@ def test_web_form_rejects_blank_answer_without_losing_draft(tmp_path: Path) -> N
             headers={"content-type": "application/x-www-form-urlencoded"},
         )
         assert response.status_code == 422
+        assert "data-workspace" in response.text
         assert 'role="alert"' in response.text
         assert 'name="text"' in response.text
         assert ">   </textarea>" in response.text
+
+
+def test_web_form_rejects_oversized_or_excess_field_payload_with_413(tmp_path: Path) -> None:
+    settings = Settings(
+        provider=ProviderMode.FIXTURE,
+        database_path=tmp_path / "oversized.sqlite3",
+        gemini_timeout_seconds=30.0,
+    )
+    app = create_app(settings=settings)
+    with TestClient(app) as client:
+        created = client.post("/api/sessions", json={}).json()
+        session_id = created["session_id"]
+        oversized = client.post(
+            f"/sessions/{session_id}/answers",
+            content="text=" + ("a" * (260 * 1024)),
+            headers={"content-type": "application/x-www-form-urlencoded"},
+        )
+        assert oversized.status_code == 413
+        assert "data-workspace" in oversized.text
+        assert 'role="alert"' in oversized.text
+
+        too_many_fields = client.post(
+            f"/sessions/{session_id}/answers",
+            content="&".join(f"f{i}=v" for i in range(12)),
+            headers={"content-type": "application/x-www-form-urlencoded"},
+        )
+        assert too_many_fields.status_code == 413
+        assert "data-workspace" in too_many_fields.text
 
 
 def test_web_provider_timeout_keeps_saved_answer_and_offers_retry(tmp_path: Path) -> None:

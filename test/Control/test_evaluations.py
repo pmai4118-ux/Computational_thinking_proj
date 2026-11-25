@@ -95,7 +95,7 @@ def test_timeout_retry_uses_saved_answer_and_versions_attempt(tmp_path: Path) ->
         assert failure.json()["error_code"] == "PROVIDER_TIMEOUT"
         assert failure.json()["answer_ref"] == {"id": answer_id, "revision": 1}
         assert failure.json()["retryable"] is True
-        assert "retry" in failure.json()["recovery_action"].lower()
+        assert "thử đánh giá lại" in failure.json()["recovery_action"].lower()
         failed = owner.get(f"/api/answers/{answer_id}/evaluation").json()
         assert failed["status"] == "failed"
         assert failed["failure_code"] == "PROVIDER_TIMEOUT"
@@ -136,6 +136,63 @@ def test_permanent_provider_failure_rejects_retry(tmp_path: Path) -> None:
         assert rejected.status_code == 409
         assert rejected.json()["error_code"] == "EVALUATION_RETRY_NOT_ALLOWED"
         assert provider.calls == 1
+
+
+def test_permanent_failure_allows_new_answer_revision_to_unblock_session(tmp_path: Path) -> None:
+    provider = FlakyInterpreter(ProviderFailureError(
+        ProviderErrorKind.CONFIG, "Synthetic missing config", retryable=False
+    ))
+    app = _app(tmp_path, provider)
+    with TestClient(app) as owner:
+        created = owner.post("/api/sessions", json={}).json()
+        session_id = created["session_id"]
+        question = created["current_question"]
+        sub1 = owner.post(
+            f"/api/sessions/{session_id}/answers",
+            json={
+                "question_id": question["id"],
+                "question_version": question["version"],
+                "client_submission_id": "perm-rev-1",
+                "text": "Bản trả lời đầu tiên gặp lỗi cấu hình dịch vụ.",
+            },
+        ).json()["answer"]
+        answer_id = sub1["answer_id"]
+        assert sub1["revision"] == 1
+
+        fail_resp = owner.post(
+            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
+            json={"answer_revision": 1},
+        )
+        assert fail_resp.status_code == 503
+        assert fail_resp.json()["retryable"] is False
+
+        # Submitting a new revision after resolving the issue preserves revision 1 and unblocks advancing.
+        sub2 = owner.post(
+            f"/api/sessions/{session_id}/answers",
+            json={
+                "question_id": question["id"],
+                "question_version": question["version"],
+                "client_submission_id": "perm-rev-2",
+                "text": "Bản trả lời mới sau khi khắc phục cấu hình dịch vụ.",
+            },
+        )
+        assert sub2.status_code == 201
+        assert sub2.json()["answer"]["answer_id"] == answer_id
+        assert sub2.json()["answer"]["revision"] == 2
+
+        ok_resp = owner.post(
+            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
+            json={"answer_revision": 2},
+        )
+        assert ok_resp.status_code == 200
+        assert ok_resp.json()["result"]["status"] == "completed"
+
+        advanced = owner.post(f"/api/sessions/{session_id}/next", json={"from_question_index": 0})
+        assert advanced.status_code == 200
+        assert advanced.json()["progress"]["current_index"] == 1
+        assert app.state.container.session_repo.get_answer(
+            AnswerRevisionRef(AnswerId(answer_id), 1)
+        ).text == "Bản trả lời đầu tiên gặp lỗi cấu hình dịch vụ."
 
 
 def test_expired_processing_claim_can_be_retried_after_worker_loss(tmp_path: Path) -> None:

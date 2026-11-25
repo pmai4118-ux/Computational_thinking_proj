@@ -174,3 +174,10 @@ def test_i05_ending_early_preserves_partial_result_and_prevents_further_work(
             "text": "This must not replace the previous answer.",
         }).status_code == 409
         assert owner.get(f"/api/sessions/{session_id}/summary").json() == report
+
+
+def test_session_summary_controller_delegates_persistence_to_service(tmp_path: Path) -> None:
+    app = _fixture_app(tmp_path, "mvcs-summary.sqlite3")
+    summary_controller = app.state.container.session_summary_controller
+    for forbidden_attr in ("_content_repo", "_session_repo", "_evaluation_repo"):
+        assert not hasattr(summary_controller, forbidden_attr)

@@ -292,7 +292,7 @@ class EvaluationService:
         except ProviderFailureError as error:
             try:
                 self._evaluation_repo.fail_evaluation(
-                    claim, str(error.code), "The provider could not complete this evaluation."
+                    claim, str(error.code), "Dịch vụ AI chưa thể hoàn tất đánh giá cho câu trả lời này."
                 )
             except RepositoryError:
                 pass  # Preserve the original provider failure if the claim expired.
@@ -300,7 +300,7 @@ class EvaluationService:
         except Exception:
             try:
                 self._evaluation_repo.fail_evaluation(
-                    claim, "EVALUATION_FAILED", "Evaluation could not be completed."
+                    claim, "EVALUATION_FAILED", "Quá trình đánh giá không thể hoàn tất."
                 )
             except RepositoryError:
                 pass

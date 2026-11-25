@@ -57,9 +57,10 @@ class SavedEvaluationController:
                 status.HTTP_404_NOT_FOUND,
                 ApiErrorResponse(
                     error_code=ErrorCode.INVALID_INPUT,
-                    message="Saved answer revision was not found.",
+                    message="Không tìm thấy phiên bản câu trả lời đã lưu.",
                     session_id=session_id,
                     answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
+                    recovery_action="Quay lại câu hỏi và gửi câu trả lời trước khi đánh giá.",
                 ),
             ) from error
         if answer.session_id != session_id:
@@ -67,8 +68,9 @@ class SavedEvaluationController:
                 status.HTTP_404_NOT_FOUND,
                 ApiErrorResponse(
                     error_code=ErrorCode.INVALID_INPUT,
-                    message="Saved answer revision was not found in this session.",
+                    message="Không tìm thấy phiên bản câu trả lời đã lưu trong phiên này.",
                     session_id=session_id,
+                    recovery_action="Kiểm tra lại liên kết câu trả lời trong phiên hiện tại.",
                 ),
             )
         return answer, rubric
@@ -84,10 +86,10 @@ class SavedEvaluationController:
                 status.HTTP_409_CONFLICT,
                 ApiErrorResponse(
                     error_code=ErrorCode.EVALUATION_IN_PROGRESS,
-                    message="Evaluation is already processing for this answer revision.",
+                    message="Phiên bản câu trả lời này đang được hệ thống đánh giá.",
                     retryable=True, session_id=session_id,
                     answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
-                    recovery_action="Read the evaluation status before trying again.",
+                    recovery_action="Đọc trạng thái đánh giá đã lưu trước khi thử lại.",
                 ),
             ) from error
         except EvaluationRetryNotAllowedError as error:
@@ -95,10 +97,10 @@ class SavedEvaluationController:
                 status.HTTP_409_CONFLICT,
                 ApiErrorResponse(
                     error_code=ErrorCode.EVALUATION_RETRY_NOT_ALLOWED,
-                    message="The previous evaluation failure cannot be retried.",
+                    message="Lượt đánh giá thất bại trước đó không thể thử lại trên cùng phiên bản.",
                     session_id=session_id,
                     answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
-                    recovery_action="Read the saved failure and contact support if needed.",
+                    recovery_action="Bài gốc vẫn được lưu; hãy khắc phục lỗi dịch vụ hoặc gửi bản trả lời mới.",
                 ),
             ) from error
         except ProviderFailureError as error:
@@ -121,14 +123,14 @@ class SavedEvaluationController:
                 http_status,
                 ApiErrorResponse(
                     error_code=error_code,
-                    message="The evaluation provider could not complete this answer.",
+                    message="Dịch vụ đánh giá chưa thể hoàn tất chấm điểm cho câu trả lời này.",
                     retryable=can_retry,
                     session_id=session_id,
                     answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
                     recovery_action=(
-                        "The original answer remains saved; retry evaluation later."
+                        "Câu trả lời gốc vẫn được lưu an toàn; bấm 'Thử đánh giá lại' để chấm lại."
                         if can_retry else
-                        "The original answer remains saved; resolve the provider issue before continuing."
+                        "Câu trả lời gốc vẫn được lưu an toàn; hãy khắc phục lỗi dịch vụ hoặc điều chỉnh và gửi bản trả lời mới."
                     ),
                 ),
             ) from error
@@ -144,10 +146,10 @@ class SavedEvaluationController:
                 status.HTTP_404_NOT_FOUND,
                 ApiErrorResponse(
                     error_code=ErrorCode.INVALID_INPUT,
-                    message="This answer has no evaluation attempt yet.",
+                    message="Câu trả lời này chưa có lượt đánh giá nào.",
                     session_id=session_id,
                     answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
-                    recovery_action="Request evaluation for this saved answer first.",
+                    recovery_action="Hãy gửi yêu cầu đánh giá cho câu trả lời đã lưu trước.",
                 ),
             )
         return self._to_response(*saved, answer, rubric)
@@ -160,9 +162,10 @@ class SavedEvaluationController:
             raise ApiControllerError(
                 status.HTTP_404_NOT_FOUND,
                 ApiErrorResponse(error_code=ErrorCode.INVALID_INPUT,
-                                 message="Saved answer revision was not found.",
+                                 message="Không tìm thấy phiên bản câu trả lời đã lưu.",
                                  answer_ref=AnswerRevisionRefDTO(id=answer_ref.id,
-                                                                 revision=answer_ref.revision)),
+                                                                 revision=answer_ref.revision),
+                                 recovery_action="Quay lại câu hỏi và gửi câu trả lời trước khi đánh giá."),
             ) from error
         return answer.session_id
 

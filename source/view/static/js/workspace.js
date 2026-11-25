@@ -12,6 +12,7 @@
   const statusBox = document.querySelector("#workspace-status");
   const submitButton = document.querySelector("#submit-answer");
   const retryButton = document.querySelector("#retry-evaluation");
+  const openReviewLink = document.querySelector("#open-review");
   const endButton = document.querySelector("#end-session");
   const endConfirmation = document.querySelector("#end-session-confirmation");
   const confirmEndButton = document.querySelector("#confirm-end-session");
@@ -36,6 +37,7 @@
   let pendingAnswer = savedAnswerId
     ? { answer_id: savedAnswerId, revision: savedAnswerRevision }
     : null;
+  let committedText = savedAnswerId && answerField ? answerField.value : null;
 
   const storage = {
     get(key) {
@@ -52,7 +54,9 @@
   function hasUnsavedWork() {
     if (allowingNavigation) return false;
     if (busy) return true;
-    return !pendingAnswer && Boolean(answerField && answerField.value && answerField.value.trim());
+    if (!answerField || !answerField.value || !answerField.value.trim()) return false;
+    if (!pendingAnswer) return true;
+    return !answerField.readOnly && answerField.value !== committedText;
   }
 
   function setupNavigationGuard() {
@@ -151,9 +155,12 @@
     if (error.code === "EVALUATION_INTERRUPTED") {
       return "Lượt đánh giá trước bị gián đoạn. Bài đã lưu và bạn có thể thử đánh giá lại.";
     }
+    if (error.code === "EVALUATION_RETRY_NOT_ALLOWED") {
+      return "Lượt đánh giá trước không thể thử lại trên cùng phiên bản. Bài gốc đã lưu; sau khi khắc phục lỗi dịch vụ hoặc điều chỉnh nội dung, bạn có thể gửi bản trả lời mới hoặc kết thúc sớm phiên.";
+    }
     if (typeof error.code === "string" && error.code.startsWith("PROVIDER_")) {
       return error.retryable === false
-        ? "Dịch vụ AI hiện chưa thể đánh giá bài này. Bài đã lưu; cần khắc phục lỗi dịch vụ trước khi tiếp tục."
+        ? "Dịch vụ AI hiện chưa thể đánh giá lượt gửi này. Bài gốc đã lưu; sau khi khắc phục lỗi dịch vụ hoặc điều chỉnh nội dung, bạn có thể gửi bản trả lời mới hoặc kết thúc sớm phiên."
         : "Dịch vụ AI chưa hoàn tất đánh giá. Bài đã lưu và bạn có thể thử lại.";
     }
     return [error.message, error.recoveryAction].filter(Boolean).join(" ");
@@ -214,8 +221,19 @@
     stopWaiting();
     setBusy(false);
     setError(errorText(error) || "Chưa thể đánh giá bài đã lưu.");
-    setStatus("Câu trả lời đã lưu trên máy chủ; chưa có điểm đánh giá.");
     retryButton.hidden = !canRetry;
+    if (!canRetry) {
+      answerField.readOnly = false;
+      if (submitButton) {
+        submitButton.textContent = "Gửi bản trả lời mới";
+        submitButton.hidden = false;
+      }
+      if (openReviewLink) openReviewLink.hidden = true;
+      draftLabel.textContent = "Bài trước đã lưu trên máy chủ; bạn có thể chỉnh sửa và gửi bản mới";
+      setStatus("Phiên bản trước vẫn được lưu nguyên vẹn (chưa có điểm). Sau khi khắc phục lỗi hoặc điều chỉnh nội dung, hãy bấm Gửi bản trả lời mới hoặc Kết thúc sớm.");
+    } else {
+      setStatus("Câu trả lời đã lưu trên máy chủ; chưa có điểm đánh giá.");
+    }
     errorBox.focus();
   }
 
@@ -334,14 +352,6 @@
       answerField.value = restoredDraft;
       setStatus("Đã khôi phục bản nháp trên trình duyệt. Bản nháp chưa được lưu trên máy chủ.");
     }
-    answerField.addEventListener("input", () => {
-      const stored = storage.set(draftKey, answerField.value);
-      draftLabel.textContent = stored
-        ? "Bản nháp trên trình duyệt (chưa lưu máy chủ)"
-        : "Bản nháp đang hiển thị; trình duyệt không cho phép lưu cục bộ.";
-      updateCounter();
-      setError("");
-    });
   } else {
     setStatus("Bài đã lưu. Đang kiểm tra kết quả đánh giá gần nhất…");
     readSavedEvaluation(pendingAnswer).then((state) => {
@@ -359,6 +369,17 @@
       }
     });
   }
+
+  answerField.addEventListener("input", () => {
+    if (!answerField.readOnly) {
+      const stored = storage.set(draftKey, answerField.value);
+      draftLabel.textContent = stored
+        ? "Bản nháp trên trình duyệt (chưa lưu máy chủ)"
+        : "Bản nháp đang hiển thị; trình duyệt không cho phép lưu cục bộ.";
+    }
+    updateCounter();
+    setError("");
+  });
 
   updateCounter();
 
@@ -434,8 +455,10 @@
         answer_id: submitted.answer.answer_id,
         revision: submitted.answer.revision,
       };
+      committedText = text;
       storage.set(answerKey, JSON.stringify(pendingAnswer));
       storage.remove(draftKey);
+      storage.remove(submissionKey);
       draftLabel.textContent = "Đã lưu câu trả lời trên máy chủ";
       answerField.readOnly = true;
       submitButton.hidden = true;

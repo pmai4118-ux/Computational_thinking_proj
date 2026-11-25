@@ -132,8 +132,16 @@
 
     content.hidden = false;
     statusBox.hidden = true;
-    errorBox.hidden = true;
     retryButton.hidden = true;
+    if (data.status === "failed") {
+      const recoveryHint = data.retryable
+        ? "Hãy quay lại trang câu hỏi để bấm Thử đánh giá lại cho câu trả lời đã lưu."
+        : "Lượt gửi này không thể chấm lại trực tiếp. Hãy quay lại trang câu hỏi để gửi bản trả lời mới hoặc kết thúc sớm phiên.";
+      errorBox.textContent = [data.failure_message || "Đánh giá chưa hoàn tất.", recoveryHint].filter(Boolean).join(" ");
+      errorBox.hidden = false;
+    } else {
+      errorBox.hidden = true;
+    }
     if (nextButton && data.status === "completed" && answerId === page.dataset.currentAnswerId
         && answerRevision === Number(page.dataset.currentAnswerRevision)) {
       nextButton.hidden = false;
