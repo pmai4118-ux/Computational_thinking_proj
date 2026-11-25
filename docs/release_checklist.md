@@ -1,10 +1,9 @@
-# Danh sách kiểm tra bàn giao và xử lý lỗi chặn phát hành (Q06)
+# Danh sách kiểm tra bàn giao, xử lý lỗi chặn và chốt phát hành (Q06 & Q08)
 
-- **Mã công việc:** `Q06` — Sửa lỗi chặn bàn giao và chạy lại các kiểm tra bị ảnh hưởng
+- **Mã công việc:** `Q06` (Sửa lỗi chặn bàn giao) & `Q08` (Chốt release và tổng duyệt thuyết trình)
 - **Ngày tổng hợp:** 25/11/2026
-- **Nhánh hiện hành:** `fix/q06-release-blocking-failures`
-- **Phụ thuộc đầu vào:** `Q01` (rubric & căn cứ), `Q02` (repository & API), `Q03` (quan sát live held-out), `Q04` (màn hình hẹp & bàn phím), `Q05` (quan sát người dùng `P1` & `P2`)
-- **Mở khóa tiếp theo:** `Q08` (Chốt release, tổng duyệt thuyết trình và hoàn thiện báo cáo cuối)
+- **Phụ thuộc đầu vào:** `Q01`–`Q05` (cho `Q06`); `Q06` và `Q07` (cho `Q08`)
+- **Tài liệu đóng gói đi kèm:** [Báo cáo tổng kết & Tư duy tính toán](final_report.md) · [Kịch bản cài đặt & demo](demo_script.md)
 
 ---
 
@@ -62,13 +61,13 @@ Các mục sau **chưa được xem là hoàn tất** và phải nêu minh bạc
 
 ---
 
-## 5. Lệnh tái hiện kiểm tra Q06
+## 5. Lệnh tái hiện kiểm tra Q06 & Q08
 
 Chạy từ thư mục gốc repository trên PowerShell cục bộ:
 
 ```powershell
-# 1. Bộ test Q06, Q07 và toàn bộ View
-uv run --locked python -m pytest test/test_q06_release_blockers.py test/test_q07_docs_and_env.py test/view/ -q
+# 1. Bộ test Q06, Q07, Q08 và toàn bộ View
+uv run --locked python -m pytest test/test_q06_release_blockers.py test/test_q07_docs_and_env.py test/test_q08_release_package.py test/view/ -q
 
 # 2. Bộ test hành vi JavaScript bằng Node.js
 node --test test/view/workspace_recovery.test.cjs test/view/q05_ui_interactions.test.cjs test/view/q06_recovery.test.cjs
@@ -77,5 +76,40 @@ node --test test/view/workspace_recovery.test.cjs test/view/q05_ui_interactions.
 uv run --locked python -m pytest -q
 
 # 4. Kiểm tra import seed C08 trên SQLite mới
-uv run --locked python -m source.service.question_bank_service --database .local/interview-q06-check.sqlite3
+uv run --locked python -m source.service.question_bank_service --database .local/interview-q08-release.sqlite3
 ```
+
+---
+
+## 6. Cổng chốt Release & Tổng duyệt thuyết trình (Q08)
+
+> [!NOTE]
+> Các mục đánh dấu **Chờ chốt** dưới đây chỉ chuyển sang **Đạt** sau khi nhóm chốt commit demo cuối cùng, chạy lại kiểm tra và tổng duyệt trực tiếp. Không tự điền trước kết quả chưa chạy.
+
+### 6.1. Hồ sơ chốt commit phát hành (Release Freeze)
+
+| Hạng mục chốt release | Trạng thái | Ghi nhận thực tế (điền khi chốt) |
+| --- | :---: | --- |
+| Commit demo đã chốt (`git rev-parse --short HEAD`) | Chờ chốt | — |
+| Toàn bộ `uv run --locked python -m pytest -q` trên commit chốt | Chờ chốt | — |
+| Toàn bộ 3 tệp `node --test` (`workspace_recovery`, `q05_ui_interactions`, `q06_recovery`) | Chờ chốt | — |
+| Kiểm tra import seed `C08` trên SQLite mới (`blocked: false`) | Chờ chốt | — |
+| Kiểm tra live Antigravity (`DEMO_LIVE_TEST=1`, `E09_LIVE_TEST=1`) trên máy trình chiếu | Chờ chốt | — |
+| Kiểm tra `git status --short` sạch (không track `.local/`, `.env`, `*.sqlite3`) | Chờ chốt | — |
+| Xác nhận cài đặt trên máy sạch bởi thành viên khác (`Q07` Bước 3) | Chờ chốt | Theo dõi tại [demo_script.md](demo_script.md#6-clean-machine-verification-checklist-q07-step-3) |
+
+### 6.2. Bảng kiểm tổng duyệt Demo 5 chặng (Q08 Bước 3)
+
+| Chặng demo | Điều kiện kiểm chứng khi tổng duyệt | Trạng thái |
+| --- | --- | :---: |
+| **1. Mở phiên 4 câu** | Trang `/` hiển thị lịch sử sạch (hoặc nhãn phiên dễ đọc `UI-03`), `/setup` tạo phiên 4 câu phủ 4 nhóm với cookie `HttpOnly`. | Chờ chốt |
+| **2. Nguồn mở & bản quyền** | Chỉ ra nhãn giấy phép nguồn mở (`PSF-2.0`, `PostgreSQL`, `MIT`, `CC-BY-SA-4.0`) và đối chiếu [QUESTION_PROVENANCE_HANDOFF.md](QUESTION_PROVENANCE_HANDOFF.md). | Chờ chốt |
+| **3. Chấm điểm & Căn cứ (`null` ≠ `0`)** | Chọn từng tiêu chí để tô sáng trích dẫn nguyên văn trong bài làm; minh họa `Chưa đủ bằng chứng` giữ `score: null` và không bịa điểm tổng. | Chờ chốt |
+| **4. Lỗi provider & Retry giữ bài** | Minh họa `504 PROVIDER_TIMEOUT` (hoặc bằng chứng đo thực tế) giữ nguyên văn bản trên SQLite, `total_score=null` và nút **Thử đánh giá lại** hoạt động trên workspace/review. | Chờ chốt |
+| **5. Tổng kết, Bài tập & Luyện lại** | Mở tổng kết phiên (`completed` / `ended_early`), xem thẻ bài tập đã gom (`UI-01`) kèm lý do/tiên quyết/thời lượng ước tính và tạo phiên luyện 1 câu bằng biến thể khác (`I06`). | Chờ chốt |
+
+### 6.3. Bảng kiểm tính trung thực của Slide & Báo cáo cuối
+
+- [x] [docs/final_report.md](final_report.md) đã bao gồm sơ đồ kiến trúc MVC-S (Mermaid), minh chứng 4 trụ cột Tư duy tính toán gắn với mã nguồn, nguồn gốc 5 kho nguồn mở, ví dụ rubric `case.c03.inventory_race.v1` và số liệu thực tế từ `Q03`/`Q04`/`Q05`/`Q06`.
+- [x] Phân biệt rõ **tính năng đã làm (MVP)**, **phần mở rộng hoãn (`X01–X12`)**, và **giả thuyết chưa kiểm chứng** (`C07` chưa có nhãn phân xử cho `Q03`, không dự đoán kết quả tuyển dụng, không tuyên bố chứng nhận toàn bộ WCAG).
+- [ ] Đối chiếu lại toàn bộ con số trên slide cuối cùng khớp 100% với kết quả chạy trên commit chốt release.

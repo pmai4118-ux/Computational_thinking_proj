@@ -31,6 +31,7 @@ uv run --locked python -m source.service.question_bank_service --database $env:D
 agy models
 
 # Khởi động máy chủ demo (mặc định EVALUATION_PROVIDER=antigravity, GEMINI_MAX_RETRIES=0)
+# run_demo.ps1 tự ưu tiên $env:ANTIGRAVITY_EXECUTABLE hoặc $env:LOCALAPPDATA\agy\bin\agy.exe nếu agy chưa nằm trong PATH
 .\run_demo.ps1
 ```
 - Mở `http://127.0.0.1:8000/health` → xác nhận `{"status":"ok","provider":"antigravity","demo_mode_label":null}`.
@@ -91,18 +92,18 @@ Mở sẵn các tệp tổng hợp sau trong trình soạn thảo để dán nha
 2. Bấm **Câu tiếp theo** để server chuyển sang Câu 2/4 (server kiểm soát thứ tự, không nhảy cách nếu bấm trùng).
 
 ### Bước 4 — Phục hồi lỗi provider & Bảo toàn bài làm (Không làm mất dữ liệu)
-Có thể giải thích dựa trên bằng chứng kiểm thử đã xác minh trong `docs/DEMO_HANDOFF.md` hoặc demo trực tiếp bằng cách đặt tạm `$env:ANTIGRAVITY_TIMEOUT_SECONDS = "1"` ở phiên riêng:
+Có thể giải thích dựa trên bằng chứng kiểm thử đã xác minh trong `docs/DEMO_HANDOFF.md` / [release_checklist.md](release_checklist.md) hoặc demo trực tiếp bằng cách đặt tạm `$env:ANTIGRAVITY_TIMEOUT_SECONDS = "1"` ở phiên riêng:
 1. Khi AI quá hạn chờ (`504 PROVIDER_TIMEOUT`, `retryable=true`), ứng dụng **giữ nguyên văn bản câu trả lời đã lưu trong SQLite**, không tạo điểm `0` và không gán nhãn người học thiếu năng lực.
-2. Màn hình hiện thông báo lỗi rõ ràng cùng nút **Thử đánh giá lại** dùng lại đúng `answer_id` đã lưu.
+2. Màn hình hiện thông báo lỗi rõ ràng cùng nút **Thử đánh giá lại** (hỗ trợ cả trên trang câu hỏi lẫn trang `/sessions/{id}/review`, không hiện nút mở kết quả rỗng khi đánh giá thất bại) dùng lại đúng `answer_id` đã lưu.
 3. Khi đánh giá đã `completed`, việc tải lại trang hoặc gọi lại endpoint đọc kết quả cũ từ SQLite, không gọi AI thêm lần nữa.
 
 ### Bước 5 — Hoàn tất / Kết thúc sớm, Tổng kết phiên (`/summary`) & Bài tập (`/exercises`)
-1. Tiếp tục trả lời đủ 4/4 câu **hoặc** bấm **Kết thúc sớm** → **Xác nhận kết thúc** để mở trang `/sessions/{id}/summary`.
+1. Tiếp tục trả lời đủ 4/4 câu **hoặc** bấm **Kết thúc sớm** → **Xác nhận kết thúc** để mở trang `/sessions/{id}/summary` (nhãn phiên tiếng Việt dễ đọc kèm thời điểm tạo; khi xem lại kết quả từ phiên đã đóng, nút đầu trang dẫn thẳng **Về tổng kết**).
 2. Trên trang Tổng kết:
    - Chỉ ra độ phủ (`Có kết quả X / 4 câu`), danh sách nhóm **Câu chưa làm**, **Câu chưa đủ căn cứ**, kết quả từng câu và mục **Điểm cần luyện tiếp**.
    - Nhấn mạnh ứng dụng **không bịa ra một điểm năng lực tổng hợp** từ các câu khác rubric hay từ câu chưa làm.
 3. Bấm **Xem bài tập** (hoặc **Bài luyện liên quan**) để mở `/sessions/{id}/exercises`:
-   - Chỉ ra mục **Vì sao bài này phù hợp** gắn đúng điểm thiếu đã xác nhận, **Bài cần học trước** (tiên quyết), **Thời lượng ước tính** và **Nguồn nội dung** có giấy phép.
+   - Chỉ ra mục **Vì sao bài này phù hợp** (nhiều tiêu chí cùng ánh xạ về một bài được gom gọn trong một thẻ, giữ nguyên thứ tự bài tiên quyết), **Bài cần học trước**, **Thời lượng ước tính** và **Nguồn nội dung** có giấy phép.
    - Bấm **Xem hướng dẫn bài tập** để tải hướng dẫn đã kiểm duyệt.
    - Bấm **Luyện lại với câu hỏi khác** (`I06`): hệ thống tạo phiên luyện mới **1/1 câu** dùng biến thể đã duyệt khác với câu gốc đã làm. (Nếu hết biến thể hoặc không có bài khớp, giao diện báo rõ thay vì tự bịa bài.)
 
@@ -141,3 +142,17 @@ Có thể giải thích dựa trên bằng chứng kiểm thử đã xác minh t
 | Chạy chế độ `fixture`, xác nhận huy hiệu `Dữ liệu minh họa` và đi trọn luồng | Chờ kiểm tra | — | — |
 | Chạy chế độ live `antigravity` qua `.\run_demo.ps1` (hoặc `gemini` với khóa cá nhân) | Chờ kiểm tra | — | — |
 | Kiểm tra `git status` không phát sinh khóa/DB bị track | Chờ kiểm tra | — | — |
+
+---
+
+## 7. Hướng dẫn tổng duyệt thuyết trình & Đối chiếu Slide (Q08)
+
+Sử dụng cùng [Báo cáo tổng kết & Tư duy tính toán](final_report.md) và [Danh sách chốt release](release_checklist.md) khi tập trình bày:
+
+| Khung thời gian | Nhịp trình diễn / Slide | Điểm cần nhấn mạnh & Kiểm tra trung thực |
+| --- | --- | --- |
+| `0:00 – 1:30` | Giới thiệu bài toán, MVP vs. Mở rộng | Khẳng định phạm vi MVP cố định 4 câu Backend Intern/Fresher tiếng Việt; nêu rõ các mục `X01–X12` nằm ngoài MVP. |
+| `1:30 – 3:00` | Kiến trúc MVC-S & Tư duy tính toán | Trình bày sơ đồ MVC-S trong [final_report.md](final_report.md), tách AI diễn giải khỏi Python xác thực (`E05`) & chấm điểm (`E06`). |
+| `3:00 – 6:30` | Demo trực tiếp: Mở phiên → Nộp bài → Căn cứ (`null` ≠ `0`) → Chuyển câu | Chỉ ra nguồn mở/giấy phép, trích dẫn nguyên văn khớp chuỗi con và cách xử lý `Chưa đủ bằng chứng`. |
+| `6:30 – 8:30` | Demo/bằng chứng Lỗi timeout & Retry → Tổng kết → Bài tập & Luyện lại | Nhấn mạnh bài gốc không mất, điểm không thành `0`, bài tập gắn đúng điểm thiếu + tiên quyết và mở biến thể khác. |
+| `8:30 – 10:00` | Kết quả kiểm định & Giới hạn trung thực | Đọc đúng số liệu đã ghi nhận trong [final_report.md](final_report.md) và [evaluation_report.md](evaluation_report.md); nêu rõ `C07` chưa có nhãn phân xử nên chưa kết luận độ chính xác AI, và không dùng chế độ `fixture` làm bằng chứng chất lượng AI. |
