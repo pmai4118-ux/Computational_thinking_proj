@@ -1,6 +1,6 @@
 # Kiểm tra khả dụng và theo dõi sửa lỗi giao diện (Q04 & Q05)
 
-Phần A ghi các vấn đề Q05 từ một lượt thử người dùng và cách sửa. Phần B giữ biên bản Q04 lập ngày 24/11/2026 trên mã trước khi hợp nhất Q05; các kết quả cần đối chiếu lại trên bản tích hợp.
+Phần A ghi các vấn đề Q05 từ một lượt thử người dùng và cách sửa. Phần B giữ biên bản Q04 lập ngày 24/11/2026 trên mã trước khi hợp nhất Q05. Phần C ghi kiểm tra lại sau khi hợp nhất.
 
 ---
 
@@ -148,8 +148,8 @@ Thực hiện kiểm thử quy trình xử lý lỗi kết nối AI, kiểm tra 
 ## 4. Tổng kết các điểm đã tinh chỉnh & Tiêu chuẩn hoàn thành
 
 ### 4.1. Các cải tiến mã nguồn đã thực hiện trong task Q04
-1. **Bổ sung phím tắt `Escape` cho hộp thoại xác nhận kết thúc sớm:** Tích hợp bộ lắng nghe sự kiện bàn phím trong [workspace.js](file:///f:/USSSSSSSS/CT/Computational_thinking_proj/source/view/static/js/workspace.js), cho phép người dùng nhấn phím `Escape` để hủy hộp thoại và hoàn trả tiêu điểm chính xác.
-2. **Tăng cường hiển thị viền tiêu điểm `:focus-visible`:** Thêm định kiểu viền focus màu tím `#6D28D9` có độ tương phản cao trong [components.css](file:///f:/USSSSSSSS/CT/Computational_thinking_proj/source/view/static/css/components.css) và [results.css](file:///f:/USSSSSSSS/CT/Computational_thinking_proj/source/view/static/css/results.css) cho các dropdown, ô nhập văn bản và nút bấm chọn tiêu chí.
+1. **Bổ sung phím tắt `Escape` cho hộp thoại xác nhận kết thúc sớm:** Tích hợp bộ lắng nghe sự kiện bàn phím trong [workspace.js](../source/view/static/js/workspace.js), cho phép người dùng nhấn phím `Escape` để hủy hộp thoại và hoàn trả tiêu điểm chính xác.
+2. **Tăng cường hiển thị viền tiêu điểm `:focus-visible`:** Thêm định kiểu viền focus màu tím `#6D28D9` có độ tương phản cao trong [components.css](../source/view/static/css/components.css) và [results.css](../source/view/static/css/results.css) cho các dropdown, ô nhập văn bản và nút bấm chọn tiêu chí.
 
 ### 4.2. Bảng kiểm tra tiêu chuẩn hoàn thành (Acceptance Checklist)
 
@@ -162,3 +162,19 @@ Thực hiện kiểm thử quy trình xử lý lỗi kết nối AI, kiểm tra 
 
 ### 4.3. Đề xuất cho các bước tiếp theo
 * Chuyển sang nhiệm vụ **Q05**: Mời các bạn sinh viên/thành viên chưa từng tiếp xúc với giao diện thực hiện thử nghiệm luồng phỏng vấn thực tế để thu thập phản hồi người dùng.
+
+---
+
+## Phần C — Kiểm tra lại bản tích hợp U08/Q05/Q04 (25/11/2026)
+
+Chạy ứng dụng cục bộ với `EVALUATION_PROVIDER=fixture` để kiểm tra giao diện một cách xác định; thanh tiêu đề hiện **Dữ liệu minh họa**. Đây là kiểm tra thao tác UI, không dùng điểm fixture để đánh giá độ chính xác của AI.
+
+| Hạng mục | Quan sát trên bản tích hợp |
+| --- | --- |
+| Reflow | Ở chiều rộng viewport 320px, `scrollWidth=305px`; ở 640px, `scrollWidth=625px`. Không có tràn ngang toàn trang trong hai kích thước đã thử. 640px mô phỏng vùng hiển thị hẹp, không phải phép đo mức zoom thực tế 200%. |
+| Bàn phím và hộp thoại | Phím `Tab` tới liên kết **Chuyển tới nội dung chính**. Tại câu 2, mở **Kết thúc sớm**, bấm `Escape` đóng hộp thoại và trả focus về nút mở; xác nhận lần sau đưa tới tổng kết **Đã kết thúc sớm**. |
+| Bản nháp và điều hướng | Nhập dở câu trả lời rồi bấm **Bắt đầu** trên thanh điều hướng: hộp xác nhận xuất hiện; khi hủy, URL và văn bản đã nhập được giữ. |
+| Luồng chính | Thiết lập phiên 4 câu → nộp câu 1 → xem rubric/căn cứ → xem 3 bài tập gợi ý và hướng dẫn → tạo lượt luyện 1 câu bằng biến thể khác → chuyển tới câu 2 → kết thúc sớm → lịch sử hiện nhãn tiếng Việt và liên kết tổng kết. |
+| Hồi quy JavaScript | `node --test test/view/workspace_recovery.test.cjs`: 7 ca đạt, bao gồm trạng thái chờ, retry và `Escape`. Bộ pytest tích hợp: 231 ca đạt, 3 ca gọi provider thật được bật riêng. |
+
+Phép thử viewport và thao tác bàn phím ở đây chỉ bao phủ các điểm nêu trong bảng; chưa có chứng nhận toàn bộ WCAG hay thử nghiệm tích hợp trên mọi trình duyệt/thiết bị. Bản Q05 hiện vẫn chỉ có một người dùng thử độc lập; cần thêm người thử theo kế hoạch ở Phần A.

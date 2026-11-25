@@ -110,4 +110,4 @@ def test_q05_observation_and_usability_docs_exist_without_pii() -> None:
     assert "Hoàn thành có vướng mắc" in observations
     assert "Q05-01" in observations
     assert "Q05-05" in usability
-    assert "Trạng thái Q04: Chưa thực hiện" in usability
+    assert "Phần B — Biên bản kiểm tra Q04" in usability

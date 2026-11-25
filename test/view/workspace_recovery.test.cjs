@@ -24,7 +24,7 @@ function browser({ savedAnswerId = "", api }) {
         value: "", textContent: "", hidden: true, disabled: false,
         dataset: {},
         addEventListener(name, callback) { handlers.set(`${selector}:${name}`, callback); },
-        focus() {},
+        focus() { this.focused = true; },
       });
     }
     return elements.get(selector);
@@ -55,7 +55,10 @@ function browser({ savedAnswerId = "", api }) {
     },
   };
   vm.runInNewContext(script, {
-    window, document: { querySelector: element }, URL,
+    window, document: {
+      querySelector: element,
+      addEventListener(name, callback) { handlers.set(`document:${name}`, callback); },
+    }, URL,
     Date: { now: () => now }, Math, JSON, Number, String, Boolean, Error,
     encodeURIComponent,
   });
@@ -177,4 +180,13 @@ test("expired session on submit keeps answer text and shows restart link", async
   assert.equal(page.element("#submit-answer").hidden, true);
   assert.equal(page.element("#session-expired-recovery").hidden, false);
   assert.match(page.element("#workspace-error").textContent, /hết hạn/);
+});
+
+test("Escape dismisses the end-session confirmation and restores focus", () => {
+  const page = browser({ api: {} });
+  const confirmation = page.element("#end-session-confirmation");
+  confirmation.hidden = false;
+  page.handlers.get("document:keydown")({ key: "Escape" });
+  assert.equal(confirmation.hidden, true);
+  assert.equal(page.element("#end-session").focused, true);
 });
