@@ -382,3 +382,178 @@ def test_f04_concurrent_identical_submission_ids_return_one_saved_answer(
     assert sorted(replayed for _, replayed in results) == [False, True]
     assert results[0][0] == results[1][0]
     assert setup_store.list_answers_for_session(session.id) == (results[0][0],)
+
+
+def test_q02_repository_session_state_transitions_and_history_invariants(
+    tmp_path: Path,
+) -> None:
+    """Q02: Verify session state transitions, history invariants, and non-existent updates."""
+    now = datetime(2026, 11, 24, 10, 0, tzinfo=UTC)
+    db_file = tmp_path / "session_transitions.sqlite3"
+    store = SQLiteRepositoryStore(db_file)
+    question, _rubric = _seed_question(store, now)
+
+    session = Session(
+        id=SessionId("session.q02.transitions"),
+        owner_token_hash="owner-token-hash-q02",
+        role="backend_developer",
+        level="intern_fresher",
+        language="vi",
+        state=SessionState.IN_PROGRESS,
+        question_refs=(question.ref,),
+        current_index=0,
+        answer_refs=(),
+        created_at=now,
+        updated_at=now,
+    )
+    store.create_session(session)
+
+    # 1. Verify initial state and owner listing
+    loaded = store.get_session(session.id)
+    assert loaded is not None
+    assert loaded.state is SessionState.IN_PROGRESS
+    assert loaded.current_index == 0
+    by_owner = store.list_sessions_by_owner("owner-token-hash-q02")
+    assert len(by_owner) == 1
+    assert by_owner[0].id == session.id
+
+    # 2. Transition state to COMPLETED
+    updated_session = Session(
+        id=session.id,
+        owner_token_hash=session.owner_token_hash,
+        role=session.role,
+        level=session.level,
+        language=session.language,
+        state=SessionState.COMPLETED,
+        question_refs=session.question_refs,
+        current_index=1,
+        answer_refs=session.answer_refs,
+        created_at=session.created_at,
+        updated_at=now,
+    )
+    store.update_session(updated_session)
+    completed_loaded = store.get_session(session.id)
+    assert completed_loaded is not None
+    assert completed_loaded.state is SessionState.COMPLETED
+    assert completed_loaded.current_index == 1
+    assert completed_loaded.question_refs == (question.ref,)
+
+    # 3. Transition state to ENDED_EARLY
+    ended_session = Session(
+        id=session.id,
+        owner_token_hash=session.owner_token_hash,
+        role=session.role,
+        level=session.level,
+        language=session.language,
+        state=SessionState.ENDED_EARLY,
+        question_refs=session.question_refs,
+        current_index=1,
+        answer_refs=session.answer_refs,
+        created_at=session.created_at,
+        updated_at=now,
+    )
+    store.update_session(ended_session)
+    ended_loaded = store.get_session(session.id)
+    assert ended_loaded is not None
+    assert ended_loaded.state is SessionState.ENDED_EARLY
+
+    # 4. Updating a non-existent session raises RecordNotFoundError
+    ghost_session = Session(
+        id=SessionId("session.ghost.not-exists"),
+        owner_token_hash="ghost-hash",
+        role="backend_developer",
+        level="intern_fresher",
+        language="vi",
+        state=SessionState.IN_PROGRESS,
+        question_refs=(question.ref,),
+        created_at=now,
+        updated_at=now,
+    )
+    from source.Model.repositories.interfaces import RecordNotFoundError
+
+    with pytest.raises(RecordNotFoundError):
+        store.update_session(ghost_session)
+
+
+def test_q02_repository_transaction_rollback_on_failed_evaluation(
+    tmp_path: Path,
+) -> None:
+    """Q02: Foreign key violation rolls back evaluation transaction with no orphan checks."""
+    now = datetime(2026, 11, 24, 10, 30, tzinfo=UTC)
+    db_file = tmp_path / "rollback_eval.sqlite3"
+    store = SQLiteRepositoryStore(db_file)
+    question, rubric = _seed_question(store, now)
+
+    session = Session(
+        id=SessionId("session.q02.eval_rb"),
+        owner_token_hash="owner-token-hash-rb",
+        role="backend_developer",
+        level="intern_fresher",
+        language="vi",
+        state=SessionState.IN_PROGRESS,
+        question_refs=(question.ref,),
+        created_at=now,
+        updated_at=now,
+    )
+    store.create_session(session)
+
+    # Attempting to save evaluation referencing a non-existent answer
+    orphan_eval = EvaluationResult(
+        id=EvaluationId("eval.q02.orphan"),
+        version=1,
+        status=EvaluationStatus.COMPLETED,
+        answer_ref=Answer(
+            id=AnswerId("answer.does_not_exist"),
+            revision=1,
+            session_id=session.id,
+            question_ref=question.ref,
+            rubric_ref=VersionedRef(rubric.id, rubric.version),
+            text="Unsaved answer",
+            submitted_at=now,
+        ).ref,
+        question_ref=question.ref,
+        rubric_ref=VersionedRef(rubric.id, rubric.version),
+        criterion_checks=(
+            CriterionCheck(
+                criterion_id=CriterionId("crit.atomicity"),
+                status=CriterionStatus.MET,
+                score=2,
+                evidence=(),
+                explanation="Check for non-existent answer",
+            ),
+        ),
+        total_score=2,
+        maximum_score=2,
+    )
+    with pytest.raises(RepositoryError):
+        store.save_evaluation(orphan_eval)
+
+    # Verify no partial rows exist in SQLite
+    with sqlite3.connect(db_file) as conn:
+        eval_count = conn.execute(
+            "SELECT COUNT(*) FROM evaluations WHERE id = 'eval.q02.orphan';"
+        ).fetchone()[0]
+        check_count = conn.execute(
+            "SELECT COUNT(*) FROM evaluation_criterion_checks WHERE evaluation_id = 'eval.q02.orphan';"
+        ).fetchone()[0]
+        assert eval_count == 0
+        assert check_count == 0
+
+
+def test_q02_repository_test_environment_isolation(tmp_path: Path) -> None:
+    """Q02: Verify test records are isolated in tmp_path without touching real database."""
+    prod_db = Path(".local/interview.sqlite3")
+    prod_mtime_before = prod_db.stat().st_mtime if prod_db.exists() else None
+
+    # Run isolated repository actions
+    test_db = tmp_path / "isolated.sqlite3"
+    store = SQLiteRepositoryStore(test_db)
+    now = datetime(2026, 11, 24, 11, 0, tzinfo=UTC)
+    _seed_question(store, now)
+
+    assert test_db.exists()
+    assert test_db != prod_db
+
+    prod_mtime_after = prod_db.stat().st_mtime if prod_db.exists() else None
+    assert prod_mtime_before == prod_mtime_after
+
