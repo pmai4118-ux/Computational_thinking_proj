@@ -9,19 +9,14 @@ import os
 from pathlib import Path
 import sys
 import time
+from uuid import uuid4
 
 # Ensure project root is on sys.path
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Ensure agy is on PATH
-AGY_BIN = Path("C:/Users/DELL/.gemini/bin")
-if AGY_BIN.is_dir() and str(AGY_BIN) not in os.environ.get("PATH", ""):
-    os.environ["PATH"] = f"{AGY_BIN};{os.environ.get('PATH', '')}"
-
-from source.config import GeminiLimits, Settings, ProviderMode
-from source.Model.evaluation import CriterionStatus
+from source.config import GeminiLimits
 from source.Model.ids import AnswerId, QuestionId, RubricId, SessionId, VersionedRef
 from source.Model.interview import Answer, Session, SessionState
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
@@ -34,23 +29,43 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run Q03 held-out evaluation.")
     parser.add_argument("--case", type=str, default=None, help="Run a specific case_id.")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of cases.")
+    parser.add_argument("--database", type=Path, help="New SQLite path for this run (must not exist).")
+    parser.add_argument("--output", type=Path, help="New JSON results path (must not exist).")
     args = parser.parse_args()
 
-    db_path = ROOT / ".local" / "held_out_evaluation.sqlite3"
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    if db_path.exists():
-        db_path.unlink()
+    if args.limit is not None and args.limit < 1:
+        parser.error("--limit must be at least 1")
+
+    expected_path = ROOT / "test" / "fixtures" / "expected_evaluations.json"
+    corpus = json.loads(expected_path.read_text(encoding="utf-8"))
+    held_out_cases = [c for c in corpus["test_cases"] if c.get("dataset_split") == "held_out"]
+    if args.case:
+        held_out_cases = [c for c in held_out_cases if c["case_id"] == args.case]
+    if args.limit is not None:
+        held_out_cases = held_out_cases[: args.limit]
+    if not held_out_cases:
+        parser.error("No held-out cases match the requested selection")
+
+    run_id = uuid4().hex
+    db_path = args.database or ROOT / ".local" / f"held_out_evaluation_{run_id}.sqlite3"
+    out_path = args.output or ROOT / ".local" / f"held_out_evaluation_{run_id}.json"
+    if db_path.resolve() == out_path.resolve():
+        parser.error("--database and --output must use different paths")
+    for path in (db_path, out_path):
+        if path.exists():
+            parser.error(f"Refusing to overwrite existing file: {path}")
+        path.parent.mkdir(parents=True, exist_ok=True)
 
     store = SQLiteRepositoryStore(db_path)
     load_seed_catalog_into_repository(store)
 
-    limits = GeminiLimits(request_budget=50, max_retries=1)
+    limits = GeminiLimits(request_budget=15, max_retries=1)
     provider = AntigravityProvider(
         limits=limits,
         budget_path=db_path,
         model_id="gemini-3.8-flash-medium",
         timeout_seconds=120.0,
-        executable=str(AGY_BIN / "agy.exe") if (AGY_BIN / "agy.exe").exists() else "agy",
+        executable=os.environ.get("ANTIGRAVITY_EXECUTABLE", "agy"),
     )
     eval_service = EvaluationService(
         content_repo=store,
@@ -59,22 +74,11 @@ def main() -> None:
         interpreter=provider,
     )
 
-    expected_path = ROOT / "test" / "fixtures" / "expected_evaluations.json"
-    corpus = json.loads(expected_path.read_text(encoding="utf-8"))
-    held_out_cases = [c for c in corpus["test_cases"] if c.get("dataset_split") == "held_out"]
-
-    if args.case:
-        held_out_cases = [c for c in held_out_cases if c["case_id"] == args.case]
-    if args.limit:
-        held_out_cases = held_out_cases[: args.limit]
-
     print(f"=== Starting Q03 Held-Out Evaluation on {len(held_out_cases)} cases ===")
     print(f"Model: gemini-3.8-flash-medium | Provider: Antigravity CLI")
     print(f"Time: {datetime.now(UTC).isoformat()}\n")
 
     results = []
-    now = datetime.now(UTC)
-
     for idx, case in enumerate(held_out_cases, start=1):
         case_id = case["case_id"]
         q_id = case["question_id"]
@@ -182,7 +186,6 @@ def main() -> None:
         })
 
         # Incremental save so partial progress is never lost
-        out_path = ROOT / "docs" / "held_out_evaluation_results.json"
         out_path.write_text(json.dumps({
             "timestamp": datetime.now(UTC).isoformat(),
             "model_id": "gemini-3.8-flash-medium",

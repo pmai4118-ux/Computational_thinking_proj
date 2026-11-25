@@ -33,9 +33,9 @@ Kiểm tra cấu trúc hiện tại:
 
 Ca live của `Demo` kiểm tra Antigravity thật theo luồng ứng dụng. Nó không dùng bộ held-out C07 để tuyên bố độ chính xác khi các nhãn còn tạm thời.
 
-## Giao thức kiểm định Q03 cho bộ giữ lại (Locked Configuration & Acceptance Thresholds)
+## Q03: cấu hình đo live và điều kiện để kiểm định độ chính xác
 
-Thực hiện bước 1 của nhiệm vụ **Q03: Đánh giá provider thật trên bộ giữ lại**, cấu hình đánh giá và tiêu chí chấp nhận được khóa cố định trước khi thực thi đợt kiểm định:
+Đợt chạy Antigravity ngày 24/11/2026 ghi lại cấu hình và kết quả quan sát trong [báo cáo Q03](evaluation_report.md). Không có bằng chứng độc lập rằng các ngưỡng dưới đây đã được khóa trước khi nhìn kết quả; chúng là tiêu chí **dự kiến cho lần kiểm định có nhãn đã phân xử**, không phải kết luận đạt của đợt chạy hiện tại.
 
 ### 1. Cấu hình AI Provider và Model đã khóa
 - **Provider**: `antigravity` (đồng bộ với cấu hình Demo chung của nhóm trong `run_demo.ps1`).
@@ -44,10 +44,10 @@ Thực hiện bước 1 của nhiệm vụ **Q03: Đánh giá provider thật tr
 - **Prompt Template Version**: `interpret_answer/v1` (tệp nguồn `source/service/prompts/interpret_answer.txt`).
 - **Cơ chế an toàn**: Toàn bộ nội dung câu trả lời của thí sinh được bao bọc trong trường `student_answer.text` và xử lý là dữ liệu thô (`untrusted data`), không được xem là chỉ thị thực thi (`data_boundary_notice`).
 - **Ngân sách thực thi (Execution Budget)**:
-  - Đúng 12 requests chính thức tương ứng với 12 ca `held_out`.
+  - 12 ca `held_out`; số lần gọi CLI thực tế chưa được lưu riêng trong tệp kết quả.
   - Tối đa 1 lần retry tự động cho mỗi ca nếu gặp sự cố mạng/timeout tạm thời.
   - Tổng ngân sách không vượt quá 15 lượt gọi.
-  - Timeout tối đa: 120 giây / request.
+  - Timeout tối đa: 120 giây / lần thử; tổng thời gian một ca có thể dài hơn khi có retry.
 
 ### 2. Danh mục 12 ca kiểm định Held-Out được đánh giá
 | Mã ca | Nhóm câu hỏi | Dạng câu trả lời | Tệp câu trả lời |
@@ -65,8 +65,8 @@ Thực hiện bước 1 của nhiệm vụ **Q03: Đánh giá provider thật tr
 | `C07_C05_03` | `ai_code_review` (C05) | `wrong` (chưa đạt / sai bản chất) | `ans_c05_03_wrong.txt` |
 | `C07_C05_05` | `ai_code_review` (C05) | `ambiguous` (mơ hồ / thiếu tệp đính kèm) | `ans_c05_05_ambiguous.txt` |
 
-### 3. Bộ ngưỡng chấp nhận định lượng (Quantitative Acceptance Thresholds)
-Để kết luận hệ thống đánh giá đạt chuẩn trong báo cáo `docs/evaluation_report.md`, kết quả kiểm định phải thỏa mãn các ngưỡng sau:
+### 3. Ngưỡng dự kiến cho lần kiểm định sau khi có nhãn phân xử
+Chỉ dùng các ngưỡng so sánh với con người sau khi hai người gán nhãn độc lập và phân xử bất đồng. Với dữ liệu hiện tại, không tính hoặc tuyên bố đạt chỉ số đồng thuận điểm.
 
 | Chỉ số kiểm định | Ngưỡng chấp nhận tối thiểu | Mục tiêu & Ý nghĩa |
 | :--- | :---: | :--- |
@@ -75,5 +75,5 @@ Thực hiện bước 1 của nhiệm vụ **Q03: Đánh giá provider thật tr
 | **Xử lý thiếu bằng chứng (Ambiguous Handling)** | **100% (2/2 ca)** | Khi câu trả lời viện dẫn tệp ngoài hoặc không đủ căn cứ, hệ thống phải giữ trạng thái `unresolved` (`score = null`), không gán điểm 0 hay điểm đạt. |
 | **Độ đồng thuận điểm tuyệt đối (Exact Agreement)** | **$\ge 75\%$** (tối thiểu 9/12 ca) | Tổng điểm AI chấm khớp hoàn toàn với nhãn chuẩn phân xử. |
 | **Độ đồng thuận có dung sai $\pm 1$ điểm** | **$\ge 90\%$** | Chấp nhận chênh lệch tối đa 1 điểm ở ranh giới tiêu chí giữa mức 1 và mức 2. |
-| **Độ tin cậy hạ tầng (Reliability & Latency)** | Lỗi mạng $\le 5\%$, độ trễ $\le 120s$ | Hệ thống xử lý thông suốt, ghi nhận đầy đủ log thời gian và độ trễ. |
+| **Độ tin cậy hạ tầng (Reliability & Latency)** | Lỗi mạng $\le 5\%$, tổng độ trễ $\le 120s$ | Báo cáo riêng timeout mỗi lần thử, retry và tổng thời gian; ca 234,23 giây của đợt hiện tại vượt ngưỡng tổng độ trễ. |
 
