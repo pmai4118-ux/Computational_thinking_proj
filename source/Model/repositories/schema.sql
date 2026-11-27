@@ -85,7 +85,8 @@ CREATE TABLE IF NOT EXISTS sessions (
     current_index INTEGER NOT NULL CHECK (current_index >= 0),
     answer_refs_json TEXT NOT NULL,
     created_at TEXT,
-    updated_at TEXT
+    updated_at TEXT,
+    evaluation_timing TEXT NOT NULL DEFAULT 'per_question'
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_owner ON sessions (owner_token_hash);
@@ -159,4 +160,26 @@ CREATE TABLE IF NOT EXISTS evaluation_criterion_checks (
     unresolved_reason TEXT,
     PRIMARY KEY (evaluation_id, evaluation_version, criterion_id),
     FOREIGN KEY (evaluation_id, evaluation_version) REFERENCES evaluations (id, version) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS competency_profiles (
+    owner_token_hash TEXT NOT NULL,
+    skill_id TEXT NOT NULL,
+    criterion_type TEXT NOT NULL,
+    observed_count INTEGER NOT NULL CHECK (observed_count >= 1),
+    met_count INTEGER NOT NULL CHECK (met_count >= 0),
+    unmet_count INTEGER NOT NULL CHECK (unmet_count >= 0),
+    unresolved_count INTEGER NOT NULL CHECK (unresolved_count >= 0),
+    latest_status TEXT NOT NULL,
+    latest_evaluated_at TEXT NOT NULL,
+    latest_session_id TEXT NOT NULL,
+    latest_answer_id TEXT NOT NULL,
+    latest_answer_revision INTEGER NOT NULL CHECK (latest_answer_revision >= 1),
+    latest_evaluation_id TEXT NOT NULL,
+    latest_evaluation_version INTEGER NOT NULL CHECK (latest_evaluation_version >= 1),
+    latest_criterion_id TEXT NOT NULL,
+    recent_scored_json TEXT NOT NULL,
+    PRIMARY KEY (owner_token_hash, skill_id, criterion_type),
+    FOREIGN KEY (skill_id) REFERENCES skills (id),
+    FOREIGN KEY (latest_session_id) REFERENCES sessions (id)
 );

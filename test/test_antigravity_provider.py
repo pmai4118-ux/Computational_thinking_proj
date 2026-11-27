@@ -62,13 +62,17 @@ def _sample_question_and_rubric() -> tuple[Question, Rubric]:
 
 def test_p07_antigravity_provider_uses_gemini_38_flash_isolated_cli_and_strips_api_keys(
     monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
     monkeypatch.setattr(antigravity_provider.shutil, "which", lambda name: "C:/tools/agy.exe")
     monkeypatch.setenv("GEMINI_API_KEY", "unused-secret-key")
     monkeypatch.setenv("GOOGLE_API_KEY", "unused-google-key")
     monkeypatch.setenv("AGY_ADC_AUTH", "true")
 
-    settings = load_settings({"EVALUATION_PROVIDER": "antigravity"})
+    settings = load_settings({
+        "EVALUATION_PROVIDER": "antigravity",
+        "DATABASE_PATH": str(tmp_path / "isolated-budget.sqlite3"),
+    })
     question, rubric = _sample_question_and_rubric()
     answer_text = "Hai yêu cầu cùng đọc stock=1 trước khi ghi."
 

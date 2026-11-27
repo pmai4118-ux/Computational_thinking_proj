@@ -32,7 +32,7 @@ from source.Control.schemas import (
     VersionedRefDTO,
 )
 from source.Model.ids import QuestionId, SessionId, VersionedRef
-from source.Model.interview import Answer
+from source.Model.interview import Answer, EvaluationTiming
 from source.Model.question import Question, SourceMetadata
 from source.Model.repositories.interfaces import DuplicateSubmissionConflictError
 from source.service.interview_service import (
@@ -165,6 +165,7 @@ class InterviewController:
                 role=request_dto.role,
                 level=request_dto.level,
                 language=request_dto.language,
+                evaluation_timing=request_dto.evaluation_timing,
             )
         except UnsupportedBlueprintError as error:
             raise ApiControllerError(
@@ -206,6 +207,7 @@ class InterviewController:
                 role=role,
                 level=level,
                 language=language,
+                evaluation_timing=EvaluationTiming.AFTER_SESSION,
             )
         except ValidationError as error:
             field_errors = {
@@ -581,6 +583,7 @@ class InterviewController:
             role=session.role,
             level=session.level,
             language=session.language,
+            evaluation_timing=session.evaluation_timing,
             demo_mode_label=self._demo_mode_label,
             progress=SessionProgressDTO(
                 current_index=session.current_index,

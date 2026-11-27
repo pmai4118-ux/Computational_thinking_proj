@@ -81,6 +81,40 @@ def test_q06_incomplete_session_blocks_manual_evaluation_and_review(tmp_path: Pa
         wait_for_evaluation_queue(app)
 
 
+def test_q06_expired_complete_session_blocks_manual_evaluation_without_calling_provider(
+    tmp_path: Path,
+) -> None:
+    """Q06-01: Even after completing 4/4 answers, an expired session refuses evaluation with 410."""
+    provider = Mock()
+    provider.interpret.side_effect = ProviderFailureError(
+        ProviderErrorKind.TIMEOUT, "Synthetic timeout", retryable=True
+    )
+    app = _build_app(tmp_path, "q06_expired_complete.sqlite3", interpreter=provider)
+
+    with TestClient(app) as client:
+        session_id, answers = complete_session(client, submission_prefix="q06-expired-complete")
+        wait_for_evaluation_queue(app)
+        provider.interpret.reset_mock()
+
+        session_repo = app.state.container.session_repo
+        stored = session_repo.get_session(SessionId(session_id))
+        assert stored is not None
+        session_repo.update_session(replace(stored, state=SessionState.EXPIRED))
+
+        answer_id = answers[0]["answer_id"]
+        for url in (
+            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
+            f"/api/answers/{answer_id}/evaluate",
+        ):
+            response = client.post(url, json={"answer_revision": 1})
+            assert response.status_code == 410
+            err = ApiErrorResponse.model_validate(response.json())
+            assert err.error_code is ErrorCode.SESSION_EXPIRED
+            assert err.retryable is False
+        wait_for_evaluation_queue(app)
+        assert provider.interpret.call_count == 0
+
+
 def test_q06_unexpected_evaluation_error_returns_structured_api_error_and_preserves_answer(
     tmp_path: Path,
 ) -> None:

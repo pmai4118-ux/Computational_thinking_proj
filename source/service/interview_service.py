@@ -5,10 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 import json
+import logging
 from pathlib import Path
 from uuid import uuid4
 
-from source.Model.evaluation import EvaluationResult, EvaluationStatus
+from source.Model.evaluation import CriterionStatus, EvaluationResult, EvaluationStatus
+from source.Model.competency_profile import CompetencyState
 from source.Model.ids import (
     AnswerId,
     QuestionId,
@@ -16,19 +18,22 @@ from source.Model.ids import (
     SkillId,
     VersionedRef,
 )
-from source.Model.interview import Answer, Session, SessionState
-from source.Model.question import LicenseStatus, Question, SourceMetadata
+from source.Model.interview import Answer, EvaluationTiming, Session, SessionState
+from source.Model.question import LicenseStatus, Question, ReviewStatus, SourceMetadata
 from source.Model.repositories.interfaces import (
     AnswerLockedError,
+    CompetencyProfileRepository,
     ContentRepository,
     EvaluationRepository,
     SessionRepository,
 )
 from source.service.coverage import missing_coverage
+from source.service.competency_profile_service import CompetencyProfileService
 
 DEFAULT_BLUEPRINTS_PATH = (
     Path(__file__).resolve().parents[2] / "data" / "seed" / "session_blueprints.json"
 )
+logger = logging.getLogger(__name__)
 
 
 class InterviewServiceError(RuntimeError):
@@ -156,11 +161,20 @@ class InterviewService:
         content_repo: ContentRepository,
         session_repo: SessionRepository,
         evaluation_repo: EvaluationRepository | None = None,
+        profile_service: CompetencyProfileService | None = None,
         blueprints: tuple[SessionBlueprint, ...] | None = None,
     ) -> None:
         self._content_repo = content_repo
         self._session_repo = session_repo
         self._evaluation_repo = evaluation_repo
+        self._profile_service = profile_service
+        if self._profile_service is None and evaluation_repo is not None and isinstance(
+            session_repo, CompetencyProfileRepository
+        ):
+            self._profile_service = CompetencyProfileService(
+                content_repo=content_repo, session_repo=session_repo,
+                evaluation_repo=evaluation_repo, profile_repo=session_repo,
+            )
         self._blueprints = (
             blueprints if blueprints is not None else load_session_blueprints()
         )
@@ -193,7 +207,8 @@ class InterviewService:
             source = self._content_repo.get_source(question.source_id)
             if source is None or source.license_status is not LicenseStatus.VERIFIED:
                 continue
-            if self._content_repo.get_rubric(question.rubric_ref) is None:
+            rubric = self._content_repo.get_rubric(question.rubric_ref)
+            if rubric is None or rubric.review.status is not ReviewStatus.APPROVED:
                 continue
             prev = latest_by_id.get(question.id)
             if prev is None or question.version > prev.version:
@@ -214,11 +229,56 @@ class InterviewService:
         if uncovered:
             raise InsufficientQuestionBankError(uncovered)
 
-        # Track usage frequency/order across prior sessions of this owner so unseen variants win
+        # Only finished, scored sessions can inform the next interview. An answer in
+        # the current interview has not been assessed and must not be treated as a gap.
         usage_counts: dict[QuestionId, int] = {}
-        for past_session in self._session_repo.list_sessions_by_owner(owner_token_hash):
+        past_sessions = sorted(
+            self._session_repo.list_sessions_by_owner(owner_token_hash),
+            key=lambda item: item.created_at.timestamp() if item.created_at else float("-inf"),
+            reverse=True,
+        )
+        for past_session in past_sessions:
             for q_ref in past_session.question_refs:
                 usage_counts[q_ref.id] = usage_counts.get(q_ref.id, 0) + 1
+        gap_priority: dict[SkillId, dict[str, float]] = {}
+        if self._profile_service is not None:
+            for entry in self._profile_service.refresh(owner_token_hash):
+                if entry.state is CompetencyState.NEEDS_PRACTICE:
+                    gap_priority.setdefault(entry.skill_id, {})[entry.criterion_type] = (
+                        entry.selection_priority
+                    )
+        elif self._evaluation_repo is not None:
+            # Compatibility for injected repositories without profile persistence.
+            latest_observations: dict[tuple[SkillId, str], bool] = {}
+            for past_session in past_sessions:
+                if past_session.state not in (SessionState.COMPLETED, SessionState.ENDED_EARLY):
+                    continue
+                latest_answers = {}
+                for answer in self._session_repo.list_answers_for_session(past_session.id):
+                    previous = latest_answers.get(answer.question_ref)
+                    if previous is None or answer.revision > previous.revision:
+                        latest_answers[answer.question_ref] = answer
+                for answer in latest_answers.values():
+                    evaluation = self._evaluation_repo.get_completed_evaluation_for_answer(answer.ref)
+                    question = self._content_repo.get_question(answer.question_ref)
+                    rubric = self._content_repo.get_rubric(answer.rubric_ref)
+                    if evaluation is None or question is None or rubric is None:
+                        continue
+                    criteria = {criterion.id: criterion for criterion in rubric.criteria}
+                    for check in evaluation.criterion_checks:
+                        criterion = criteria.get(check.criterion_id)
+                        if criterion is None or not criterion.criterion_type:
+                            continue
+                        for skill_id in question.skill_ids:
+                            latest_observations.setdefault(
+                                (skill_id, criterion.criterion_type),
+                                check.status is CriterionStatus.UNMET
+                                and check.score is not None
+                                and check.score < criterion.max_score,
+                            )
+            for (skill_id, criterion_type), still_gap in latest_observations.items():
+                if still_gap:
+                    gap_priority.setdefault(skill_id, {})[criterion_type] = 1.0
 
         chosen: list[VersionedRef[QuestionId]] = []
         chosen_ids: set[QuestionId] = set()
@@ -234,9 +294,21 @@ class InterviewService:
                 if q.id not in chosen_ids
                 and q.category == slot.category
                 and slot.skill_id in q.skill_ids
+                and any(
+                    criterion.criterion_type in slot.eligible_criterion_types
+                    for criterion in self._content_repo.get_rubric(q.rubric_ref).criteria
+                )
             ]
-            # Sort unseen (usage_count == 0) first, then fewer prior uses, then stable ID
-            slot_candidates.sort(key=lambda q: (usage_counts.get(q.id, 0), q.id))
+            def selection_key(question: Question) -> tuple[int, float, str]:
+                rubric = self._content_repo.get_rubric(question.rubric_ref)
+                matched_types = 0.0 if rubric is None else sum(
+                    gap_priority.get(slot.skill_id, {}).get(criterion_type, 0.0)
+                    for criterion_type in {criterion.criterion_type for criterion in rubric.criteria}
+                )
+                # Exposure control wins over personalization in the small seed bank.
+                return (usage_counts.get(question.id, 0), -matched_types, question.id)
+
+            slot_candidates.sort(key=selection_key)
 
             picked: Question | None = None
             for candidate in slot_candidates:
@@ -269,6 +341,7 @@ class InterviewService:
         level: str = "intern_fresher",
         language: str = "vi",
         session_id: SessionId | None = None,
+        evaluation_timing: EvaluationTiming = EvaluationTiming.PER_QUESTION,
     ) -> SessionSnapshot:
         blueprint = self.find_blueprint(role=role, level=level, language=language)
         selected_refs = self._select_questions_for_owner(
@@ -289,6 +362,7 @@ class InterviewService:
             answer_refs=(),
             created_at=now,
             updated_at=now,
+            evaluation_timing=evaluation_timing,
         )
         stored = self._session_repo.create_session(session)
         return self._build_snapshot(stored)
@@ -327,6 +401,8 @@ class InterviewService:
                 # Recover a crash between the final answer save and the next action.
                 # The repository transition is atomic and repeated requests are idempotent.
                 session = self._session_repo.advance_session(session.id, session.current_index)
+                if session.state is SessionState.COMPLETED:
+                    self._refresh_profile_after_finish(session)
         return self._build_snapshot(session)
 
     def list_owner_sessions(self, *, owner_token_hash: str) -> tuple[Session, ...]:
@@ -458,6 +534,8 @@ class InterviewService:
                 advanced = self._session_repo.advance_session(session_id, from_question_index)
             except AnswerLockedError as error:
                 raise InvalidSessionStateError(str(error)) from error
+            if advanced.state is SessionState.COMPLETED:
+                self._refresh_profile_after_finish(advanced)
             return self._build_snapshot(advanced)
         if session.state is SessionState.COMPLETED and from_question_index == len(session.question_refs) - 1:
             return self._build_snapshot(session)
@@ -496,6 +574,8 @@ class InterviewService:
             updated_at=datetime.now(UTC),
         )
         stored = self._session_repo.update_session(updated)
+        if next_state is SessionState.COMPLETED:
+            self._refresh_profile_after_finish(stored)
         return self._build_snapshot(stored)
 
     def end_session(
@@ -519,7 +599,18 @@ class InterviewService:
             state=SessionState.ENDED_EARLY,
             updated_at=datetime.now(UTC),
         )
-        return self._session_repo.update_session(updated)
+        stored = self._session_repo.update_session(updated)
+        self._refresh_profile_after_finish(stored)
+        return stored
+
+    def _refresh_profile_after_finish(self, session: Session) -> None:
+        if self._profile_service is None:
+            return
+        try:
+            self._profile_service.refresh(session.owner_token_hash)
+        except Exception:
+            # Completion remains durable; opening the next session rebuilds the profile.
+            logger.exception("Could not refresh profile for finished session %s", session.id)
 
     def _build_snapshot(self, session: Session) -> SessionSnapshot:
         all_answers = self._session_repo.list_answers_for_session(session.id)

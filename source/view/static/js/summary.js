@@ -62,7 +62,7 @@
     return labels;
   }
 
-  function renderOutcome(outcome, criterionLabels) {
+  function renderOutcome(outcome, criterionLabels, detail, openAnswerIds) {
     const item = node("li", "outcome-card");
     const heading = node("h3", "", outcome.question_prompt || categoryNames[outcome.category] || outcome.category);
     item.append(heading);
@@ -75,6 +75,11 @@
     if (outcome.question_code) item.append(node("pre", "code-block", outcome.question_code));
     if (outcome.answer_text !== null && outcome.answer_text !== undefined) {
       const details = node("details");
+      const answerKey = outcome.answer_ref ? `${outcome.answer_ref.id}:${outcome.answer_ref.revision}` : "";
+      if (answerKey) {
+        details.dataset.answerKey = answerKey;
+        if (openAnswerIds && openAnswerIds.has(answerKey)) details.open = true;
+      }
       details.append(node("summary", "", "Xem câu trả lời đã lưu"));
       details.append(node("pre", "answer-source", outcome.answer_text));
       item.append(details);
@@ -103,6 +108,15 @@
         (criterionId) => criterionLabels.get(criterionId) || criterionId
       );
       item.append(node("p", "", `Điểm thiếu đã xác nhận: ${gapNames.join(", ")}`));
+    }
+    if (detail && detail.findings && detail.findings.length) {
+      const findings = node("ul", "");
+      for (const finding of detail.findings) {
+        const label = finding.status === "met" ? "Đạt" : finding.status === "unmet" ? "Cần cải thiện" : "Chưa đủ căn cứ";
+        const evidence = (finding.evidence || []).map((item) => item.quote || item.observation).filter(Boolean);
+        findings.append(node("li", "", `${finding.criterion_label}: ${label}. ${finding.explanation}${evidence.length ? ` Căn cứ: ${evidence.join("; ")}` : ""}`));
+      }
+      item.append(findings);
     }
 
     const actions = node("div", "action-row");
@@ -151,24 +165,101 @@
   }
 
   function renderSummary(data) {
+    const report = data.report;
+    const headings = [
+      ["#coverage-heading", "Tổng quan"],
+      ["#outcomes-heading", "Chi tiết từng câu"],
+      ["#gaps-heading", "Đề xuất cải thiện"],
+    ];
+    for (const [selector, title] of headings) {
+      const heading = document.querySelector(selector);
+      if (heading) heading.textContent = title;
+    }
     stateBadge.textContent = stateNames[data.state] || data.state;
     coverageCount.textContent = `Có kết quả ${data.completed_question_count} / ${data.total_question_count} câu`;
     appendValues(unanswered, data.unanswered_categories);
     appendValues(unresolved, data.unresolved_categories);
+    const overviewHost = document.querySelector(".coverage-card");
+    if (overviewHost) {
+      const previous = overviewHost.querySelector("[data-report-overview]");
+      if (previous) previous.remove();
+      if (report && report.overview) {
+        const section = node("div", "");
+        section.dataset.reportOverview = "";
+        section.append(node("p", "", report.overview.scope_note));
+        const axes = node("ul", "");
+        for (const axis of report.overview.axes || []) {
+          axes.append(node("li", "", `${axis.label}: ${axis.observed_count ? `${axis.met_count} tiêu chí đạt, ${axis.gap_count} cần cải thiện, ${axis.unresolved_count} chưa đủ căn cứ` : "chưa được quan sát"}.`));
+        }
+        section.append(axes);
+        const strengths = report.overview.strengths || [];
+        section.append(node("h3", "", "Điểm mạnh có căn cứ"));
+        section.append(node("p", "", strengths.length
+          ? strengths.map((item) => `${item.criterion_label}: ${item.explanation}`).join("; ")
+          : "Chưa đủ kết quả để xác nhận điểm mạnh."));
+        overviewHost.append(section);
+      }
+    }
+
+    const openAnswerIds = new Set();
+    const walkOpenDetails = (root) => {
+      for (const child of (root && root.children) || []) {
+        if ((child.tagName === "DETAILS" || child.tag === "details") && child.open && child.dataset && child.dataset.answerKey) {
+          openAnswerIds.add(child.dataset.answerKey);
+        }
+        walkOpenDetails(child);
+      }
+    };
+    walkOpenDetails(outcomesList);
 
     const criterionLabels = buildCriterionLabelMap(data.observed_gaps);
     outcomesList.replaceChildren();
     for (const outcome of data.outcomes || []) {
-      outcomesList.append(renderOutcome(outcome, criterionLabels));
+      const detail = (report && report.details || []).find((item) =>
+        item.question_ref.id === outcome.question_ref.id && item.question_ref.version === outcome.question_ref.version);
+      outcomesList.append(renderOutcome(outcome, criterionLabels, detail, openAnswerIds));
     }
     outcomesEmpty.hidden = Boolean(data.outcomes && data.outcomes.length);
 
     gapsList.replaceChildren();
-    for (const gap of data.observed_gaps || []) gapsList.append(renderGap(gap));
-    gapsEmpty.hidden = Boolean(data.observed_gaps && data.observed_gaps.length);
+    if (report && report.proposals) {
+      for (const proposal of report.proposals) {
+        const item = node("li", "gap-card");
+        item.append(node("h3", "", `Ưu tiên ${proposal.priority}: ${proposal.finding.criterion_label}`));
+        item.append(node("p", "", `Căn cứ: ${proposal.finding.explanation}`));
+        item.append(node("p", "", proposal.priority_reason));
+        item.append(node("p", "", `Mục tiêu: ${proposal.goal}`));
+        item.append(node("p", "", proposal.exercise_titles.length
+          ? `Bài luyện theo thứ tự: ${proposal.exercise_titles.join(" → ")}${proposal.estimated_minutes ? ` (ước tính ${proposal.estimated_minutes} phút)` : ""}.`
+          : proposal.note));
+        if (proposal.exercise_titles.length) item.append(node("p", "", proposal.note));
+        const link = node("a", "btn btn--secondary", "Xem bài luyện phù hợp");
+        link.href = `/sessions/${encodeURIComponent(sessionId)}/exercises`;
+        item.append(link);
+        gapsList.append(item);
+      }
+    } else {
+      for (const gap of data.observed_gaps || []) gapsList.append(renderGap(gap));
+    }
+    gapsEmpty.hidden = Boolean((data.observed_gaps && data.observed_gaps.length) || (report && report.proposals && report.proposals.length));
 
     content.hidden = false;
-    statusBox.hidden = true;
+    const pending = report && report.status === "assessing";
+    statusBox.hidden = !pending;
+    if (pending) {
+      statusBox.replaceChildren(document.createTextNode(
+        `AI đã chấm ${report.overview.evaluated_count}/${report.overview.answered_count} câu đã lưu. Bạn có thể rời trang và quay lại; các kết quả hoàn tất sẽ được dùng lại. `
+      ));
+      const progress = node("progress", "");
+      progress.max = report.overview.answered_count;
+      progress.value = report.overview.evaluated_count;
+      progress.setAttribute("aria-label", "Số câu đã chấm trên số câu đã lưu");
+      statusBox.append(progress);
+    }
+    if (report && report.status === "partial_failure") {
+      errorBox.textContent = report.message || "Một số câu chưa chấm được. Hãy thử lại từ bài đã lưu.";
+      errorBox.hidden = false;
+    }
   }
 
   async function loadSummary(background = false) {
@@ -182,7 +273,9 @@
     try {
       const payload = await api.getSessionSummary(sessionId);
       renderSummary(payload);
-      if ((payload.outcomes || []).some((item) => item.evaluation_status === "pending" || item.evaluation_status === "processing")) {
+      if (payload.state !== "expired" && (payload.outcomes || []).some(
+        (item) => item.evaluation_status === "pending" || item.evaluation_status === "processing"
+      )) {
         pollTimer = window.setTimeout(() => loadSummary(true), 5000);
       }
     } catch (error) {

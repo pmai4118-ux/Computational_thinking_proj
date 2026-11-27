@@ -6,6 +6,7 @@
 {% block content %}
 <section class="card results-page" data-answer-review
          data-session-id="{{ session.session_id }}"
+         data-evaluation-timing="{{ session.evaluation_timing }}"
          data-answer-id="{{ answer_id or '' }}"
          data-answer-revision="{{ answer_revision or '' }}"
          data-current-index="{{ session.progress.current_index }}"
@@ -69,4 +70,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261125-q06" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261127-mvp" defer></script>{% endblock %}

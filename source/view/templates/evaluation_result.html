@@ -14,6 +14,9 @@
       {% endif %}
       {% if report.result.demo_mode_label %}<p class="badge badge--demo">{{ report.result.demo_mode_label }}</p>{% endif %}
       <p class="text-secondary">Mô hình: {{ report.result.model_id }} · Phiên bản prompt: {{ report.result.prompt_version }}</p>
+    {% elif report and report.result.status.value == "pending" %}
+      <p>Câu trả lời đang chờ đánh giá nền. Câu trả lời gốc đã được lưu.</p>
+      <a class="btn btn--secondary" href="/sessions/{{ session_id }}/answers/{{ answer_id }}/result?revision={{ revision }}">Tải lại trạng thái</a>
     {% elif report and report.result.status.value == "processing" %}
       <p>Đánh giá đang được xử lý. Câu trả lời gốc đã được lưu.</p>
       <a class="btn btn--secondary" href="/sessions/{{ session_id }}/answers/{{ answer_id }}/result?revision={{ revision }}">Tải lại trạng thái</a>

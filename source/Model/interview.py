@@ -28,6 +28,11 @@ class SessionState(StrEnum):
     EXPIRED = "expired"
 
 
+class EvaluationTiming(StrEnum):
+    PER_QUESTION = "per_question"  # Existing API sessions remain compatible.
+    AFTER_SESSION = "after_session"
+
+
 @dataclass(frozen=True, slots=True)
 class Answer:
     """Immutable submitted answer snapshot tied to exact question and rubric versions.
@@ -78,6 +83,7 @@ class Session:
     answer_refs: tuple[AnswerRevisionRef, ...] = ()
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    evaluation_timing: EvaluationTiming = EvaluationTiming.PER_QUESTION
 
     def __post_init__(self) -> None:
         require_non_empty_id(self.id, "Session.id")
@@ -87,6 +93,8 @@ class Session:
         require_non_empty_id(self.language, "Session.language")
         if not isinstance(self.state, SessionState):
             raise ValueError("Session.state must be a SessionState member.")
+        if not isinstance(self.evaluation_timing, EvaluationTiming):
+            raise ValueError("Session.evaluation_timing must be an EvaluationTiming member.")
         if not self.question_refs:
             raise ValueError("Session.question_refs must contain at least one question.")
         logical_ids = [q_ref.id for q_ref in self.question_refs]
@@ -109,4 +117,5 @@ __all__ = [
     "Answer",
     "Session",
     "SessionState",
+    "EvaluationTiming",
 ]

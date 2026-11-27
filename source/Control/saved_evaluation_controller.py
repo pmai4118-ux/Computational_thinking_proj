@@ -82,7 +82,19 @@ class SavedEvaluationController:
     def evaluate(
         self, session_id: SessionId, answer_ref: AnswerRevisionRef, owner_token: str | None,
     ) -> EvaluationResponseDTO:
-        _session_view, answer, question, rubric = self._owned_context(session_id, answer_ref, owner_token)
+        session_view, answer, question, rubric = self._owned_context(session_id, answer_ref, owner_token)
+        if session_view.state.value == "expired":
+            raise ApiControllerError(
+                status.HTTP_410_GONE,
+                ApiErrorResponse(
+                    error_code=ErrorCode.SESSION_EXPIRED,
+                    message="Phiên luyện tập đã hết hạn khả dụng.",
+                    retryable=False,
+                    session_id=session_id,
+                    answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
+                    recovery_action="Bắt đầu phiên luyện tập mới.",
+                ),
+            )
         if self._evaluation_queue is None:
             raise RuntimeError("Background evaluation queue is not configured.")
         try:
