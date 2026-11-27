@@ -144,6 +144,15 @@
       review.href = reviewUrl.toString();
       actions.append(review);
     }
+    if (outcome.category === "technical_case" && outcome.evaluation_status === "completed" && outcome.answer_ref && outcome.answer_ref.id) {
+      const replayForm = node("form", "");
+      replayForm.method = "post";
+      replayForm.action = `/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(outcome.answer_ref.id)}/replay/start?revision=${encodeURIComponent(String(outcome.answer_ref.revision))}`;
+      const replayBtn = node("button", "btn btn--secondary", "Tua lại Decision Replay");
+      replayBtn.type = "submit";
+      replayForm.append(replayBtn);
+      actions.append(replayForm);
+    }
     if (outcome.confirmed_gap_criterion_ids && outcome.confirmed_gap_criterion_ids.length) {
       const exercise = node("a", "btn btn--secondary", "Bài luyện liên quan");
       exercise.href = `/sessions/${encodeURIComponent(sessionId)}/exercises?skill_id=${encodeURIComponent(outcome.skill_id || "")}`;

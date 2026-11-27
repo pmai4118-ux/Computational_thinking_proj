@@ -202,6 +202,36 @@
     }
     if (data.status === "completed") {
       loadAdaptiveProbePlan();
+      loadAnswerReplayAction();
+    }
+  }
+
+  async function loadAnswerReplayAction() {
+    const replaySection = document.querySelector("#answer-replay-section");
+    const replaySummary = document.querySelector("#answer-replay-summary");
+    const replayForm = document.querySelector("#answer-replay-form");
+    const replayButton = document.querySelector("#answer-replay-submit");
+    if (!replaySection || typeof api.getAnswerReplay !== "function") return;
+    try {
+      const info = await api.getAnswerReplay(sessionId, answerId, answerRevision);
+      if (!info.available || !info.scenario) {
+        replaySection.hidden = true;
+        return;
+      }
+      replaySection.hidden = false;
+      if (replaySummary) {
+        replaySummary.textContent = `${info.scenario.title}: ${info.scenario.summary} (Bài trả lời gốc và điểm vẫn giữ nguyên).`;
+      }
+      if (replayForm) {
+        replayForm.action = `/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answerId)}/replay/start?revision=${encodeURIComponent(String(answerRevision))}`;
+      }
+      if (replayButton) {
+        replayButton.textContent = info.existing_run_id
+          ? "Tiếp tục / tua lại Decision Replay từ bài làm"
+          : "Mở Decision Replay từ bài làm này";
+      }
+    } catch (_error) {
+      replaySection.hidden = true;
     }
   }
 

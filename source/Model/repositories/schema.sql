@@ -240,6 +240,8 @@ CREATE TABLE IF NOT EXISTS decision_replay_runs (
     completed INTEGER NOT NULL CHECK (completed IN (0, 1)),
     steps_json TEXT NOT NULL,
     linked_session_id TEXT,
+    linked_answer_id TEXT,
+    linked_answer_revision INTEGER,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );

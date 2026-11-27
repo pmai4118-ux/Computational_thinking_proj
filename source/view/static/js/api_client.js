@@ -177,6 +177,10 @@
         body: payload,
       });
     },
+    getAnswerReplay(sessionId, answerId, answerRevision) {
+      const query = answerRevision == null ? "" : `?revision=${encode(answerRevision)}`;
+      return request(`/sessions/${encode(sessionId)}/answers/${encode(answerId)}/replay${query}`);
+    },
   };
 
   window.InterviewApi = Object.freeze(api);

@@ -17,6 +17,7 @@ from source.Control.competency_profile_controller import CompetencyProfileContro
 from source.Control.decision_replay_controller import (
     ChooseReplayOptionRequest,
     DecisionReplayController,
+    RewindReplayRequest,
 )
 from source.Control.interview_controller import (
     ApiControllerError,
@@ -801,6 +802,82 @@ def build_pages_router(
             active_run=active_run,
         )
         return HTMLResponse(content=html)
+
+    @router.post("/sessions/{session_id}/answers/{answer_id}/replay/start", response_model=None)
+    async def start_answer_replay_page(
+        session_id: str,
+        answer_id: str,
+        request: Request,
+        revision: int = Query(default=1, ge=1),
+        reuse_existing: int = Query(default=1),
+    ) -> Response:
+        if decision_replay_controller is None:
+            return HTMLResponse("Decision Replay chưa được cấu hình.", status_code=503)
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        try:
+            run = await run_in_threadpool(
+                decision_replay_controller.start_run_for_answer,
+                SessionId(session_id),
+                AnswerRevisionRef(AnswerId(answer_id), revision),
+                owner_token=owner_token,
+                reuse_existing=bool(reuse_existing),
+            )
+        except ApiControllerError as error:
+            html = replay_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                scenarios=decision_replay_controller.list_scenarios().scenarios,
+                recent_runs=decision_replay_controller.list_runs_for_owner(owner_token=owner_token),
+                active_run=None,
+                error_message=error.payload.message,
+                recovery_action=error.payload.recovery_action,
+            )
+            return HTMLResponse(content=html, status_code=error.status_code)
+        return RedirectResponse(
+            url=f"/replays/runs/{run.run_id}", status_code=status.HTTP_303_SEE_OTHER
+        )
+
+    @router.post("/replays/runs/{run_id}/rewind", response_model=None)
+    async def rewind_replay_page(run_id: str, request: Request) -> Response:
+        if decision_replay_controller is None:
+            return HTMLResponse("Decision Replay chưa được cấu hình.", status_code=503)
+        body = await _read_body_with_limit(request, max_bytes=MAX_SETUP_FORM_BODY_BYTES)
+        if body is None:
+            return HTMLResponse("Yêu cầu quá lớn.", status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+        parsed = parse_qs(
+            body.decode("utf-8", errors="replace"),
+            keep_blank_values=True,
+            max_num_fields=8,
+        )
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        try:
+            payload = RewindReplayRequest(
+                checkpoint_id=_first_form_value(parsed, "checkpoint_id", ""),
+            )
+            await run_in_threadpool(
+                decision_replay_controller.rewind, run_id, payload, owner_token=owner_token
+            )
+        except (ValidationError, ApiControllerError) as error:
+            msg = (
+                error.payload.message
+                if isinstance(error, ApiControllerError)
+                else "Điểm chốt tua lại không hợp lệ."
+            )
+            code = error.status_code if isinstance(error, ApiControllerError) else 422
+            try:
+                active_run = decision_replay_controller.get_run(run_id, owner_token=owner_token)
+            except ApiControllerError:
+                active_run = None
+            html = replay_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                scenarios=decision_replay_controller.list_scenarios().scenarios if active_run is None else (),
+                recent_runs=(),
+                active_run=active_run,
+                error_message=msg,
+            )
+            return HTMLResponse(content=html, status_code=code)
+        return RedirectResponse(
+            url=f"/replays/runs/{run_id}", status_code=status.HTTP_303_SEE_OTHER
+        )
 
     @router.post("/replays/runs/{run_id}/choose", response_model=None)
     async def choose_replay_option_page(run_id: str, request: Request) -> Response:

@@ -81,6 +81,15 @@
       <div id="probe-results" class="stack"></div>
       <p id="probe-variant-note" class="form-hint" style="margin: 0;"></p>
     </section>
+    <section id="answer-replay-section" class="probe-panel" aria-labelledby="answer-replay-heading" hidden>
+      <div>
+        <h2 id="answer-replay-heading">Decision Replay từ bài trả lời này</h2>
+        <p id="answer-replay-summary" class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);"></p>
+      </div>
+      <form id="answer-replay-form" method="post" action="#">
+        <button id="answer-replay-submit" class="btn btn--secondary" type="submit">Mở &amp; tua lại Decision Replay từ bài làm</button>
+      </form>
+    </section>
   </div>
   <div class="action-row">
     {% if session.state == "in_progress" and session.current_answer and answer_id == session.current_answer.answer_id and answer_revision|int == session.current_answer.revision %}

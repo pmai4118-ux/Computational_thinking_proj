@@ -225,8 +225,16 @@ def create_app(
         interview_controller=interview_controller,
         probe_service=adaptive_probe_service,
     )
-    decision_replay_service = DecisionReplayService(replay_repo=resolved_replay_repo)
-    decision_replay_controller = DecisionReplayController(decision_replay_service)
+    decision_replay_service = DecisionReplayService(
+        replay_repo=resolved_replay_repo,
+        interview_service=interview_service,
+        session_repo=resolved_session_repo,
+        evaluation_repo=resolved_eval_repo,
+    )
+    decision_replay_controller = DecisionReplayController(
+        decision_replay_service,
+        interview_controller=interview_controller,
+    )
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):

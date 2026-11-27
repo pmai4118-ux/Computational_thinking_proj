@@ -1,9 +1,10 @@
 [
   {
-    "id": "replay.c03.flash_sale_inventory",
+    "id": "replay.c03.inventory_race",
     "version": 1,
-    "title": "Xử lý tranh chấp tồn kho Flash Sale (Decision Replay)",
-    "summary": "Đi qua 3 điểm chốt quyết định khi dịch vụ đặt hàng chạy nhiều instance cùng truy cập một sản phẩm còn 1 đơn vị tồn kho trong PostgreSQL.",
+    "question_id": "case.c03.inventory_race.v1",
+    "title": "Decision Replay: Tranh chấp tồn kho khi chỉ còn 1 sản phẩm",
+    "summary": "Tua lại dòng chảy quyết định từ bài làm câu Technical Case (Read -> Lock/Transaction -> Test) để đối chiếu lựa chọn với hệ quả đã kiểm duyệt.",
     "role": "backend_developer",
     "level": "intern_fresher",
     "language": "vi",
@@ -14,110 +15,107 @@
     "source_id": "source.c03.concurrent_inventory",
     "review_status": "approved",
     "assumptions": [
-      "Hệ thống chạy từ 2 instance ứng dụng trở lên phía sau load balancer, dùng chung một cơ sở dữ liệu PostgreSQL ở mức cô lập mặc định Read Committed.",
-      "Tất cả hệ quả dưới đây là kịch bản đã kiểm duyệt dựa trên tài liệu PostgreSQL MVCC, không mô phỏng số liệu tải thực tế của hạ tầng riêng."
+      "Mô phỏng biên soạn từ tài liệu PostgreSQL MVCC (không phải kết quả chạy hệ thống thật và không thay đổi điểm bài làm gốc).",
+      "Hệ thống chạy từ 2 instance ứng dụng trở lên dùng chung một PostgreSQL ở mức cô lập Read Committed.",
+      "Nếu bài làm gốc thiếu thông tin (insufficient_evidence), hệ thống không tự gán hệ quả chắc chắn mà yêu cầu chọn giả định để mô phỏng."
     ],
-    "start_checkpoint_id": "cp1_locking_strategy",
+    "start_checkpoint_id": "cp1_race_diagnosis",
     "checkpoints": [
       {
-        "id": "cp1_locking_strategy",
-        "title": "Điểm chốt 1: Chọn cách kiểm tra và trừ tồn kho",
-        "situation": "Sản phẩm X còn stock = 1. Hai yêu cầu đặt hàng đến đồng thời vào hai instance ứng dụng khác nhau.",
-        "question": "Bạn chọn cơ chế nào để đọc và cập nhật cột stock trong PostgreSQL?",
+        "id": "cp1_race_diagnosis",
+        "criterion_id": "c03.race",
+        "title": "Điểm chốt 1: Mô hình hóa điểm tranh chấp (Đọc — Kiểm tra — Ghi)",
+        "situation": "Sản phẩm X còn stock = 1. Hai yêu cầu mua đến đồng thời qua hai instance ứng dụng khác nhau cùng kết nối một cơ sở dữ liệu PostgreSQL.",
+        "question": "Tại thời điểm đọc tồn kho, giả định nào mô tả đúng hành vi đồng thời của hệ thống?",
+        "insufficient_evidence_note": "Bài làm gốc chưa đủ căn cứ về cơ chế đọc dữ liệu giữa nhiều instance — chưa thể gán hệ quả chắc chắn. Hãy chọn một giả định bên dưới để xem diễn biến.",
         "options": [
           {
-            "id": "opt_app_mutex",
-            "label": "Dùng khóa threading.Lock trong bộ nhớ Python rồi SELECT và UPDATE",
-            "action_summary": "Khóa cục bộ trên từng process ứng dụng, sau đó chạy SELECT stock và UPDATE stock = stock - 1.",
-            "consequence_summary": "Mỗi instance chỉ khóa luồng bên trong chính nó; hai instance khác nhau vẫn cùng đọc thấy stock = 1 ở mức Read Committed và cùng trừ kho.",
-            "system_impact": "Bán vượt tồn kho (overselling: stock âm hoặc 2 đơn cùng xác nhận thành công).",
-            "tradeoff_note": "Đơn giản trên 1 process đơn lẻ nhưng hoàn toàn mất tác dụng khi chạy nhiều worker hoặc nhiều container.",
+            "id": "opt_assume_single_instance_safe",
+            "label": "Giả định chỉ cần khóa threading.Lock trong bộ nhớ Python hoặc mỗi request tự đọc stock riêng lẻ rồi trừ",
+            "action_summary": "Chặn đồng thời trong RAM của từng instance hoặc không xử lý interleaving giữa hai instance.",
+            "consequence_summary": "Hai instance khác nhau không dùng chung bộ nhớ RAM; ở mức Read Committed cả hai đều đọc thấy stock = 1 trước khi một bên kịp ghi xuống DB.",
+            "system_impact": "Cả hai request vượt qua bước kiểm tra tồn kho và cùng tiến tới trừ kho.",
+            "tradeoff_note": "Dễ cài đặt nhầm khi chỉ thử trên máy cá nhân 1 worker nhưng sụp đổ ngay khi chạy đa tiến trình hoặc đa container.",
             "outcome_tag": "risky",
-            "next_checkpoint_id": "cp2_transaction_boundary"
+            "next_checkpoint_id": "cp2_atomic_transaction"
           },
           {
-            "id": "opt_atomic_where",
-            "label": "Cập nhật nguyên tử UPDATE products SET stock = stock - 1 WHERE id = :id AND stock >= 1",
-            "action_summary": "Để PostgreSQL lấy khóa hàng ngay tại câu lệnh UPDATE kèm điều kiện stock >= 1 và kiểm tra rowcount == 1.",
-            "consequence_summary": "Giao dịch thứ nhất khóa hàng và trừ stock về 0; giao dịch thứ hai đợi khóa xong, đọc lại phiên bản hàng mới thấy stock = 0 nên rowcount = 0 và không bán vượt kho.",
-            "system_impact": "Bảo vệ bất biến stock >= 0 trên mọi số lượng instance với độ trễ khóa ngắn nhất.",
-            "tradeoff_note": "Cần kiểm tra rõ rowcount để phân biệt hết hàng với lỗi hệ thống, và vẫn phải bọc chung với bước tạo đơn hàng trong cùng transaction.",
+            "id": "opt_identify_interleaving",
+            "label": "Nhận diện cửa sổ tranh chấp đọc-kiểm-tra-ghi (check-then-act) giữa nhiều instance trên DB dùng chung",
+            "action_summary": "Xác định rằng việc đồng bộ phải đặt tại cơ sở dữ liệu chia sẻ chứ không thể dựa vào đọc-rồi-ghi rời rạc ở tầng ứng dụng.",
+            "consequence_summary": "Xác định đúng gốc rễ khiến bước tiếp theo tập trung vào cập nhật nguyên tử hoặc khóa hàng ngay trong tầng dữ liệu.",
+            "system_impact": "Tránh đặt niềm tin sai vào khóa cục bộ ở ứng dụng, mở đường bảo vệ bất biến stock >= 0.",
+            "tradeoff_note": "Đẩy trách nhiệm đồng bộ xuống DB nên ở điểm chốt kế tiếp bắt buộc phải kiểm soát phạm vi khóa và transaction ngắn gọn.",
             "outcome_tag": "recommended",
-            "next_checkpoint_id": "cp2_transaction_boundary"
-          },
-          {
-            "id": "opt_select_for_update",
-            "label": "Mở transaction và dùng SELECT stock FROM products WHERE id = :id FOR UPDATE",
-            "action_summary": "Khóa độc quyền hàng sản phẩm từ bước đọc, kiểm tra stock >= 1 rồi UPDATE trong cùng transaction.",
-            "consequence_summary": "Giao dịch thứ hai bị chặn ngay ở SELECT FOR UPDATE cho tới khi giao dịch thứ nhất COMMIT hoặc ROLLBACK, ngăn được việc cả hai cùng thấy stock = 1.",
-            "system_impact": "Giữ đúng bất biến stock >= 0 nhưng giữ khóa hàng lâu hơn nếu có xử lý chậm bên trong transaction.",
-            "tradeoff_note": "Hữu ích khi cần đọc thêm nhiều cột để tính giá trước khi ghi, nhưng không được gọi API ngoài khi đang giữ khóa.",
-            "outcome_tag": "partial",
-            "next_checkpoint_id": "cp2_transaction_boundary"
+            "next_checkpoint_id": "cp2_atomic_transaction"
           }
         ]
       },
       {
-        "id": "cp2_transaction_boundary",
-        "title": "Điểm chốt 2: Xử lý lỗi khi lưu đơn hàng sau khi trừ kho",
-        "situation": "Sau khi trừ tồn kho thành công, hệ thống cần ghi bản ghi vào bảng orders và gọi cổng thanh toán bên ngoài.",
-        "question": "Bạn tổ chức ranh giới transaction và rollback như thế nào?",
+        "id": "cp2_atomic_transaction",
+        "criterion_id": "c03.atomicity",
+        "title": "Điểm chốt 2: Bảo vệ bất biến tồn kho & ranh giới Transaction Rollback",
+        "situation": "Đã đến bước cập nhật stock = stock - 1 và chèn bản ghi vào bảng orders (lỗi ràng buộc hoặc sập giữa chừng có thể xảy ra ở bước ghi đơn).",
+        "question": "Bạn chọn thiết kế khóa dữ liệu và ranh giới transaction nào trong PostgreSQL?",
+        "insufficient_evidence_note": "Bài làm gốc chưa nêu rõ ranh giới transaction hoặc câu lệnh khóa tại DB — không suy diễn hệ quả. Hãy chọn một phương án để thử.",
         "options": [
           {
             "id": "opt_separate_commits",
-            "label": "Commit câu lệnh trừ kho trước, rồi mới INSERT vào bảng orders ở transaction riêng",
-            "action_summary": "Tách 2 transaction rời rạc để tránh khóa bảng products lâu.",
-            "consequence_summary": "Nếu bước INSERT orders gặp lỗi ràng buộc hoặc máy chủ sập giữa chừng, tồn kho đã bị trừ vĩnh viễn mà không có đơn hàng tương ứng.",
-            "system_impact": "Rò rỉ tồn kho (lost inventory), sai lệch dữ liệu giữa products và orders.",
-            "tradeoff_note": "Giảm thời gian giữ khóa nhưng phá vỡ tính nguyên tử nghiệp vụ nếu không có cơ chế bù trừ chặt chẽ.",
+            "label": "Trừ tồn kho ở transaction 1 (COMMIT ngay), sau đó mới INSERT orders ở transaction 2",
+            "action_summary": "Tách cập nhật tồn kho và tạo đơn hàng thành hai transaction độc lập.",
+            "consequence_summary": "Nếu bước INSERT orders thất bại sau khi transaction 1 đã commit, tồn kho đã bị trừ xuống 0 vĩnh viễn mà không có đơn hàng nào được tạo.",
+            "system_impact": "Vi phạm yêu cầu rollback khi tạo đơn lỗi, gây mất hàng hóa khả dụng (lost inventory).",
+            "tradeoff_note": "Không giúp xử lý lỗi nhất quán nghiệp vụ dù mỗi transaction trông ngắn hơn.",
             "outcome_tag": "risky",
-            "next_checkpoint_id": "cp3_verification_plan"
+            "next_checkpoint_id": "cp3_invariant_tests"
           },
           {
-            "id": "opt_same_tx_local_only",
-            "label": "Gộp trừ kho và INSERT orders (trạng thái pending) trong 1 transaction, gọi cổng thanh toán bên ngoài sau COMMIT",
-            "action_summary": "Giữ toàn bộ thao tác ghi DB cục bộ trong cùng transaction nguyên tử; gọi mạng ngoài sau khi giải phóng khóa DB và có cơ chế hết hạn đơn.",
-            "consequence_summary": "Nếu INSERT orders lỗi, PostgreSQL tự rollback khôi phục stock; đồng thời khóa hàng không bị treo chờ mạng cổng thanh toán.",
-            "system_impact": "Bảo toàn đồng bộ giữa tồn kho và đơn hàng mà vẫn giữ thời gian giữ khóa ngắn.",
-            "tradeoff_note": "Cần thêm quy trình giải phóng giữ chỗ nếu đơn pending không thanh toán trong thời hạn.",
+            "id": "opt_atomic_where_same_tx",
+            "label": "Dùng UPDATE ... SET stock = stock - 1 WHERE stock >= 1 (kiểm tra rowcount == 1) chung 1 transaction với INSERT orders",
+            "action_summary": "Khóa hàng ngắn ngay tại lệnh UPDATE nguyên tử, rollback toàn bộ transaction nếu rowcount == 0 hoặc INSERT orders gặp lỗi.",
+            "consequence_summary": "Giao dịch đến trước giữ khóa hàng và trừ stock về 0; giao dịch đến sau thấy stock = 0 nên rowcount = 0. Nếu INSERT lỗi, PostgreSQL tự rollback khôi phục stock = 1.",
+            "system_impact": "Bảo vệ đồng thời cả bất biến stock >= 0 lẫn tính nguyên tử tạo đơn — trừ kho với độ trễ khóa ngắn.",
+            "tradeoff_note": "Phải kiểm tra tường minh affected rows == 1 để trả về thông báo hết hàng chính xác thay vì lỗi chung chung.",
             "outcome_tag": "recommended",
-            "next_checkpoint_id": "cp3_verification_plan"
+            "next_checkpoint_id": "cp3_invariant_tests"
           },
           {
-            "id": "opt_hold_tx_during_http",
-            "label": "Giữ nguyên transaction DB đang mở trong lúc chờ phản hồi HTTP từ cổng thanh toán",
-            "action_summary": "Chỉ COMMIT sau khi cổng thanh toán trả HTTP 200.",
-            "consequence_summary": "Khóa hàng và kết nối trong connection pool bị giữ suốt nhiều giây chờ mạng; dưới tải Flash Sale, pool nhanh chóng cạn kiệt và gây lỗi hàng loạt.",
-            "system_impact": "Nghẽn connection pool và timeout dây chuyền dù dữ liệu đơn lẻ có vẻ đồng bộ.",
-            "tradeoff_note": "Dễ viết lúc ban đầu nhưng trở thành điểm nghẽn nghiêm trọng ngay khi lưu lượng tăng.",
+            "id": "opt_select_for_update_same_tx",
+            "label": "Mở 1 transaction và dùng SELECT stock ... FOR UPDATE rồi kiểm tra stock >= 1 trước khi UPDATE và INSERT orders",
+            "action_summary": "Khóa bi quan cấp dòng từ bước đọc và giữ khóa trong suốt transaction nội bộ DB (không gọi mạng ngoài trong transaction).",
+            "consequence_summary": "Giao dịch thứ hai đợi khóa hàng xong mới đọc được stock = 0 sau khi giao dịch một commit; mọi lỗi ghi đơn đều được rollback nguyên vẹn.",
+            "system_impact": "An toàn tuyệt đối về dữ liệu; giữ khóa lâu hơn lệnh UPDATE đơn lẻ nếu logic tính toán trước UPDATE phức tạp.",
+            "tradeoff_note": "Tuyệt đối không gọi API thanh toán/mạng ngoài khi đang mở transaction giữ khóa.",
             "outcome_tag": "partial",
-            "next_checkpoint_id": "cp3_verification_plan"
+            "next_checkpoint_id": "cp3_invariant_tests"
           }
         ]
       },
       {
-        "id": "cp3_verification_plan",
-        "title": "Điểm chốt 3: Chọn chiến lược kiểm chứng trước khi phát hành",
-        "situation": "Mã nguồn đã sửa xong. Bạn cần chứng minh bản sửa không còn bán vượt tồn kho và tự khôi phục khi ghi đơn lỗi.",
-        "question": "Bạn sẽ bổ sung bài kiểm thử nào để kiểm chứng bất biến này?",
+        "id": "cp3_invariant_tests",
+        "criterion_id": "c03.concurrent_tests",
+        "title": "Điểm chốt 3: Kiểm chứng bất biến đồng thời & kịch bản Rollback",
+        "situation": "Mã nguồn đã viết xong. Bạn cần chọn cách kiểm thử để chứng minh trước khi đưa vào sử dụng.",
+        "question": "Kịch bản kiểm thử nào đủ khả năng phát hiện lỗi tranh chấp và kiểm tra rollback?",
+        "insufficient_evidence_note": "Bài làm gốc chưa nói rõ cách dựng bài test đồng thời và kiểm tra rollback. Chọn một cách kiểm thử bên dưới để xem rủi ro sót lỗi.",
         "options": [
           {
-            "id": "opt_single_happy_path",
-            "label": "Chạy 1 bài unit test gọi tuần tự đặt hàng 2 lần trên mock repository",
-            "action_summary": "Kiểm tra lần 1 thành công và lần 2 báo hết hàng bằng mock trong bộ nhớ.",
-            "consequence_summary": "Bài test vượt qua ngay cả khi câu lệnh SQL thực tế vẫn dính race condition, vì mock không tái hiện khóa và MVCC của PostgreSQL.",
-            "system_impact": "Tạo cảm giác an toàn giả; lỗi tranh chấp chỉ lộ ra khi chạy thật trên production.",
-            "tradeoff_note": "Chạy nhanh nhưng không kiểm chứng được hành vi đồng thời ở tầng cơ sở dữ liệu.",
+            "id": "opt_sequential_mock_test",
+            "label": "Chỉ chạy 1 unit test gọi tuần tự hàm đặt hàng 2 lần với repository giả lập (mock)",
+            "action_summary": "Đặt hàng lần 1 thành công, lần 2 hết hàng mà không mở 2 luồng/kết nối song song tới DB.",
+            "consequence_summary": "Bài test vẫn xanh 100% dù hệ thống thật vẫn cho phép 2 request song song trừ âm kho hoặc làm rơi stock khi INSERT lỗi.",
+            "system_impact": "Tạo cảm giác an toàn giả, để lọt lỗi tranh chấp sang môi trường thật.",
+            "tradeoff_note": "Chạy rất nhanh nhưng không đo được khóa hàng, Read Committed hay rollback thực tế.",
             "outcome_tag": "risky",
             "next_checkpoint_id": null
           },
           {
-            "id": "opt_concurrent_and_rollback",
-            "label": "Viết integration test bắn N yêu cầu đồng thời (barrier) vào DB thật + ca test ép lỗi INSERT để xác nhận stock rollback",
-            "action_summary": "Dùng 2+ kết nối DB thật đồng bộ bằng barrier với stock = 1, kiểm tra đúng 1 đơn thành công và stock = 0; thêm ca ép lỗi sau UPDATE để xác nhận stock trở lại 1.",
-            "consequence_summary": "Phát hiện trực tiếp lỗi đọc-trước-khi-ghi và xác minh cơ chế rollback trên đúng engine cơ sở dữ liệu đang dùng.",
-            "system_impact": "Cung cấp bằng chứng tái hiện được cho cả bất biến tồn kho và khả năng phục hồi khi lỗi.",
-            "tradeoff_note": "Chậm hơn unit test thuần nhưng bắt đúng loại lỗi cốt lõi của bài toán.",
+            "id": "opt_concurrent_barrier_and_rollback",
+            "label": "Bắn 2+ request song song qua barrier vào cùng DB (kiểm tra 1 đơn thành công, stock = 0) + 1 test ép lỗi INSERT để kiểm tra stock hoàn lại = 1",
+            "action_summary": "Kiểm chứng song song trên engine DB thật kết hợp ca kiểm thử chèn lỗi sau bước trừ kho.",
+            "consequence_summary": "Bắt ngay lỗi read-then-write nếu còn tồn tại và xác nhận chắc chắn stock quay lại 1 khi tạo đơn thất bại.",
+            "system_impact": "Cung cấp bằng chứng kiểm chứng đầy đủ cho cả hai bất biến cốt lõi của bài toán.",
+            "tradeoff_note": "Cần DB thử nghiệm riêng (như SQLite/PostgreSQL test) thay vì chỉ mock thuần.",
             "outcome_tag": "recommended",
             "next_checkpoint_id": null
           }
@@ -126,10 +124,11 @@
     ]
   },
   {
-    "id": "replay.c03.transfer_deadlock_order",
+    "id": "replay.c03.transfer_deadlock",
     "version": 1,
-    "title": "Phòng tránh Deadlock khi chuyển khoản hai chiều (Decision Replay)",
-    "summary": "Đi qua 2 điểm chốt quyết định khi hai giao dịch chuyển tiền ngược chiều (A → B và B → A) cùng khóa hai bản ghi tài khoản trong PostgreSQL.",
+    "question_id": "case.c03.transfer_deadlock.v1",
+    "title": "Decision Replay: Phòng tránh Deadlock khi chuyển ví hai chiều",
+    "summary": "Tua lại dòng quyết định từ bài làm câu Technical Case về hai giao dịch ngược chiều 11111 ↔ 22222 để đối chiếu thứ tự khóa và bảo toàn số dư.",
     "role": "backend_developer",
     "level": "intern_fresher",
     "language": "vi",
@@ -140,62 +139,107 @@
     "source_id": "source.postgres.mvcc.deadlocks",
     "review_status": "approved",
     "assumptions": [
-      "Hai giao dịch chạy đồng thời trên cùng bảng accounts: Giao dịch 1 chuyển từ tài khoản 111 sang 222; Giao dịch 2 chuyển từ 222 sang 111.",
-      "PostgreSQL tự phát hiện deadlock sau deadlock_timeout và hủy một giao dịch với mã lỗi 40P01."
+      "Mô phỏng biên soạn từ ví dụ PostgreSQL MVCC Deadlocks (không thay đổi kết quả hay điểm của câu trả lời gốc).",
+      "Request 1 chuyển từ ví 11111 sang 22222; Request 2 chạy song song chuyển từ 22222 sang 11111 trên hai instance.",
+      "Khi bài làm gốc thiếu thông tin tại một tiêu chí, điểm chốt đó giữ trạng thái chưa kết luận chắc chắn để bạn tự chọn phương án mô phỏng."
     ],
-    "start_checkpoint_id": "cp1_lock_order",
+    "start_checkpoint_id": "cp1_deadlock_cycle",
     "checkpoints": [
       {
-        "id": "cp1_lock_order",
-        "title": "Điểm chốt 1: Thứ tự khóa hai bản ghi tài khoản",
-        "situation": "Trong cùng một transaction chuyển khoản, dịch vụ cần khóa cả tài khoản nguồn (from_id) và tài khoản đích (to_id).",
-        "question": "Bạn chọn thứ tự khóa nào trong giao dịch?",
+        "id": "cp1_deadlock_cycle",
+        "criterion_id": "c03.q2.deadlock_cycle",
+        "title": "Điểm chốt 1: Xác định trình tự giữ và chờ khóa ngược chiều",
+        "situation": "Trong đoạn SQL hiện tại, mỗi giao dịch cập nhật ví nguồn trước rồi mới cập nhật ví đích.",
+        "question": "Nguyên nhân nào dẫn tới lỗi deadlock khi hai yêu cầu chạy song song?",
+        "insufficient_evidence_note": "Bài làm gốc chưa nêu rõ chuỗi giữ khóa giao nhau giữa hai giao dịch — không gán kết luận chắc chắn. Chọn một giả định bên dưới.",
         "options": [
           {
-            "id": "opt_from_then_to",
-            "label": "Luôn khóa tài khoản nguồn (from_id) trước, rồi mới khóa tài khoản đích (to_id)",
-            "action_summary": "Giao dịch 1 khóa 111 trước 222; Giao dịch 2 khóa 222 trước 111.",
-            "consequence_summary": "Hai giao dịch tạo thành vòng chờ khóa (circular wait); PostgreSQL buộc phải hủy một giao dịch bằng lỗi deadlock 40P01.",
-            "system_impact": "Tăng đột biến lỗi 40P01 và độ trễ chờ deadlock_timeout khi hai tài khoản giao dịch qua lại nhiều.",
-            "tradeoff_note": "Trực quan theo nghiệp vụ gửi/nhận nhưng không triệt tiêu nguyên nhân gây deadlock.",
+            "id": "opt_misdiagnose_network",
+            "label": "Cho rằng lỗi chỉ do mạng chập chờn hoặc do cập nhật cùng 1 dòng ví duy nhất",
+            "action_summary": "Tăng timeout kết nối mà giữ nguyên thứ tự UPDATE ví nguồn rồi ví đích.",
+            "consequence_summary": "Không đụng vào vòng chờ khóa cấp dòng giữa 11111 và 22222; tăng timeout chỉ làm request treo lâu hơn trước khi DB hủy giao dịch.",
+            "system_impact": "Lỗi deadlock (40P01) tiếp tục xảy ra mỗi khi hai ví giao dịch ngược chiều cùng lúc.",
+            "tradeoff_note": "Không cần sửa SQL nhưng hoàn toàn không giải quyết nguyên nhân gốc.",
             "outcome_tag": "risky",
-            "next_checkpoint_id": "cp2_retry_and_idempotency"
+            "next_checkpoint_id": "cp2_lock_ordering"
           },
           {
-            "id": "opt_canonical_order",
-            "label": "Sắp xếp cặp (min(from_id, to_id), max(from_id, to_id)) rồi khóa theo thứ tự ID tăng dần",
-            "action_summary": "Cả hai giao dịch đều yêu cầu khóa tài khoản 111 trước, sau đó mới khóa 222.",
-            "consequence_summary": "Phá vỡ hoàn toàn điều kiện vòng chờ khóa giữa cặp tài khoản: một giao dịch đợi gọn ở hàng 111 rồi chạy tiếp ngay sau khi giao dịch kia commit.",
-            "system_impact": "Triệt tiêu deadlock hai chiều trên cặp tài khoản và giữ tổng số dư nhất quán.",
-            "tradeoff_note": "Cần áp dụng nhất quán quy ước sắp xếp ID ở mọi endpoint cùng chạm bảng accounts.",
+            "id": "opt_diagnose_circular_wait",
+            "label": "Xác định T1 giữ khóa ví 11111 và chờ khóa ví 22222, trong khi T2 giữ khóa ví 22222 và chờ khóa ví 11111",
+            "action_summary": "Nhận diện vòng chờ khóa ngược chiều (circular wait) trên hai dòng dữ liệu khác nhau.",
+            "consequence_summary": "Nhìn thấy chính xác điều kiện đủ gây deadlock nên hướng xử lý sẽ nhắm thẳng vào chuẩn hóa thứ tự khóa toàn cục.",
+            "system_impact": "Cô lập được đúng nguyên nhân trong đồ thị chờ khóa.",
+            "tradeoff_note": "Cần đối chiếu mọi truy vấn khác cùng khóa bảng `wallets` chứ không chỉ một endpoint.",
             "outcome_tag": "recommended",
-            "next_checkpoint_id": "cp2_retry_and_idempotency"
+            "next_checkpoint_id": "cp2_lock_ordering"
           }
         ]
       },
       {
-        "id": "cp2_retry_and_idempotency",
-        "title": "Điểm chốt 2: Khi client gửi lại yêu cầu sau lỗi tạm thời",
-        "situation": "Mạng giữa client và API chập chờn khiến client gửi lại cùng một lệnh chuyển tiền hai lần liên tiếp.",
-        "question": "Bạn xử lý retry từ client như thế nào?",
+        "id": "cp2_lock_ordering",
+        "criterion_id": "c03.q2.lock_ordering",
+        "title": "Điểm chốt 2: Cố định thứ tự khóa & bảo toàn giao dịch",
+        "situation": "Cần cập nhật số dư của cả hai ví và bảo đảm tổng số dư hai ví không đổi, không ví nào bị âm.",
+        "question": "Bạn chọn cách sắp xếp khóa và tổ chức transaction nào?",
+        "insufficient_evidence_note": "Bài làm gốc chưa chỉ rõ cách sắp thứ tự khóa hoặc ranh giới transaction.",
         "options": [
           {
-            "id": "opt_blind_retry",
-            "label": "Thực thi lại giao dịch như yêu cầu mới mỗi khi nhận POST /transfers",
-            "action_summary": "Không lưu mã yêu cầu chống trùng; mỗi HTTP POST trừ tiền một lần.",
-            "consequence_summary": "Nếu yêu cầu đầu tiên đã commit ở server nhưng phản hồi bị rớt mạng, lượt gửi lại sẽ trừ tiền lần thứ hai.",
-            "system_impact": "Chuyển tiền trùng lặp (double debit), hỏng tính bất biến tài chính.",
-            "tradeoff_note": "Không cần bảng lưu khóa chống trùng nhưng rủi ro trực tiếp cho tiền người dùng.",
+            "id": "opt_split_transactions",
+            "label": "Tách bước trừ tiền ví nguồn và cộng tiền ví đích ra hai transaction riêng để khỏi khóa 2 dòng cùng lúc",
+            "action_summary": "COMMIT trừ ví nguồn trước, sau đó mở transaction mới cộng ví đích.",
+            "consequence_summary": "Tránh được khóa hai dòng cùng lúc nhưng nếu bước thứ hai sập hoặc lỗi, tiền bị trừ mất khỏi hệ thống làm sai tổng số dư.",
+            "system_impact": "Phá vỡ bất biến bảo toàn tổng số dư hai ví.",
+            "tradeoff_note": "Rủi ro mất tiền nghiêm trọng hơn nhiều so với deadlock.",
+            "outcome_tag": "risky",
+            "next_checkpoint_id": "cp3_cross_tests"
+          },
+          {
+            "id": "opt_canonical_lock_order",
+            "label": "Sắp xếp khóa theo thứ tự wallet_id tăng dần (min trước, max sau) bằng SELECT ... ORDER BY wallet_id FOR UPDATE trong cùng 1 transaction",
+            "action_summary": "Mọi giao dịch đều khóa ví nhỏ ID trước rồi mới khóa ví lớn ID, kiểm tra số dư >= 0 và cộng/trừ nguyên tử.",
+            "consequence_summary": "Triệt tiêu hoàn toàn vòng chờ giữa T1 và T2: một giao dịch khóa được ví 11111 trước, giao dịch kia chờ gọn rồi chạy nối tiếp mà vẫn giữ tổng số dư không đổi.",
+            "system_impact": "Ngăn deadlock ngay từ gốc và bảo toàn tính nguyên tử của giao dịch chuyển ví.",
+            "tradeoff_note": "Cần giữ quy ước sắp thứ tự tăng dần thống nhất ở mọi thao tác chuyển điểm.",
+            "outcome_tag": "recommended",
+            "next_checkpoint_id": "cp3_cross_tests"
+          },
+          {
+            "id": "opt_retry_without_order",
+            "label": "Giữ nguyên thứ tự khóa cũ và chỉ bắt lỗi 40P01 để tự động retry",
+            "action_summary": "Khi PostgreSQL hủy một giao dịch do deadlock thì thử chạy lại toàn bộ transaction.",
+            "consequence_summary": "Giảm lỗi lộ ra cho người dùng ở tải thấp, nhưng vẫn lãng phí công sức phát hiện deadlock và kẹt dây chuyền khi cặp ví chuyển qua lại liên tục.",
+            "system_impact": "Độ trễ tăng vọt theo `deadlock_timeout` dưới tải cao vì không triệt tiêu vòng chờ.",
+            "tradeoff_note": "Retry hữu hạn nên là lớp bảo vệ phụ đi kèm sau khi đã chuẩn hóa thứ tự khóa, không thay thế thứ tự khóa.",
+            "outcome_tag": "partial",
+            "next_checkpoint_id": "cp3_cross_tests"
+          }
+        ]
+      },
+      {
+        "id": "cp3_cross_tests",
+        "criterion_id": "c03.q2.tests",
+        "title": "Điểm chốt 3: Kiểm thử chuyển chéo đồng thời & bảo toàn số dư",
+        "situation": "Bản sửa thứ tự khóa đã được áp dụng. Cần viết kiểm thử tự động trước khi bàn giao.",
+        "question": "Bạn chọn kiểm chứng theo kịch bản nào?",
+        "insufficient_evidence_note": "Bài làm gốc chưa nêu kịch bản kiểm thử chuyển chéo và kiểm tra tổng số dư.",
+        "options": [
+          {
+            "id": "opt_one_way_test",
+            "label": "Chỉ test chuyển 1 chiều từ ví A sang ví B lặp 10 lần tuần tự",
+            "action_summary": "Chạy nối tiếp từng giao dịch A → B trên một luồng đơn.",
+            "consequence_summary": "Không tạo ra kịch bản hai khóa ngược chiều chạy song song nên không chứng minh được hết deadlock đã biến mất.",
+            "system_impact": "Bỏ sót hoàn toàn tình huống lỗi cốt lõi của đề bài.",
+            "tradeoff_note": "Chỉ kiểm tra đúng đường đi cơ bản 1 chiều.",
             "outcome_tag": "risky",
             "next_checkpoint_id": null
           },
           {
-            "id": "opt_idempotency_key",
-            "label": "Yêu cầu client gửi Idempotency-Key và ràng buộc UNIQUE trong DB trong cùng transaction chuyển tiền",
-            "action_summary": "Ghi nhận khóa idempotency cùng transaction chuyển khoản; nếu cùng khóa và cùng nội dung gửi lại thì trả về kết quả đã lưu thay vì trừ tiền tiếp.",
-            "consequence_summary": "Mỗi lệnh chuyển tiền chỉ thực thi đúng một lần dù client hoặc tầng retry gọi lại nhiều lần.",
-            "system_impact": "Bảo đảm an toàn khi retry mà không gây trừ tiền kép.",
-            "tradeoff_note": "Cần kiểm tra xung đột nếu cùng Idempotency-Key nhưng số tiền hoặc tài khoản đích khác nhau (trả 409).",
+            "id": "opt_parallel_cross_and_invariant",
+            "label": "Chạy song song nhiều cặp A→B và B→A qua 2 luồng/kết nối, xác nhận không kẹt deadlock, không ví âm và balance(A)+balance(B) không đổi",
+            "action_summary": "Kiểm thử chuyển chéo song song lặp nhiều vòng kết hợp đối chiếu bất biến tổng số dư.",
+            "consequence_summary": "Xác minh trực tiếp cả việc hết vòng chờ khóa lẫn tính bảo toàn tổng số dư sau hàng loạt tranh chấp.",
+            "system_impact": "Đủ bằng chứng thực chứng cho cả độ an toàn đồng thời lẫn bất biến kế toán.",
+            "tradeoff_note": "Cần engine DB hỗ trợ transaction/khóa hàng thật (PostgreSQL test hoặc khóa bảng tương ứng).",
             "outcome_tag": "recommended",
             "next_checkpoint_id": null
           }

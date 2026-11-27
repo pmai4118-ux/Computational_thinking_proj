@@ -152,6 +152,15 @@ class SQLiteRepositoryStore:
                     conn.execute(
                         "ALTER TABLE sessions ADD COLUMN evaluation_timing TEXT NOT NULL DEFAULT 'per_question';"
                     )
+                replay_cols = {
+                    row[1] for row in conn.execute("PRAGMA table_info(decision_replay_runs);")
+                }
+                if "linked_answer_id" not in replay_cols:
+                    conn.execute("ALTER TABLE decision_replay_runs ADD COLUMN linked_answer_id TEXT;")
+                if "linked_answer_revision" not in replay_cols:
+                    conn.execute(
+                        "ALTER TABLE decision_replay_runs ADD COLUMN linked_answer_revision INTEGER;"
+                    )
                 conn.execute(
                     "INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, ?);",
                     (SCHEMA_VERSION, _dt_to_iso(datetime.now(UTC))),
@@ -1597,8 +1606,9 @@ class SQLiteRepositoryStore:
                     INSERT OR REPLACE INTO decision_replay_runs (
                         id, scenario_id, scenario_version, owner_token_hash,
                         current_checkpoint_id, completed, steps_json,
-                        linked_session_id, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        linked_session_id, linked_answer_id, linked_answer_revision,
+                        created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     (
                         run.id,
@@ -1609,6 +1619,8 @@ class SQLiteRepositoryStore:
                         1 if run.completed else 0,
                         steps_json,
                         str(run.linked_session_id) if run.linked_session_id else None,
+                        str(run.linked_answer_ref.id) if run.linked_answer_ref else None,
+                        run.linked_answer_ref.revision if run.linked_answer_ref else None,
                         _dt_to_iso(run.created_at),
                         _dt_to_iso(run.updated_at),
                     ),
@@ -1637,6 +1649,14 @@ class SQLiteRepositoryStore:
             )
             for item in json.loads(row["steps_json"])
         )
+        linked_answer_ref = (
+            AnswerRevisionRef(
+                AnswerId(row["linked_answer_id"]),
+                int(row["linked_answer_revision"] or 1),
+            )
+            if row["linked_answer_id"]
+            else None
+        )
         return ReplayRun(
             id=row["id"],
             scenario_id=row["scenario_id"],
@@ -1646,6 +1666,7 @@ class SQLiteRepositoryStore:
             completed=bool(row["completed"]),
             steps=steps,
             linked_session_id=SessionId(row["linked_session_id"]) if row["linked_session_id"] else None,
+            linked_answer_ref=linked_answer_ref,
             created_at=created_at,
             updated_at=updated_at,
         )

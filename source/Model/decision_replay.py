@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
-from source.Model.ids import SessionId, SkillId, SourceId
+from source.Model.evaluation import AnswerRevisionRef
+from source.Model.ids import CriterionId, QuestionId, SessionId, SkillId, SourceId
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,13 +25,15 @@ class ReplayOption:
 
 @dataclass(frozen=True, slots=True)
 class ReplayCheckpoint:
-    """One decision node in a curated Decision Replay scenario."""
+    """One decision node in a curated Decision Replay scenario, optionally tied to a rubric criterion."""
 
     id: str
     title: str
     situation: str
     question: str
     options: tuple[ReplayOption, ...]
+    criterion_id: CriterionId | None = None
+    insufficient_evidence_note: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +52,7 @@ class DecisionReplayScenario:
     start_checkpoint_id: str
     checkpoints: tuple[ReplayCheckpoint, ...]
     source_id: SourceId
+    question_id: QuestionId | None = None
     review_status: str = "approved"
 
 
@@ -70,7 +74,7 @@ class ReplayStepRecord:
 
 @dataclass(frozen=True, slots=True)
 class ReplayRun:
-    """Owner-scoped traversal state for a curated Decision Replay scenario."""
+    """Owner-scoped traversal state for a curated Decision Replay linked optionally to a saved answer."""
 
     id: str
     scenario_id: str
@@ -82,6 +86,7 @@ class ReplayRun:
     created_at: datetime
     updated_at: datetime
     linked_session_id: SessionId | None = None
+    linked_answer_ref: AnswerRevisionRef | None = None
 
 
 __all__ = [
