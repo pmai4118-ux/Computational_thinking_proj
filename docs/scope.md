@@ -1,5 +1,11 @@
 # P01 MVP scope: Backend Intern/Fresher interview practice
 
+> **MVP flow update — 27 November 2026:** Sessions require all answers in
+> order before the summary, evidence or exercise recommendations are visible.
+> Submitted answers are locked; drafts and unfinished progress are saved for
+> resumption. Evaluation runs in the background and may be pending or failed
+> when the summary opens. A one-question practice session unlocks at 1/1.
+
 Status: scope baseline selected for implementation on 9 November 2026. It follows
 the current project plan and the user's request to complete P01. A team walkthrough
 and individual confirmation are still required before describing this as a

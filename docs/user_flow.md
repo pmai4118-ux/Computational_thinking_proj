@@ -1,5 +1,17 @@
 # P02 — Luồng phỏng vấn và phục hồi lỗi
 
+> **Cập nhật luồng MVP — 27/11/2026:** Nội dung P02 bên dưới là lịch sử đề xuất;
+> nếu có mâu thuẫn, áp dụng các quyết định sau và `api_contract.md`.
+>
+> 1. Trả lời theo thứ tự; mỗi bài gửi được khóa, không bỏ qua và không sửa lại.
+> 2. Bản nháp chưa gửi được lưu cùng phiên trong SQLite. **Lưu và thoát** giữ
+>    phiên để tiếp tục; phiên cũ `ended_early` được mở lại tại câu chưa trả lời.
+> 3. Sau khi lưu bài, chuyển câu và chấm nền. Không hiện kết quả từng câu trước
+>    khi trả lời đủ số câu của phiên (4/4 hoặc 1/1 với lượt luyện bổ trợ).
+> 4. Tổng kết hiển thị bài đã lưu, kết quả có sẵn và trạng thái chờ/lỗi; tự cập
+>    nhật khi còn chấm. Lỗi provider cho phép thử lại nếu có thể. Chỉ tác vụ bị
+>    gián đoạn quá hạn được tự xếp lại khi mở phiên.
+
 | Thuộc tính | Nội dung |
 | --- | --- |
 | Người thực hiện | Qthynhh |

@@ -46,6 +46,7 @@ from source.Model.question import (
     SourceMetadata,
 )
 from source.Model.repositories.interfaces import (
+    AnswerLockedError,
     DuplicateRecordError,
     DuplicateSubmissionConflictError,
     EvaluationInProgressError,
@@ -700,6 +701,57 @@ class SQLiteRepositoryStore:
                 raise RecordNotFoundError(f"Session {session.id} does not exist.")
         return session
 
+    def resume_ended_session(self, session_id: SessionId) -> Session:
+        """Repair a legacy ended session without overwriting concurrent updates."""
+        with self._connect() as conn, conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute("SELECT * FROM sessions WHERE id=?", (session_id,)).fetchone()
+            if row is None:
+                raise RecordNotFoundError(f"Session {session_id} does not exist.")
+            session = self._row_to_session(row)
+            if session.state is not SessionState.ENDED_EARLY:
+                return session
+            rows = conn.execute(
+                "SELECT question_id, question_version FROM answers WHERE session_id=?", (session_id,)
+            ).fetchall()
+            answered = {(r["question_id"], int(r["question_version"])) for r in rows}
+            index = next((i for i, q in enumerate(session.question_refs) if (q.id, q.version) not in answered), len(session.question_refs))
+            state = SessionState.IN_PROGRESS if index < len(session.question_refs) else SessionState.COMPLETED
+            now = datetime.now(UTC)
+            conn.execute("UPDATE sessions SET current_index=?, state=?, updated_at=? WHERE id=?", (index, state.value, _dt_to_iso(now), session_id))
+            return replace(session, current_index=index, state=state, updated_at=now)
+
+    def advance_session(self, session_id: SessionId, from_question_index: int) -> Session:
+        """Advance once, atomically, while preserving concurrent answer references."""
+        with self._connect() as conn, conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute("SELECT * FROM sessions WHERE id=?", (session_id,)).fetchone()
+            if row is None:
+                raise RecordNotFoundError(f"Session {session_id} does not exist.")
+            session = self._row_to_session(row)
+            if session.state is SessionState.COMPLETED and from_question_index == len(session.question_refs) - 1:
+                return session
+            if session.state is not SessionState.IN_PROGRESS:
+                raise AnswerLockedError("This session cannot advance.")
+            if session.current_index > 0 and from_question_index == session.current_index - 1:
+                return session
+            if from_question_index != session.current_index:
+                raise AnswerLockedError("The current question has changed.")
+            question_ref = session.question_refs[session.current_index]
+            if not conn.execute(
+                "SELECT 1 FROM answers WHERE session_id=? AND question_id=? AND question_version=? LIMIT 1",
+                (session_id, question_ref.id, question_ref.version),
+            ).fetchone():
+                raise AnswerLockedError("Submit an answer before advancing.")
+            index = session.current_index + 1
+            next_state = SessionState.COMPLETED if index == len(session.question_refs) else SessionState.IN_PROGRESS
+            now = datetime.now(UTC)
+            conn.execute(
+                "UPDATE sessions SET current_index=?, state=?, updated_at=? WHERE id=?",
+                (index, next_state.value, _dt_to_iso(now), session_id),
+            )
+            return replace(session, current_index=index, state=next_state, updated_at=now)
+
     @staticmethod
     def _row_to_answer(row: sqlite3.Row) -> Answer:
         submitted_at = _iso_to_dt(row["submitted_at"])
@@ -767,6 +819,15 @@ class SQLiteRepositoryStore:
                             f"Answer ({answer.id}, {answer.revision}) already exists with different content."
                         )
 
+                    if session.state is not SessionState.IN_PROGRESS or session.current_question_ref != answer.question_ref:
+                        raise AnswerLockedError("This question is no longer active.")
+                    prior = conn.execute(
+                        "SELECT 1 FROM answers WHERE session_id=? AND question_id=? AND question_version=? LIMIT 1",
+                        (answer.session_id, answer.question_ref.id, answer.question_ref.version),
+                    ).fetchone()
+                    if prior is not None:
+                        raise AnswerLockedError("The submitted answer is locked.")
+
                     conn.execute(
                         """
                         INSERT INTO answers (
@@ -786,6 +847,10 @@ class SQLiteRepositoryStore:
                             _dt_to_iso(answer.submitted_at),
                             answer.client_submission_id,
                         ),
+                    )
+                    conn.execute(
+                        "DELETE FROM answer_drafts WHERE session_id=? AND question_id=? AND question_version=?",
+                        (answer.session_id, answer.question_ref.id, answer.question_ref.version),
                     )
                     if answer.ref not in session.answer_refs:
                         updated_session = replace(
@@ -832,6 +897,35 @@ class SQLiteRepositoryStore:
             ).fetchall()
         return tuple(self._row_to_answer(row) for row in rows)
 
+    def get_draft(self, session_id: SessionId, question_ref: VersionedRef[QuestionId]) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT text FROM answer_drafts WHERE session_id=? AND question_id=? AND question_version=?",
+                (session_id, question_ref.id, question_ref.version),
+            ).fetchone()
+        return None if row is None else str(row["text"])
+
+    def save_draft(self, session_id: SessionId, question_ref: VersionedRef[QuestionId], text: str) -> None:
+        with self._connect() as conn, conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute("SELECT * FROM sessions WHERE id=?", (session_id,)).fetchone()
+            if row is None:
+                raise RecordNotFoundError(f"Session {session_id} does not exist.")
+            session = self._row_to_session(row)
+            if session.state is not SessionState.IN_PROGRESS or session.current_question_ref != question_ref:
+                raise AnswerLockedError("This question is no longer active.")
+            if conn.execute(
+                "SELECT 1 FROM answers WHERE session_id=? AND question_id=? AND question_version=? LIMIT 1",
+                (session_id, question_ref.id, question_ref.version),
+            ).fetchone():
+                raise AnswerLockedError("The submitted answer is locked.")
+            conn.execute(
+                "INSERT INTO answer_drafts (session_id, question_id, question_version, text, updated_at) "
+                "VALUES (?, ?, ?, ?, ?) ON CONFLICT(session_id, question_id, question_version) "
+                "DO UPDATE SET text=excluded.text, updated_at=excluded.updated_at",
+                (session_id, question_ref.id, question_ref.version, text, _dt_to_iso(datetime.now(UTC))),
+            )
+
     # EvaluationRepository
     def claim_evaluation(
         self, answer_ref: AnswerRevisionRef,
@@ -863,6 +957,16 @@ class SQLiteRepositoryStore:
                     "WHERE id=? AND version=? AND status='processing'",
                     (row["id"], row["version"]),
                 )
+            elif row is not None and row["status"] == EvaluationStatus.PENDING.value:
+                conn.execute(
+                    "UPDATE evaluations SET status='processing', evaluated_at=? WHERE id=? AND version=?",
+                    (_dt_to_iso(now), row["id"], row["version"]),
+                )
+                return EvaluationResult(
+                    id=EvaluationId(row["id"]), version=int(row["version"]),
+                    status=EvaluationStatus.PROCESSING, answer_ref=answer_ref,
+                    question_ref=question_ref, rubric_ref=rubric_ref, evaluated_at=now,
+                )
             elif row is not None and row["status"] == EvaluationStatus.FAILED.value:
                 if row["failure_code"] not in RETRYABLE_EVALUATION_FAILURES:
                     raise EvaluationRetryNotAllowedError("This evaluation failure cannot be retried.")
@@ -884,6 +988,52 @@ class SQLiteRepositoryStore:
                  _dt_to_iso(now)),
             )
             return claim
+
+    def prepare_evaluation(
+        self, answer_ref: AnswerRevisionRef, question_ref: VersionedRef[QuestionId],
+        rubric_ref: VersionedRef[RubricId], *, retry_failed: bool = False,
+        recover_interrupted: bool = False,
+    ) -> EvaluationResult:
+        """Reserve a durable pending attempt; only retry failures on request."""
+        now = datetime.now(UTC)
+        with self._connect() as conn, conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT * FROM evaluations WHERE answer_id=? AND answer_revision=? "
+                "ORDER BY version DESC LIMIT 1", (answer_ref.id, answer_ref.revision),
+            ).fetchone()
+            if row is not None:
+                current = self._load_evaluation_from_row(conn, row)
+                if current.status in (EvaluationStatus.COMPLETED, EvaluationStatus.PENDING):
+                    return current
+                if current.status is EvaluationStatus.PROCESSING:
+                    if current.evaluated_at and now - current.evaluated_at < EVALUATION_LEASE:
+                        return current
+                    if not recover_interrupted and not retry_failed:
+                        return current
+                    conn.execute(
+                        "UPDATE evaluations SET status='failed', failure_code='EVALUATION_INTERRUPTED', "
+                        "failure_message='The prior evaluation was interrupted.' "
+                        "WHERE id=? AND version=? AND status='processing'", (current.id, current.version),
+                    )
+                elif current.status is EvaluationStatus.FAILED:
+                    if not retry_failed and not (recover_interrupted and current.failure_code == 'EVALUATION_INTERRUPTED'):
+                        return current
+                    if current.failure_code not in RETRYABLE_EVALUATION_FAILURES:
+                        raise EvaluationRetryNotAllowedError("This evaluation failure cannot be retried.")
+            pending = EvaluationResult(
+                id=EvaluationId(row["id"] if row else f"evaluation.{uuid4().hex[:12]}"),
+                version=int(row["version"]) + 1 if row else 1,
+                status=EvaluationStatus.PENDING, answer_ref=answer_ref,
+                question_ref=question_ref, rubric_ref=rubric_ref,
+            )
+            conn.execute(
+                "INSERT INTO evaluations (id,version,status,answer_id,answer_revision,question_id,"
+                "question_version,rubric_id,rubric_version) VALUES (?,?,?,?,?,?,?,?,?)",
+                (pending.id, pending.version, pending.status.value, answer_ref.id, answer_ref.revision,
+                 question_ref.id, question_ref.version, rubric_ref.id, rubric_ref.version),
+            )
+            return pending
 
     def complete_evaluation(self, claim: EvaluationResult, result: EvaluationResult) -> EvaluationResult:
         if claim.status is not EvaluationStatus.PROCESSING or result.status is not EvaluationStatus.COMPLETED:
@@ -1077,6 +1227,8 @@ class SQLiteRepositoryStore:
         version: int | None = None,
     ) -> EvaluationResult | None:
         with self._connect() as conn:
+            # The evaluation row and its criteria must come from one SQLite snapshot.
+            conn.execute("BEGIN")
             if version is not None:
                 row = conn.execute(
                     "SELECT * FROM evaluations WHERE id = ? AND version = ?;",
@@ -1094,6 +1246,7 @@ class SQLiteRepositoryStore:
         answer_ref: AnswerRevisionRef,
     ) -> EvaluationResult | None:
         with self._connect() as conn:
+            conn.execute("BEGIN")
             row = conn.execute(
                 """
                 SELECT * FROM evaluations
@@ -1109,6 +1262,7 @@ class SQLiteRepositoryStore:
         answer_ref: AnswerRevisionRef,
     ) -> EvaluationResult | None:
         with self._connect() as conn:
+            conn.execute("BEGIN")
             row = conn.execute(
                 """
                 SELECT * FROM evaluations

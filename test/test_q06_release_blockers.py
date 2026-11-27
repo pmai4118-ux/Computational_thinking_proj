@@ -16,6 +16,8 @@ from source.main import create_app
 from source.Model.evaluation import AnswerRevisionRef
 from source.Model.ids import AnswerId, SessionId
 from source.Model.interview import SessionState
+from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
+from test.fixtures.session_flow import complete_session, wait_for_evaluation_queue
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 SOURCE_DIR = ROOT_DIR / "source"
@@ -32,8 +34,8 @@ def _build_app(tmp_path: Path, db_name: str, interpreter: object | None = None):
     return create_app(settings=settings, interpreter=interpreter)
 
 
-def test_q06_expired_session_blocks_evaluation_without_calling_provider(tmp_path: Path) -> None:
-    """Q06-01: Expired sessions must return 410 SESSION_EXPIRED before invoking the provider."""
+def test_q06_incomplete_session_blocks_manual_evaluation_and_review(tmp_path: Path) -> None:
+    """Q06-01: A saved answer cannot be evaluated or read until all questions are answered."""
     provider = Mock()
     app = _build_app(tmp_path, "q06_expired_eval.sqlite3", interpreter=provider)
 
@@ -63,21 +65,20 @@ def test_q06_expired_session_blocks_evaluation_without_calling_provider(tmp_path
             f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
             json={"answer_revision": 1},
         )
-        assert session_eval.status_code == 410
+        assert session_eval.status_code == 409
         err1 = ApiErrorResponse.model_validate(session_eval.json())
-        assert err1.error_code is ErrorCode.SESSION_EXPIRED
+        assert err1.error_code is ErrorCode.INVALID_STATE_TRANSITION
         assert err1.retryable is False
 
         answer_eval = client.post(
             f"/api/answers/{answer_id}/evaluate",
             json={"answer_revision": 1},
         )
-        assert answer_eval.status_code == 410
+        assert answer_eval.status_code == 409
         err2 = ApiErrorResponse.model_validate(answer_eval.json())
-        assert err2.error_code is ErrorCode.SESSION_EXPIRED
+        assert err2.error_code is ErrorCode.INVALID_STATE_TRANSITION
         assert err2.retryable is False
-
-        provider.interpret.assert_not_called()
+        wait_for_evaluation_queue(app)
 
 
 def test_q06_unexpected_evaluation_error_returns_structured_api_error_and_preserves_answer(
@@ -89,33 +90,12 @@ def test_q06_unexpected_evaluation_error_returns_structured_api_error_and_preser
     app = _build_app(tmp_path, "q06_unexpected_eval.sqlite3", interpreter=provider)
 
     with TestClient(app) as client:
-        created = client.post("/api/sessions", json={}).json()
-        session_id = created["session_id"]
-        question = created["current_question"]
         answer_text = "Nguyên văn câu trả lời phải còn nguyên sau lỗi hệ thống."
-
-        submitted = client.post(
-            f"/api/sessions/{session_id}/answers",
-            json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "q06-unexpected-1",
-                "text": answer_text,
-            },
+        session_id, answers = complete_session(
+            client, first_answer_text=answer_text, submission_prefix="q06-unexpected"
         )
-        assert submitted.status_code == 201
-        answer_id = submitted.json()["answer"]["answer_id"]
-
-        failed = client.post(
-            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
-            json={"answer_revision": 1},
-        )
-        assert failed.status_code == 500
-        err = ApiErrorResponse.model_validate(failed.json())
-        assert err.error_code is ErrorCode.EVALUATION_FAILED
-        assert err.retryable is True
-        assert err.answer_ref is not None
-        assert err.answer_ref.id == AnswerId(answer_id)
+        answer_id = answers[0]["answer_id"]
+        wait_for_evaluation_queue(app)
 
         latest = client.get(f"/api/sessions/{session_id}/answers/{answer_id}/evaluations/1")
         assert latest.status_code == 200
@@ -123,6 +103,7 @@ def test_q06_unexpected_evaluation_error_returns_structured_api_error_and_preser
         assert latest.json()["result"]["failure_code"] == "EVALUATION_FAILED"
         assert latest.json()["result"]["total_score"] is None
         assert latest.json()["result"]["answer_text"] == answer_text
+        assert provider.interpret.call_count == 4
 
     saved = app.state.container.session_repo.get_answer(
         AnswerRevisionRef(AnswerId(answer_id), 1)
@@ -131,39 +112,41 @@ def test_q06_unexpected_evaluation_error_returns_structured_api_error_and_preser
     assert saved.text == answer_text
 
 
-def test_q06_review_template_and_scripts_provide_failed_evaluation_recovery(
+def test_q06_summary_and_review_provide_failed_evaluation_recovery(
     tmp_path: Path,
 ) -> None:
-    """Q06-02: Workspace hides broken review CTA on failure and review page exposes retry recovery."""
-    app = _build_app(tmp_path, "q06_recovery_ui.sqlite3")
+    """Q06-02: Completed sessions expose detailed review and retry actions for failed jobs."""
+    provider = Mock()
+    provider.interpret.side_effect = ProviderFailureError(
+        ProviderErrorKind.TIMEOUT, "Synthetic timeout", retryable=True
+    )
+    app = _build_app(tmp_path, "q06_recovery_ui.sqlite3", interpreter=provider)
     with TestClient(app) as client:
-        created = client.post("/api/sessions", json={}).json()
-        session_id = created["session_id"]
-        question = created["current_question"]
-        submitted = client.post(
-            f"/api/sessions/{session_id}/answers",
-            json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "q06-recovery-submit-1",
-                "text": "Câu trả lời kiểm tra phục hồi lỗi trên giao diện review.",
-            },
+        session_id, answers = complete_session(
+            client,
+            first_answer_text="Câu trả lời kiểm tra phục hồi lỗi trên giao diện review.",
+            submission_prefix="q06-recovery",
         )
-        answer = submitted.json()["answer"]
+        wait_for_evaluation_queue(app)
+        answer = answers[0]
 
         review = client.get(
             f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}"
         )
         assert review.status_code == 200
         assert 'id="retry-review-evaluation"' in review.text
-        assert "Thử đánh giá lại" in review.text
+        summary = client.get(f"/sessions/{session_id}/summary")
+        assert summary.status_code == 200
+        assert "data-session-summary" in summary.text
 
     workspace_js = (STATIC_JS_DIR / "workspace.js").read_text(encoding="utf-8")
     evidence_js = (STATIC_JS_DIR / "evidence.js").read_text(encoding="utf-8")
-    assert "hideOpenReview" in workspace_js
-    assert "#open-review" in workspace_js
+    summary_js = (STATIC_JS_DIR / "summary.js").read_text(encoding="utf-8")
+    assert '"#save-exit"' in workspace_js
+    assert "api.submitAnswer" in workspace_js
     assert "retrySavedEvaluation" in evidence_js
     assert "#retry-review-evaluation" in evidence_js
+    assert 'node("button", "btn btn--secondary", "Thử đánh giá lại")' in summary_js
 
 
 def test_q06_expired_session_status_is_localized_in_welcome_and_summary(

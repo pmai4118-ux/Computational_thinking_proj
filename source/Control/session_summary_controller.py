@@ -35,7 +35,7 @@ class SessionSummaryController:
 
     def get_summary(self, session_id: SessionId, *, owner_token: str | None) -> SessionSummaryDTO:
         # Delegate missing, foreign, and expired session checks to InterviewController.
-        view = self._interview_controller.get_session(session_id, owner_token=owner_token)
+        view = self._interview_controller.require_complete(session_id, owner_token=owner_token)
         owner_hash = hash_owner_token(owner_token) if owner_token else ""
         report = self._recommendation_service.summarize_session(
             session_id=session_id,
@@ -58,6 +58,10 @@ class SessionSummaryController:
                         id=item.question_ref.id, version=item.question_ref.version
                     ),
                     question_prompt=item.question_prompt,
+                    question_code=item.question_code,
+                    answer_text=item.answer_text,
+                    failure_message=item.failure_message,
+                    retryable=item.retryable,
                     answer_ref=(
                         AnswerRevisionRefDTO(id=item.answer_ref.id, revision=item.answer_ref.revision)
                         if item.answer_ref is not None
@@ -94,6 +98,7 @@ class SessionSummaryController:
     def end_and_summarize(
         self, session_id: SessionId, *, owner_token: str | None, reason: str
     ) -> SessionSummaryDTO:
+        self._interview_controller.require_complete(session_id, owner_token=owner_token)
         self._interview_controller.end_session(
             session_id, owner_token=owner_token, reason=reason
         )

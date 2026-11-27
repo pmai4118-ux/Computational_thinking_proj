@@ -110,6 +110,17 @@ CREATE TABLE IF NOT EXISTS answers (
 
 CREATE INDEX IF NOT EXISTS idx_answers_session ON answers (session_id);
 
+CREATE TABLE IF NOT EXISTS answer_drafts (
+    session_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    question_version INTEGER NOT NULL CHECK (question_version >= 1),
+    text TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (session_id, question_id, question_version),
+    FOREIGN KEY (session_id) REFERENCES sessions (id),
+    FOREIGN KEY (question_id, question_version) REFERENCES questions (id, version)
+);
+
 CREATE TABLE IF NOT EXISTS evaluations (
     id TEXT NOT NULL,
     version INTEGER NOT NULL CHECK (version >= 1),

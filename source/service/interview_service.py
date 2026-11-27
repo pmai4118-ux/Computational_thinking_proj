@@ -19,6 +19,7 @@ from source.Model.ids import (
 from source.Model.interview import Answer, Session, SessionState
 from source.Model.question import LicenseStatus, Question, SourceMetadata
 from source.Model.repositories.interfaces import (
+    AnswerLockedError,
     ContentRepository,
     EvaluationRepository,
     SessionRepository,
@@ -98,6 +99,7 @@ class SessionSnapshot:
     latest_evaluation: EvaluationResult | None
     answered_count: int
     evaluated_count: int
+    current_draft: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -316,10 +318,33 @@ class InterviewService:
             session_id=session_id,
             owner_token_hash=owner_token_hash,
         )
+        if session.state is SessionState.ENDED_EARLY:
+            session = self._session_repo.resume_ended_session(session.id)
+        if (session.state is SessionState.IN_PROGRESS
+                and session.current_index == len(session.question_refs) - 1):
+            answered = {answer.question_ref for answer in self._session_repo.list_answers_for_session(session.id)}
+            if all(ref in answered for ref in session.question_refs):
+                # Recover a crash between the final answer save and the next action.
+                # The repository transition is atomic and repeated requests are idempotent.
+                session = self._session_repo.advance_session(session.id, session.current_index)
         return self._build_snapshot(session)
 
     def list_owner_sessions(self, *, owner_token_hash: str) -> tuple[Session, ...]:
         return self._session_repo.list_sessions_by_owner(owner_token_hash)
+
+    def save_draft(
+        self, *, session_id: SessionId, owner_token_hash: str,
+        question_ref: VersionedRef[QuestionId], text: str,
+    ) -> None:
+        session = self._require_owned_session(session_id=session_id, owner_token_hash=owner_token_hash)
+        if session.state is not SessionState.IN_PROGRESS or session.current_question_ref != question_ref:
+            raise InvalidSessionStateError("Bản nháp chỉ được lưu cho câu hỏi hiện tại.")
+        if len(text) > 20_000:
+            raise ValueError("Bản nháp tối đa 20.000 ký tự.")
+        try:
+            self._session_repo.save_draft(session_id, question_ref, text)
+        except AnswerLockedError as error:
+            raise InvalidSessionStateError(str(error)) from error
 
     def submit_answer(
         self,
@@ -338,11 +363,6 @@ class InterviewService:
         )
         if session.state is SessionState.EXPIRED:
             raise SessionExpiredError(f"Session '{session_id}' has expired.")
-        if session.state is not SessionState.IN_PROGRESS:
-            raise InvalidSessionStateError(
-                f"Cannot submit answers when session '{session_id}' is in state '{session.state.value}'."
-            )
-
         # Allow exact idempotent replay even if client retries an already saved submission
         existing_answers = self._session_repo.list_answers_for_session(session_id)
         for existing in existing_answers:
@@ -373,6 +393,11 @@ class InterviewService:
                     evaluation_status=eval_status,
                 )
 
+        if session.state is not SessionState.IN_PROGRESS:
+            raise InvalidSessionStateError(
+                f"Cannot submit answers when session '{session_id}' is in state '{session.state.value}'."
+            )
+
         active_q_ref = session.current_question_ref
         if active_q_ref is None or active_q_ref != question_ref:
             raise InvalidSessionStateError(
@@ -390,9 +415,7 @@ class InterviewService:
             ans for ans in existing_answers if ans.question_ref == question_ref
         ]
         if prior_for_question:
-            latest_prior = max(prior_for_question, key=lambda a: a.revision)
-            resolved_answer_id = latest_prior.id
-            next_revision = latest_prior.revision + 1
+            raise InvalidSessionStateError("The submitted answer is locked.")
         else:
             resolved_answer_id = answer_id or AnswerId(f"answer.{uuid4().hex[:12]}")
             next_revision = 1
@@ -407,7 +430,10 @@ class InterviewService:
             submitted_at=datetime.now(UTC),
             client_submission_id=client_submission_id,
         )
-        stored_answer, replay = self._session_repo.save_answer(new_answer)
+        try:
+            stored_answer, replay = self._session_repo.save_answer(new_answer)
+        except AnswerLockedError as error:
+            raise InvalidSessionStateError(str(error)) from error
         return SubmittedAnswerOutcome(
             answer=stored_answer,
             idempotent_replay=replay,
@@ -427,6 +453,12 @@ class InterviewService:
         )
         if session.state is SessionState.EXPIRED:
             raise SessionExpiredError(f"Session '{session_id}' has expired.")
+        if hasattr(self._session_repo, "advance_session"):
+            try:
+                advanced = self._session_repo.advance_session(session_id, from_question_index)
+            except AnswerLockedError as error:
+                raise InvalidSessionStateError(str(error)) from error
+            return self._build_snapshot(advanced)
         if session.state is SessionState.COMPLETED and from_question_index == len(session.question_refs) - 1:
             return self._build_snapshot(session)
         if session.state is not SessionState.IN_PROGRESS:
@@ -451,16 +483,6 @@ class InterviewService:
             raise InvalidSessionStateError(
                 "Cannot advance before submitting an answer for the current question."
             )
-        latest_answer = max(answers, key=lambda a: a.revision)
-        if self._evaluation_repo is not None:
-            completed_eval = self._evaluation_repo.get_completed_evaluation_for_answer(
-                latest_answer.ref
-            )
-            if completed_eval is None:
-                raise InvalidSessionStateError(
-                    "Cannot advance until the current question's evaluation has completed."
-                )
-
         next_index = session.current_index + 1
         next_state = (
             SessionState.COMPLETED
@@ -490,6 +512,8 @@ class InterviewService:
             raise SessionExpiredError(f"Session '{session_id}' has expired.")
         if session.state in (SessionState.COMPLETED, SessionState.ENDED_EARLY):
             return session
+        if len({a.question_ref for a in self._session_repo.list_answers_for_session(session.id)} & set(session.question_refs)) < len(session.question_refs):
+            raise InvalidSessionStateError("Hãy lưu và thoát để tiếp tục phiên sau.")
         updated = replace(
             session,
             state=SessionState.ENDED_EARLY,
@@ -501,6 +525,8 @@ class InterviewService:
         all_answers = self._session_repo.list_answers_for_session(session.id)
         latest_by_q: dict[VersionedRef[QuestionId], Answer] = {}
         for ans in all_answers:
+            if ans.question_ref not in session.question_refs:
+                continue
             prev = latest_by_q.get(ans.question_ref)
             if prev is None or ans.revision > prev.revision:
                 latest_by_q[ans.question_ref] = ans
@@ -535,6 +561,10 @@ class InterviewService:
             latest_evaluation=latest_eval,
             answered_count=len(latest_by_q),
             evaluated_count=evaluated_count,
+            current_draft=(
+                self._session_repo.get_draft(session.id, current_q_ref)
+                if current_q_ref is not None and current_answer is None else None
+            ),
         )
 
 

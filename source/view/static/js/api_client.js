@@ -125,6 +125,9 @@
     submitAnswer(sessionId, payload) {
       return request(`/sessions/${encode(sessionId)}/answers`, { method: "POST", body: payload });
     },
+    saveDraft(sessionId, payload) {
+      return request(`/sessions/${encode(sessionId)}/draft`, { method: "PUT", body: payload });
+    },
     evaluateAnswer(sessionId, answerId, answerRevision) {
       return request(`/sessions/${encode(sessionId)}/answers/${encode(answerId)}/evaluate`, {
         method: "POST",

@@ -55,6 +55,10 @@ class DuplicateSubmissionConflictError(RepositoryError):
         self.existing_answer = existing_answer
 
 
+class AnswerLockedError(RepositoryError):
+    """The active question already has a submission or has changed."""
+
+
 @runtime_checkable
 class ContentRepository(Protocol):
     """Read/write operations for versioned skills, sources, rubrics, questions, and exercises."""
@@ -102,6 +106,10 @@ class SessionRepository(Protocol):
 
     def update_session(self, session: Session) -> Session: ...
 
+    def advance_session(self, session_id: SessionId, from_question_index: int) -> Session: ...
+
+    def resume_ended_session(self, session_id: SessionId) -> Session: ...
+
     def save_answer(self, answer: Answer) -> tuple[Answer, bool]:
         """Persist `answer` and attach its reference to the owning session.
 
@@ -117,6 +125,10 @@ class SessionRepository(Protocol):
 
     def list_answers_for_session(self, session_id: SessionId) -> tuple[Answer, ...]: ...
 
+    def save_draft(self, session_id: SessionId, question_ref: VersionedRef[QuestionId], text: str) -> None: ...
+
+    def get_draft(self, session_id: SessionId, question_ref: VersionedRef[QuestionId]) -> str | None: ...
+
 
 @runtime_checkable
 class EvaluationRepository(Protocol):
@@ -125,6 +137,8 @@ class EvaluationRepository(Protocol):
     def save_evaluation(self, result: EvaluationResult, *, reuse_completed: bool = False) -> EvaluationResult: ...
 
     def claim_evaluation(self, answer_ref: AnswerRevisionRef, question_ref: VersionedRef[QuestionId], rubric_ref: VersionedRef[RubricId]) -> EvaluationResult: ...
+
+    def prepare_evaluation(self, answer_ref: AnswerRevisionRef, question_ref: VersionedRef[QuestionId], rubric_ref: VersionedRef[RubricId], *, retry_failed: bool = False, recover_interrupted: bool = False) -> EvaluationResult: ...
 
     def complete_evaluation(self, claim: EvaluationResult, result: EvaluationResult) -> EvaluationResult: ...
 

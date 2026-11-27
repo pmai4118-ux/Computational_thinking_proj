@@ -11,9 +11,9 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 
 def test_u05_summary_page_has_coverage_outcome_and_next_action_regions(
     ui_client: TestClient,
-    ui_session: dict[str, object],
+    complete_ui_session: dict[str, object],
 ) -> None:
-    session_id = ui_session["session_id"]
+    session_id = complete_ui_session["session_id"]
     response = ui_client.get(f"/sessions/{session_id}/summary")
     assert response.status_code == 200
     assert 'data-session-summary' in response.text

@@ -249,6 +249,12 @@ class EvaluationService:
             raise ValueError("Question and answer reference different rubric versions.")
         return answer, question, rubric
 
+    @property
+    def evaluation_repository(self) -> EvaluationRepository:
+        if self._evaluation_repo is None:
+            raise RuntimeError("Saved evaluation requires an evaluation repository.")
+        return self._evaluation_repo
+
     def get_completed_saved_answer(
         self, answer_ref: AnswerRevisionRef,
     ) -> tuple[EvaluationResult, EvaluationFeedback] | None:

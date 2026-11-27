@@ -6,6 +6,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from source.Model.evaluation import AnswerRevisionRef
+from source.Model.ids import AnswerId
+
 ROOT_DIR = Path(__file__).resolve().parents[2]
 
 
@@ -25,7 +28,7 @@ def test_u03_shows_question_constraints_progress_and_labeled_answer_form(
     assert "/static/js/workspace.js" in response.text
 
 
-def test_u03_saves_before_evaluation_and_keeps_server_answer_afterward(
+def test_u03_saves_answer_and_advances_without_revealing_its_result(
     ui_client: TestClient,
     ui_session: dict[str, object],
 ) -> None:
@@ -43,22 +46,35 @@ def test_u03_saves_before_evaluation_and_keeps_server_answer_afterward(
         },
     )
     assert submitted.status_code == 201
+    answer_id = submitted.json()["answer"]["answer_id"]
     assert submitted.json()["evaluation_status"] == "pending"
     assert submitted.json()["answer"]["text"] == answer_text
+    advanced = ui_client.post(
+        f"/api/sessions/{session_id}/next", json={"from_question_index": 0}
+    )
+    assert advanced.status_code == 200
 
     saved_workspace = ui_client.get(f"/sessions/{session_id}")
-    assert answer_text in saved_workspace.text
-    assert "Đã lưu câu trả lời trên máy chủ" in saved_workspace.text
-    assert "Thử đánh giá lại" in saved_workspace.text
+    assert saved_workspace.status_code == 200
+    view = ui_client.get(f"/api/sessions/{session_id}").json()
+    assert view["progress"]["current_index"] == 1
+    assert view["progress"]["answered_count"] == 1
+    assert view["current_question"]["id"] != question["id"]
+    stored = ui_client.app.state.container.session_repo.get_answer(
+        AnswerRevisionRef(AnswerId(answer_id), 1)
+    )
+    assert stored is not None and stored.text == answer_text
+    assert answer_text not in saved_workspace.text
+    assert "Đang tải tổng kết" not in saved_workspace.text
 
 
 def test_u03_draft_and_idempotency_are_bound_to_session_and_question() -> None:
     workspace_js = (ROOT_DIR / "source" / "view" / "static" / "js" / "workspace.js").read_text(encoding="utf-8")
     workspace_css = (ROOT_DIR / "source" / "view" / "static" / "css" / "workspace.css").read_text(encoding="utf-8")
 
-    assert "draft:${sessionId}:${questionId}" in workspace_js
-    assert "client_submission_id: submissionFor(text)" in workspace_js
-    assert "answer_id: submitted.answer.answer_id" in workspace_js
-    assert "api.submitAnswer(sessionId, requestBody)" in workspace_js
-    assert "api.evaluateAnswer(sessionId, answer.answer_id, answer.revision)" in workspace_js
+    assert "api.saveDraft(sessionId" in workspace_js
+    assert "client_submission_id: submissionId(text)" in workspace_js
+    assert "api.submitAnswer(sessionId" in workspace_js
+    assert "api.nextQuestion(sessionId, index)" in workspace_js
+    assert 'window.location.assign(`/sessions/' in workspace_js
     assert "@media (max-width: 48rem)" in workspace_css

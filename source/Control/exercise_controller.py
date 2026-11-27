@@ -60,7 +60,7 @@ class ExerciseController:
     def _require_owned_session(
         self, session_id: SessionId, owner_token: str | None
     ) -> None:
-        snapshot = self._interview_controller.get_session(
+        snapshot = self._interview_controller.require_complete(
             session_id, owner_token=owner_token
         )
         if snapshot.state.value == "expired":

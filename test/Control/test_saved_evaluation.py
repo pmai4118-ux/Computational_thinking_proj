@@ -15,6 +15,7 @@ from source.Model.ids import AnswerId
 from source.main import create_app
 from source.service.providers.fixture_provider import FixtureProvider
 from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
+from test.fixtures.session_flow import complete_session, wait_for_evaluation_queue
 
 
 def _app(tmp_path: Path, interpreter: object):
@@ -27,21 +28,10 @@ def _app(tmp_path: Path, interpreter: object):
 
 
 def _submit(client: TestClient, answer_text: str) -> tuple[str, str]:
-    created = client.post("/api/sessions", json={})
-    assert created.status_code == 201
-    session = created.json()
-    question = session["current_question"]
-    response = client.post(
-        f"/api/sessions/{session['session_id']}/answers",
-        json={
-            "question_id": question["id"],
-            "question_version": question["version"],
-            "client_submission_id": "evaluation-flow-1",
-            "text": answer_text,
-        },
+    session_id, answers = complete_session(
+        client, first_answer_text=answer_text, submission_prefix="evaluation-flow"
     )
-    assert response.status_code == 201
-    return session["session_id"], response.json()["answer"]["answer_id"]
+    return session_id, answers[0]["answer_id"]
 
 
 def test_saved_answer_api_validates_scores_persists_and_replays(tmp_path: Path) -> None:
@@ -51,9 +41,10 @@ def test_saved_answer_api_validates_scores_persists_and_replays(tmp_path: Path) 
 
     with TestClient(app) as owner, TestClient(app) as stranger:
         session_id, answer_id = _submit(owner, answer_text)
+        wait_for_evaluation_queue(app)
         base = f"/api/sessions/{session_id}/answers/{answer_id}"
         read_url = f"{base}/evaluations/1"
-        assert owner.get(read_url).status_code == 404
+        assert owner.get(read_url).status_code == 200
         assert stranger.post(f"{base}/evaluate", json={}).status_code == 403
 
         first_response = owner.post(f"{base}/evaluate", json={})
@@ -67,10 +58,13 @@ def test_saved_answer_api_validates_scores_persists_and_replays(tmp_path: Path) 
             for item in check.evidence:
                 if item.quote is not None:
                     assert answer_text[item.start_offset:item.end_offset] == item.quote
-        assert owner.get(read_url).json() == first_response.json()
-        assert owner.post(f"{base}/evaluate", json={}).json() == first_response.json()
+        wait_for_evaluation_queue(app)
+        first_response = owner.get(read_url)
+        first = EvaluationResponseDTO.model_validate(first_response.json())
+        assert first.result.status.value == "completed"
+        assert owner.post(f"{base}/evaluate", json={}).json()["result"]["status"] == "completed"
         assert stranger.get(read_url).status_code == 403
-        provider.interpret.assert_called_once()
+        assert provider.interpret.call_count == 4
         owner_cookie = owner.cookies.get(OWNER_COOKIE_NAME)
 
     reopened_provider = Mock(wraps=FixtureProvider())
@@ -86,6 +80,7 @@ def test_saved_answer_api_keeps_unresolved_total_null(tmp_path: Path) -> None:
     app = _app(tmp_path, FixtureProvider())
     with TestClient(app) as client:
         session_id, answer_id = _submit(client, "xem file dinh kem")
+        wait_for_evaluation_queue(app)
         response = client.post(
             f"/api/sessions/{session_id}/answers/{answer_id}/evaluate", json={}
         )
@@ -104,14 +99,14 @@ def test_provider_failure_does_not_delete_saved_answer(tmp_path: Path) -> None:
     app = _app(tmp_path, provider)
     with TestClient(app) as client:
         session_id, answer_id = _submit(client, "A saved answer stays intact after timeout.")
+        wait_for_evaluation_queue(app)
         base = f"/api/sessions/{session_id}/answers/{answer_id}"
-        response = client.post(f"{base}/evaluate", json={})
-        assert response.status_code == 504
-        assert response.json()["error_code"] == "PROVIDER_TIMEOUT"
+        wait_for_evaluation_queue(app)
         failed = client.get(f"{base}/evaluations/1")
         assert failed.status_code == 200
         assert failed.json()["result"]["status"] == "failed"
         assert failed.json()["result"]["failure_code"] == "PROVIDER_TIMEOUT"
+        assert failed.json()["result"]["answer_text"] == "A saved answer stays intact after timeout."
     saved = app.state.container.session_repo.get_answer(
         AnswerRevisionRef(AnswerId(answer_id), 1)
     )

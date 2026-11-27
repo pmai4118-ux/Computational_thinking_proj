@@ -9,7 +9,8 @@ from unittest.mock import Mock
 from fastapi.testclient import TestClient
 
 from source.Control.schemas import ErrorCode
-from source.Model.ids import SessionId
+from source.Model.evaluation import AnswerRevisionRef
+from source.Model.ids import AnswerId, SessionId
 from source.Model.interview import SessionState
 from source.config import ProviderMode, Settings
 from source.main import create_app
@@ -43,20 +44,17 @@ def test_u08_workspace_template_includes_accessibility_and_recovery_regions(
     assert "Bắt đầu phiên luyện tập mới" in html
 
 
-def test_u08_workspace_js_implements_polling_timeout_and_expiry_handling() -> None:
+def test_u08_workspace_persists_drafts_and_summary_refreshes_pending_evaluations() -> None:
     workspace_js = (JS_DIR / "workspace.js").read_text(encoding="utf-8")
+    summary_js = (JS_DIR / "summary.js").read_text(encoding="utf-8")
 
-    # Polling bounded timeout cap (no infinite spinner)
-    assert "MAX_POLLING_DURATION_MS = 150000" in workspace_js
-    assert "Date.now() - waitStartedAt >= MAX_POLLING_DURATION_MS" in workspace_js
-    assert "nhiều thời gian hơn dự kiến" in workspace_js
-
-    # Expiry and forbidden handling
-    assert "showSessionExpired" in workspace_js
-    assert "showSessionForbidden" in workspace_js
-    assert "sessionExpiredRecovery" in workspace_js
-    assert "Phiên luyện tập đã hết hạn khả dụng" in workspace_js
-    assert "Bản nháp được giữ nguyên trên ô nhập" in workspace_js
+    assert "api.saveDraft(sessionId" in workspace_js
+    assert "window.addEventListener(\"beforeunload\"" in workspace_js
+    assert 'window.location.assign("/")' in workspace_js
+    assert 'evaluation_status === "pending"' in summary_js
+    assert 'evaluation_status === "processing"' in summary_js
+    assert "loadSummary(true), 5000" in summary_js
+    assert "Thử đánh giá lại" in summary_js
 
 
 def test_u08_api_client_extracts_field_errors_and_standard_error_codes() -> None:
@@ -194,7 +192,7 @@ def test_u08_duplicate_submission_is_idempotent_and_conflicts_on_different_conte
     assert payload3["recovery_action"] is not None
 
 
-def test_u08_provider_timeout_keeps_saved_answer_without_zero_score_and_offers_retry(
+def test_u08_provider_failure_remains_hidden_until_all_questions_are_answered(
     tmp_path: Path,
 ) -> None:
     provider = Mock()
@@ -227,25 +225,17 @@ def test_u08_provider_timeout_keeps_saved_answer_without_zero_score_and_offers_r
         answer_id = submitted["answer"]["answer_id"]
         revision = submitted["answer"]["revision"]
 
-        # Evaluation call triggers provider timeout
-        eval_resp = client.post(
-            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
-            json={"answer_revision": revision},
-        )
-        assert eval_resp.status_code == 504
-        payload = eval_resp.json()
-        assert payload["error_code"] == ErrorCode.PROVIDER_TIMEOUT
-        assert payload["retryable"] is True
-        assert payload["recovery_action"] is not None
+        app.state.container.evaluation_queue._executor.submit(lambda: None).result(timeout=3)
 
-        # Reading saved evaluation: answer text is retained, score is None (NEVER zero)
+        # The provider may finish or fail in the background, but neither the
+        # evaluation result nor the summary is readable before 4/4 answers.
         read_resp = client.get(
             f"/api/sessions/{session_id}/answers/{answer_id}/evaluations/{revision}"
         )
-        assert read_resp.status_code == 200
-        result = read_resp.json()["result"]
-        assert result["status"] == "failed"
-        assert result["failure_code"] == "PROVIDER_TIMEOUT"
-        assert result["retryable"] is True
-        assert result["total_score"] is None  # Score must never become 0
-        assert result["answer_text"] == answer_text
+        assert read_resp.status_code == 409
+        assert read_resp.json()["error_code"] == ErrorCode.INVALID_STATE_TRANSITION
+        assert client.get(f"/api/sessions/{session_id}/summary").status_code == 409
+        saved = app.state.container.session_repo.get_answer(
+            AnswerRevisionRef(AnswerId(answer_id), revision)
+        )
+        assert saved is not None and saved.text == answer_text

@@ -23,6 +23,7 @@ from source.Model.repositories.interfaces import (
     ContentRepository,
     EvaluationRepository,
     SessionRepository,
+    RETRYABLE_EVALUATION_FAILURES,
 )
 from source.service.interview_service import InterviewService, SessionExpiredError
 
@@ -71,6 +72,10 @@ class QuestionOutcomeRecord:
     skill_id: SkillId
     question_ref: VersionedRef[QuestionId]
     question_prompt: str
+    question_code: str | None
+    answer_text: str
+    failure_message: str | None
+    retryable: bool
     answer_ref: AnswerRevisionRef | None
     evaluation_id: EvaluationId | None
     evaluation_status: EvaluationStatus
@@ -379,6 +384,10 @@ class RecommendationService:
                     skill_id=skills_by_category.get(question.category, question.skill_ids[0]),
                     question_ref=question_ref,
                     question_prompt=question.prompt,
+                    question_code=question.code,
+                    answer_text=answer.text,
+                    failure_message=evaluation.failure_message if evaluation else None,
+                    retryable=bool(evaluation and evaluation.failure_code in RETRYABLE_EVALUATION_FAILURES),
                     answer_ref=answer.ref,
                     evaluation_id=evaluation.id if evaluation is not None else None,
                     evaluation_status=(

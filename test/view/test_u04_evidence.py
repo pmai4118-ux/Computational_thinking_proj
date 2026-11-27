@@ -11,26 +11,16 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 
 def test_u04_review_page_is_bound_to_the_owned_session_and_answer(
     ui_client: TestClient,
-    ui_session: dict[str, object],
+    complete_ui_session: dict[str, object],
 ) -> None:
-    session_id = ui_session["session_id"]
-    question = ui_session["current_question"]
-    submitted = ui_client.post(
-        f"/api/sessions/{session_id}/answers",
-        json={
-            "question_id": question["id"],
-            "question_version": question["version"],
-            "client_submission_id": "u04-acceptance-submit-1",
-            "text": "Câu trả lời tổng hợp để kiểm tra trang đối chiếu.",
-        },
-    )
-    answer_id = submitted.json()["answer"]["answer_id"]
+    session_id = complete_ui_session["session_id"]
+    answer_id = complete_ui_session["answers"][0]["answer_id"]
 
     response = ui_client.get(f"/sessions/{session_id}/review?answer_id={answer_id}")
     assert response.status_code == 200
     assert 'data-answer-review' in response.text
     assert f'data-answer-id="{answer_id}"' in response.text
-    assert "Chưa đủ bằng chứng" in response.text
+    assert "Đang tải căn cứ" in response.text or "Tổng điểm" in response.text
     assert "/static/js/evidence.js" in response.text
 
 

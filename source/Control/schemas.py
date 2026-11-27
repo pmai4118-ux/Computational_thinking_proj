@@ -145,7 +145,22 @@ class SessionViewDTO(BaseModel):
     progress: SessionProgressDTO
     current_question: QuestionPromptDTO | None = None
     current_answer: SavedAnswerDTO | None = None
+    current_draft: str | None = None
     latest_evaluation_id: EvaluationId | None = None
+
+
+class SaveDraftRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    question_id: QuestionId = Field(min_length=1)
+    question_version: int = Field(ge=1)
+    text: str = Field(max_length=20000)
+
+
+class SaveDraftResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    text: str
 
 
 class SubmitAnswerRequest(BaseModel):
@@ -258,6 +273,8 @@ class EvaluationResultDTO(BaseModel):
     question_ref: VersionedRefDTO
     rubric_ref: VersionedRefDTO
     answer_text: str = Field(min_length=1)
+    question_prompt: str | None = None
+    question_code: str | None = None
     criterion_checks: tuple[CriterionCheckDTO, ...] = ()
     total_score: int | None = Field(default=None, ge=0)
     maximum_score: int | None = Field(default=None, ge=1)
@@ -345,6 +362,10 @@ class QuestionOutcomeSummaryDTO(BaseModel):
     skill_id: SkillId = Field(min_length=1)
     question_ref: VersionedRefDTO
     question_prompt: str = Field(min_length=1)
+    question_code: str | None = None
+    answer_text: str | None = None
+    failure_message: str | None = None
+    retryable: bool = False
     answer_ref: AnswerRevisionRefDTO | None = None
     evaluation_id: EvaluationId | None = None
     evaluation_status: EvaluationStatus | None = None

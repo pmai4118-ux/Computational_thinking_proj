@@ -20,7 +20,7 @@ from source.Control.interview_controller import (
     apply_owner_cookie,
     ensure_owner_cookie_token,
 )
-from source.Control.schemas import CreateSessionRequest, SubmitAnswerRequest
+from source.Control.schemas import CreateSessionRequest, NextQuestionRequest, SaveDraftRequest, SubmitAnswerRequest
 from source.Control.saved_evaluation_controller import SavedEvaluationController
 from source.Model.evaluation import AnswerRevisionRef
 from source.Model.ids import AnswerId
@@ -256,11 +256,13 @@ def build_pages_router(
         session_dto, error_response = _get_owned_session_page_data(session_id, request)
         if error_response is not None:
             return error_response
+        if session_dto.progress.answered_count == session_dto.progress.total_questions:
+            return RedirectResponse(url=f"/sessions/{session_id}/summary", status_code=303)
         html = workspace_template.render(
             demo_mode_label=controller.demo_mode_label,
             session=session_dto,
             submission_id=token_urlsafe(16),
-            answer_text="",
+            answer_text=session_dto.current_draft or "",
         )
         return HTMLResponse(content=html)
 
@@ -298,6 +300,39 @@ def build_pages_router(
         question_version = _first_form_value(parsed, "question_version", "")
         submission_id = _first_form_value(parsed, "client_submission_id", "")
         answer_text = parsed.get("text", [""])[0]
+        action = _first_form_value(parsed, "action", "")
+        if action in ("save_exit", "continue_saved"):
+            session_dto, error_response = await run_in_threadpool(_get_owned_session_page_data, session_id, request)
+            if error_response is not None:
+                return error_response
+            if session_dto.current_answer:
+                if action == "save_exit":
+                    return RedirectResponse(url="/", status_code=303)
+                current = await run_in_threadpool(
+                    controller.next_question, SessionId(session_id),
+                    NextQuestionRequest(from_question_index=session_dto.progress.current_index), owner_token=owner_token,
+                )
+                suffix = "/summary" if current.progress.answered_count == current.progress.total_questions else ""
+                return RedirectResponse(url=f"/sessions/{session_id}{suffix}", status_code=303)
+        if action == "save_exit":
+            try:
+                await run_in_threadpool(
+                    controller.save_draft, SessionId(session_id),
+                    SaveDraftRequest(question_id=question_id, question_version=int(question_version), text=answer_text),
+                    owner_token=owner_token,
+                )
+                return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+            except (ApiControllerError, ValidationError, ValueError) as error:
+                session_dto, error_response = await run_in_threadpool(_get_owned_session_page_data, session_id, request)
+                if error_response is not None:
+                    return error_response
+                html = workspace_template.render(
+                    demo_mode_label=controller.demo_mode_label, session=session_dto,
+                    submission_id=submission_id or token_urlsafe(16), answer_text=answer_text,
+                    error_message="Chưa lưu được bản nháp.",
+                    recovery_action="Nội dung vẫn ở ô trả lời; hãy thử lại.",
+                )
+                return HTMLResponse(content=html, status_code=error.status_code if isinstance(error, ApiControllerError) else 422)
         try:
             payload = SubmitAnswerRequest(
                 question_id=question_id,
@@ -335,36 +370,24 @@ def build_pages_router(
             )
             return HTMLResponse(content=html, status_code=code)
 
-        answer_id = saved.answer.answer_id
-        revision = saved.answer.revision
-        result_url = f"/sessions/{session_id}/answers/{answer_id}/result?revision={revision}"
-        if evaluation_controller is not None:
-            try:
-                await run_in_threadpool(
-                    evaluation_controller.evaluate,
-                    SessionId(session_id),
-                    AnswerRevisionRef(AnswerId(answer_id), revision),
-                    owner_token,
-                )
-            except ApiControllerError as error:
-                html = result_template.render(
-                    demo_mode_label=controller.demo_mode_label,
-                    session_id=session_id,
-                    answer_id=answer_id,
-                    revision=revision,
-                    report=None,
-                    rows=(),
-                    can_retry=error.payload.retryable,
-                    error_message=error.payload.message,
-                    recovery_action=error.payload.recovery_action,
-                )
-                return HTMLResponse(content=html, status_code=error.status_code)
-        return RedirectResponse(url=result_url, status_code=status.HTTP_303_SEE_OTHER)
+        current = await run_in_threadpool(controller.get_session, SessionId(session_id), owner_token=owner_token)
+        if current.current_answer and current.current_answer.answer_id == saved.answer.answer_id:
+            current = await run_in_threadpool(
+                controller.next_question, SessionId(session_id),
+                NextQuestionRequest(from_question_index=current.progress.current_index), owner_token=owner_token,
+            )
+        destination = "summary" if current.progress.answered_count == current.progress.total_questions else ""
+        return RedirectResponse(url=f"/sessions/{session_id}" + (f"/{destination}" if destination else ""), status_code=303)
 
     @router.get("/sessions/{session_id}/answers/{answer_id}/result", response_model=None)
     def evaluation_result_page(
         session_id: str, answer_id: str, request: Request, revision: int = Query(default=1, ge=1),
     ) -> HTMLResponse:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        if session_dto.progress.answered_count < session_dto.progress.total_questions:
+            return RedirectResponse(url=f"/sessions/{session_id}", status_code=303)
         if evaluation_controller is None:
             return HTMLResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
         try:
@@ -401,6 +424,11 @@ def build_pages_router(
     def retry_evaluation_page(
         session_id: str, answer_id: str, request: Request, revision: int = Query(default=1, ge=1),
     ) -> Response:
+        session_dto, error_response = _get_owned_session_page_data(session_id, request)
+        if error_response is not None:
+            return error_response
+        if session_dto.progress.answered_count < session_dto.progress.total_questions:
+            return RedirectResponse(url=f"/sessions/{session_id}", status_code=303)
         if evaluation_controller is None:
             return HTMLResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE)
         try:
@@ -431,6 +459,8 @@ def build_pages_router(
         session_dto, error_response = _get_owned_session_page_data(session_id, request)
         if error_response is not None:
             return error_response
+        if session_dto.progress.answered_count < session_dto.progress.total_questions:
+            return RedirectResponse(url=f"/sessions/{session_id}", status_code=303)
         answer_id = request.query_params.get("answer_id")
         answer_revision = request.query_params.get("revision")
         current_answer = session_dto.current_answer
@@ -452,6 +482,8 @@ def build_pages_router(
         session_dto, error_response = _get_owned_session_page_data(session_id, request)
         if error_response is not None:
             return error_response
+        if session_dto.progress.answered_count < session_dto.progress.total_questions:
+            return RedirectResponse(url=f"/sessions/{session_id}", status_code=303)
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
         created_at = controller.get_session_created_at(
             SessionId(session_id),
@@ -472,6 +504,8 @@ def build_pages_router(
         session_dto, error_response = _get_owned_session_page_data(session_id, request)
         if error_response is not None:
             return error_response
+        if session_dto.progress.answered_count < session_dto.progress.total_questions:
+            return RedirectResponse(url=f"/sessions/{session_id}", status_code=303)
         html = exercise_template.render(
             demo_mode_label=controller.demo_mode_label,
             session=session_dto,

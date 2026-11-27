@@ -19,7 +19,7 @@ from source.Model.evaluation import (
     EvaluationStatus,
 )
 from source.Model.ids import AnswerId, CriterionId, EvaluationId, ExerciseId
-from source.Model.interview import Answer
+from source.Model.interview import Answer, SessionState
 from source.Model.question import ReviewMetadata
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.main import create_app
@@ -69,6 +69,45 @@ def _app(tmp_path: Path, store: InMemoryRepositoryStore):
     )
 
 
+def _store_complete_session(
+    store: InMemoryRepositoryStore,
+    session,
+    target_question,
+    *,
+    target_answer_id: str,
+    target_answer_text: str,
+) -> Answer:
+    target_answer = None
+    for index, question_ref in enumerate(session.question_refs):
+        question = store.get_question(question_ref)
+        assert question is not None
+        active = store.get_session(session.id)
+        assert active is not None
+        store.update_session(replace(
+            active, current_index=index, state=SessionState.IN_PROGRESS
+        ))
+        is_target = question.ref == target_question.ref
+        answer = Answer(
+            id=AnswerId(target_answer_id if is_target else f"answer.coverage.{session.id}.{index}"),
+            revision=1,
+            session_id=session.id,
+            question_ref=question.ref,
+            rubric_ref=question.rubric_ref,
+            text=target_answer_text if is_target else f"Coverage answer {index}.",
+            submitted_at=datetime.now(UTC),
+        )
+        store.save_answer(answer)
+        if is_target:
+            target_answer = answer
+    assert target_answer is not None
+    store.update_session(replace(
+        session,
+        current_index=len(session.question_refs),
+        state=SessionState.COMPLETED,
+    ))
+    return target_answer
+
+
 def _evaluated_answer(
     client: TestClient,
     store: InMemoryRepositoryStore,
@@ -98,7 +137,31 @@ def _evaluated_answer(
         text="A synthetic response that omits the rollback test.",
         submitted_at=datetime.now(UTC),
     )
-    store.save_answer(answer)
+    for index, question_ref in enumerate(session.question_refs):
+        active = store.get_session(session.id)
+        assert active is not None
+        store.update_session(replace(
+            active, current_index=index, state=SessionState.IN_PROGRESS
+        ))
+        if question_ref == question.ref:
+            store.save_answer(answer)
+            continue
+        other_question = store.get_question(question_ref)
+        assert other_question is not None
+        store.save_answer(Answer(
+            id=AnswerId(f"answer.i06.coverage.{index}"),
+            revision=1,
+            session_id=session.id,
+            question_ref=other_question.ref,
+            rubric_ref=other_question.rubric_ref,
+            text=f"Coverage answer for question {index}.",
+            submitted_at=datetime.now(UTC),
+        ))
+    store.update_session(replace(
+        store.get_session(session.id),
+        current_index=len(session.question_refs),
+        state=SessionState.COMPLETED,
+    ))
     checks = tuple(
         CriterionCheck(
             criterion_id=item.id,
@@ -209,23 +272,29 @@ def test_i06_unresolved_evidence_never_creates_a_gap(tmp_path: Path) -> None:
         assert "Chưa ghi nhận điểm thiếu" in response.json()["message"]
 
 
-def test_i06_new_answer_revision_without_completed_evaluation_has_no_gap(tmp_path: Path) -> None:
+def test_i06_completed_answer_cannot_be_revised_after_submission(tmp_path: Path) -> None:
     store = InMemoryRepositoryStore()
     app = _app(tmp_path, store)
     with TestClient(app) as client:
         session_id, answer_ref, _ = _evaluated_answer(client, store)
         original = store.get_answer(answer_ref)
         assert original is not None
-        store.save_answer(
-            replace(
-                original, revision=2, text="A revised answer awaiting evaluation.",
-                submitted_at=datetime.now(UTC),
-            )
+        question = store.get_question(original.question_ref)
+        assert question is not None
+        revised = client.post(
+            f"/api/sessions/{session_id}/answers",
+            json={
+                "question_id": question.id,
+                "question_version": question.version,
+                "client_submission_id": "i06-revision-attempt",
+                "text": "A revised answer awaiting evaluation.",
+            },
         )
+        assert revised.status_code == 409
+        assert revised.json()["error_code"] == "INVALID_STATE_TRANSITION"
         response = client.get(f"/api/sessions/{session_id}/exercises")
         assert response.status_code == 200
-        assert response.json()["recommendations"] == []
-        assert response.json()["unmatched_skill_ids"] == []
+        assert response.json()["recommendations"]
 
 
 def test_i06_no_reviewed_match_is_explicit_and_foreign_session_is_forbidden(tmp_path: Path) -> None:
@@ -441,35 +510,35 @@ def test_i06_antigravity_evaluation_flows_into_recommendations_without_another_c
         opened = client.post("/api/sessions", json={})
         assert opened.status_code == 201
         session_id = opened.json()["session_id"]
-        question = opened.json()["current_question"]
-        assert question is not None
         session = store.get_session(session_id)
         assert session is not None
-        saved_question = store.get_question(
-            next(ref for ref in session.question_refs if ref.id == question["id"])
+        question = next(
+            candidate for candidate in (
+                store.get_question(ref) for ref in session.question_refs
+            )
+            if candidate is not None and candidate.category == "technical_case"
         )
-        assert saved_question is not None
-        rubric = store.get_rubric(saved_question.rubric_ref)
+        rubric = store.get_rubric(question.rubric_ref)
         assert rubric is not None
-
-        submitted = client.post(
-            f"/api/sessions/{session_id}/answers",
-            json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "i06-antigravity-integration",
-                "text": "Synthetic answer with no rubric requirements.",
-            },
+        answer = _store_complete_session(
+            store,
+            session,
+            question,
+            target_answer_id="answer.i06.antigravity",
+            target_answer_text="Synthetic answer with no rubric requirements.",
         )
-        assert submitted.status_code == 201
-        answer_id = submitted.json()["answer"]["answer_id"]
         evaluated = client.post(
-            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
-            json={"answer_revision": 1},
+            f"/api/sessions/{session_id}/answers/{answer.id}/evaluate",
+            json={"answer_revision": answer.revision},
         )
         assert evaluated.status_code == 200
-        assert evaluated.json()["result"]["model_id"] == settings.antigravity_model
-        assert evaluated.json()["result"]["total_score"] == 0
+        client.app.state.container.evaluation_queue._executor.submit(lambda: None).result(timeout=5)
+        result = client.get(
+            f"/api/sessions/{session_id}/answers/{answer.id}/evaluations/{answer.revision}"
+        )
+        assert result.status_code == 200
+        assert result.json()["result"]["model_id"] == settings.antigravity_model
+        assert result.json()["result"]["total_score"] == 0
 
         recommendations = client.get(f"/api/sessions/{session_id}/exercises")
         assert recommendations.status_code == 200
@@ -481,7 +550,7 @@ def test_i06_antigravity_evaluation_flows_into_recommendations_without_another_c
             if item["eligible_alternate_question_available"]
         )
         practice = client.post(
-            f"/api/sessions/{session_id}/answers/{answer_id}/practice",
+            f"/api/sessions/{session_id}/answers/{answer.id}/practice",
             json={
                 "answer_revision": 1,
                 "criterion_id": first["matched_gap"]["criterion_id"],
@@ -489,7 +558,7 @@ def test_i06_antigravity_evaluation_flows_into_recommendations_without_another_c
             },
         )
         assert practice.status_code == 201
-        assert practice.json()["current_question"]["id"] != question["id"]
+        assert practice.json()["current_question"]["id"] != question.id
         assert len(calls) == 1
 
 
@@ -513,24 +582,27 @@ def test_i06_provider_failure_does_not_create_recommendations(tmp_path: Path) ->
         opened = client.post("/api/sessions", json={})
         assert opened.status_code == 201
         session_id = opened.json()["session_id"]
-        question = opened.json()["current_question"]
-        assert question is not None
-        submitted = client.post(
-            f"/api/sessions/{session_id}/answers",
-            json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "i06-failed-provider",
-                "text": "Synthetic answer saved before provider failure.",
-            },
+        session = store.get_session(session_id)
+        assert session is not None
+        question = next(
+            candidate for candidate in (
+                store.get_question(ref) for ref in session.question_refs
+            )
+            if candidate is not None and candidate.category == "technical_case"
         )
-        assert submitted.status_code == 201
-        answer_id = submitted.json()["answer"]["answer_id"]
+        answer = _store_complete_session(
+            store,
+            session,
+            question,
+            target_answer_id="answer.i06.failure",
+            target_answer_text="Synthetic answer saved before provider failure.",
+        )
         evaluated = client.post(
-            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
-            json={"answer_revision": 1},
+            f"/api/sessions/{session_id}/answers/{answer.id}/evaluate",
+            json={"answer_revision": answer.revision},
         )
-        assert evaluated.status_code == 504
+        assert evaluated.status_code == 200
+        client.app.state.container.evaluation_queue._executor.submit(lambda: None).result(timeout=5)
         recommendations = client.get(f"/api/sessions/{session_id}/exercises")
         assert recommendations.status_code == 200
         assert recommendations.json()["recommendations"] == []

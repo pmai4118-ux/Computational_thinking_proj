@@ -9,6 +9,7 @@
          data-session-id="{{ session.session_id }}"
          data-question-id="{{ session.current_question.id if session.current_question else '' }}"
          data-question-version="{{ session.current_question.version if session.current_question else '' }}"
+         data-current-index="{{ session.progress.current_index }}"
          data-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"
          data-answer-revision="{{ session.current_answer.revision if session.current_answer else '' }}">
   <div class="workspace-topline">
@@ -26,7 +27,7 @@
             {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
           </progress>
         </div>
-        <span class="workspace-progress__meta">{{ session.progress.evaluated_count }} câu đã có kết quả</span>
+        <span class="workspace-progress__meta">{{ session.progress.answered_count }} câu đã gửi</span>
       </div>
     {% else %}
       <span class="badge badge--unresolved" id="question-progress-label">
@@ -87,17 +88,17 @@
       {% if session.current_answer %}
         <div class="alert alert--status" role="status">
           <p class="alert__title">Câu trả lời đã được lưu trên máy chủ.</p>
-          <p class="alert__hint">Đang kiểm tra kết quả. Nếu đánh giá thất bại, bạn có thể thử lại với bài đã lưu.</p>
+          <p class="alert__hint">Câu trả lời đã khóa. Tiếp tục sang câu kế tiếp.</p>
         </div>
       {% endif %}
       <div class="form-field">
         <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
-        <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự. Bản nháp chưa gửi chỉ được giữ trong tab trình duyệt hiện tại.</p>
+        <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự. Bản nháp được lưu để tiếp tục sau.</p>
         <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
                   aria-describedby="answer-guidance answer-counter draft-label"
                   {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% elif answer_text %}{{ answer_text }}{% endif %}</textarea>
         <p class="form-hint" id="draft-label" data-draft-label>
-          {% if session.current_answer %}Đã lưu câu trả lời trên máy chủ{% else %}Bản nháp trên trình duyệt (chưa lưu máy chủ){% endif %}
+          {% if session.current_answer %}Đã lưu câu trả lời{% elif session.current_draft %}Đã khôi phục bản nháp{% else %}Bản nháp chưa gửi{% endif %}
         </p>
         <p class="form-hint" id="answer-counter" aria-live="polite"></p>
       </div>
@@ -112,24 +113,13 @@
 
       <div class="action-row workspace-primary-actions">
         <button class="btn btn--primary" id="submit-answer" type="submit" {% if session.current_answer %}hidden{% endif %}>Gửi câu trả lời</button>
-        <button class="btn btn--secondary" id="retry-evaluation" type="button" hidden>Thử đánh giá lại</button>
         {% if session.current_answer %}
-          <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}&amp;revision={{ session.current_answer.revision }}">Xem kết quả câu này</a>
+          <button class="btn btn--primary" id="continue-saved" type="submit" name="action" value="continue_saved">Tiếp tục</button>
         {% endif %}
       </div>
 
       <div class="workspace-secondary-actions" aria-label="Tùy chọn phiên">
-        <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
-        <button class="btn btn--ghost btn--danger-subtle" id="end-session" type="button">Kết thúc sớm</button>
-      </div>
-
-      <div class="alert alert--status" id="end-session-confirmation" role="group" aria-labelledby="end-session-confirmation-title" hidden>
-        <p class="alert__title" id="end-session-confirmation-title">Kết thúc phiên bây giờ?</p>
-        <p class="alert__hint">Các câu đã gửi được giữ trong tổng kết. Bản nháp chưa gửi không được tính.</p>
-        <div class="action-row">
-          <button class="btn btn--primary" id="confirm-end-session" type="button">Xác nhận kết thúc</button>
-          <button class="btn btn--secondary" id="cancel-end-session" type="button">Tiếp tục làm</button>
-        </div>
+        <button class="btn btn--ghost" id="save-exit" type="submit" name="action" value="save_exit">Lưu và thoát</button>
       </div>
     </form>
     </div>
@@ -143,4 +133,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261125-q06" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261127-mvp" defer></script>{% endblock %}

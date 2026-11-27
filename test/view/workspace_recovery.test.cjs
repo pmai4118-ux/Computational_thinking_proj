@@ -10,21 +10,22 @@ const script = fs.readFileSync(
   path.join(__dirname, "../../source/view/static/js/workspace.js"), "utf8"
 );
 
-function browser({ savedAnswerId = "", initialAnswerText = "", initialDraft = null, api }) {
+function browser({ api, index = 0 }) {
   const handlers = new Map();
-  const intervals = new Map();
+  const timers = new Map();
   const elements = new Map();
-  let nextInterval = 1;
-  let now = 0;
+  const storage = new Map();
+  let nextTimer = 1;
   let navigation = null;
 
   function element(selector) {
     if (!elements.has(selector)) {
       elements.set(selector, {
-        value: "", textContent: "", hidden: true, disabled: false,
-        dataset: {},
+        value: "", textContent: "", hidden: false, disabled: false,
+        dataset: {}, readOnly: false,
         addEventListener(name, callback) { handlers.set(`${selector}:${name}`, callback); },
         focus() { this.focused = true; },
+        insertAdjacentElement(_position, node) { this.inserted = node; },
       });
     }
     return elements.get(selector);
@@ -32,221 +33,150 @@ function browser({ savedAnswerId = "", initialAnswerText = "", initialDraft = nu
 
   element("[data-workspace]").dataset = {
     sessionId: "session-1", questionId: "question-1", questionVersion: "1",
-    answerId: savedAnswerId, answerRevision: "1",
+    currentIndex: String(index), answerId: "",
   };
-  if (initialAnswerText) {
-    element("#answer-text").value = initialAnswerText;
-    element("#answer-text").readOnly = true;
-  }
-  const storage = new Map();
-  if (initialDraft !== null) {
-    storage.set("draft:session-1:question-1", initialDraft);
-  }
+  element("#workspace-error").hidden = true;
+  element("#workspace-status").hidden = true;
+
+  const sessionStorage = {
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, value),
+    removeItem: (key) => storage.delete(key),
+  };
   const window = {
     InterviewApi: api,
     crypto: { randomUUID: () => "submission-1" },
-    sessionStorage: {
-      getItem: (key) => storage.get(key) ?? null,
-      setItem: (key, value) => storage.set(key, value),
-      removeItem: (key) => storage.delete(key),
-    },
-    setInterval(callback, delay) {
-      const id = nextInterval++;
-      intervals.set(id, { callback, delay });
+    sessionStorage,
+    addEventListener(name, callback) { handlers.set(`window:${name}`, callback); },
+    setTimeout(callback, delay) {
+      const id = nextTimer++;
+      timers.set(id, { callback, delay });
       return id;
     },
-    clearInterval: (id) => intervals.delete(id),
-    location: {
-      origin: "http://localhost",
-      assign(url) { navigation = url; },
-    },
+    clearTimeout: (id) => timers.delete(id),
+    location: { origin: "http://localhost", assign(url) { navigation = url; } },
   };
+
   vm.runInNewContext(script, {
-    window, document: {
+    window,
+    document: {
       querySelector: element,
-      addEventListener(name, callback) { handlers.set(`document:${name}`, callback); },
-    }, URL,
-    Date: { now: () => now }, Math, JSON, Number, String, Boolean, Error,
+      createElement: () => ({
+        addEventListener(name, callback) { this[`on${name}`] = callback; },
+      }),
+    },
+    sessionStorage, URL,
+    Date: { now: () => 1000 }, Math, JSON, Number, String, Boolean, Error,
     encodeURIComponent,
   });
+
   return {
-    element, handlers, intervals,
-    setNow(value) { now = value; },
+    element, handlers, timers, sessionStorage,
+    async fireTimer(delay) {
+      const match = [...timers.entries()].find(([, timer]) => timer.delay === delay);
+      assert.ok(match, `expected a ${delay}ms timer`);
+      timers.delete(match[0]);
+      await match[1].callback();
+    },
     get navigation() { return navigation; },
   };
 }
 
-const flush = () => new Promise((resolve) => setImmediate(resolve));
+const input = (page, text) => {
+  page.element("#answer-text").value = text;
+  page.handlers.get("#answer-text:input")();
+};
 
-test("a timed-out saved answer stays available for retry without a score", async () => {
-  const page = browser({
-    savedAnswerId: "answer-1",
-    api: { getEvaluation: async () => ({ result: {
-      status: "failed", failure_code: "PROVIDER_TIMEOUT", retryable: true,
-    } }) },
-  });
-  await flush();
-  assert.equal(page.element("#retry-evaluation").hidden, false);
-  assert.match(page.element("#workspace-error").textContent, /AI phản hồi quá thời gian/);
-  assert.match(page.element("#workspace-status").textContent, /chưa có điểm/);
-  assert.equal(page.navigation, null);
+test("draft autosaves to the session API after typing", async () => {
+  const saves = [];
+  const page = browser({ api: { saveDraft: async (...args) => saves.push(args) } });
+  input(page, "Bản nháp đã nhập");
+  await page.fireTimer(600);
+  assert.equal(saves.length, 1);
+  assert.equal(saves[0][0], "session-1");
+  assert.equal(saves[0][1].question_id, "question-1");
+  assert.equal(saves[0][1].text, "Bản nháp đã nhập");
+  assert.equal(page.element("#draft-label").textContent, "Đã lưu bản nháp");
 });
 
-test("a permanent provider failure does not invite an impossible retry", async () => {
-  const submissions = [];
-  const page = browser({
-    savedAnswerId: "answer-1",
-    api: {
-      getEvaluation: async () => ({ result: {
-        status: "failed", failure_code: "PROVIDER_CONFIG_ERROR", retryable: false,
-      } }),
-      submitAnswer: async (_sessionId, body) => {
-        submissions.push(body);
-        return { answer: { answer_id: "answer-1", revision: 2 } };
-      },
-      evaluateAnswer: async () => ({ result: { status: "completed" } }),
-    },
-  });
-  page.element("#answer-text").value = "Bài gốc đã lưu";
-  page.element("#answer-text").readOnly = true;
-  await flush();
-  assert.equal(page.element("#retry-evaluation").hidden, true);
-  assert.equal(page.element("#submit-answer").hidden, false);
-  assert.equal(page.element("#submit-answer").textContent, "Gửi bản trả lời mới");
-  assert.equal(page.element("#answer-text").readOnly, false);
-  assert.match(page.element("#workspace-error").textContent, /khắc phục lỗi dịch vụ/);
-
-  const submit = page.handlers.get("#answer-form:submit");
-  await submit({ preventDefault() {} });
-  await flush();
-  assert.equal(submissions.length, 1);
-  assert.match(page.navigation, /\/sessions\/session-1\/review\?answer_id=answer-1&revision=2/);
+test("save and exit waits for the latest draft before leaving", async () => {
+  const saves = [];
+  const page = browser({ api: { saveDraft: async (_id, draft) => saves.push(draft.text) } });
+  input(page, "Nội dung mới nhất");
+  await page.handlers.get("#save-exit:click")({ preventDefault() {} });
+  assert.deepEqual(saves, ["Nội dung mới nhất"]);
+  assert.equal(page.navigation, "/");
 });
 
-test("reopened processing answer polls the saved result without another AI call", async () => {
-  let reads = 0;
-  let evaluations = 0;
-  const page = browser({
-    savedAnswerId: "answer-1",
-    api: {
-      getEvaluation: async () => ({ result: {
-        status: ++reads === 1 ? "processing" : "completed",
-      } }),
-      evaluateAnswer: async () => { evaluations += 1; },
-    },
-  });
-  await flush();
-  assert.equal(page.element("#retry-evaluation").hidden, true);
-  const poll = [...page.intervals.values()].find((item) => item.delay === 5000);
-  assert.ok(poll);
-  await poll.callback();
-  await flush();
-  assert.match(page.navigation, /\/sessions\/session-1\/review\?answer_id=answer-1/);
-  assert.equal(evaluations, 0);
+test("blank answer is rejected without submitting", async () => {
+  let submits = 0;
+  const page = browser({ api: { submitAnswer: async () => { submits += 1; } } });
+  await page.handlers.get("#answer-form:submit")({ preventDefault() {} });
+  assert.equal(submits, 0);
+  assert.equal(page.element("#workspace-error").hidden, false);
+  assert.equal(page.element("#answer-text").focused, true);
 });
 
-test("slow live request keeps saved-answer progress visible and opens its result", async () => {
-  let finishEvaluation;
-  const page = browser({
-    api: {
-      submitAnswer: async () => ({ answer: { answer_id: "answer-1", revision: 1 } }),
-      evaluateAnswer: () => new Promise((resolve) => { finishEvaluation = resolve; }),
+test("submission saves the draft, locks the answer, and advances in order", async () => {
+  const calls = [];
+  const page = browser({ api: {
+    saveDraft: async (_id, draft) => calls.push(`draft:${draft.text}`),
+    submitAnswer: async (_id, payload) => { calls.push(`answer:${payload.text}`); },
+    nextQuestion: async (_id, from) => {
+      calls.push(`next:${from}`);
+      return { progress: { answered_count: 1, total_questions: 4 } };
     },
-  });
-  page.element("#answer-text").value = "Câu trả lời đã lưu";
-  const submit = page.handlers.get("#answer-form:submit");
-  const pending = submit({ preventDefault() {} });
-  await flush();
-  page.setNow(30000);
-  const notice = [...page.intervals.values()].find((item) => item.delay === 10000);
-  assert.ok(notice);
-  notice.callback();
-  assert.match(page.element("#workspace-status").textContent, /đã chờ khoảng 30 giây/);
+  } });
+  input(page, "Câu trả lời đã gửi");
+  await page.handlers.get("#answer-form:submit")({ preventDefault() {} });
+  assert.equal(calls.join("|"), "draft:Câu trả lời đã gửi|answer:Câu trả lời đã gửi|next:0");
+  assert.equal(page.navigation, "/sessions/session-1");
   assert.equal(page.element("#answer-text").readOnly, true);
-  finishEvaluation({ result: { status: "completed" } });
-  await pending;
-  assert.match(page.navigation, /\/sessions\/session-1\/review\?answer_id=answer-1/);
-});
-
-test("polling times out after 150s and enables retry without an infinite spinner", async () => {
-  const page = browser({
-    savedAnswerId: "answer-1",
-    api: {
-      getEvaluation: async () => ({ result: { status: "processing" } }),
-    },
-  });
-  await flush();
-  assert.equal(page.element("#retry-evaluation").hidden, true);
-  const poll = [...page.intervals.values()].find((item) => item.delay === 5000);
-  assert.ok(poll);
-  page.setNow(160000);
-  await poll.callback();
-  await flush();
-  assert.equal(page.element("#retry-evaluation").hidden, false);
-  assert.match(page.element("#workspace-error").textContent, /nhiều thời gian hơn dự kiến/);
-  assert.equal(page.intervals.size, 0);
-});
-
-test("expired session on submit keeps answer text and shows restart link", async () => {
-  const page = browser({
-    api: {
-      submitAnswer: async () => {
-        const error = new Error("Phiên luyện tập đã hết hạn khả dụng.");
-        error.code = "SESSION_EXPIRED";
-        error.status = 410;
-        throw error;
-      },
-    },
-  });
-  page.element("#answer-text").value = "Bản nháp cần bảo toàn";
-  const submit = page.handlers.get("#answer-form:submit");
-  await submit({ preventDefault() {} });
-  await flush();
-  assert.equal(page.element("#answer-text").value, "Bản nháp cần bảo toàn");
   assert.equal(page.element("#submit-answer").hidden, true);
-  assert.equal(page.element("#session-expired-recovery").hidden, false);
-  assert.match(page.element("#workspace-error").textContent, /hết hạn/);
 });
 
-test("Escape dismisses the end-session confirmation and restores focus", () => {
+test("final answer opens the summary only after the session count is complete", async () => {
+  const page = browser({ index: 3, api: {
+    saveDraft: async () => {},
+    submitAnswer: async () => {},
+    nextQuestion: async () => ({ progress: { answered_count: 4, total_questions: 4 } }),
+  } });
+  input(page, "Câu trả lời thứ tư");
+  await page.handlers.get("#answer-form:submit")({ preventDefault() {} });
+  assert.equal(page.navigation, "/sessions/session-1/summary");
+});
+
+test("a failed advance after saving prevents a duplicate submission", async () => {
+  let submits = 0;
+  const page = browser({ api: {
+    saveDraft: async () => {},
+    submitAnswer: async () => { submits += 1; },
+    nextQuestion: async () => { throw new Error("Kết nối bị ngắt"); },
+  } });
+  input(page, "Câu đã lưu ở máy chủ");
+  await page.handlers.get("#answer-form:submit")({ preventDefault() {} });
+  assert.equal(submits, 1);
+  assert.equal(page.element("#submit-answer").hidden, true);
+  assert.equal(page.element("#answer-text").readOnly, true);
+  assert.match(page.element("#workspace-status").textContent, /Tải lại trang/);
+  assert.ok(page.element("#workspace-status").inserted);
+});
+
+test("beforeunload warns while an unsaved draft is dirty", () => {
   const page = browser({ api: {} });
-  const confirmation = page.element("#end-session-confirmation");
-  confirmation.hidden = false;
-  page.handlers.get("document:keydown")({ key: "Escape" });
-  assert.equal(confirmation.hidden, true);
-  assert.equal(page.element("#end-session").focused, true);
+  input(page, "Bản nháp chưa lưu");
+  let prevented = false;
+  const event = { preventDefault() { prevented = true; }, returnValue: null };
+  page.handlers.get("window:beforeunload")(event);
+  assert.equal(prevented, true);
+  assert.equal(event.returnValue, "");
 });
 
-test("reopening a non-retryable failed answer restores unsent replacement draft while keeping committed baseline", async () => {
-  let confirmCalls = 0;
-  const submissions = [];
-  const page = browser({
-    savedAnswerId: "answer-1",
-    initialAnswerText: "Bài gốc đã lưu ở revision 1",
-    initialDraft: "Bản nháp thay thế đang viết dở cho revision 2",
-    api: {
-      getEvaluation: async () => ({ result: {
-        status: "failed", failure_code: "PROVIDER_CONFIG_ERROR", retryable: false,
-      } }),
-      submitAnswer: async (_sessionId, body) => {
-        submissions.push(body);
-        return { answer: { answer_id: "answer-1", revision: 2 } };
-      },
-      evaluateAnswer: async () => ({ result: { status: "completed" } }),
-    },
-  });
-  await flush();
-
-  assert.equal(page.element("#answer-text").readOnly, false);
-  assert.equal(page.element("#answer-text").value, "Bản nháp thay thế đang viết dở cho revision 2");
-  assert.match(page.element("[data-draft-label]").textContent, /khôi phục bản nháp thay thế/);
-  assert.match(page.element("#answer-counter").textContent, /45/);
-  assert.equal(confirmCalls, 0);
-
-  const submit = page.handlers.get("#answer-form:submit");
-  await submit({ preventDefault() {} });
-  await flush();
-  assert.equal(submissions.length, 1);
-  assert.equal(submissions[0].text, "Bản nháp thay thế đang viết dở cho revision 2");
-  assert.match(page.navigation, /\/sessions\/session-1\/review\?answer_id=answer-1&revision=2/);
+test("failed draft save keeps the answer visible and stays on the question", async () => {
+  const page = browser({ api: { saveDraft: async () => { throw new Error("Không lưu được"); } } });
+  input(page, "Bản nháp vẫn giữ trong ô");
+  await page.handlers.get("#save-exit:click")({ preventDefault() {} });
+  assert.equal(page.navigation, null);
+  assert.equal(page.element("#answer-text").value, "Bản nháp vẫn giữ trong ô");
+  assert.match(page.element("#workspace-error").textContent, /Không lưu được/);
 });

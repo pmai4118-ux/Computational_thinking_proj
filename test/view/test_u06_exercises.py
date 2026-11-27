@@ -11,9 +11,9 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 
 def test_u06_exercise_page_accepts_session_skill_and_exercise_filters(
     ui_client: TestClient,
-    ui_session: dict[str, object],
+    complete_ui_session: dict[str, object],
 ) -> None:
-    session_id = ui_session["session_id"]
+    session_id = complete_ui_session["session_id"]
     response = ui_client.get(
         f"/sessions/{session_id}/exercises?skill_id=skill.backend.data_consistency&exercise_id=exercise.backend.rollback_invariant_test"
     )

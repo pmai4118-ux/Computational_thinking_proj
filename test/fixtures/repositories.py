@@ -20,7 +20,7 @@ from source.Model.ids import (
     SourceId,
     VersionedRef,
 )
-from source.Model.interview import Answer, Session
+from source.Model.interview import Answer, Session, SessionState
 from source.Model.question import (
     LicenseStatus,
     Question,
@@ -30,6 +30,7 @@ from source.Model.question import (
     SourceMetadata,
 )
 from source.Model.repositories.interfaces import (
+    AnswerLockedError,
     DuplicateRecordError,
     DuplicateSubmissionConflictError,
     EvaluationInProgressError,
@@ -51,6 +52,7 @@ class InMemoryRepositoryStore:
         self._sessions: dict[SessionId, Session] = {}
         self._answers: dict[tuple[AnswerId, int], Answer] = {}
         self._submissions: dict[tuple[SessionId, str], tuple[AnswerId, int]] = {}
+        self._drafts: dict[tuple[SessionId, QuestionId, int], str] = {}
         self._evaluations: dict[tuple[EvaluationId, int], EvaluationResult] = {}
         self._evaluation_lock = RLock()
 
@@ -154,6 +156,31 @@ class InMemoryRepositoryStore:
         self._sessions[session.id] = session
         return session
 
+    def advance_session(self, session_id: SessionId, from_question_index: int) -> Session:
+        session = self._sessions[session_id]
+        if session.state is SessionState.COMPLETED and from_question_index == len(session.question_refs) - 1:
+            return session
+        if session.state is not SessionState.IN_PROGRESS:
+            raise AnswerLockedError("This session cannot advance.")
+        if session.current_index > 0 and from_question_index == session.current_index - 1:
+            return session
+        if from_question_index != session.current_index:
+            raise AnswerLockedError("The current question has changed.")
+        if not any(a.question_ref == session.current_question_ref for a in self.list_answers_for_session(session_id)):
+            raise AnswerLockedError("Submit an answer before advancing.")
+        index = session.current_index + 1
+        next_state = SessionState.COMPLETED if index == len(session.question_refs) else SessionState.IN_PROGRESS
+        return self.update_session(replace(session, current_index=index, state=next_state, updated_at=datetime.now(UTC)))
+
+    def resume_ended_session(self, session_id: SessionId) -> Session:
+        session = self._sessions[session_id]
+        if session.state is not SessionState.ENDED_EARLY:
+            return session
+        answered = {answer.question_ref for answer in self.list_answers_for_session(session_id)}
+        index = next((i for i, question in enumerate(session.question_refs) if question not in answered), len(session.question_refs))
+        state = SessionState.IN_PROGRESS if index < len(session.question_refs) else SessionState.COMPLETED
+        return self.update_session(replace(session, current_index=index, state=state, updated_at=datetime.now(UTC)))
+
     def save_answer(self, answer: Answer) -> tuple[Answer, bool]:
         session = self._sessions.get(answer.session_id)
         if session is None:
@@ -181,7 +208,13 @@ class InMemoryRepositoryStore:
                 return existing, True
             raise DuplicateRecordError(f"Answer {ans_key} already exists with different content.")
 
+        if session.state is not SessionState.IN_PROGRESS or session.current_question_ref != answer.question_ref:
+            raise AnswerLockedError("This question is no longer active.")
+        if any(item.question_ref == answer.question_ref for item in self.list_answers_for_session(answer.session_id)):
+            raise AnswerLockedError("The submitted answer is locked.")
+
         self._answers[ans_key] = answer
+        self._drafts.pop((answer.session_id, answer.question_ref.id, answer.question_ref.version), None)
         if answer.client_submission_id is not None:
             self._submissions[(answer.session_id, answer.client_submission_id)] = ans_key
         if answer.ref not in session.answer_refs:
@@ -208,6 +241,17 @@ class InMemoryRepositoryStore:
         items.sort(key=lambda item: (item.submitted_at, item.id, item.revision))
         return tuple(items)
 
+    def get_draft(self, session_id: SessionId, question_ref: VersionedRef[QuestionId]) -> str | None:
+        return self._drafts.get((session_id, question_ref.id, question_ref.version))
+
+    def save_draft(self, session_id: SessionId, question_ref: VersionedRef[QuestionId], text: str) -> None:
+        session = self._sessions[session_id]
+        if session.state is not SessionState.IN_PROGRESS or session.current_question_ref != question_ref:
+            raise AnswerLockedError("This question is no longer active.")
+        if any(a.question_ref == question_ref for a in self.list_answers_for_session(session_id)):
+            raise AnswerLockedError("The submitted answer is locked.")
+        self._drafts[(session_id, question_ref.id, question_ref.version)] = text
+
     # EvaluationRepository
     def claim_evaluation(
         self, answer_ref: AnswerRevisionRef,
@@ -227,6 +271,10 @@ class InMemoryRepositoryStore:
                     failure_code="EVALUATION_INTERRUPTED",
                     failure_message="The prior evaluation was interrupted.",
                 )
+            elif latest is not None and latest.status is EvaluationStatus.PENDING:
+                claim = replace(latest, status=EvaluationStatus.PROCESSING, evaluated_at=now)
+                self._evaluations[(claim.id, claim.version)] = claim
+                return claim
             elif latest is not None and latest.status is EvaluationStatus.FAILED:
                 if latest.failure_code not in RETRYABLE_EVALUATION_FAILURES:
                     raise EvaluationRetryNotAllowedError("This evaluation failure cannot be retried.")
@@ -239,6 +287,38 @@ class InMemoryRepositoryStore:
             )
             self._evaluations[(claim.id, claim.version)] = claim
             return claim
+
+    def prepare_evaluation(
+        self, answer_ref: AnswerRevisionRef,
+        question_ref: VersionedRef[QuestionId], rubric_ref: VersionedRef[RubricId],
+        *, retry_failed: bool = False, recover_interrupted: bool = False,
+    ) -> EvaluationResult:
+        with self._evaluation_lock:
+            latest = self.get_latest_evaluation_for_answer(answer_ref)
+            if latest is not None:
+                if latest.status in (EvaluationStatus.COMPLETED, EvaluationStatus.PENDING):
+                    return latest
+                if latest.status is EvaluationStatus.PROCESSING:
+                    if latest.evaluated_at and datetime.now(UTC) - latest.evaluated_at < timedelta(minutes=15):
+                        return latest
+                    if not recover_interrupted and not retry_failed:
+                        return latest
+                    self._evaluations[(latest.id, latest.version)] = replace(
+                        latest, status=EvaluationStatus.FAILED, failure_code="EVALUATION_INTERRUPTED",
+                        failure_message="The prior evaluation was interrupted.",
+                    )
+                elif latest.status is EvaluationStatus.FAILED:
+                    if not retry_failed and not (recover_interrupted and latest.failure_code == "EVALUATION_INTERRUPTED"):
+                        return latest
+                    if latest.failure_code not in RETRYABLE_EVALUATION_FAILURES:
+                        raise EvaluationRetryNotAllowedError("This evaluation failure cannot be retried.")
+            pending = EvaluationResult(
+                id=latest.id if latest else EvaluationId(f"evaluation.{uuid4().hex[:12]}"),
+                version=latest.version + 1 if latest else 1, status=EvaluationStatus.PENDING,
+                answer_ref=answer_ref, question_ref=question_ref, rubric_ref=rubric_ref,
+            )
+            self._evaluations[(pending.id, pending.version)] = pending
+            return pending
 
     def complete_evaluation(self, claim: EvaluationResult, result: EvaluationResult) -> EvaluationResult:
         with self._evaluation_lock:

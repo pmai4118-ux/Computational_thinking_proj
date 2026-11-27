@@ -1,502 +1,135 @@
 (() => {
   "use strict";
-
-  const workspace = document.querySelector("[data-workspace]");
+  const page = document.querySelector("[data-workspace]");
   const form = document.querySelector("#answer-form");
-  if (!workspace || !form) return;
-
-  const answerField = document.querySelector("#answer-text");
-  const counter = document.querySelector("#answer-counter");
-  const draftLabel = document.querySelector("[data-draft-label]");
-  const errorBox = document.querySelector("#workspace-error");
-  const statusBox = document.querySelector("#workspace-status");
-  const submitButton = document.querySelector("#submit-answer");
-  const retryButton = document.querySelector("#retry-evaluation");
-  const openReviewLink = document.querySelector("#open-review");
-  const endButton = document.querySelector("#end-session");
-  const endConfirmation = document.querySelector("#end-session-confirmation");
-  const confirmEndButton = document.querySelector("#confirm-end-session");
-  const cancelEndButton = document.querySelector("#cancel-end-session");
-  const sessionExpiredRecovery = document.querySelector("#session-expired-recovery");
+  if (!page || !form) return;
   const api = window.InterviewApi;
-  const sessionId = workspace.dataset.sessionId;
-  const questionId = workspace.dataset.questionId;
-  const questionVersion = Number(workspace.dataset.questionVersion);
-  const savedAnswerId = workspace.dataset.answerId;
-  const savedAnswerRevision = Number(workspace.dataset.answerRevision || "1");
-  const draftKey = `draft:${sessionId}:${questionId}`;
-  const submissionKey = `submission:${sessionId}:${questionId}`;
-  const answerKey = `saved-answer:${sessionId}:${questionId}`;
-  const MAX_POLLING_DURATION_MS = 150000;
-  const LEAVE_CONFIRM_MESSAGE = "Bạn có chắc chắn muốn rời khỏi phiên làm bài? Bản nháp chưa gửi chưa được lưu trên máy chủ.";
+  const sessionId = page.dataset.sessionId;
+  const questionId = page.dataset.questionId;
+  const questionVersion = Number(page.dataset.questionVersion);
+  const index = Number(page.dataset.currentIndex);
+  const field = document.querySelector("#answer-text");
+  const submit = document.querySelector("#submit-answer");
+  const exit = document.querySelector("#save-exit");
+  const next = document.querySelector("#continue-saved");
+  const status = document.querySelector("#workspace-status");
+  const error = document.querySelector("#workspace-error");
+  const label = document.querySelector("#draft-label");
+  const counter = document.querySelector("#answer-counter");
+  const key = `submission:${sessionId}:${questionId}`;
+  let timer = null;
+  let saveChain = Promise.resolve();
+  let savedText = field.value;
+  let draftDirty = false;
+  let submissionUncertain = false;
   let busy = false;
-  let allowingNavigation = false;
-  let statusPoll = null;
-  let waitNotice = null;
-  let waitStartedAt = 0;
-  let pendingAnswer = savedAnswerId
-    ? { answer_id: savedAnswerId, revision: savedAnswerRevision }
-    : null;
-  let committedText = savedAnswerId && answerField ? answerField.value : null;
+  let leaving = false;
 
-  const storage = {
-    get(key) {
-      try { return window.sessionStorage.getItem(key); } catch (_error) { return null; }
-    },
-    set(key, value) {
-      try { window.sessionStorage.setItem(key, value); return true; } catch (_error) { return false; }
-    },
-    remove(key) {
-      try { window.sessionStorage.removeItem(key); } catch (_error) { /* Storage can be disabled. */ }
-    },
-  };
-
-  function hasUnsavedWork() {
-    if (allowingNavigation) return false;
-    if (busy) return true;
-    if (!answerField || !answerField.value || !answerField.value.trim()) return false;
-    if (!pendingAnswer) return true;
-    return !answerField.readOnly && answerField.value !== committedText;
+  function showError(message) {
+    error.textContent = message;
+    error.hidden = false;
+    error.focus();
   }
-
-  function setupNavigationGuard() {
-    const nav = document.querySelector(".site-nav");
-    if (nav && nav.classList && typeof nav.classList.add === "function") {
-      nav.classList.add("site-nav--in-session");
-    }
-    if (typeof document.querySelectorAll === "function") {
-      const links = document.querySelectorAll(".site-nav__link, .site-brand__link");
-      for (const link of links) {
-        if (link && typeof link.addEventListener === "function") {
-          link.addEventListener("click", (event) => {
-            if (!hasUnsavedWork()) return;
-            if (typeof window.confirm === "function" && !window.confirm(LEAVE_CONFIRM_MESSAGE)) {
-              event.preventDefault();
-            } else {
-              allowingNavigation = true;
-            }
-          });
-        }
-      }
-    }
-    if (typeof window.addEventListener === "function") {
-      window.addEventListener("beforeunload", (event) => {
-        if (!hasUnsavedWork()) return;
-        event.preventDefault();
-        event.returnValue = LEAVE_CONFIRM_MESSAGE;
-      });
-    }
-  }
-
-  function setStatus(message) {
-    statusBox.textContent = message;
-    statusBox.hidden = false;
-  }
-
-  function setError(message) {
-    errorBox.textContent = message;
-    errorBox.hidden = !message;
-  }
-
+  function updateCounter() { counter.textContent = `${field.value.length.toLocaleString("vi-VN")} / 20.000 ký tự`; }
   function setBusy(value) {
     busy = value;
-    if (submitButton) submitButton.disabled = value;
-    retryButton.disabled = value;
-    if (endButton) endButton.disabled = value;
-    if (confirmEndButton) confirmEndButton.disabled = value;
-    if (cancelEndButton) cancelEndButton.disabled = value;
+    if (submit) submit.disabled = value;
+    if (exit) exit.disabled = value || submissionUncertain;
+    if (next) next.disabled = value;
+    field.readOnly = value || submissionUncertain || Boolean(page.dataset.answerId);
   }
-
-  function updateCounter() {
-    counter.textContent = `${answerField.value.length.toLocaleString("vi-VN")} / 20.000 ký tự`;
+  function submissionId(text) {
+    let pending;
+    try { pending = JSON.parse(sessionStorage.getItem(key) || "null"); } catch (_) { pending = null; }
+    if (pending && pending.text === text && pending.id) return pending.id;
+    const id = window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : `subm-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    try { sessionStorage.setItem(key, JSON.stringify({ id, text })); } catch (_) { /* Continue with this submission ID. */ }
+    return id;
   }
-
-  function createSubmissionId() {
-    if (window.crypto && typeof window.crypto.randomUUID === "function") {
-      return window.crypto.randomUUID();
-    }
-    return `subm-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  }
-
-  function submissionFor(text) {
-    let saved = null;
-    try { saved = JSON.parse(storage.get(submissionKey) || "null"); } catch (_error) { saved = null; }
-    if (saved && saved.text === text && saved.id) return saved.id;
-    const next = { id: createSubmissionId(), text };
-    storage.set(submissionKey, JSON.stringify(next));
-    return next.id;
-  }
-
-  function errorText(error) {
-    if (error.code === "SESSION_EXPIRED" || error.status === 410) {
-      return [
-        error.message || "Phiên luyện tập đã hết hạn khả dụng.",
-        error.recoveryAction || "Bản nháp được giữ nguyên trên ô nhập. Vui lòng sao chép và bắt đầu phiên mới.",
-      ].filter(Boolean).join(" ");
-    }
-    if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
-      return [
-        error.message || "Phiên luyện tập này không thuộc trình duyệt hiện tại.",
-        error.recoveryAction || "Bản nháp được giữ nguyên để bạn sao chép và mở phiên hợp lệ.",
-      ].filter(Boolean).join(" ");
-    }
-    if (error.code === "SUBMISSION_CONFLICT" || error.status === 409) {
-      return [
-        error.message || "Mã gửi bài đã được dùng cho một nội dung khác.",
-        error.recoveryAction || "Tải lại câu trả lời đã lưu hoặc tạo mã gửi mới.",
-      ].filter(Boolean).join(" ");
-    }
-    if (error.code === "PROVIDER_TIMEOUT") {
-      return "AI phản hồi quá thời gian. Bài đã lưu nguyên vẹn và chưa bị chấm điểm; bạn có thể thử đánh giá lại.";
-    }
-    if (error.code === "EVALUATION_IN_PROGRESS") {
-      return "Bài này đang được AI đánh giá. Hãy chờ kết quả của lượt đang chạy.";
-    }
-    if (error.code === "EVALUATION_INTERRUPTED") {
-      return "Lượt đánh giá trước bị gián đoạn. Bài đã lưu và bạn có thể thử đánh giá lại.";
-    }
-    if (error.code === "EVALUATION_RETRY_NOT_ALLOWED") {
-      return "Lượt đánh giá trước không thể thử lại trên cùng phiên bản. Bài gốc đã lưu; sau khi khắc phục lỗi dịch vụ hoặc điều chỉnh nội dung, bạn có thể gửi bản trả lời mới hoặc kết thúc sớm phiên.";
-    }
-    if (typeof error.code === "string" && error.code.startsWith("PROVIDER_")) {
-      return error.retryable === false
-        ? "Dịch vụ AI hiện chưa thể đánh giá lượt gửi này. Bài gốc đã lưu; sau khi khắc phục lỗi dịch vụ hoặc điều chỉnh nội dung, bạn có thể gửi bản trả lời mới hoặc kết thúc sớm phiên."
-        : "Dịch vụ AI chưa hoàn tất đánh giá. Bài đã lưu và bạn có thể thử lại.";
-    }
-    return [error.message, error.recoveryAction].filter(Boolean).join(" ");
-  }
-
-  function hideOpenReview() {
-    if (openReviewLink) openReviewLink.hidden = true;
-  }
-
-  function showSessionExpired(error) {
-    stopWaiting();
-    setBusy(false);
-    hideOpenReview();
-    setError(errorText(error) || "Phiên luyện tập đã hết hạn khả dụng.");
-    setStatus("Phiên đã hết hạn; câu trả lời chưa thể ghi vào phiên cũ. Hãy sao chép nội dung và bắt đầu phiên mới.");
-    if (submitButton) submitButton.hidden = true;
-    if (retryButton) retryButton.hidden = true;
-    if (endButton) endButton.hidden = true;
-    if (sessionExpiredRecovery) sessionExpiredRecovery.hidden = false;
-    errorBox.focus();
-  }
-
-  function showSessionForbidden(error) {
-    stopWaiting();
-    setBusy(false);
-    hideOpenReview();
-    setError(errorText(error) || "Phiên luyện tập này không thuộc trình duyệt hiện tại.");
-    setStatus("Bạn không có quyền gửi vào phiên này. Hãy sao chép nội dung và mở phiên của bạn.");
-    if (submitButton) submitButton.hidden = true;
-    if (retryButton) retryButton.hidden = true;
-    if (endButton) endButton.hidden = true;
-    if (sessionExpiredRecovery) sessionExpiredRecovery.hidden = false;
-    errorBox.focus();
-  }
-
-  function reviewAnswer(answer) {
-    allowingNavigation = true;
-    storage.remove(answerKey);
-    const reviewUrl = new URL(`/sessions/${encodeURIComponent(sessionId)}/review`, window.location.origin);
-    reviewUrl.searchParams.set("answer_id", answer.answer_id);
-    reviewUrl.searchParams.set("revision", String(answer.revision));
-    window.location.assign(reviewUrl.toString());
-  }
-
-  function stopWaiting() {
-    if (statusPoll !== null) window.clearInterval(statusPoll);
-    if (waitNotice !== null) window.clearInterval(waitNotice);
-    statusPoll = null;
-    waitNotice = null;
-  }
-
-  function showWaiting() {
-    hideOpenReview();
-    waitStartedAt = Date.now();
-    setStatus("Bài đã lưu. AI đang đối chiếu câu trả lời với rubric; việc này có thể mất hơn một phút. Bạn có thể quay lại trang này để xem kết quả.");
-    waitNotice = window.setInterval(() => {
-      const seconds = Math.floor((Date.now() - waitStartedAt) / 1000);
-      if (seconds >= 20) {
-        setStatus(`Bài đã lưu. AI vẫn đang đánh giá (đã chờ khoảng ${seconds} giây). Bạn có thể quay lại trang này để xem kết quả.`);
-      }
-    }, 10000);
-  }
-
-  function showFailure(error, canRetry = error.retryable !== false) {
-    stopWaiting();
-    setBusy(false);
-    hideOpenReview();
-    setError(errorText(error) || "Chưa thể đánh giá bài đã lưu.");
-    retryButton.hidden = !canRetry;
-    if (!canRetry) {
-      answerField.readOnly = false;
-      if (submitButton) {
-        submitButton.textContent = "Gửi bản trả lời mới";
-        submitButton.hidden = false;
-      }
-      const restoredDraft = storage.get(draftKey);
-      if (restoredDraft && restoredDraft !== committedText) {
-        answerField.value = restoredDraft;
-        updateCounter();
-        draftLabel.textContent = "Đã khôi phục bản nháp thay thế (bài gốc trước đó vẫn được lưu trên máy chủ)";
-        setStatus("Đã khôi phục bản nháp bạn đang chỉnh sửa. Phiên bản trước vẫn được lưu nguyên vẹn trên máy chủ (chưa có điểm); hãy bấm Gửi bản trả lời mới hoặc Kết thúc sớm.");
-      } else {
-        draftLabel.textContent = "Bài trước đã lưu trên máy chủ; bạn có thể chỉnh sửa và gửi bản mới";
-        setStatus("Phiên bản trước vẫn được lưu nguyên vẹn (chưa có điểm). Sau khi khắc phục lỗi hoặc điều chỉnh nội dung, hãy bấm Gửi bản trả lời mới hoặc Kết thúc sớm.");
-      }
-    } else {
-      setStatus("Câu trả lời đã lưu trên máy chủ; chưa có điểm đánh giá.");
-    }
-    errorBox.focus();
-  }
-
-  async function readSavedEvaluation(answer) {
-    const response = await api.getEvaluation(sessionId, answer.answer_id, answer.revision);
-    if (response.result.status === "completed") {
-      stopWaiting();
-      reviewAnswer(answer);
-      return "completed";
-    }
-    if (response.result.status === "failed") {
-      const failure = new Error(response.result.failure_message || "AI chưa hoàn tất đánh giá.");
-      failure.code = response.result.failure_code;
-      failure.retryable = response.result.retryable;
-      showFailure(failure);
-      return "failed";
-    }
-    return "processing";
-  }
-
-  function watchEvaluation(answer) {
-    if (statusPoll !== null) return;
-    setBusy(true);
-    retryButton.hidden = true;
-    showWaiting();
-    let reading = false;
-    statusPoll = window.setInterval(async () => {
-      if (reading) return;
-      if (Date.now() - waitStartedAt >= MAX_POLLING_DURATION_MS) {
-        stopWaiting();
-        setBusy(false);
-        setError("Lượt đánh giá mất nhiều thời gian hơn dự kiến. Bài trả lời của bạn đã được lưu an toàn trên máy chủ (chưa bị tính điểm). Bạn có thể thử đánh giá lại hoặc tải lại trang.");
-        setStatus("Câu trả lời đã lưu trên máy chủ; chưa có điểm đánh giá.");
-        retryButton.hidden = false;
-        errorBox.focus();
-        return;
-      }
-      reading = true;
-      try {
-        await readSavedEvaluation(answer);
-      } catch (error) {
-        if (error.code === "SESSION_EXPIRED" || error.status === 410) {
-          showSessionExpired(error);
-          return;
-        }
-        if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
-          showSessionForbidden(error);
-          return;
-        }
-        // A temporary read error must not start another evaluation.
-        setStatus("Bài đã lưu. Chưa đọc được trạng thái AI; hệ thống sẽ kiểm tra lại.");
-      } finally {
-        reading = false;
-      }
-    }, 5000);
-  }
-
-  async function evaluateSavedAnswer(answer) {
-    if (busy || !answer) return;
-    stopWaiting();
-    setBusy(true);
-    setError("");
-    showWaiting();
-    retryButton.hidden = true;
-    try {
-      const response = await api.evaluateAnswer(sessionId, answer.answer_id, answer.revision);
-      if (!response.result || response.result.status !== "completed") {
-        throw new Error("Đánh giá chưa hoàn tất. Bài đã lưu; bạn có thể thử lại.");
-      }
-      stopWaiting();
-      reviewAnswer(answer);
-    } catch (error) {
-      if (error.code === "SESSION_EXPIRED" || error.status === 410) {
-        showSessionExpired(error);
-        return;
-      }
-      if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
-        showSessionForbidden(error);
-        return;
-      }
-      if (error.code === "EVALUATION_IN_PROGRESS" || error.code === "NETWORK_ERROR") {
-        try {
-          const state = await readSavedEvaluation(answer);
-          if (state === "processing") {
-            stopWaiting();
-            watchEvaluation(answer);
-          }
-          return;
-        } catch (readError) {
-          if (readError.code === "SESSION_EXPIRED" || readError.status === 410) {
-            showSessionExpired(readError);
-            return;
-          }
-          if (readError.code === "SESSION_FORBIDDEN" || readError.status === 403) {
-            showSessionForbidden(readError);
-            return;
-          }
-          if (error.code === "EVALUATION_IN_PROGRESS") {
-            stopWaiting();
-            watchEvaluation(answer);
-            return;
-          }
-        }
-      }
-      showFailure(error, error.code !== "EVALUATION_IN_PROGRESS" && error.retryable !== false);
-    } finally {
-      if (statusPoll === null && (!submitButton || !submitButton.hidden)) setBusy(false);
-    }
-  }
-
-  setupNavigationGuard();
-
-  if (!savedAnswerId) {
-    const restoredDraft = storage.get(draftKey);
-    if (restoredDraft !== null) {
-      answerField.value = restoredDraft;
-      setStatus("Đã khôi phục bản nháp trên trình duyệt. Bản nháp chưa được lưu trên máy chủ.");
-    }
-  } else {
-    hideOpenReview();
-    setStatus("Bài đã lưu. Đang kiểm tra kết quả đánh giá gần nhất…");
-    readSavedEvaluation(pendingAnswer).then((state) => {
-      if (state === "processing") watchEvaluation(pendingAnswer);
-    }).catch((error) => {
-      if (error.status === 404) {
-        retryButton.hidden = false;
-        setStatus("Bài đã lưu nhưng chưa được đánh giá. Bạn có thể bắt đầu đánh giá bài đã lưu.");
-      } else if (error.code === "SESSION_EXPIRED" || error.status === 410) {
-        showSessionExpired(error);
-      } else if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
-        showSessionForbidden(error);
-      } else {
-        showFailure(error);
-      }
+  function saveDraft(text) {
+    if (page.dataset.answerId) return Promise.resolve();
+    saveChain = saveChain.catch(() => {}).then(async () => {
+      label.textContent = "Đang lưu bản nháp…";
+      await api.saveDraft(sessionId, { question_id: questionId, question_version: questionVersion, text });
+      savedText = text;
+      if (field.value === text) draftDirty = false;
+      label.textContent = field.value === text ? "Đã lưu bản nháp" : "Đang lưu bản nháp…";
     });
+    return saveChain;
   }
-
-  answerField.addEventListener("input", () => {
-    if (!answerField.readOnly) {
-      const stored = storage.set(draftKey, answerField.value);
-      draftLabel.textContent = stored
-        ? "Bản nháp trên trình duyệt (chưa lưu máy chủ)"
-        : "Bản nháp đang hiển thị; trình duyệt không cho phép lưu cục bộ.";
-    }
-    updateCounter();
-    setError("");
+  async function flushDraft() {
+    window.clearTimeout(timer);
+    try { await saveChain; } catch (_) { /* Retry the latest text below. */ }
+    if (!page.dataset.answerId) await saveDraft(field.value);
+  }
+  async function advance() {
+    const session = await api.nextQuestion(sessionId, index);
+    leaving = true;
+    const done = session.progress.answered_count >= session.progress.total_questions;
+    window.location.assign(`/sessions/${encodeURIComponent(sessionId)}${done ? "/summary" : ""}`);
+  }
+  field.addEventListener("input", () => {
+    updateCounter(); error.hidden = true;
+    draftDirty = true;
+    label.textContent = "Bản nháp chưa lưu xong";
+    window.clearTimeout(timer);
+    const text = field.value;
+    timer = window.setTimeout(() => saveDraft(text).catch(() => {
+      label.textContent = "Chưa lưu được bản nháp. Hãy thử Lưu và thoát hoặc sao chép nội dung.";
+    }), 600);
   });
-
-  updateCounter();
-
-  retryButton.addEventListener("click", () => evaluateSavedAnswer(pendingAnswer));
-
-  if (endButton) {
-    endButton.addEventListener("click", () => {
-      if (busy) return;
-      endConfirmation.hidden = false;
-      confirmEndButton.focus();
-    });
-    cancelEndButton.addEventListener("click", () => {
-      endConfirmation.hidden = true;
-      endButton.focus();
-    });
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && !endConfirmation.hidden) {
-        endConfirmation.hidden = true;
-        endButton.focus();
-      }
-    });
-    confirmEndButton.addEventListener("click", async () => {
-      if (busy) return;
-      setBusy(true);
-      setError("");
-      setStatus("Đang kết thúc phiên và lưu tổng kết…");
-      try {
-        await api.endSession(sessionId);
-        allowingNavigation = true;
-        window.location.assign(`/sessions/${encodeURIComponent(sessionId)}/summary`);
-      } catch (error) {
-        if (error.code === "SESSION_EXPIRED" || error.status === 410) {
-          showSessionExpired(error);
-        } else if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
-          showSessionForbidden(error);
-        } else {
-          setError(errorText(error) || "Chưa thể kết thúc phiên.");
-          errorBox.focus();
-        }
-      } finally {
-        setBusy(false);
-      }
-    });
-  }
-
+  window.addEventListener("beforeunload", (event) => {
+    if (!leaving && !page.dataset.answerId && (busy || draftDirty || field.value !== savedText)) {
+      event.preventDefault(); event.returnValue = "";
+    }
+  });
+  exit.addEventListener("click", async (event) => {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true); error.hidden = true;
+    try { await flushDraft(); leaving = true; window.location.assign("/"); }
+    catch (err) { showError(`${err.message || "Chưa lưu được bản nháp."} Nội dung vẫn ở ô trả lời; hãy thử lại.`); }
+    finally { setBusy(false); }
+  });
+  if (next) next.addEventListener("click", async (event) => {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true); error.hidden = true;
+    try { await advance(); } catch (err) { showError(`${err.message || "Chưa thể chuyển câu."} Bài đã gửi vẫn được giữ.`); }
+    finally { setBusy(false); }
+  });
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (busy || !submitButton) return;
-    const text = answerField.value;
-    if (!text.trim()) {
-      setError("Vui lòng nhập câu trả lời trước khi gửi.");
-      answerField.focus();
-      return;
-    }
-    if (text.length > 20000) {
-      setError("Câu trả lời vượt quá giới hạn 20.000 ký tự.");
-      answerField.focus();
-      return;
-    }
-
-    const requestBody = {
-      question_id: questionId,
-      question_version: questionVersion,
-      client_submission_id: submissionFor(text),
-      text,
-    };
-    setBusy(true);
-    setError("");
-    setStatus("Đang lưu nguyên văn câu trả lời…");
+    if (busy || !submit) return;
+    const text = field.value;
+    if (!text.trim()) { showError("Vui lòng nhập câu trả lời trước khi gửi."); field.focus(); return; }
+    setBusy(true); error.hidden = true;
+    status.hidden = false; status.textContent = "Đang lưu câu trả lời…";
+    let submissionSent = false;
     try {
-      const submitted = await api.submitAnswer(sessionId, requestBody);
-      pendingAnswer = {
-        answer_id: submitted.answer.answer_id,
-        revision: submitted.answer.revision,
-      };
-      committedText = text;
-      storage.set(answerKey, JSON.stringify(pendingAnswer));
-      storage.remove(draftKey);
-      storage.remove(submissionKey);
-      draftLabel.textContent = "Đã lưu câu trả lời trên máy chủ";
-      answerField.readOnly = true;
-      submitButton.hidden = true;
-      retryButton.hidden = false;
-      setBusy(false);
-      await evaluateSavedAnswer(pendingAnswer);
-    } catch (error) {
-      if (error.code === "SESSION_EXPIRED" || error.status === 410) {
-        showSessionExpired(error);
-      } else if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
-        showSessionForbidden(error);
-      } else if (error.code === "SUBMISSION_CONFLICT" || error.status === 409) {
-        setError(errorText(error) || "Xung đột mã gửi bài. Hãy tải lại câu trả lời đã lưu.");
-        setStatus("Mã gửi đã được dùng cho nội dung khác. Nội dung hiện tại vẫn được giữ trên ô nhập.");
-        errorBox.focus();
+      await flushDraft();
+      submissionSent = true;
+      await api.submitAnswer(sessionId, { question_id: questionId, question_version: questionVersion, client_submission_id: submissionId(text), text });
+      page.dataset.answerId = "saved";
+      field.readOnly = true;
+      submit.hidden = true;
+      await advance();
+    } catch (err) {
+      showError(`${err.message || "Chưa thể lưu hoặc chuyển câu."} Nội dung vẫn được giữ; hãy thử lại hoặc tải lại trang.`);
+      if (submissionSent) {
+        submissionUncertain = true;
+        submit.hidden = true;
+        status.textContent = "Tải lại trang để kiểm tra bài đã gửi và tiếp tục. Bản nháp đã được lưu trước khi gửi.";
+        const reload = document.createElement("button");
+        reload.type = "button";
+        reload.className = "btn btn--secondary";
+        reload.textContent = "Tải lại phiên";
+        reload.addEventListener("click", () => { leaving = true; window.location.reload(); });
+        status.insertAdjacentElement("afterend", reload);
       } else {
-        setError(errorText(error) || "Chưa xác nhận được việc lưu bài. Bản nháp vẫn được giữ trên trình duyệt.");
-        setStatus("Chưa xác nhận được bài đã lưu. Bạn có thể kiểm tra mạng rồi bấm gửi lại.");
-        answerField.focus();
+        status.textContent = "Chưa gửi được câu trả lời. Hãy thử lại.";
       }
-    } finally {
-      if (statusPoll === null && submitButton && !submitButton.hidden) setBusy(false);
-    }
+    } finally { setBusy(false); }
   });
+  updateCounter();
 })();

@@ -7,10 +7,12 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from source.Model.ids import SessionId
+from source.Model.evaluation import AnswerRevisionRef
+from source.Model.ids import AnswerId, SessionId
 from source.Model.interview import SessionState
 from source.config import load_settings
 from source.main import create_app
+from test.fixtures.session_flow import wait_for_evaluation_queue
 
 
 def _fixture_app(tmp_path: Path, name: str):
@@ -20,7 +22,7 @@ def _fixture_app(tmp_path: Path, name: str):
     }))
 
 
-def test_summary_tracks_saved_evaluation_and_unanswered_categories(tmp_path: Path) -> None:
+def test_summary_is_locked_until_all_questions_have_answers(tmp_path: Path) -> None:
     app = _fixture_app(tmp_path, "summary.sqlite3")
     with TestClient(app) as owner, TestClient(app) as stranger:
         session = owner.post("/api/sessions", json={
@@ -31,11 +33,7 @@ def test_summary_tracks_saved_evaluation_and_unanswered_categories(tmp_path: Pat
         path = f"/api/sessions/{session_id}/summary"
         assert stranger.get(path).status_code == 403
 
-        before = owner.get(path)
-        assert before.status_code == 200
-        assert before.json()["completed_question_count"] == 0
-        assert len(before.json()["unanswered_categories"]) == 4
-        assert before.json()["outcomes"] == []
+        assert owner.get(path).status_code == 409
 
         saved = owner.post(f"/api/sessions/{session_id}/answers", json={
             "question_id": question["id"],
@@ -45,23 +43,37 @@ def test_summary_tracks_saved_evaluation_and_unanswered_categories(tmp_path: Pat
         })
         assert saved.status_code == 201
         answer = saved.json()["answer"]
-        evaluated = owner.post(f"/api/answers/{answer['answer_id']}/evaluate", json={
-            "answer_revision": answer["revision"]
-        })
-        assert evaluated.status_code == 200
+        assert owner.get(path).status_code == 409
+        session = owner.get(f"/api/sessions/{session_id}").json()
+        for index in range(1, 4):
+            advanced = owner.post(
+                f"/api/sessions/{session_id}/next", json={"from_question_index": index - 1}
+            )
+            assert advanced.status_code == 200
+            session = advanced.json()
+            question = session["current_question"]
+            saved_next = owner.post(f"/api/sessions/{session_id}/answers", json={
+                "question_id": question["id"],
+                "question_version": question["version"],
+                "client_submission_id": f"summary-rest-{index}",
+                "text": f"Answer for remaining question {index}.",
+            })
+            assert saved_next.status_code == 201
+        final = owner.post(
+            f"/api/sessions/{session_id}/next", json={"from_question_index": 3}
+        )
+        assert final.status_code == 200
+        wait_for_evaluation_queue(app)
         after = owner.get(path)
         assert after.status_code == 200
         report = after.json()
-        assert report["completed_question_count"] == 1
-        assert report["total_question_count"] == 4
-        assert len(report["unanswered_categories"]) == 3
-        assert len(report["outcomes"]) == 1
+        assert report["completed_question_count"] == report["total_question_count"] == 4
+        assert report["unanswered_categories"] == []
+        assert len(report["outcomes"]) == 4
         assert report["outcomes"][0]["answer_ref"]["id"] == answer["answer_id"]
-        assert report["outcomes"][0]["evaluation_status"] == "completed"
-        assert report["outcomes"][0]["total_score"] == evaluated.json()["total_score"]
 
 
-def test_i05_four_question_flow_requires_completed_evaluation_and_replays_next(
+def test_i05_four_question_flow_unlocks_summary_after_all_answers(
     tmp_path: Path,
 ) -> None:
     app = _fixture_app(tmp_path, "four-questions.sqlite3")
@@ -72,6 +84,7 @@ def test_i05_four_question_flow_requires_completed_evaluation_and_replays_next(
         assert stranger.post(next_url, json={"from_question_index": 0}).status_code == 403
         assert owner.post(next_url, json={"from_question_index": -1}).status_code == 422
         assert owner.post(next_url, json={"from_question_index": 0}).json()["error_code"] == "INVALID_STATE_TRANSITION"
+        assert owner.get(f"/api/sessions/{session_id}/summary").status_code == 409
 
         seen_questions = set()
         for index in range(4):
@@ -82,10 +95,12 @@ def test_i05_four_question_flow_requires_completed_evaluation_and_replays_next(
             assert session["progress"]["current_index"] == index
             workspace = owner.get(f"/sessions/{session_id}")
             assert workspace.status_code == 200
-            assert "Kết thúc sớm" in workspace.text
-            assert 'id="confirm-end-session"' in workspace.text
+            assert "Lưu và thoát" in workspace.text
+            assert 'id="save-exit"' in workspace.text
             if index == 0:
-                assert "Tiếp tục phiên" in owner.get(f"/sessions/{session_id}/summary").text
+                blocked = owner.get(f"/sessions/{session_id}/summary", follow_redirects=False)
+                assert blocked.status_code == 303
+                assert blocked.headers["location"] == f"/sessions/{session_id}"
 
             saved = owner.post(f"/api/sessions/{session_id}/answers", json={
                 "question_id": question["id"],
@@ -95,22 +110,15 @@ def test_i05_four_question_flow_requires_completed_evaluation_and_replays_next(
             })
             assert saved.status_code == 201
             answer = saved.json()["answer"]
-            if index == 0:
-                blocked = owner.post(next_url, json={"from_question_index": index})
-                assert blocked.status_code == 409
-                assert blocked.json()["error_code"] == "INVALID_STATE_TRANSITION"
-
-            evaluated = owner.post(
-                f"/api/sessions/{session_id}/answers/{answer['answer_id']}/evaluate",
-                json={"answer_revision": answer["revision"]},
-            )
-            assert evaluated.status_code == 200
-            assert evaluated.json()["result"]["status"] == "completed"
             review = owner.get(
-                f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}"
+                f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}",
+                follow_redirects=False,
             )
-            assert review.status_code == 200
-            assert 'id="next-question"' in review.text
+            if index < 3:
+                assert review.status_code == 303
+                assert review.headers["location"] == f"/sessions/{session_id}"
+            else:
+                assert review.status_code == 200
 
             advanced = owner.post(next_url, json={"from_question_index": index})
             assert advanced.status_code == 200
@@ -119,10 +127,8 @@ def test_i05_four_question_flow_requires_completed_evaluation_and_replays_next(
             replay = owner.post(next_url, json={"from_question_index": index})
             assert replay.status_code == 200
             assert replay.json()["progress"]["current_index"] == index + 1
-            historical_review = owner.get(
-                f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}"
-            )
-            assert 'id="next-question"' not in historical_review.text
+
+        wait_for_evaluation_queue(app)
 
         assert session["state"] == "completed"
         assert session["current_question"] is None
@@ -133,12 +139,15 @@ def test_i05_four_question_flow_requires_completed_evaluation_and_replays_next(
         assert report["completed_question_count"] == 4
         assert report["unanswered_categories"] == []
         assert len(report["outcomes"]) == 4
-        assert all(item["answer_ref"] and item["evaluation_id"] for item in report["outcomes"])
+        assert all(item["answer_ref"] for item in report["outcomes"])
         assert "total_score" not in report
         assert "Tiếp tục phiên" not in owner.get(f"/sessions/{session_id}/summary").text
+        assert owner.get(
+            f"/sessions/{session_id}/review?answer_id={report['outcomes'][0]['answer_ref']['id']}&revision=1"
+        ).status_code == 200
 
 
-def test_i05_ending_early_preserves_partial_result_and_prevents_further_work(
+def test_i05_legacy_ended_early_session_resumes_at_first_unanswered_question(
     tmp_path: Path,
 ) -> None:
     app = _fixture_app(tmp_path, "ended-early.sqlite3")
@@ -152,31 +161,24 @@ def test_i05_ending_early_preserves_partial_result_and_prevents_further_work(
             "client_submission_id": "i05-early-answer",
             "text": "Original answer preserved after early end.",
         }).json()["answer"]
-        evaluated = owner.post(
-            f"/api/sessions/{session_id}/answers/{saved['answer_id']}/evaluate",
-            json={"answer_revision": saved["revision"]},
-        )
-        assert evaluated.status_code == 200
-
         end_url = f"/api/sessions/{session_id}/end"
         assert stranger.post(end_url, json={"reason": "student_requested"}).status_code == 403
-        assert owner.post(end_url, json={"reason": "unknown"}).status_code == 422
-        ended = owner.post(end_url, json={"reason": "student_requested"})
-        assert ended.status_code == 200
-        report = ended.json()
-        assert report["state"] == "ended_early"
-        assert report["completed_question_count"] == 1
-        assert len(report["unanswered_categories"]) == 3
-        assert report["outcomes"][0]["answer_ref"]["id"] == saved["answer_id"]
-        assert owner.post(end_url, json={"reason": "student_requested"}).json() == report
-        assert owner.post(f"/api/sessions/{session_id}/next", json={"from_question_index": 0}).status_code == 409
-        assert owner.post(f"/api/sessions/{session_id}/answers", json={
-            "question_id": question["id"],
-            "question_version": question["version"],
-            "client_submission_id": "i05-too-late",
-            "text": "This must not replace the previous answer.",
-        }).status_code == 409
-        assert owner.get(f"/api/sessions/{session_id}/summary").json() == report
+        assert owner.post(end_url, json={"reason": "student_requested"}).status_code == 409
+        assert owner.get(f"/api/sessions/{session_id}/summary").status_code == 409
+
+        # Model a legacy row from the old early-end flow; opening it resumes at question two.
+        repo = app.state.container.session_repo
+        stored = repo.get_session(SessionId(session_id))
+        assert stored is not None
+        repo.update_session(replace(stored, state=SessionState.ENDED_EARLY))
+        resumed = owner.get(f"/api/sessions/{session_id}")
+        assert resumed.status_code == 200
+        assert resumed.json()["state"] == "in_progress"
+        assert resumed.json()["progress"]["current_index"] == 1
+        assert resumed.json()["current_question"]["id"] != question["id"]
+        assert repo.get_answer(
+            AnswerRevisionRef(AnswerId(saved["answer_id"]), saved["revision"])
+        ).text == "Original answer preserved after early end."
 
 
 def test_session_summary_controller_delegates_persistence_to_service(tmp_path: Path) -> None:
@@ -186,7 +188,7 @@ def test_session_summary_controller_delegates_persistence_to_service(tmp_path: P
         assert not hasattr(summary_controller, forbidden_attr)
 
 
-def test_expired_session_summary_remains_readable_while_end_returns_410(tmp_path: Path) -> None:
+def test_expired_incomplete_session_never_exposes_partial_summary(tmp_path: Path) -> None:
     app = _fixture_app(tmp_path, "expired-summary.sqlite3")
     with TestClient(app) as owner:
         session = owner.post("/api/sessions", json={}).json()
@@ -198,32 +200,23 @@ def test_expired_session_summary_remains_readable_while_end_returns_410(tmp_path
             "client_submission_id": "expired-summary-answer",
             "text": "Bài trả lời đã lưu trước khi phiên hết hạn.",
         }).json()["answer"]
-        evaluated = owner.post(
-            f"/api/sessions/{session_id}/answers/{saved['answer_id']}/evaluate",
-            json={"answer_revision": saved["revision"]},
-        )
-        assert evaluated.status_code == 200
-
         session_repo = app.state.container.session_repo
         stored = session_repo.get_session(SessionId(session_id))
         assert stored is not None
         session_repo.update_session(replace(stored, state=SessionState.EXPIRED))
 
-        summary_page = owner.get(f"/sessions/{session_id}/summary")
-        assert summary_page.status_code == 200
+        summary_page = owner.get(
+            f"/sessions/{session_id}/summary", follow_redirects=False
+        )
+        assert summary_page.status_code == 303
+        assert summary_page.headers["location"] == f"/sessions/{session_id}"
 
         summary_api = owner.get(f"/api/sessions/{session_id}/summary")
-        assert summary_api.status_code == 200
-        report = summary_api.json()
-        assert report["state"] == "expired"
-        assert report["completed_question_count"] == 1
-        assert len(report["outcomes"]) == 1
-        assert report["outcomes"][0]["answer_ref"]["id"] == saved["answer_id"]
+        assert summary_api.status_code == 409
 
         end_attempt = owner.post(
             f"/api/sessions/{session_id}/end",
             json={"reason": "student_requested"},
         )
-        assert end_attempt.status_code == 410
-        assert end_attempt.json()["error_code"] == "SESSION_EXPIRED"
+        assert end_attempt.status_code == 409
 

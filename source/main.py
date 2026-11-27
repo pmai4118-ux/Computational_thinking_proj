@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -30,6 +31,7 @@ from source.Model.repositories.interfaces import (
 )
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.service.evaluation_service import EvaluationService
+from source.service.evaluation_queue import EvaluationQueue
 from source.service.interview_service import InterviewService
 from source.service.recommendation_service import RecommendationService
 from source.service.providers.factory import create_evidence_interpreter
@@ -52,6 +54,7 @@ class AppContainer:
     interpreter: EvidenceInterpreter
     interview_service: InterviewService
     evaluation_service: EvaluationService
+    evaluation_queue: EvaluationQueue
     interview_controller: InterviewController
     saved_evaluation_controller: SavedEvaluationController
     recommendation_service: RecommendationService
@@ -98,13 +101,15 @@ def create_app(
         evaluation_repo=resolved_eval_repo, session_repo=resolved_session_repo,
         content_repo=resolved_content_repo, interpreter=resolved_interpreter,
     )
+    evaluation_queue = EvaluationQueue(evaluation_service, resolved_session_repo)
     interview_controller = InterviewController(
         interview_service=interview_service,
         demo_mode_label=resolved_settings.demo_label,
+        evaluation_queue=evaluation_queue,
     )
 
     saved_evaluation_controller = SavedEvaluationController(
-        interview_controller, evaluation_service
+        interview_controller, evaluation_service, evaluation_queue
     )
     recommendation_service = RecommendationService(
         content_repo=resolved_content_repo,
@@ -122,9 +127,17 @@ def create_app(
         recommendation_service=recommendation_service,
     )
 
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI):
+        try:
+            yield
+        finally:
+            evaluation_queue.shutdown()
+
     app = FastAPI(
         title="interviewUS — Luyện phỏng vấn kỹ thuật Backend",
         version="0.1.0",
+        lifespan=lifespan,
     )
     app.state.container = AppContainer(
         settings=resolved_settings,
@@ -134,6 +147,7 @@ def create_app(
         interpreter=resolved_interpreter,
         interview_service=interview_service,
         evaluation_service=evaluation_service,
+        evaluation_queue=evaluation_queue,
         interview_controller=interview_controller,
         saved_evaluation_controller=saved_evaluation_controller,
         recommendation_service=recommendation_service,

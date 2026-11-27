@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import sqlite3
@@ -18,6 +17,7 @@ from source.Model.repositories.interfaces import EvaluationInProgressError
 from source.service.providers.fixture_provider import FixtureProvider
 from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
 from test.Control.test_saved_evaluation import _app, _submit
+from test.fixtures.session_flow import wait_for_evaluation_queue
 
 
 class BlockingInterpreter(FixtureProvider):
@@ -53,31 +53,27 @@ def test_parallel_evaluation_exposes_processing_and_commits_once(tmp_path: Path)
     with TestClient(app) as owner, TestClient(app) as same_owner, TestClient(app) as stranger:
         session_id, answer_id = _submit(owner, "Atomic update and rollback.")
         same_owner.cookies.set(OWNER_COOKIE_NAME, owner.cookies.get(OWNER_COOKIE_NAME))
-        evaluate_url = f"/api/answers/{answer_id}/evaluate"
-        read_url = f"/api/answers/{answer_id}/evaluation"
+        evaluate_url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluate"
+        read_url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluations/1"
         assert stranger.get(read_url).status_code == 403
         assert stranger.post(evaluate_url, json={}).status_code == 403
-        assert owner.get(read_url).status_code == 404
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            first = executor.submit(owner.post, evaluate_url, json={})
-            assert provider.started.wait(timeout=10)
-            processing = same_owner.get(read_url)
-            assert processing.status_code == 200
-            assert processing.json()["status"] == "processing"
-            assert processing.json()["total_score"] is None
-            assert processing.json()["processing_started_at"] is not None
-            conflict = same_owner.post(evaluate_url, json={})
-            assert conflict.status_code == 409
-            assert conflict.json()["error_code"] == "EVALUATION_IN_PROGRESS"
-            assert conflict.json()["retryable"] is True
-            provider.release.set()
-            completed = first.result(timeout=10)
+        assert provider.started.wait(timeout=10)
+        processing = same_owner.get(read_url)
+        assert processing.status_code == 200
+        assert processing.json()["result"]["status"] == "processing"
+        assert processing.json()["result"]["total_score"] is None
+        assert processing.json()["result"]["processing_started_at"] is not None
+        conflict = same_owner.post(evaluate_url, json={})
+        assert conflict.status_code == 200
+        assert conflict.json()["result"]["status"] == "processing"
+        provider.release.set()
+        wait_for_evaluation_queue(app)
+        completed = same_owner.get(read_url)
         assert completed.status_code == 200
-        assert completed.json()["status"] == "completed"
-        assert same_owner.get(read_url).json() == completed.json()
+        assert completed.json()["result"]["status"] == "completed"
         assert same_owner.post(evaluate_url, json={}).json() == completed.json()
         assert owner.get(f"/api/sessions/{session_id}/answers/{answer_id}/evaluations/1").status_code == 200
-        assert provider.calls == 1
+        assert provider.calls == 4
     with sqlite3.connect(tmp_path / "evaluation.sqlite3") as db:
         assert db.execute("SELECT COUNT(*) FROM evaluations WHERE answer_id=?", (answer_id,)).fetchone()[0] == 1
 
@@ -88,15 +84,11 @@ def test_timeout_retry_uses_saved_answer_and_versions_attempt(tmp_path: Path) ->
     ))
     app = _app(tmp_path, provider)
     with TestClient(app) as owner:
-        _session_id, answer_id = _submit(owner, "Atomic update and rollback.")
-        url = f"/api/answers/{answer_id}/evaluate"
-        failure = owner.post(url, json={"answer_revision": 1})
-        assert failure.status_code == 504
-        assert failure.json()["error_code"] == "PROVIDER_TIMEOUT"
-        assert failure.json()["answer_ref"] == {"id": answer_id, "revision": 1}
-        assert failure.json()["retryable"] is True
-        assert "thử đánh giá lại" in failure.json()["recovery_action"].lower()
-        failed = owner.get(f"/api/answers/{answer_id}/evaluation").json()
+        session_id, answer_id = _submit(owner, "Atomic update and rollback.")
+        url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluate"
+        read_url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluations/1"
+        wait_for_evaluation_queue(app)
+        failed = owner.get(read_url).json()["result"]
         assert failed["status"] == "failed"
         assert failed["failure_code"] == "PROVIDER_TIMEOUT"
         assert failed["retryable"] is True
@@ -104,15 +96,20 @@ def test_timeout_retry_uses_saved_answer_and_versions_attempt(tmp_path: Path) ->
         saved_before = app.state.container.session_repo.get_answer(AnswerRevisionRef(AnswerId(answer_id), 1))
         completed = owner.post(url, json={"answer_revision": 1})
         assert completed.status_code == 200
-        assert completed.json()["status"] == "completed"
-        assert completed.json()["version"] == 2
-        assert completed.json()["evaluation_id"] == failed["evaluation_id"]
-        assert owner.post(url, json={}).json() == completed.json()
+        assert completed.json()["result"]["status"] == "pending"
+        wait_for_evaluation_queue(app)
+        completed = owner.get(read_url)
+        assert completed.json()["result"]["status"] == "completed"
+        assert completed.json()["result"]["version"] == 2
+        assert completed.json()["result"]["evaluation_id"] == failed["evaluation_id"]
+        assert owner.post(url, json={}).json()["result"]["status"] == "completed"
         assert app.state.container.session_repo.get_answer(AnswerRevisionRef(AnswerId(answer_id), 1)) == saved_before
-        assert provider.calls == 2
+        assert provider.calls == 5
     with sqlite3.connect(tmp_path / "evaluation.sqlite3") as db:
         assert db.execute("SELECT COUNT(*) FROM answers WHERE id=?", (answer_id,)).fetchone()[0] == 1
-        assert db.execute("SELECT status FROM evaluations ORDER BY version", ()).fetchall() == [
+        assert db.execute(
+            "SELECT status FROM evaluations WHERE answer_id=? ORDER BY version", (answer_id,)
+        ).fetchall() == [
             ("failed",), ("completed",)
         ]
 
@@ -123,19 +120,17 @@ def test_permanent_provider_failure_rejects_retry(tmp_path: Path) -> None:
     ))
     app = _app(tmp_path, provider)
     with TestClient(app) as owner:
-        _session_id, answer_id = _submit(owner, "Atomic update and rollback.")
-        url = f"/api/answers/{answer_id}/evaluate"
-        failure = owner.post(url, json={})
-        assert failure.status_code == 503
-        assert failure.json()["error_code"] == "PROVIDER_CONFIG_ERROR"
-        assert failure.json()["retryable"] is False
-        failed = owner.get(f"/api/answers/{answer_id}/evaluation").json()
+        session_id, answer_id = _submit(owner, "Atomic update and rollback.")
+        url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluate"
+        read_url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluations/1"
+        wait_for_evaluation_queue(app)
+        failed = owner.get(read_url).json()["result"]
         assert failed["status"] == "failed"
         assert failed["retryable"] is False
         rejected = owner.post(url, json={})
         assert rejected.status_code == 409
         assert rejected.json()["error_code"] == "EVALUATION_RETRY_NOT_ALLOWED"
-        assert provider.calls == 1
+        assert provider.calls == 4
 
 
 def test_permanent_failure_allows_new_answer_revision_to_unblock_session(tmp_path: Path) -> None:
@@ -144,64 +139,46 @@ def test_permanent_failure_allows_new_answer_revision_to_unblock_session(tmp_pat
     ))
     app = _app(tmp_path, provider)
     with TestClient(app) as owner:
-        created = owner.post("/api/sessions", json={}).json()
-        session_id = created["session_id"]
-        question = created["current_question"]
-        sub1 = owner.post(
+        session_id, answer_id = _submit(owner, "Bản trả lời đầu tiên gặp lỗi cấu hình dịch vụ.")
+        wait_for_evaluation_queue(app)
+
+        # Submitted answers remain immutable even when grading fails.
+        question = app.state.container.session_repo.get_answer(
+            AnswerRevisionRef(AnswerId(answer_id), 1)
+        )
+        assert question is not None
+        current_question = owner.get(f"/api/sessions/{session_id}").json()["current_question"]
+        assert current_question is None
+        assert owner.post(
             f"/api/sessions/{session_id}/answers",
             json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "perm-rev-1",
-                "text": "Bản trả lời đầu tiên gặp lỗi cấu hình dịch vụ.",
+                "question_id": str(question.question_ref.id),
+                "question_version": question.question_ref.version,
+                "client_submission_id": "perm-rev-2",
+                "text": "Bản sửa không được ghi đè câu trả lời đã gửi.",
             },
-        ).json()["answer"]
-        answer_id = sub1["answer_id"]
-        assert sub1["revision"] == 1
-
-        fail_resp = owner.post(
+        ).status_code == 409
+        retry = owner.post(
             f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
             json={"answer_revision": 1},
         )
-        assert fail_resp.status_code == 503
-        assert fail_resp.json()["retryable"] is False
-
-        # Submitting a new revision after resolving the issue preserves revision 1 and unblocks advancing.
-        sub2 = owner.post(
-            f"/api/sessions/{session_id}/answers",
-            json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "perm-rev-2",
-                "text": "Bản trả lời mới sau khi khắc phục cấu hình dịch vụ.",
-            },
-        )
-        assert sub2.status_code == 201
-        assert sub2.json()["answer"]["answer_id"] == answer_id
-        assert sub2.json()["answer"]["revision"] == 2
-
-        ok_resp = owner.post(
-            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate",
-            json={"answer_revision": 2},
-        )
-        assert ok_resp.status_code == 200
-        assert ok_resp.json()["result"]["status"] == "completed"
-
-        advanced = owner.post(f"/api/sessions/{session_id}/next", json={"from_question_index": 0})
-        assert advanced.status_code == 200
-        assert advanced.json()["progress"]["current_index"] == 1
+        assert retry.status_code == 409
+        assert retry.json()["error_code"] == "EVALUATION_RETRY_NOT_ALLOWED"
         assert app.state.container.session_repo.get_answer(
             AnswerRevisionRef(AnswerId(answer_id), 1)
         ).text == "Bản trả lời đầu tiên gặp lỗi cấu hình dịch vụ."
 
 
 def test_expired_processing_claim_can_be_retried_after_worker_loss(tmp_path: Path) -> None:
-    app = _app(tmp_path, FixtureProvider())
+    provider = BlockingInterpreter()
+    app = _app(tmp_path, provider)
     with TestClient(app) as owner:
         _session_id, answer_id = _submit(owner, "Atomic update and rollback.")
+        assert provider.started.wait(timeout=5)
         store = app.state.container.evaluation_repo
         answer = store.get_answer(AnswerRevisionRef(AnswerId(answer_id), 1))
-        first = store.claim_evaluation(answer.ref, answer.question_ref, answer.rubric_ref)
+        first = store.get_latest_evaluation_for_answer(answer.ref)
+        assert first is not None and first.status is EvaluationStatus.PROCESSING
         with pytest.raises(EvaluationInProgressError):
             store.claim_evaluation(answer.ref, answer.question_ref, answer.rubric_ref)
         with sqlite3.connect(tmp_path / "evaluation.sqlite3") as db:
@@ -214,3 +191,5 @@ def test_expired_processing_claim_can_be_retried_after_worker_loss(tmp_path: Pat
         with pytest.raises(EvaluationInProgressError):
             store.fail_evaluation(first, "PROVIDER_TIMEOUT", "Too late")
         store.fail_evaluation(second, "PROVIDER_TIMEOUT", "Timed out")
+        provider.release.set()
+        wait_for_evaluation_queue(app)

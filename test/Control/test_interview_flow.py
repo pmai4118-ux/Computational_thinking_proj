@@ -11,22 +11,21 @@ temporary SQLite database:
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import sqlite3
 from threading import Event
 
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from source.config import ProviderMode, Settings
 from source.Control.interview_controller import OWNER_COOKIE_NAME
+from source.Model.evaluation import AnswerRevisionRef
+from source.Model.ids import AnswerId
 from source.Control.schemas import (
     ApiErrorResponse,
     ErrorCode,
     EvaluationResponseDTO,
-    EvaluationResultDTO,
     ExerciseRecommendationsResponse,
     SessionSummaryDTO,
     SessionViewDTO,
@@ -35,6 +34,7 @@ from source.Control.schemas import (
 from source.main import create_app
 from source.service.providers.fixture_provider import FixtureProvider
 from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
+from test.fixtures.session_flow import complete_session, wait_for_evaluation_queue
 
 
 class BlockingInterpreter(FixtureProvider):
@@ -238,20 +238,9 @@ def test_q02_strict_question_sequence_and_idempotent_next(tmp_path: Path) -> Non
             },
         ).json()["answer"]
 
-        # 4. Calling /next before evaluation is complete returns 409
+        # A submitted answer can advance without waiting for background grading.
         unevaluated_next = client.post(next_url, json={"from_question_index": 0})
-        assert unevaluated_next.status_code == 409
-        assert unevaluated_next.json()["error_code"] == "INVALID_STATE_TRANSITION"
-
-        # 5. Evaluate the answer
-        eval_resp = client.post(
-            f"/api/answers/{saved['answer_id']}/evaluate",
-            json={"answer_revision": saved["revision"]},
-        )
-        assert eval_resp.status_code == 200
-        assert eval_resp.json()["status"] == "completed"
-
-        # 6. Now /next succeeds and advances to index 1
+        assert unevaluated_next.status_code == 200
         advanced = client.post(next_url, json={"from_question_index": 0})
         assert advanced.status_code == 200
         session_state = SessionViewDTO.model_validate(advanced.json())
@@ -259,7 +248,7 @@ def test_q02_strict_question_sequence_and_idempotent_next(tmp_path: Path) -> Non
         assert session_state.current_question is not None
         assert session_state.current_question.id != question["id"]
 
-        # 7. Replaying /next with the old index (from_question_index=0) is idempotent
+        # Replaying /next with the old index is idempotent.
         replayed = client.post(next_url, json={"from_question_index": 0})
         assert replayed.status_code == 200
         replayed_state = SessionViewDTO.model_validate(replayed.json())
@@ -322,99 +311,62 @@ def test_q02_duplicate_submission_and_conflict_handling(tmp_path: Path) -> None:
 # =============================================================================
 
 def test_q02_concurrent_evaluation_and_timeout_retry(tmp_path: Path) -> None:
-    """Verify parallel evaluation lock (409) and timeout recovery preserving the saved answer."""
-    # 1. Test Concurrency Lock with BlockingInterpreter
+    """Verify queued grading is nonblocking and provider failures can be retried."""
     blocking_provider = BlockingInterpreter()
     app_concurrent = _build_test_app(tmp_path, "concurrent.sqlite3", blocking_provider)
 
     with TestClient(app_concurrent) as owner, TestClient(app_concurrent) as same_owner:
-        session = owner.post("/api/sessions", json={}).json()
-        session_id = session["session_id"]
-        question = session["current_question"]
+        session_id, answers = complete_session(
+            owner, first_answer_text="Answer undergoing concurrent evaluation verification."
+        )
+        answer_id = answers[0]["answer_id"]
         owner_cookie = owner.cookies.get(OWNER_COOKIE_NAME)
         same_owner.cookies.set(OWNER_COOKIE_NAME, owner_cookie)
+        assert blocking_provider.started.wait(timeout=10)
+        eval_url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluate"
+        read_url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluations/1"
+        processing = same_owner.get(read_url)
+        assert processing.status_code == 200
+        assert processing.json()["result"]["status"] == "processing"
+        assert processing.json()["result"]["total_score"] is None
 
-        ans = owner.post(
-            f"/api/sessions/{session_id}/answers",
-            json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "concurrent-eval-ans",
-                "text": "Answer undergoing concurrent evaluation verification.",
-            },
-        ).json()["answer"]
-        answer_id = ans["answer_id"]
+        repeat = same_owner.post(eval_url, json={"answer_revision": 1})
+        assert repeat.status_code == 200
+        assert repeat.json()["result"]["status"] == "processing"
 
-        eval_url = f"/api/answers/{answer_id}/evaluate"
-        read_url = f"/api/answers/{answer_id}/evaluation"
+        blocking_provider.release.set()
+        wait_for_evaluation_queue(app_concurrent)
+        done = same_owner.get(read_url)
+        assert done.status_code == 200
+        assert done.json()["result"]["status"] == "completed"
+        assert same_owner.post(eval_url, json={"answer_revision": 1}).json() == done.json()
+        assert blocking_provider.calls == 4
 
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            fut1 = executor.submit(owner.post, eval_url, json={"answer_revision": 1})
-            assert blocking_provider.started.wait(timeout=10)
-
-            # While evaluation is in flight:
-            # - GET returns status 'processing' and null total_score
-            poll_resp = same_owner.get(read_url)
-            assert poll_resp.status_code == 200
-            assert poll_resp.json()["status"] == "processing"
-            assert poll_resp.json()["total_score"] is None
-
-            # - Second POST returns 409 EVALUATION_IN_PROGRESS
-            conflict_resp = same_owner.post(eval_url, json={"answer_revision": 1})
-            assert conflict_resp.status_code == 409
-            assert conflict_resp.json()["error_code"] == "EVALUATION_IN_PROGRESS"
-            assert conflict_resp.json()["retryable"] is True
-
-            # Release interpreter
-            blocking_provider.release.set()
-            done1 = fut1.result(timeout=10)
-
-        assert done1.status_code == 200
-        assert done1.json()["status"] == "completed"
-        assert done1.json()["total_score"] is not None
-
-        # Re-evaluating a completed answer returns the cached result without calling provider again
-        assert same_owner.post(eval_url, json={"answer_revision": 1}).json() == done1.json()
-        assert blocking_provider.calls == 1
-
-    # 2. Test Timeout and Retry with FlakyInterpreter
     flaky_provider = FlakyInterpreter(
         ProviderFailureError(ProviderErrorKind.TIMEOUT, "Simulated provider timeout", retryable=True)
     )
     app_flaky = _build_test_app(tmp_path, "flaky.sqlite3", flaky_provider)
 
     with TestClient(app_flaky) as owner:
-        session = owner.post("/api/sessions", json={}).json()
-        question = session["current_question"]
-        ans = owner.post(
-            f"/api/sessions/{session['session_id']}/answers",
-            json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "flaky-ans-01",
-                "text": "Verbatim text that must remain intact despite timeout.",
-            },
-        ).json()["answer"]
-        answer_id = ans["answer_id"]
-
-        eval_url = f"/api/answers/{answer_id}/evaluate"
-
-        # Attempt 1: Provider times out (504)
-        fail_resp = owner.post(eval_url, json={"answer_revision": 1})
-        assert fail_resp.status_code == 504
-        assert fail_resp.json()["error_code"] == "PROVIDER_TIMEOUT"
-        assert fail_resp.json()["retryable"] is True
-
-        # Failed attempt is visible and answer text is preserved
-        failed_state = owner.get(f"/api/answers/{answer_id}/evaluation").json()
+        session_id, answers = complete_session(
+            owner, first_answer_text="Verbatim text that must remain intact despite timeout."
+        )
+        answer_id = answers[0]["answer_id"]
+        wait_for_evaluation_queue(app_flaky)
+        eval_url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluate"
+        read_url = f"/api/sessions/{session_id}/answers/{answer_id}/evaluations/1"
+        failed_state = owner.get(read_url).json()["result"]
         assert failed_state["status"] == "failed"
+        assert failed_state["failure_code"] == "PROVIDER_TIMEOUT"
+        assert failed_state["answer_text"] == "Verbatim text that must remain intact despite timeout."
 
-        # Attempt 2: Retry succeeds (200 OK)
         retry_resp = owner.post(eval_url, json={"answer_revision": 1})
         assert retry_resp.status_code == 200
-        assert retry_resp.json()["status"] == "completed"
-        assert retry_resp.json()["answer_text"] == "Verbatim text that must remain intact despite timeout."
-        assert flaky_provider.calls == 2
+        wait_for_evaluation_queue(app_flaky)
+        retried = owner.get(read_url).json()["result"]
+        assert retried["status"] == "completed"
+        assert retried["answer_text"] == "Verbatim text that must remain intact despite timeout."
+        assert flaky_provider.calls == 5
 
 
 # =============================================================================
@@ -439,6 +391,8 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
         assert session.state.value == "in_progress"
 
         seen_questions: set[str] = set()
+        saved_answers: list[dict[str, object]] = []
+        answer_texts: list[str] = []
 
         # Step 2: Loop through questions 0 to 3
         for index in range(4):
@@ -470,22 +424,8 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
             )
             assert subm_resp.status_code == 201
             saved_answer = subm_resp.json()["answer"]
-
-            # Evaluate answer via POST /api/answers/{answer_id}/evaluate
-            eval_resp = client.post(
-                f"/api/answers/{saved_answer['answer_id']}/evaluate",
-                json={"answer_revision": saved_answer["revision"]},
-            )
-            assert eval_resp.status_code == 200
-            eval_dto = EvaluationResultDTO.model_validate(eval_resp.json())
-            assert eval_dto.status.value == "completed"
-            assert eval_dto.answer_text == answer_text
-
-            # Verify evidence quotes match exact substrings of answer text
-            for check in eval_dto.criterion_checks:
-                for ev in check.evidence:
-                    if ev.quote is not None:
-                        assert answer_text[ev.start_offset:ev.end_offset] == ev.quote
+            saved_answers.append(saved_answer)
+            answer_texts.append(answer_text)
 
             # Advance to next question
             next_resp = client.post(
@@ -499,6 +439,20 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
         assert session.state.value == "completed"
         assert session.current_question is None
         assert session.progress.current_index == 4
+
+        wait_for_evaluation_queue(app)
+        for answer, answer_text in zip(saved_answers, answer_texts, strict=True):
+            eval_response = client.get(
+                f"/api/sessions/{session_id}/answers/{answer['answer_id']}/evaluations/1"
+            )
+            assert eval_response.status_code == 200
+            eval_dto = EvaluationResponseDTO.model_validate(eval_response.json()).result
+            assert eval_dto.status.value == "completed"
+            assert eval_dto.answer_text == answer_text
+            for check in eval_dto.criterion_checks:
+                for ev in check.evidence:
+                    if ev.quote is not None:
+                        assert answer_text[ev.start_offset:ev.end_offset] == ev.quote
 
         # Step 4: Verify Session Summary
         summary_resp = client.get(f"/api/sessions/{session_id}/summary")
@@ -547,6 +501,26 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
         assert practice_session.current_question is not None
         assert practice_session.state.value == "in_progress"
 
+        # A one-question practice summary unlocks after its only answer is saved.
+        practice_id = str(practice_session.session_id)
+        assert client.get(f"/api/sessions/{practice_id}/summary").status_code == 409
+        practice_question = practice_session.current_question
+        practice_answer = client.post(
+            f"/api/sessions/{practice_id}/answers",
+            json={
+                "question_id": practice_question.id,
+                "question_version": practice_question.version,
+                "client_submission_id": "practice-answer",
+                "text": "A complete targeted practice answer.",
+            },
+        )
+        assert practice_answer.status_code == 201
+        practice_advanced = client.post(
+            f"/api/sessions/{practice_id}/next", json={"from_question_index": 0}
+        )
+        assert practice_advanced.status_code == 200
+        assert client.get(f"/api/sessions/{practice_id}/summary").status_code == 200
+
 
 # =============================================================================
 # Q02 STEP 3: EARLY END WORKFLOW
@@ -555,7 +529,7 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
 def test_q02_early_session_termination_preserves_records_and_disables_advancing(
     tmp_path: Path,
 ) -> None:
-    """Verify ending a session early preserves partial progress and prevents further answers/advances."""
+    """Verify partial progress stays resumable and cannot expose a partial summary."""
     app = _build_test_app(tmp_path, "early_end.sqlite3")
 
     with TestClient(app) as client:
@@ -563,7 +537,7 @@ def test_q02_early_session_termination_preserves_records_and_disables_advancing(
         session_id = session["session_id"]
         question = session["current_question"]
 
-        # 1. Answer and evaluate first question
+        # Save the first answer.
         saved = client.post(
             f"/api/sessions/{session_id}/answers",
             json={
@@ -573,45 +547,19 @@ def test_q02_early_session_termination_preserves_records_and_disables_advancing(
                 "text": "Answer for the single completed question before ending early.",
             },
         ).json()["answer"]
-
-        client.post(
-            f"/api/answers/{saved['answer_id']}/evaluate",
-            json={"answer_revision": saved["revision"]},
-        )
-
-        # 2. End session early
         end_url = f"/api/sessions/{session_id}/end"
-        assert client.post(end_url, json={"reason": "invalid_reason"}).status_code == 422
+        assert client.post(end_url, json={"reason": "student_requested"}).status_code == 409
+        assert client.get(f"/api/sessions/{session_id}/summary").status_code == 409
 
-        end_resp = client.post(end_url, json={"reason": "student_requested"})
-        assert end_resp.status_code == 200
-        report = SessionSummaryDTO.model_validate(end_resp.json())
-        assert report.state.value == "ended_early"
-        assert report.completed_question_count == 1
-        assert report.total_question_count == 4
-        assert len(report.unanswered_categories) == 3
-        assert len(report.outcomes) == 1
-
-        # Calling /end again is idempotent
-        assert client.post(end_url, json={"reason": "student_requested"}).json() == end_resp.json()
-
-        # 3. Cannot advance or submit new answers to ended session
-        assert client.post(
+        advanced = client.post(
             f"/api/sessions/{session_id}/next",
             json={"from_question_index": 0},
-        ).status_code == 409
-
-        assert client.post(
-            f"/api/sessions/{session_id}/answers",
-            json={
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "too-late-subm",
-                "text": "Attempting to submit to ended session.",
-            },
-        ).status_code == 409
-
-        # Summary continues to report ended_early state
-        summary_resp = client.get(f"/api/sessions/{session_id}/summary")
-        assert summary_resp.status_code == 200
-        assert summary_resp.json()["state"] == "ended_early"
+        )
+        assert advanced.status_code == 200
+        assert advanced.json()["progress"]["current_index"] == 1
+        assert advanced.json()["progress"]["answered_count"] == 1
+        persisted = app.state.container.session_repo.get_answer(
+            AnswerRevisionRef(AnswerId(saved["answer_id"]), saved["revision"])
+        )
+        assert persisted is not None
+        assert persisted.text == "Answer for the single completed question before ending early."

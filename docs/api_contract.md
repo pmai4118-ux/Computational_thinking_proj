@@ -1,5 +1,21 @@
 # Hợp đồng API nội bộ và dữ liệu mẫu (P04)
 
+> **Điều chỉnh MVP — 27/11/2026:** Các mô tả P04 lịch sử bên dưới về chấm
+> đồng bộ, `sessionStorage`, chuyển câu sau khi chấm và kết thúc sớm được thay
+> bằng quy tắc sau. DTO trong `source/Control/schemas.py` là hợp đồng hiện hành.
+>
+> - `PUT /api/sessions/{session_id}/draft` lưu nội dung nháp của câu hiện tại
+>   vào SQLite; gửi bài khóa câu trả lời và chuyển câu theo thứ tự. Gửi lại cùng
+>   submission ID và nội dung phải an toàn, không tạo bài mới.
+> - Lưu bài xếp đánh giá nền. `pending`, `processing`, `failed` và `completed`
+>   là các trạng thái riêng; provider lỗi không tự retry, bài gốc vẫn được giữ.
+>   Công việc bị gián đoạn quá hạn có thể được tự xếp lại khi mở phiên.
+> - Tổng kết, kết quả chi tiết và khuyến nghị chỉ được đọc sau khi số câu có
+>   bài lưu bằng tổng số câu trong phiên. Trang chưa đủ chuyển về câu hiện tại;
+>   API trả lỗi trạng thái. Phiên chính mở ở 4/4, lượt bổ trợ mở ở 1/1.
+> - Tổng kết trả câu hỏi, bài gốc, trạng thái đánh giá, điểm/căn cứ có sẵn và
+>   thông tin retry; giao diện tự tải lại khi còn tác vụ đang chờ.
+
 | Thuộc tính | Nội dung |
 | --- | --- |
 | Mã công việc | P04 — Thống nhất API và dữ liệu mẫu |

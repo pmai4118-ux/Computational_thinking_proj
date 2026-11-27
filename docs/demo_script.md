@@ -1,5 +1,11 @@
 # Kịch bản cài đặt và trình diễn ứng dụng (Q07)
 
+> **Cập nhật MVP — 27/11/2026:** Các bước màn hình ở mục 3 là kịch bản demo cũ.
+> Trong luồng hiện hành, nhập bản nháp rồi **Lưu và thoát** để kiểm tra tiếp tục;
+> gửi lần lượt đủ 4 câu, sau đó mở tổng kết. Kết quả chấm nền có thể chờ hoặc
+> lỗi và được thử lại từ tổng kết; mở căn cứ sau khi phiên đã đủ câu. Lượt
+> luyện bổ trợ có một câu. Không dùng thao tác kết thúc sớm trong kịch bản mới.
+
 Tài liệu này hướng dẫn chi tiết cách chuẩn bị môi trường, kiểm tra dữ liệu nguồn mở và chạy trọn vẹn buổi demo ứng dụng **interviewUS** (Backend Intern / Fresher — Tiếng Việt) mà không cần hỏi trực tiếp tác giả.
 
 ---

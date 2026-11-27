@@ -104,12 +104,12 @@ function runWorkspaceWithSavedAnswer(api) {
     answerId: "answer-q06",
     answerRevision: "1",
   };
-  element("#open-review").hidden = false;
-
   const storage = new Map();
+  const windowListeners = new Map();
   const window = {
     InterviewApi: api,
     crypto: { randomUUID: () => "subm-q06" },
+    addEventListener(name, callback) { windowListeners.set(name, callback); },
     sessionStorage: {
       getItem: (key) => storage.get(key) ?? null,
       setItem: (key, value) => storage.set(key, value),
@@ -137,7 +137,7 @@ function runWorkspaceWithSavedAnswer(api) {
     encodeURIComponent,
   });
 
-  return { element };
+  return { element, elements };
 }
 
 function runEvidencePage(api) {
@@ -194,17 +194,19 @@ function runEvidencePage(api) {
   return { querySelector };
 }
 
-test("Q06-02: reopening a failed saved answer in workspace hides open-review and surfaces retry", async () => {
+test("workspace does not expose a partial evaluation before all questions are answered", async () => {
+  let reads = 0;
   const page = runWorkspaceWithSavedAnswer({
-    getEvaluation: async () => ({
-      result: { status: "failed", failure_code: "PROVIDER_TIMEOUT", retryable: true },
-    }),
+    getEvaluation: async () => {
+      reads += 1;
+      return { result: { status: "failed", failure_code: "PROVIDER_TIMEOUT", retryable: true } };
+    },
   });
   await flush();
 
-  assert.equal(page.element("#open-review").hidden, true);
-  assert.equal(page.element("#retry-evaluation").hidden, false);
-  assert.match(page.element("#workspace-error").textContent, /AI phản hồi quá thời gian/);
+  assert.equal(reads, 0);
+  assert.equal(page.elements.has("#open-review"), false);
+  assert.equal(page.elements.has("#retry-evaluation"), false);
 });
 
 test("Q06-02: review page on retryable failed evaluation exposes retry and renders result on recovery", async () => {

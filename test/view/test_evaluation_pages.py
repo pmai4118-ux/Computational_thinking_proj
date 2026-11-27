@@ -1,8 +1,7 @@
-"""Browser form and result page checks for the merged evaluation flow."""
+"""Browser page checks for the all-answers-first session flow."""
 
 from __future__ import annotations
 
-import asyncio
 import re
 import threading
 from pathlib import Path
@@ -15,18 +14,23 @@ from source.config import ProviderMode, Settings
 from source.main import create_app
 from source.service.providers.fixture_provider import FixtureProvider
 from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
-from source.Model.evaluation import AnswerRevisionRef
-from source.Model.ids import AnswerId, SessionId
+from test.fixtures.session_flow import complete_session, wait_for_evaluation_queue
 
 
-def test_web_form_saves_verbatim_answer_and_displays_cached_result(tmp_path: Path) -> None:
-    provider = Mock(wraps=FixtureProvider())
-    settings = Settings(
-        provider=ProviderMode.FIXTURE,
-        database_path=tmp_path / "web.sqlite3",
-        gemini_timeout_seconds=30.0,
+def _app(tmp_path: Path, name: str, provider: object | None = None):
+    return create_app(
+        settings=Settings(
+            provider=ProviderMode.FIXTURE,
+            database_path=tmp_path / name,
+            gemini_timeout_seconds=30.0,
+        ),
+        interpreter=provider,
     )
-    app = create_app(settings=settings, interpreter=provider)
+
+
+def test_web_form_saves_answer_and_advances_without_showing_partial_results(tmp_path: Path) -> None:
+    provider = Mock(wraps=FixtureProvider())
+    app = _app(tmp_path, "web.sqlite3", provider)
     answer_text = (
         "  Check the inventory inside one atomic transaction before decrementing. "
         "A second buyer cannot commit against the same remaining item.  "
@@ -51,26 +55,24 @@ def test_web_form_saves_verbatim_answer_and_displays_cached_result(tmp_path: Pat
                 "text": answer_text,
             }),
             headers={"content-type": "application/x-www-form-urlencoded"},
-            follow_redirects=True,
+            follow_redirects=False,
         )
-        assert submitted.status_code == 200
-        assert "Tổng điểm:" in submitted.text
-        assert answer_text in submitted.text
-        assert "Câu trả lời gốc" in submitted.text
-        assert "Điểm và căn cứ theo tiêu chí" in submitted.text
-        result_url = str(submitted.url)
-        assert owner.get(result_url).status_code == 200
+        assert submitted.status_code == 303
+        assert submitted.headers["location"] == f"/sessions/{session_id}"
+        saved = app.state.container.session_repo.list_answers_for_session(session_id)
+        assert saved[0].text == answer_text
+
+        result_url = f"/sessions/{session_id}/answers/{saved[0].id}/result?revision=1"
+        blocked = owner.get(result_url, follow_redirects=False)
+        assert blocked.status_code == 303
+        assert blocked.headers["location"] == f"/sessions/{session_id}"
         assert stranger.get(result_url).status_code == 403
+        wait_for_evaluation_queue(app)
         provider.interpret.assert_called_once()
 
 
 def test_web_form_rejects_blank_answer_without_losing_draft(tmp_path: Path) -> None:
-    settings = Settings(
-        provider=ProviderMode.FIXTURE,
-        database_path=tmp_path / "invalid.sqlite3",
-        gemini_timeout_seconds=30.0,
-    )
-    app = create_app(settings=settings)
+    app = _app(tmp_path, "invalid.sqlite3")
     with TestClient(app) as client:
         created = client.post("/api/sessions", json={}).json()
         session_id = created["session_id"]
@@ -93,12 +95,7 @@ def test_web_form_rejects_blank_answer_without_losing_draft(tmp_path: Path) -> N
 
 
 def test_web_form_rejects_oversized_or_excess_field_payload_with_413(tmp_path: Path) -> None:
-    settings = Settings(
-        provider=ProviderMode.FIXTURE,
-        database_path=tmp_path / "oversized.sqlite3",
-        gemini_timeout_seconds=30.0,
-    )
-    app = create_app(settings=settings)
+    app = _app(tmp_path, "oversized.sqlite3")
     with TestClient(app) as client:
         created = client.post("/api/sessions", json={}).json()
         session_id = created["session_id"]
@@ -120,88 +117,75 @@ def test_web_form_rejects_oversized_or_excess_field_payload_with_413(tmp_path: P
         assert "data-workspace" in too_many_fields.text
 
 
-def test_web_provider_timeout_keeps_saved_answer_and_offers_retry(tmp_path: Path) -> None:
+def test_web_provider_timeout_keeps_answer_and_allows_explicit_retry(tmp_path: Path) -> None:
     provider = Mock()
     provider.interpret.side_effect = ProviderFailureError(
         ProviderErrorKind.TIMEOUT, "Synthetic timeout", retryable=True
     )
-    settings = Settings(
-        provider=ProviderMode.FIXTURE,
-        database_path=tmp_path / "timeout.sqlite3",
-        gemini_timeout_seconds=30.0,
-    )
-    app = create_app(settings=settings, interpreter=provider)
+    app = _app(tmp_path, "timeout.sqlite3", provider)
     with TestClient(app) as client:
-        created = client.post("/api/sessions", json={}).json()
-        session_id = created["session_id"]
-        question = created["current_question"]
-        response = client.post(
-            f"/sessions/{session_id}/answers",
-            content=urlencode({
-                "question_id": question["id"],
-                "question_version": question["version"],
-                "client_submission_id": "timeout-page-test",
-                "text": "Original answer remains saved.",
-            }),
-            headers={"content-type": "application/x-www-form-urlencoded"},
+        session_id, answers = complete_session(
+            client,
+            first_answer_text="Original answer remains saved.",
+            submission_prefix="timeout-page",
         )
-        assert response.status_code == 504
-        assert 'role="alert"' in response.text
-        assert "Thử đánh giá lại" in response.text
-        [saved] = app.state.container.session_repo.list_answers_for_session(SessionId(session_id))
-        assert saved.text == "Original answer remains saved."
+        answer = answers[0]
+        wait_for_evaluation_queue(app)
+        result_url = (
+            f"/api/sessions/{session_id}/answers/{answer['answer_id']}/evaluations/1"
+        )
+        failure = client.get(result_url)
+        assert failure.status_code == 200
+        assert failure.json()["result"]["status"] == "failed"
+        assert failure.json()["result"]["failure_code"] == "PROVIDER_TIMEOUT"
+        assert failure.json()["result"]["answer_text"] == "Original answer remains saved."
 
-        result_url = f"/sessions/{session_id}/answers/{saved.id}/result?revision=1"
-        saved_failure = client.get(result_url)
-        assert saved_failure.status_code == 200
-        assert "Mã lỗi:" in saved_failure.text
-        assert "Thử đánh giá lại" in saved_failure.text
-        assert "Chưa thể tính tổng điểm" not in saved_failure.text
+        page = client.get(
+            f"/sessions/{session_id}/answers/{answer['answer_id']}/result?revision=1"
+        )
+        assert page.status_code == 200
+        assert "Mã lỗi:" in page.text
+        assert "Thử đánh giá lại" in page.text
 
         provider.interpret.side_effect = FixtureProvider().interpret
         retried = client.post(
-            f"/sessions/{session_id}/answers/{saved.id}/evaluate?revision=1",
-            follow_redirects=True,
+            f"/api/sessions/{session_id}/answers/{answer['answer_id']}/evaluate",
+            json={"answer_revision": 1},
         )
         assert retried.status_code == 200
-        assert "Tổng điểm:" in retried.text
-        assert provider.interpret.call_count == 2
+        wait_for_evaluation_queue(app)
+        assert client.get(result_url).json()["result"]["status"] == "completed"
 
 
 def test_web_processing_state_offers_refresh_without_duplicate_retry(tmp_path: Path) -> None:
-    app = create_app(settings=Settings(
-        provider=ProviderMode.FIXTURE,
-        database_path=tmp_path / "processing.sqlite3",
-        gemini_timeout_seconds=30.0,
-    ))
-    with TestClient(app) as client:
-        session = client.post("/api/sessions", json={}).json()
-        session_id = session["session_id"]
-        question = session["current_question"]
-        submitted = client.post(f"/api/sessions/{session_id}/answers", json={
-            "question_id": question["id"],
-            "question_version": question["version"],
-            "client_submission_id": "processing-page-test",
-            "text": "Original answer remains saved.",
-        })
-        assert submitted.status_code == 201
-        answer_id = submitted.json()["answer"]["answer_id"]
-        answer = app.state.container.session_repo.get_answer(
-            AnswerRevisionRef(AnswerId(answer_id), 1)
-        )
-        assert answer is not None
-        app.state.container.evaluation_repo.claim_evaluation(
-            answer.ref, answer.question_ref, answer.rubric_ref
-        )
+    started = threading.Event()
+    release = threading.Event()
+    provider = FixtureProvider()
 
-        page = client.get(
-            f"/sessions/{session_id}/answers/{answer_id}/result?revision=1"
-        )
-        assert page.status_code == 200
-        assert "Đánh giá đang được xử lý" in page.text
-        assert "Tải lại trạng thái" in page.text
-        assert "Thử đánh giá lại" not in page.text
-        assert "Chưa thể tính tổng điểm" not in page.text
+    def block(**kwargs):
+        started.set()
+        assert release.wait(timeout=5)
+        return provider.interpret(**kwargs)
+
+    interpreter = Mock()
+    interpreter.interpret = Mock(side_effect=block)
+    app = _app(tmp_path, "processing.sqlite3", interpreter)
+    with TestClient(app) as client:
+        try:
+            session_id, answers = complete_session(
+                client, first_answer_text="Answer held while its background grade is processing."
+            )
+            assert started.wait(timeout=5)
+            page = client.get(
+                f"/sessions/{session_id}/answers/{answers[0]['answer_id']}/result?revision=1"
+            )
+            assert page.status_code == 200
+            assert "Đánh giá đang được xử lý" in page.text
+            assert "Tải lại trạng thái" in page.text
+            assert "Thử đánh giá lại" not in page.text
+        finally:
+            release.set()
+            wait_for_evaluation_queue(app)
 
 
 def test_web_permanent_failure_does_not_offer_retry(tmp_path: Path) -> None:
@@ -209,143 +193,57 @@ def test_web_permanent_failure_does_not_offer_retry(tmp_path: Path) -> None:
     provider.interpret.side_effect = ProviderFailureError(
         ProviderErrorKind.CONFIG, "Synthetic missing config", retryable=False
     )
-    app = create_app(settings=Settings(
-        provider=ProviderMode.FIXTURE,
-        database_path=tmp_path / "permanent.sqlite3",
-        gemini_timeout_seconds=30.0,
-    ), interpreter=provider)
+    app = _app(tmp_path, "permanent.sqlite3", provider)
     with TestClient(app) as client:
-        session = client.post("/api/sessions", json={}).json()
-        session_id = session["session_id"]
-        question = session["current_question"]
-        submitted = client.post(f"/api/sessions/{session_id}/answers", json={
-            "question_id": question["id"],
-            "question_version": question["version"],
-            "client_submission_id": "permanent-page-test",
-            "text": "Original answer remains saved.",
-        })
-        assert submitted.status_code == 201
-        answer_id = submitted.json()["answer"]["answer_id"]
-        failed = client.post(
-            f"/api/sessions/{session_id}/answers/{answer_id}/evaluate", json={}
-        )
-        assert failed.status_code == 503
-
+        session_id, answers = complete_session(client, submission_prefix="permanent-page")
+        wait_for_evaluation_queue(app)
         page = client.get(
-            f"/sessions/{session_id}/answers/{answer_id}/result?revision=1"
+            f"/sessions/{session_id}/answers/{answers[0]['answer_id']}/result?revision=1"
         )
         assert page.status_code == 200
         assert "PROVIDER_CONFIG_ERROR" in page.text
         assert "Thử đánh giá lại" not in page.text
 
 
-async def _asgi_request(
-    app,
-    *,
-    method: str,
-    path: str,
-    headers: list[tuple[bytes, bytes]] | None = None,
-    body: bytes = b"",
-) -> tuple[int, bytes]:
-    sent_body = False
-    status_code = 500
-    chunks: list[bytes] = []
-
-    async def receive() -> dict[str, object]:
-        nonlocal sent_body
-        if not sent_body:
-            sent_body = True
-            return {"type": "http.request", "body": body, "more_body": False}
-        return {"type": "http.disconnect"}
-
-    async def send(message: dict[str, object]) -> None:
-        nonlocal status_code
-        if message["type"] == "http.response.start":
-            status_code = int(message["status"])
-        elif message["type"] == "http.response.body":
-            chunks.append(bytes(message.get("body", b"")))
-
-    scope = {
-        "type": "http",
-        "asgi": {"version": "3.0"},
-        "http_version": "1.1",
-        "method": method,
-        "scheme": "http",
-        "path": path,
-        "raw_path": path.encode("ascii"),
-        "query_string": b"",
-        "headers": headers or [],
-        "client": ("127.0.0.1", 50000),
-        "server": ("testserver", 80),
-    }
-    await app(scope, receive, send)
-    return status_code, b"".join(chunks)
-
-
-def test_web_form_evaluation_runs_off_event_loop_keeping_health_responsive(
-    tmp_path: Path,
-) -> None:
-    eval_started = threading.Event()
-    release_eval = threading.Event()
+def test_web_answer_post_and_health_remain_responsive_while_grading_runs(tmp_path: Path) -> None:
+    started = threading.Event()
+    release = threading.Event()
     worker_threads: list[threading.Thread] = []
     delegate = FixtureProvider()
 
     def blocking_interpret(**kwargs):
         worker_threads.append(threading.current_thread())
-        eval_started.set()
-        assert release_eval.wait(timeout=3.0), "Event loop was blocked; /health never ran."
+        started.set()
+        assert release.wait(timeout=5)
         return delegate.interpret(**kwargs)
 
-    delegate_interpreter = Mock()
-    delegate_interpreter.interpret = Mock(side_effect=blocking_interpret)
-    app = create_app(
-        settings=Settings(
-            provider=ProviderMode.FIXTURE,
-            database_path=tmp_path / "nonblocking.sqlite3",
-            gemini_timeout_seconds=30.0,
-        ),
-        interpreter=delegate_interpreter,
-    )
-
-    with TestClient(app) as setup_client:
-        created = setup_client.post("/api/sessions", json={}).json()
-        owner_cookie = setup_client.cookies.get("interview_owner_id")
-    assert owner_cookie is not None
-    session_id = created["session_id"]
-    question = created["current_question"]
-    encoded_form = urlencode({
-        "question_id": question["id"],
-        "question_version": question["version"],
-        "client_submission_id": "async-nonblocking-test",
-        "text": "Atomic transaction locks row before decrementing stock.",
-    }).encode("utf-8")
-
-    async def exercise() -> None:
-        loop_thread = threading.current_thread()
-        submit_task = asyncio.create_task(
-            _asgi_request(
-                app,
-                method="POST",
-                path=f"/sessions/{session_id}/answers",
-                headers=[
-                    (b"content-type", b"application/x-www-form-urlencoded"),
-                    (b"content-length", str(len(encoded_form)).encode("ascii")),
-                    (b"cookie", f"interview_owner_id={owner_cookie}".encode("utf-8")),
-                ],
-                body=encoded_form,
+    interpreter = Mock()
+    interpreter.interpret = Mock(side_effect=blocking_interpret)
+    app = _app(tmp_path, "nonblocking.sqlite3", interpreter)
+    with TestClient(app) as client:
+        try:
+            created = client.post("/api/sessions", json={}).json()
+            session_id = created["session_id"]
+            question = created["current_question"]
+            form = client.get(f"/sessions/{session_id}").text
+            submission_id = re.search(
+                r'name="client_submission_id" value="([^"]+)"', form
+            ).group(1)
+            response = client.post(
+                f"/sessions/{session_id}/answers",
+                content=urlencode({
+                    "question_id": question["id"],
+                    "question_version": question["version"],
+                    "client_submission_id": submission_id,
+                    "text": "Atomic transaction locks the row before decrementing stock.",
+                }),
+                headers={"content-type": "application/x-www-form-urlencoded"},
+                follow_redirects=False,
             )
-        )
-        await asyncio.to_thread(eval_started.wait, 3.0)
-        assert eval_started.is_set()
-        assert worker_threads and worker_threads[0] is not loop_thread
-
-        health_status, health_body = await _asgi_request(app, method="GET", path="/health")
-        assert health_status == 200
-        assert b'"status":"ok"' in health_body
-
-        release_eval.set()
-        submit_status, _ = await submit_task
-        assert submit_status == 303
-
-    asyncio.run(exercise())
-
+            assert response.status_code == 303
+            assert started.wait(timeout=5)
+            assert worker_threads and worker_threads[0] is not threading.current_thread()
+            assert client.get("/health").json()["status"] == "ok"
+        finally:
+            release.set()
+            wait_for_evaluation_queue(app)

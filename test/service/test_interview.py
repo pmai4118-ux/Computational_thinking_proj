@@ -2,18 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-
 import pytest
 
-from source.Model.evaluation import (
-    CriterionCheck,
-    CriterionStatus,
-    EvaluationResult,
-    EvaluationStatus,
-    Evidence,
-)
-from source.Model.ids import EvaluationId
 from source.Model.interview import SessionState
 from source.service.interview_service import (
     InsufficientQuestionBankError,
@@ -87,27 +77,27 @@ def test_i01_reports_contextual_error_when_question_bank_is_empty_or_missing_slo
         service.open_session(owner_token_hash="owner-hash-a", role="unknown_role")
 
 
-def test_i01_enforces_ordered_question_transitions_and_completed_evaluation_gate() -> None:
-    store, service = _make_seeded_service()
+def test_session_advances_in_order_after_each_saved_answer_without_waiting_for_evaluation() -> None:
+    _store, service = _make_seeded_service()
     snap = service.open_session(owner_token_hash="owner-hash-1")
     session_id = snap.session.id
 
-    # Cannot skip ahead or advance before answering and evaluating
-    with pytest.raises(InvalidSessionStateError, match="before submitting an answer"):
+    # Cannot skip ahead or advance before answering.
+    with pytest.raises(InvalidSessionStateError, match="Submit an answer"):
         service.advance_question(
             session_id=session_id,
             owner_token_hash="owner-hash-1",
             from_question_index=0,
         )
 
-    with pytest.raises(InvalidSessionStateError, match="Expected from_question_index=0"):
+    with pytest.raises(InvalidSessionStateError, match="current question has changed"):
         service.advance_question(
             session_id=session_id,
             owner_token_hash="owner-hash-1",
             from_question_index=2,
         )
 
-    # Walk all 4 questions in order: submit -> require evaluation -> advance
+    # Walk all four questions without creating any evaluations.
     for expected_idx in range(4):
         current = service.get_owned_session(
             session_id=session_id,
@@ -116,54 +106,12 @@ def test_i01_enforces_ordered_question_transitions_and_completed_evaluation_gate
         assert current.session.current_index == expected_idx
         assert current.current_question is not None
 
-        submitted = service.submit_answer(
+        service.submit_answer(
             session_id=session_id,
             owner_token_hash="owner-hash-1",
             question_ref=current.current_question.ref,
             text="Bài trả lời thử nghiệm hợp lệ cho bước hiện tại.",
             client_submission_id=f"subm-{expected_idx}",
-        )
-
-        # Still blocked before evaluation completes
-        with pytest.raises(InvalidSessionStateError, match="evaluation has completed"):
-            service.advance_question(
-                session_id=session_id,
-                owner_token_hash="owner-hash-1",
-                from_question_index=expected_idx,
-            )
-
-        rubric = store.get_rubric(current.current_question.rubric_ref)
-        assert rubric is not None
-        checks = tuple(
-            CriterionCheck(
-                criterion_id=crit.id,
-                status=CriterionStatus.MET,
-                score=2,
-                evidence=(
-                    Evidence(
-                        answer_ref=submitted.answer.ref,
-                        quote="Bài trả lời",
-                        start_offset=0,
-                        end_offset=11,
-                    ),
-                ),
-                explanation="Đạt tiêu chí.",
-            )
-            for crit in rubric.criteria
-        )
-        store.save_evaluation(
-            EvaluationResult(
-                id=EvaluationId(f"eval.{expected_idx}"),
-                version=1,
-                status=EvaluationStatus.COMPLETED,
-                answer_ref=submitted.answer.ref,
-                question_ref=current.current_question.ref,
-                rubric_ref=current.current_question.rubric_ref,
-                criterion_checks=checks,
-                total_score=6,
-                maximum_score=6,
-                evaluated_at=datetime.now(UTC),
-            )
         )
 
         advanced = service.advance_question(
@@ -187,14 +135,14 @@ def test_i01_enforces_ordered_question_transitions_and_completed_evaluation_gate
     assert final_snap.session.state is SessionState.COMPLETED
     assert final_snap.current_question is None
     assert final_snap.answered_count == 4
-    assert final_snap.evaluated_count == 4
+    assert final_snap.evaluated_count == 0
 
 
 def test_i01_rejects_negative_retry_index_before_first_question() -> None:
     _store, service = _make_seeded_service()
     snapshot = service.open_session(owner_token_hash="owner-hash-negative-index")
 
-    with pytest.raises(InvalidSessionStateError, match="Expected from_question_index=0, got -1"):
+    with pytest.raises(InvalidSessionStateError, match="current question has changed"):
         service.advance_question(
             session_id=snapshot.session.id,
             owner_token_hash="owner-hash-negative-index",

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 import hashlib
+import logging
 import secrets
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, FastAPI, Request, Response, status
 from fastapi.exceptions import RequestValidationError
@@ -19,6 +21,8 @@ from source.Control.schemas import (
     NextQuestionRequest,
     QuestionPromptDTO,
     SavedAnswerDTO,
+    SaveDraftRequest,
+    SaveDraftResponse,
     SessionProgressDTO,
     SessionState as SchemaSessionState,
     SessionViewDTO,
@@ -42,7 +46,11 @@ from source.service.interview_service import (
     UnsupportedBlueprintError,
 )
 
+if TYPE_CHECKING:
+    from source.service.evaluation_queue import EvaluationQueue
+
 OWNER_COOKIE_NAME = "interview_owner_id"
+logger = logging.getLogger(__name__)
 
 
 class ApiControllerError(Exception):
@@ -134,9 +142,11 @@ class InterviewController:
         *,
         interview_service: InterviewService,
         demo_mode_label: str | None = None,
+        evaluation_queue: EvaluationQueue | None = None,
     ) -> None:
         self._service = interview_service
         self._demo_mode_label = demo_mode_label
+        self._evaluation_queue = evaluation_queue
 
     @property
     def demo_mode_label(self) -> str | None:
@@ -272,7 +282,41 @@ class InterviewController:
                     session_id=session_id,
                 ),
             ) from error
+        if self._evaluation_queue is not None:
+            try:
+                self._evaluation_queue.resume_session(session_id)
+            except Exception:
+                logger.exception("Could not resume evaluation jobs; saved answers remain intact.")
         return self._snapshot_to_dto(snapshot)
+
+    def require_complete(self, session_id: SessionId, *, owner_token: str | None) -> SessionViewDTO:
+        """Authorize access to results only after every session question has an answer."""
+        session = self.get_session(session_id, owner_token=owner_token)
+        if session.progress.answered_count < session.progress.total_questions:
+            raise ApiControllerError(
+                status.HTTP_409_CONFLICT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.INVALID_STATE_TRANSITION,
+                    message="Hãy trả lời tất cả câu hỏi trước khi xem kết quả.",
+                    retryable=False, session_id=session_id,
+                    recovery_action="Tiếp tục trả lời câu hỏi hiện tại.",
+                ),
+            )
+        return session
+
+    def save_draft(self, session_id: SessionId, payload: SaveDraftRequest, *, owner_token: str | None) -> SaveDraftResponse:
+        owner_hash = hash_owner_token(owner_token) if owner_token else ""
+        try:
+            self._service.save_draft(
+                session_id=session_id,
+                owner_token_hash=owner_hash,
+                question_ref=VersionedRef(QuestionId(payload.question_id), payload.question_version),
+                text=payload.text,
+            )
+        except (SessionNotFoundError, SessionForbiddenError, SessionExpiredError,
+                InvalidSessionStateError) as error:
+            raise self._session_action_error(error, session_id) from error
+        return SaveDraftResponse(text=payload.text)
 
     def list_sessions_for_owner(
         self,
@@ -330,7 +374,7 @@ class InterviewController:
         *,
         owner_token: str | None,
     ) -> SessionViewDTO:
-        """Advance only when the server confirms the active answer was evaluated."""
+        """Advance once the current answer has been saved."""
         owner_hash = hash_owner_token(owner_token) if owner_token else ""
         try:
             snapshot = self._service.advance_question(
@@ -393,7 +437,7 @@ class InterviewController:
             code = ErrorCode.INVALID_STATE_TRANSITION
             http_status = status.HTTP_409_CONFLICT
             message = str(error)
-            recovery = "Tải lại trạng thái phiên và hoàn tất đánh giá câu hiện tại trước khi chuyển câu."
+            recovery = "Tải lại trạng thái phiên và gửi câu trả lời hiện tại."
         return ApiControllerError(
             http_status,
             ApiErrorResponse(
@@ -503,6 +547,11 @@ class InterviewController:
                 ),
             ) from error
 
+        if self._evaluation_queue is not None:
+            try:
+                self._evaluation_queue.enqueue(outcome.answer.ref)
+            except Exception:
+                logger.exception("Could not queue evaluation; the submitted answer remains saved.")
         return SubmitAnswerResponse(
             answer=_to_saved_answer_dto(outcome.answer),
             idempotent_replay=outcome.idempotent_replay,
@@ -541,6 +590,7 @@ class InterviewController:
             ),
             current_question=question_dto,
             current_answer=answer_dto,
+            current_draft=snapshot.current_draft,
             latest_evaluation_id=latest_eval_id,
         )
 
@@ -640,6 +690,12 @@ def build_interview_router(controller: InterviewController) -> APIRouter:
         if result.idempotent_replay:
             response.status_code = status.HTTP_200_OK
         return result
+
+    @router.put("/{session_id}/draft", response_model=SaveDraftResponse)
+    def save_draft_endpoint(session_id: str, payload: SaveDraftRequest, request: Request) -> SaveDraftResponse:
+        return controller.save_draft(
+            SessionId(session_id), payload, owner_token=request.cookies.get(OWNER_COOKIE_NAME)
+        )
 
     @router.post("/{session_id}/next", response_model=SessionViewDTO)
     def next_question_endpoint(

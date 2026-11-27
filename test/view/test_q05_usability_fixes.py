@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+
+from source.Model.ids import SessionId
+from source.Model.interview import SessionState
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 STATIC_CSS_DIR = ROOT_DIR / "source" / "view" / "static" / "css"
@@ -16,17 +20,20 @@ def test_q05_welcome_history_localizes_ended_early_and_links_directly_to_summary
     ui_session: dict[str, object],
 ) -> None:
     session_id = ui_session["session_id"]
-    ended = ui_client.post(
-        f"/api/sessions/{session_id}/end",
-        json={"reason": "student_requested"},
+    stored = ui_client.app.state.container.session_repo.get_session(SessionId(session_id))
+    assert stored is not None
+    ui_client.app.state.container.session_repo.update_session(
+        replace(stored, state=SessionState.ENDED_EARLY)
     )
-    assert ended.status_code == 200
+    resumed = ui_client.get(f"/api/sessions/{session_id}")
+    assert resumed.status_code == 200
+    assert resumed.json()["state"] == "in_progress"
 
     welcome = ui_client.get("/")
     assert welcome.status_code == 200
-    assert "Đã kết thúc sớm" in welcome.text
+    assert "Đang thực hiện" in welcome.text
     assert "ended_early" not in welcome.text
-    assert f'href="/sessions/{session_id}/summary"' in welcome.text
+    assert f'href="/sessions/{session_id}"' in welcome.text
 
 
 def test_q05_workspace_compacts_header_separates_secondary_actions_and_styles_code_block(
@@ -53,35 +60,25 @@ def test_q05_workspace_compacts_header_separates_secondary_actions_and_styles_co
 
 def test_q05_workspace_guards_unsaved_navigation_and_uses_standard_saved_label() -> None:
     workspace_js = (STATIC_JS_DIR / "workspace.js").read_text(encoding="utf-8")
-    assert "setupNavigationGuard" in workspace_js
     assert "beforeunload" in workspace_js
-    assert "site-nav--in-session" in workspace_js
-    assert "Đã lưu câu trả lời trên máy chủ" in workspace_js
+    assert "api.saveDraft(sessionId" in workspace_js
+    assert "Bản nháp chưa lưu xong" in workspace_js
+    assert 'window.location.assign("/")' in workspace_js
 
 
 def test_q05_review_page_has_single_primary_cta_summary_link_and_vietnamese_wording(
     ui_client: TestClient,
-    ui_session: dict[str, object],
+    complete_ui_session: dict[str, object],
 ) -> None:
-    session_id = ui_session["session_id"]
-    question = ui_session["current_question"]
-    submitted = ui_client.post(
-        f"/api/sessions/{session_id}/answers",
-        json={
-            "question_id": question["id"],
-            "question_version": question["version"],
-            "client_submission_id": "q05-review-submit-1",
-            "text": "Câu trả lời tổng hợp để kiểm tra điều hướng trang kết quả.",
-        },
-    )
-    answer = submitted.json()["answer"]
+    session_id = complete_ui_session["session_id"]
+    answer = complete_ui_session["answers"][0]
 
     review = ui_client.get(
         f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}"
     )
     assert review.status_code == 200
-    assert 'id="next-question" class="btn btn--primary"' in review.text
-    assert "Câu tiếp theo" in review.text
+    assert 'id="next-question"' not in review.text
+    assert "Câu tiếp theo" not in review.text
     assert f'class="btn btn--secondary" href="/sessions/{session_id}/exercises"' in review.text
     assert f'href="/sessions/{session_id}/summary"' in review.text
 
@@ -136,29 +133,21 @@ def test_q05_review_page_links_to_summary_instead_of_empty_workspace_when_sessio
     assert submitted.status_code == 201
     answer = submitted.json()["answer"]
 
-    in_progress_review = ui_client.get(
-        f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}"
+    review = ui_client.get(
+        f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}",
+        follow_redirects=False,
     )
-    assert in_progress_review.status_code == 200
-    assert "Về câu hỏi" in in_progress_review.text
-
-    ended = ui_client.post(
-        f"/api/sessions/{session_id}/end",
-        json={"reason": "student_requested"},
-    )
-    assert ended.status_code == 200
-
-    ended_review = ui_client.get(
-        f"/sessions/{session_id}/review?answer_id={answer['answer_id']}&revision={answer['revision']}"
-    )
-    assert ended_review.status_code == 200
-    assert "Về câu hỏi" not in ended_review.text
-    assert f'class="btn btn--secondary" href="/sessions/{session_id}/summary">Về tổng kết</a>' in ended_review.text
+    assert review.status_code == 303
+    assert review.headers["location"] == f"/sessions/{session_id}"
+    summary = ui_client.get(f"/sessions/{session_id}/summary", follow_redirects=False)
+    assert summary.status_code == 303
+    assert summary.headers["location"] == f"/sessions/{session_id}"
 
 
 def test_q05_welcome_and_summary_use_readable_session_labels_instead_of_raw_id_headings(
     ui_client: TestClient,
     ui_session: dict[str, object],
+    complete_ui_session: dict[str, object],
 ) -> None:
     session_id = ui_session["session_id"]
 
@@ -168,21 +157,23 @@ def test_q05_welcome_and_summary_use_readable_session_labels_instead_of_raw_id_h
     assert "Phiên luyện phỏng vấn" in welcome.text
     assert f"<code>{session_id}</code>" in welcome.text
 
-    summary = ui_client.get(f"/sessions/{session_id}/summary")
+    completed_id = complete_ui_session["session_id"]
+    summary = ui_client.get(f"/sessions/{completed_id}/summary")
     assert summary.status_code == 200
-    assert f'<p class="eyebrow">Phiên {session_id}</p>' not in summary.text
+    assert f'<p class="eyebrow">Phiên {completed_id}</p>' not in summary.text
     assert "Phiên luyện phỏng vấn" in summary.text
-    assert f'data-session-id="{session_id}"' in summary.text
+    assert f'data-session-id="{completed_id}"' in summary.text
 
 
-def test_q05_workspace_clarifies_tab_only_draft_and_scripts_remove_api_jargon(
+def test_q05_workspace_clarifies_persistent_draft_and_scripts_remove_api_jargon(
     ui_client: TestClient,
     ui_session: dict[str, object],
 ) -> None:
     session_id = ui_session["session_id"]
     workspace = ui_client.get(f"/sessions/{session_id}")
     assert workspace.status_code == 200
-    assert "trong tab trình duyệt hiện tại" in workspace.text
+    assert "Bản nháp được lưu để tiếp tục sau" in workspace.text
+    assert "Lưu và thoát" in workspace.text
 
     exercise_js = (STATIC_JS_DIR / "exercise.js").read_text(encoding="utf-8")
     summary_js = (STATIC_JS_DIR / "summary.js").read_text(encoding="utf-8")

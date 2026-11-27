@@ -16,6 +16,7 @@
   const outcomesEmpty = document.querySelector("#outcomes-empty");
   const gapsList = document.querySelector("#gaps-list");
   const gapsEmpty = document.querySelector("#gaps-empty");
+  let pollTimer = null;
 
   const categoryNames = {
     programming_knowledge: "Kiến thức lập trình",
@@ -71,6 +72,17 @@
     meta.append(node("span", "badge", evaluationNames[outcome.evaluation_status] || "Chưa có trạng thái đánh giá"));
     item.append(meta);
 
+    if (outcome.question_code) item.append(node("pre", "code-block", outcome.question_code));
+    if (outcome.answer_text !== null && outcome.answer_text !== undefined) {
+      const details = node("details");
+      details.append(node("summary", "", "Xem câu trả lời đã lưu"));
+      details.append(node("pre", "answer-source", outcome.answer_text));
+      item.append(details);
+    }
+    if (outcome.evaluation_status === "failed") {
+      item.append(node("p", "", outcome.failure_message || "Chưa thể hoàn tất đánh giá. Câu trả lời vẫn được lưu."));
+    }
+
     let scoreText;
     if (outcome.total_score === null || outcome.total_score === undefined) {
       scoreText = outcome.evaluation_status === "completed" && outcome.unresolved_criteria_count > 0
@@ -94,6 +106,22 @@
     }
 
     const actions = node("div", "action-row");
+    if (outcome.evaluation_status === "failed" && outcome.retryable && outcome.answer_ref) {
+      const retry = node("button", "btn btn--secondary", "Thử đánh giá lại");
+      retry.type = "button";
+      retry.addEventListener("click", async () => {
+        retry.disabled = true;
+        try {
+          await api.evaluateAnswer(sessionId, outcome.answer_ref.id, outcome.answer_ref.revision);
+          await loadSummary(true);
+        } catch (error) {
+          errorBox.textContent = `${error.message || "Chưa thể đánh giá lại."} Bài trả lời vẫn được lưu.`;
+          errorBox.hidden = false;
+          retry.disabled = false;
+        }
+      });
+      actions.append(retry);
+    }
     if (outcome.answer_ref && outcome.answer_ref.id) {
       const review = node("a", "btn btn--secondary", "Xem căn cứ và tiêu chí");
       const reviewUrl = new URL(`/sessions/${encodeURIComponent(sessionId)}/review`, window.location.origin);
@@ -143,14 +171,20 @@
     statusBox.hidden = true;
   }
 
-  async function loadSummary() {
-    statusBox.hidden = false;
-    statusBox.textContent = "Đang tải kết quả và độ phủ phiên…";
+  async function loadSummary(background = false) {
+    window.clearTimeout(pollTimer);
+    if (!background) {
+      statusBox.hidden = false;
+      statusBox.textContent = "Đang tải kết quả và độ phủ phiên…";
+      content.hidden = true;
+    }
     errorBox.hidden = true;
-    content.hidden = true;
     try {
       const payload = await api.getSessionSummary(sessionId);
       renderSummary(payload);
+      if ((payload.outcomes || []).some((item) => item.evaluation_status === "pending" || item.evaluation_status === "processing")) {
+        pollTimer = window.setTimeout(() => loadSummary(true), 5000);
+      }
     } catch (error) {
       statusBox.hidden = true;
       const missingSummaryRoute = error.status === 404 && error.code === "HTTP_ERROR";
@@ -163,10 +197,11 @@
       if (canRetry) {
         const retry = node("button", "btn btn--secondary", "Tải lại tổng kết");
         retry.type = "button";
-        retry.addEventListener("click", loadSummary);
+        retry.addEventListener("click", () => loadSummary());
         errorBox.replaceChildren(document.createTextNode(`${message} `), retry);
       }
-      errorBox.focus();
+      if (background) pollTimer = window.setTimeout(() => loadSummary(true), 10000);
+      else errorBox.focus();
     }
   }
 

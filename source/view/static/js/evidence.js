@@ -17,6 +17,8 @@
   const total = document.querySelector("#evaluation-total");
   const evaluationState = document.querySelector("#evaluation-state");
   const answerSource = document.querySelector("#answer-source");
+  const questionPrompt = document.querySelector("#review-question-prompt");
+  const questionCode = document.querySelector("#review-question-code");
   const detail = document.querySelector("#evidence-detail");
   const explanation = document.querySelector("#selected-criterion-explanation");
   let evaluation = null;
@@ -113,13 +115,16 @@
     if (data.retryable) {
       return "Chưa thể hoàn tất đánh giá cho bài đã lưu. Câu trả lời gốc vẫn còn nguyên và chưa có điểm; bạn có thể thử đánh giá lại.";
     }
-    return "Dịch vụ AI hiện chưa thể đánh giá bài này. Câu trả lời gốc vẫn được giữ; sau khi khắc phục lỗi dịch vụ, bạn có thể quay lại trang câu hỏi để gửi bản trả lời mới hoặc kết thúc sớm phiên.";
+    return "Dịch vụ AI hiện chưa thể đánh giá bài này. Câu trả lời gốc vẫn được giữ; hãy khắc phục lỗi dịch vụ rồi quay lại tổng kết.";
   }
 
   function renderEvaluation(response) {
     const data = response && response.result;
     if (!data) throw new Error("Máy chủ trả thiếu kết quả đánh giá theo DTO.");
     evaluation = data;
+    questionPrompt.textContent = data.question_prompt || "";
+    questionCode.textContent = data.question_code || "";
+    questionCode.hidden = !data.question_code;
     feedbackItems = response.feedback_items || [];
     criteriaList.replaceChildren();
     answerSource.textContent = data.answer_text;

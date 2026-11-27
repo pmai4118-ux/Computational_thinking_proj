@@ -34,6 +34,11 @@
     <button id="retry-review-load" class="btn btn--secondary" type="button" hidden>Tải lại kết quả</button>
   </div>
   <div id="review-content" hidden>
+    <section aria-labelledby="review-question-heading">
+      <h2 id="review-question-heading">Đề bài</h2>
+      <p id="review-question-prompt"></p>
+      <pre id="review-question-code" class="code-block" hidden></pre>
+    </section>
     <section class="score-summary" aria-label="Tổng điểm câu trả lời">
       <div><span class="score-summary__label">Điểm câu này</span><strong id="evaluation-total"></strong></div>
       <p id="evaluation-state" class="badge"></p>
