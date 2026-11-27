@@ -2,7 +2,7 @@
 
 {% block title %}Decision Replay — Cây quyết định tương tác — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/features.css?v=20261127-p5">
+<link rel="stylesheet" href="/static/css/features.css?v=20261127-p6">
 {% endblock %}
 
 {% block content %}
@@ -11,12 +11,13 @@
          data-replay-studio
          data-run-id="{{ active_run.run_id }}"
          aria-labelledby="replay-run-heading">
-  <header class="card replay-header-card">
+  <header class="card stack replay-header-card">
     <div class="results-header">
       <div>
         <div class="profile-entry__meta" style="margin-bottom: var(--space-2);">
-          <span class="badge badge--met">Decision Replay · Tình huống kỹ thuật</span>
+          <span class="badge badge--met">Kịch bản mô phỏng · Tình huống kỹ thuật</span>
           <span class="badge">Bài làm &amp; điểm gốc được giữ nguyên</span>
+          <span class="badge badge--neutral">Kết quả kỳ vọng (mô phỏng) — không chạy test thật</span>
           {% if active_run.demo_mode_label %}
             <span class="badge badge--demo">{{ active_run.demo_mode_label }}</span>
           {% endif %}
@@ -28,7 +29,12 @@
         {% if active_run.linked_session_id and active_run.linked_answer_ref %}
           <form method="post"
                 action="/sessions/{{ active_run.linked_session_id }}/answers/{{ active_run.linked_answer_ref.id }}/replay/start?revision={{ active_run.linked_answer_ref.revision }}&amp;reuse_existing=0">
-            <button type="submit" class="btn btn--secondary">Phân tích lại cây mới</button>
+            <button type="submit"
+                    class="btn btn--secondary"
+                    title="Tạo một lượt mô phỏng tách biệt mới theo bộ tiêu chí hiện hành; lượt đang xem vẫn được giữ nguyên."
+                    aria-label="Tạo lượt mô phỏng mới tách biệt (không xóa lượt đang xem)">
+              Tạo lượt mô phỏng mới
+            </button>
           </form>
         {% endif %}
         {% if active_run.linked_session_id %}
@@ -43,10 +49,26 @@
         <a class="btn btn--ghost" href="/replays">Trung tâm Replay</a>
       </div>
     </div>
+
+    <div class="replay-guide-grid" aria-label="Hướng dẫn nhanh cách dùng Decision Replay">
+      <div class="replay-guide-item">
+        <strong>1. Tình huống ban đầu</strong>
+        <span>Mốc xuất phát đối chiếu với bài làm gốc; phần chưa nêu rõ sẽ không bị tự suy đoán.</span>
+      </div>
+      <div class="replay-guide-item">
+        <strong>2. Các hướng có thể thử</strong>
+        <span>Bấm trực tiếp node trên cây để rẽ nhánh, so sánh hoặc tua lại bất kỳ lúc nào (nút “Tạo lượt mô phỏng mới” mở một lượt riêng, không ghi đè lượt hiện tại).</span>
+      </div>
+      <div class="replay-guide-item">
+        <strong>3. Cách đọc kết quả kỳ vọng</strong>
+        <span>Mỗi kết cục mô phỏng tách riêng <strong>Tính đúng đắn dữ liệu</strong> và <strong>Hiệu năng &amp; Vận hành</strong> — chỉ là mô phỏng cơ chế, không thay cho bằng chứng chạy test thực tế.</span>
+      </div>
+    </div>
   </header>
 
+  <p id="replay-live-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
   <p id="replay-error" class="alert alert--error" role="alert" tabindex="-1" hidden></p>
-  <p id="replay-status" class="alert alert--status" role="status" aria-live="polite" hidden></p>
+  <p id="replay-status" class="alert alert--status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
 
   <!-- Stage 1: True Interactive Decision Tree Canvas + Rewind Controls -->
   <section id="replay-tree-stage" class="card stack replay-tree-stage" aria-labelledby="tree-canvas-heading">
@@ -108,7 +130,7 @@
       <div class="results-header">
         <div class="stack" style="gap: var(--space-1);">
           <div><span id="replay-node-badge" class="badge"></span></div>
-          <h2 id="replay-node-title" style="margin: 0;"></h2>
+          <h2 id="replay-node-title" tabindex="-1" style="margin: 0;"></h2>
         </div>
       </div>
 
@@ -117,8 +139,19 @@
 
       <section class="stack" aria-labelledby="trace-heading">
         <div>
-          <h3 id="trace-heading" style="margin: 0;">Diễn biến đồng thời theo mốc thời gian (Trace)</h3>
-          <p class="form-hint" style="margin: 0;">Theo dõi thứ tự từng request đến song song và thời điểm khóa/mở khóa.</p>
+          <h3 id="trace-heading" style="margin: 0;">Diễn biến mô phỏng theo mốc khóa &amp; thời gian (Trace)</h3>
+          <p class="form-hint" style="margin: 0;">Theo dõi thứ tự các mốc vòng đời khóa và trạng thái tồn kho/đơn hàng kỳ vọng sau từng bước.</p>
+        </div>
+        <div class="trace-legend" aria-label="Chú thích các mốc vòng đời khóa">
+          <span class="trace-phase trace-phase--acquire">Lấy khóa / Ghi</span>
+          <span class="trace-legend__arrow" aria-hidden="true">→</span>
+          <span class="trace-phase trace-phase--wait">Chờ khóa</span>
+          <span class="trace-legend__arrow" aria-hidden="true">→</span>
+          <span class="trace-phase trace-phase--commit">Commit · Nhả khóa</span>
+          <span class="trace-legend__arrow" aria-hidden="true">/</span>
+          <span class="trace-phase trace-phase--rollback">Rollback / Lỗi</span>
+          <span class="trace-legend__arrow" aria-hidden="true">/</span>
+          <span class="trace-phase trace-phase--finish">Kết thúc (0 dòng)</span>
         </div>
         <ol id="replay-trace-list" class="trace-list"></ol>
       </section>
@@ -147,6 +180,11 @@
           <h3 id="custom-branch-heading" style="margin-bottom: var(--space-1);">Hoặc tự nhập phương án xử lý của bạn để tạo nhánh mới</h3>
           <p id="replay-custom-quota" class="form-hint" style="margin: 0;"></p>
         </div>
+        <ul id="replay-custom-rules" class="custom-branch-rules">
+          <li><strong>Cách tính lượt:</strong> chỉ trừ 1 lượt khi nhánh mới được mô phỏng và lưu thành công (tối đa theo giới hạn hiển thị ở trên cho lượt Replay hiện tại).</li>
+          <li><strong>Xử lý khi lỗi:</strong> nếu nhập trống, quá giới hạn hoặc hệ thống mô phỏng gặp lỗi/timeout, <strong>không bị trừ lượt</strong> và nội dung bạn đã viết vẫn được giữ nguyên.</li>
+          <li><strong>Gợi ý nội dung (tối đa 1.000 ký tự):</strong> nêu rõ cơ chế khóa, ranh giới transaction hoặc van an toàn muốn thử (ví dụ: <code>UPDATE ... WHERE</code>, <code>SELECT ... FOR UPDATE</code>, <code>SET LOCAL lock_timeout</code>, hoặc cột <code>version</code>).</li>
+        </ul>
         <form id="replay-custom-form" method="post" action="/replays/runs/{{ active_run.run_id }}/custom-branch" class="stack">
           <input type="hidden" name="parent_node_id" value="{{ active_run.active_node_id }}">
           <label class="form-label" for="replay-custom-input">Mô tả ngắn phương án kỹ thuật muốn thử nghiệm</label>
@@ -155,8 +193,10 @@
                     class="form-textarea"
                     rows="3"
                     maxlength="1000"
+                    aria-describedby="replay-custom-quota replay-custom-rules replay-custom-count"
                     placeholder="Ví dụ: Dùng UPDATE WHERE + SET LOCAL lock_timeout = '500ms' chung 1 transaction..."></textarea>
-          <div class="action-row">
+          <div class="action-row" style="justify-content: space-between;">
+            <span id="replay-custom-count" class="form-hint" style="margin: 0;">0 / 1.000 ký tự</span>
             <button id="replay-custom-submit" type="submit" class="btn btn--secondary">Mô phỏng phương án này thành nhánh mới</button>
           </div>
         </form>
@@ -164,8 +204,8 @@
 
       <section id="replay-ending-section" class="ending-panel stack" aria-labelledby="ending-heading" hidden>
         <div>
-          <h3 id="ending-heading" style="margin-bottom: var(--space-1);">Kết cục thực tế &amp; Đối chiếu 2 nhóm tiêu chí (không tính điểm)</h3>
-          <p class="form-hint" style="margin: 0;">Tách riêng tính đúng đắn dữ liệu (Safety) và rủi ro hiệu năng/vận hành (Operational) để không che mờ cảnh báo nghẽn khóa.</p>
+          <h3 id="ending-heading" style="margin-bottom: var(--space-1);">Kết cục kỳ vọng (mô phỏng) &amp; Đối chiếu 2 nhóm tiêu chí (không tính điểm)</h3>
+          <p class="form-hint" style="margin: 0;">Tách riêng tính đúng đắn dữ liệu (Safety) và hiệu năng/vận hành (Operational) theo cơ chế hệ thống — không thay cho bằng chứng chạy test thực tế.</p>
         </div>
 
         <div id="replay-outcome-summary" class="outcome-summary-strip"></div>
@@ -294,6 +334,6 @@
 
 {% block extra_scripts %}
 {% if active_run %}
-<script src="/static/js/replay.js?v=20261127-p5" defer></script>
+<script src="/static/js/replay.js?v=20261127-p6" defer></script>
 {% endif %}
 {% endblock %}

@@ -6,11 +6,13 @@
   const api = window.InterviewApi;
   const runId = root.dataset.runId;
   const initialScript = document.querySelector("#replay-initial-data");
+  const liveAnnouncer = document.querySelector("#replay-live-announcer");
   const errorBox = document.querySelector("#replay-error");
   const statusBox = document.querySelector("#replay-status");
   const answerHost = document.querySelector("#replay-answer-source");
   const alignmentBanner = document.querySelector("#replay-alignment-banner");
   const assumptionsList = document.querySelector("#replay-assumptions-list");
+  const treeStage = document.querySelector("#replay-tree-stage");
   const treeNav = document.querySelector("#replay-tree-nav");
   const breadcrumbNav = document.querySelector("#replay-breadcrumbs");
   const rewindParentTopBtn = document.querySelector("#replay-rewind-parent-top");
@@ -29,6 +31,7 @@
   const customQuota = document.querySelector("#replay-custom-quota");
   const customForm = document.querySelector("#replay-custom-form");
   const customInput = document.querySelector("#replay-custom-input");
+  const customCount = document.querySelector("#replay-custom-count");
   const customSubmit = document.querySelector("#replay-custom-submit");
   const endingSection = document.querySelector("#replay-ending-section");
   const outcomeSummary = document.querySelector("#replay-outcome-summary");
@@ -40,12 +43,29 @@
 
   let runState = null;
   let busy = false;
+  let renderedTreeButtons = new Map();
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
     if (text !== undefined) node.textContent = text;
     return node;
+  }
+
+  function announce(message) {
+    if (!liveAnnouncer || !message) return;
+    liveAnnouncer.textContent = liveAnnouncer.textContent === message ? `${message}\u00A0` : message;
+  }
+
+  function setBusyState(isBusy) {
+    busy = isBusy;
+    const val = isBusy ? "true" : "false";
+    if (treeStage && typeof treeStage.setAttribute === "function") {
+      treeStage.setAttribute("aria-busy", val);
+    }
+    if (focusCard && typeof focusCard.setAttribute === "function") {
+      focusCard.setAttribute("aria-busy", val);
+    }
   }
 
   function setError(message) {
@@ -71,6 +91,12 @@
     statusBox.hidden = false;
   }
 
+  function updateCustomCharCount() {
+    if (!customCount || !customInput) return;
+    const len = (customInput.value || "").length;
+    customCount.textContent = `${len} / 1.000 ký tự`;
+  }
+
   function getNodeMap(state) {
     const map = new Map();
     for (const n of state.nodes || []) map.set(n.id, n);
@@ -88,7 +114,6 @@
       }
     }
     parentOf.delete(state.root_node_id);
-    // Ensure path array fallback even if active_path_ids was empty
     const computePath = (id) => {
       const path = [];
       const seen = new Set();
@@ -102,6 +127,77 @@
       return path;
     };
     return { parentOf, computePath };
+  }
+
+  function evaluateNodeDimensions(node) {
+    const invs = node.invariants || [];
+    const safetyItems = invs.filter((item) => item.category !== "operational");
+    const operationalItems = invs.filter((item) => item.category === "operational");
+
+    const safetyPass = safetyItems.filter((i) => i.status === "preserved").length;
+    const safetyBroken = safetyItems.some((i) => i.status === "broken");
+    const safetyUncertain = safetyItems.some((i) => i.status === "uncertain");
+
+    let safety;
+    if (safetyBroken) {
+      safety = {
+        cls: "badge--unmet",
+        nodeText: "Tính đúng đắn: Vỡ bất biến",
+        summaryText: `Tính đúng đắn (Safety): ${safetyPass}/${safetyItems.length} Đạt · Vỡ bất biến`,
+      };
+    } else if (!safetyItems.length || safetyUncertain) {
+      safety = {
+        cls: "badge--unresolved",
+        nodeText: "Tính đúng đắn: Chưa rõ",
+        summaryText: `Tính đúng đắn (Safety): ${safetyPass}/${safetyItems.length} Đạt · Chưa rõ`,
+      };
+    } else {
+      safety = {
+        cls: "badge--met",
+        nodeText: "Tính đúng đắn: Đạt",
+        summaryText: `Tính đúng đắn (Safety): ${safetyPass}/${safetyItems.length} Đạt`,
+      };
+    }
+
+    let operational;
+    if (!operationalItems.length) {
+      operational = {
+        evaluated: false,
+        cls: "badge--neutral",
+        nodeText: "Vận hành: Chưa đánh giá",
+        summaryText: "Hiệu năng & Vận hành: Chưa đánh giá",
+      };
+    } else if (operationalItems.some((i) => i.status === "broken")) {
+      operational = {
+        evaluated: true,
+        cls: "badge--unmet",
+        nodeText: "Vận hành: Nguy cơ nghẽn / Vỡ",
+        summaryText: "Hiệu năng & Vận hành: Nguy cơ nghẽn / Vỡ",
+      };
+    } else if (operationalItems.some((i) => i.status === "warning")) {
+      operational = {
+        evaluated: true,
+        cls: "badge--unresolved",
+        nodeText: "Vận hành: Có rủi ro chờ khóa",
+        summaryText: "Hiệu năng & Vận hành: Có rủi ro chờ khóa",
+      };
+    } else if (operationalItems.some((i) => i.status === "uncertain")) {
+      operational = {
+        evaluated: true,
+        cls: "badge--unresolved",
+        nodeText: "Vận hành: Chưa rõ",
+        summaryText: "Hiệu năng & Vận hành: Chưa rõ",
+      };
+    } else {
+      operational = {
+        evaluated: true,
+        cls: "badge--met",
+        nodeText: "Vận hành: Ổn định",
+        summaryText: "Hiệu năng & Vận hành: Ổn định",
+      };
+    }
+
+    return { safetyItems, operationalItems, safety, operational };
   }
 
   function renderHighlightedAnswer(answerText, activeNode) {
@@ -149,7 +245,7 @@
       alignmentBanner.className = "alert alert--status";
       alignmentBanner.append(el("p", "alert__title", "Đang focus nhánh thử nghiệm do bạn tự đề xuất"));
       alignmentBanner.append(
-        el("p", "alert__hint", "Kết quả mô phỏng này hoàn toàn tách biệt — bài làm và điểm gốc không thay đổi.")
+        el("p", "alert__hint", "Kết quả kỳ vọng (mô phỏng) này hoàn toàn tách biệt — bài làm và điểm gốc không thay đổi.")
       );
     } else {
       alignmentBanner.className = "alert alert--status";
@@ -160,31 +256,11 @@
     }
   }
 
-  function summarizeNodeOutcome(node, visited) {
-    if (node.id === runState.root_node_id) return { cls: "badge--met", text: "Điểm xuất phát" };
-    if (!node.is_terminal) {
-      return visited.has(node.id)
-        ? { cls: "", text: `Đã qua · Tầng ${node.depth}` }
-        : { cls: "", text: `Điểm rẽ · Tầng ${node.depth}` };
-    }
-    if (!visited.has(node.id)) {
-      return { cls: "", text: "Chưa mở · Bấm để xem" };
-    }
-    const invs = node.invariants || [];
-    const safetyBroken = invs.some((i) => i.category !== "operational" && i.status === "broken");
-    const opRisk = invs.some(
-      (i) => i.status === "warning" || (i.category === "operational" && i.status === "broken")
-    );
-    const hasUncertain = invs.some((i) => i.status === "uncertain");
-    if (safetyBroken) return { cls: "badge--unmet", text: "Vỡ bất biến" };
-    if (opRisk) return { cls: "badge--unresolved", text: "An toàn · Cảnh báo vận hành" };
-    if (hasUncertain || !invs.length) return { cls: "badge--unresolved", text: "Cần kiểm chứng" };
-    return { cls: "badge--met", text: "An toàn · Ổn định" };
-  }
-
   function renderVisualTree(state, nodeMap, parentOf, activePathSet) {
     if (!treeNav) return;
     treeNav.replaceChildren();
+    renderedTreeButtons = new Map();
+
     const visited = new Set(state.visited_node_ids || []);
     visited.add(state.root_node_id);
     visited.add(state.active_node_id);
@@ -208,8 +284,10 @@
       );
       card.type = "button";
       card.disabled = busy;
-      if (isActive && typeof card.setAttribute === "function") {
-        card.setAttribute("aria-current", "step");
+      card.dataset.nodeId = node.id;
+      if (typeof card.setAttribute === "function") {
+        card.setAttribute("data-node-id", node.id);
+        if (isActive) card.setAttribute("aria-current", "step");
       }
 
       const topRow = el("span", "dtree__top");
@@ -221,15 +299,33 @@
             ? "Kết cục"
             : `Nhánh ${node.depth}`;
       topRow.append(el("span", "dtree__origin", originText));
+
       if (isActive) {
         topRow.append(el("span", "badge badge--met dtree__badge", "Đang focus"));
+      } else if (node.id === state.root_node_id) {
+        topRow.append(el("span", "badge badge--met dtree__badge", "Điểm xuất phát"));
+      } else if (!node.is_terminal) {
+        topRow.append(
+          el("span", "badge dtree__badge", isVisited ? `Đã qua · Tầng ${node.depth}` : `Điểm rẽ · Tầng ${node.depth}`)
+        );
+      } else if (!isVisited) {
+        topRow.append(el("span", "badge dtree__badge", "Chưa mở · Bấm để xem"));
       } else {
-        const meta = summarizeNodeOutcome(node, visited);
-        topRow.append(el("span", `badge ${meta.cls} dtree__badge`, meta.text));
+        topRow.append(el("span", "badge dtree__badge", "Đã xem"));
       }
       card.append(topRow);
       card.append(el("span", "dtree__label", node.branch_label || node.title));
-      card.addEventListener("click", () => navigateToNode(node.id, { scrollToFocus: true }));
+
+      if (node.is_terminal && (isVisited || isActive)) {
+        const dims = evaluateNodeDimensions(node);
+        const statuses = el("span", "dtree__statuses");
+        statuses.append(el("span", `badge ${dims.safety.cls} dtree__status-pill`, dims.safety.nodeText));
+        statuses.append(el("span", `badge ${dims.operational.cls} dtree__status-pill`, dims.operational.nodeText));
+        card.append(statuses);
+      }
+
+      card.addEventListener("click", () => navigateToNode(node.id, { scrollToFocus: true, focusMode: "tree" }));
+      renderedTreeButtons.set(node.id, card);
       branch.append(card);
 
       const children = childrenByParent.get(node.id) || [];
@@ -261,7 +357,7 @@
       const btn = el("button", `replay-crumb${isLast ? " is-current" : ""}`, node.branch_label || node.title);
       btn.type = "button";
       btn.disabled = busy || isLast;
-      btn.addEventListener("click", () => navigateToNode(id, { scrollToFocus: false }));
+      btn.addEventListener("click", () => navigateToNode(id, { scrollToFocus: false, focusMode: "heading" }));
       breadcrumbNav.append(btn);
       if (!isLast) breadcrumbNav.append(el("span", "replay-crumb__sep", "›"));
     });
@@ -284,16 +380,109 @@
     return li;
   }
 
-  function isConcurrentOrBlockedStep(step) {
-    const text = `${step.time_label || ""} ${step.event || ""} ${step.state_after || ""}`.toLowerCase();
-    return (
-      text.includes("song song") ||
-      text.includes("chờ") ||
-      text.includes("chặn") ||
-      text.includes("treo") ||
-      text.includes("deadlock") ||
-      text.includes("vỡ")
-    );
+  function classifyTraceStep(step) {
+    const timeText = `${step.time_label || ""}`.toLowerCase();
+    const eventText = `${step.event || ""}`.toLowerCase();
+    const primaryEvent = eventText.replace(/\([^)]*\)/g, " ");
+    const stateText = `${step.state_after || ""}`.toLowerCase();
+    const fullText = `${timeText} ${eventText} ${stateText}`;
+    const isSongSong = timeText.includes("song song") || primaryEvent.includes("song song");
+
+    if (fullText.includes("deadlock") || fullText.includes("circular wait") || fullText.includes("vòng chờ")) {
+      return { key: "error", label: "Deadlock / Chặn chéo", isConcurrent: true };
+    }
+    if (
+      primaryEvent.includes("0 dòng") ||
+      primaryEvent.includes("rowcount = 0") ||
+      primaryEvent.includes("affected_rows = 0") ||
+      primaryEvent.includes("không cập nhật dữ liệu") ||
+      primaryEvent.includes("trả về hết hàng") ||
+      primaryEvent.includes("báo hết hàng")
+    ) {
+      return { key: "finish", label: "Kết thúc (0 dòng)", isConcurrent: isSongSong };
+    }
+    if (
+      primaryEvent.includes("rollback") ||
+      primaryEvent.includes("thất bại") ||
+      primaryEvent.includes("hủy") ||
+      stateText.includes("vỡ") ||
+      stateText.includes("mất hàng")
+    ) {
+      return { key: "rollback", label: "Rollback / Lỗi", isConcurrent: isSongSong };
+    }
+    if (primaryEvent.includes("commit")) {
+      return { key: "commit", label: "Commit · Nhả khóa", isConcurrent: isSongSong };
+    }
+    if (primaryEvent.includes("nhả khóa") || primaryEvent.includes("giải phóng")) {
+      return { key: "release", label: "Nhả khóa", isConcurrent: isSongSong };
+    }
+    if (
+      primaryEvent.includes("chờ khóa") ||
+      primaryEvent.includes("bị chặn") ||
+      primaryEvent.includes("tạm chờ") ||
+      primaryEvent.includes("đứng chờ") ||
+      primaryEvent.includes("đợi ở khóa") ||
+      primaryEvent.includes("treo") ||
+      stateText.includes("chờ")
+    ) {
+      return { key: "wait", label: "Chờ khóa", isConcurrent: true };
+    }
+    if (
+      primaryEvent.includes("lấy khóa") ||
+      primaryEvent.includes("for update") ||
+      primaryEvent.includes("for no key update") ||
+      primaryEvent.includes("khóa") ||
+      primaryEvent.includes("update")
+    ) {
+      return { key: "acquire", label: "Lấy khóa / Ghi", isConcurrent: isSongSong };
+    }
+    if (isSongSong) {
+      return { key: "wait", label: "Chạy song song", isConcurrent: true };
+    }
+    return { key: "step", label: "Thực thi", isConcurrent: false };
+  }
+
+  function renderTraceStateChips(stateAfter) {
+    const wrap = el("div", "trace-state-chips");
+    const parts = String(stateAfter)
+      .split(/[,;·]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    if (!parts.length) return null;
+    for (const part of parts) {
+      const lower = part.toLowerCase();
+      const isAlert =
+        lower.includes("vỡ") ||
+        lower.includes("mất") ||
+        lower.includes("deadlock") ||
+        lower.includes("âm") ||
+        lower.includes("-1");
+      wrap.append(el("span", `trace-state-chip${isAlert ? " trace-state-chip--alert" : ""}`, part));
+    }
+    return wrap;
+  }
+
+  function buildNodeAnnouncement(active) {
+    if (!active) return "";
+    if (active.is_terminal) {
+      const dims = evaluateNodeDimensions(active);
+      return `Đang xem kết cục mô phỏng: ${active.title}. ${dims.safety.nodeText}. ${dims.operational.nodeText}.`;
+    }
+    return `Đang xem điểm rẽ: ${active.title}.`;
+  }
+
+  function restoreFocus(focusMode, nodeId) {
+    if (!focusMode) return;
+    if (focusMode === "tree") {
+      const targetBtn = renderedTreeButtons.get(nodeId);
+      if (targetBtn && !targetBtn.disabled && typeof targetBtn.focus === "function") {
+        targetBtn.focus({ preventScroll: true });
+        return;
+      }
+    }
+    if (nodeTitle && typeof nodeTitle.focus === "function") {
+      nodeTitle.focus({ preventScroll: true });
+    }
   }
 
   function renderActiveNode(state) {
@@ -336,10 +525,10 @@
         nodeBadge.textContent = active.answer_alignment === "unspecified" ? "Điểm xuất phát · Chưa xác định rõ" : "Điểm xuất phát từ bài làm";
         nodeBadge.className = `badge ${active.answer_alignment === "unspecified" ? "badge--unresolved" : "badge--met"}`;
       } else if (active.origin === "custom_user_branch") {
-        nodeBadge.textContent = "Nhánh bạn tự đề xuất · Kết cục";
+        nodeBadge.textContent = "Nhánh bạn tự đề xuất · Kết quả kỳ vọng (mô phỏng)";
         nodeBadge.className = "badge badge--met";
       } else if (active.is_terminal) {
-        nodeBadge.textContent = "Đang focus · Kết cục nhánh mô phỏng";
+        nodeBadge.textContent = "Đang focus · Kết cục mô phỏng";
         nodeBadge.className = "badge badge--unresolved";
       } else {
         nodeBadge.textContent = `Đang focus · Điểm rẽ Tầng ${active.depth}`;
@@ -355,18 +544,18 @@
     if (traceList) {
       traceList.replaceChildren();
       (active.trace_steps || []).forEach((step, idx) => {
-        const li = el(
-          "li",
-          `trace-step${isConcurrentOrBlockedStep(step) ? " trace-step--concurrent" : ""}`
-        );
+        const phase = classifyTraceStep(step);
+        const li = el("li", `trace-step${phase.isConcurrent ? " trace-step--concurrent" : ""}`);
         const rail = el("div", "trace-step__rail");
         rail.append(el("span", "trace-step__time", step.time_label || `Bước ${idx + 1}`));
         rail.append(el("span", "trace-step__actor", step.actor));
+        rail.append(el("span", `trace-phase trace-phase--${phase.key}`, phase.label));
         li.append(rail);
         const body = el("div", "trace-step__body");
         body.append(el("p", "trace-step__event", step.event));
         if (step.state_after) {
-          body.append(el("p", "trace-step__state", `Trạng thái: ${step.state_after}`));
+          const chips = renderTraceStateChips(step.state_after);
+          if (chips) body.append(chips);
         }
         li.append(body);
         traceList.append(li);
@@ -381,64 +570,43 @@
       if (customSection) customSection.hidden = true;
       if (endingSection) endingSection.hidden = false;
 
-      const invs = active.invariants || [];
-      const safetyItems = invs.filter((item) => item.category !== "operational");
-      const operationalItems = invs.filter((item) => item.category === "operational");
+      const dims = evaluateNodeDimensions(active);
 
       if (outcomeSummary) {
         outcomeSummary.replaceChildren();
-        const safetyPass = safetyItems.filter((i) => i.status === "preserved").length;
-        const safetyFail = safetyItems.filter((i) => i.status === "broken").length;
-        const safetyBadgeCls = safetyFail > 0
-          ? "badge--unmet"
-          : safetyPass === safetyItems.length && safetyItems.length > 0
-            ? "badge--met"
-            : "badge--unresolved";
-        outcomeSummary.append(
-          el(
-            "span",
-            `badge ${safetyBadgeCls}`,
-            `Tính đúng đắn (Safety): ${safetyPass}/${safetyItems.length} Đạt`
-          )
-        );
-
-        if (operationalItems.length > 0) {
-          const opBroken = operationalItems.some((i) => i.status === "broken");
-          const opWarn = operationalItems.some((i) => i.status === "warning" || i.status === "uncertain");
-          const opCls = opBroken ? "badge--unmet" : opWarn ? "badge--unresolved" : "badge--met";
-          const opLabel = opBroken
-            ? "Hiệu năng & Vận hành: Nguy cơ nghẽn / Vỡ"
-            : opWarn
-              ? "Hiệu năng & Vận hành: Cảnh báo rủi ro"
-              : "Hiệu năng & Vận hành: Ổn định";
-          outcomeSummary.append(el("span", `badge ${opCls}`, opLabel));
-        } else {
-          outcomeSummary.append(
-            el(
-              "span",
-              "badge badge--unresolved",
-              "Hiệu năng & Vận hành: Bấm 'Phân tích lại cây mới' để tách nhóm chi tiết"
-            )
-          );
-        }
+        outcomeSummary.append(el("span", `badge ${dims.safety.cls}`, dims.safety.summaryText));
+        outcomeSummary.append(el("span", `badge ${dims.operational.cls}`, dims.operational.summaryText));
       }
 
       if (safetyList) {
         safetyList.replaceChildren();
-        for (const inv of safetyItems) safetyList.append(renderInvariantCard(inv));
+        if (dims.safetyItems.length) {
+          for (const inv of dims.safetyItems) safetyList.append(renderInvariantCard(inv));
+        } else {
+          const emptySafety = el("li", "invariant-card invariant-card--unassessed");
+          emptySafety.append(el("strong", "", "Chưa có dữ liệu đối chiếu bất biến dữ liệu"));
+          safetyList.append(emptySafety);
+        }
       }
+
       if (operationalList) {
         operationalList.replaceChildren();
-        if (operationalItems.length) {
-          for (const inv of operationalItems) operationalList.append(renderInvariantCard(inv));
+        if (dims.operationalItems.length) {
+          for (const inv of dims.operationalItems) operationalList.append(renderInvariantCard(inv));
         } else {
-          operationalList.append(
+          const unassessed = el("li", "invariant-card invariant-card--unassessed");
+          const top = el("div", "profile-entry__meta");
+          top.append(el("strong", "", "Trạng thái vận hành của lượt hiện tại"));
+          top.append(el("span", "badge badge--neutral", "CHƯA ĐÁNH GIÁ"));
+          unassessed.append(top);
+          unassessed.append(
             el(
-              "li",
-              "invariant-card",
-              "Bản phân tích cũ chưa tách riêng chỉ số Hiệu năng & Vận hành. Xem mục Tác động & Đánh đổi ở trên hoặc bấm 'Phân tích lại cây mới'."
+              "p",
+              "text-secondary",
+              "Lượt mô phỏng đang xem được tạo trước khi bổ sung nhóm tiêu chí Hiệu năng & Vận hành, nên hệ thống ghi nhận Chưa đánh giá thay vì tự suy đoán. Hãy xem mục Tác động hệ thống / Đánh đổi kỹ thuật ở trên, hoặc bấm 'Tạo lượt mô phỏng mới' ở đầu trang để sinh một lượt tách biệt có đầy đủ cả 2 nhóm tiêu chí (lượt hiện tại vẫn được giữ nguyên)."
             )
           );
+          operationalList.append(unassessed);
         }
       }
 
@@ -484,35 +652,50 @@
 
       if (customSection) {
         customSection.hidden = false;
-        const remaining = Math.max(0, (state.custom_branch_limit || 2) - (state.custom_branches_used || 0));
+        const limit = state.custom_branch_limit || 2;
+        const remaining = Math.max(0, limit - (state.custom_branches_used || 0));
         if (customQuota) {
           customQuota.textContent = remaining > 0
-            ? `Còn ${remaining}/${state.custom_branch_limit || 2} lượt tự đề xuất phương án trong phiên Replay này.`
-            : `Đã dùng hết ${state.custom_branch_limit || 2}/${state.custom_branch_limit || 2} lượt tự đề xuất. Bạn vẫn có thể bấm xem tất cả các nhánh trên cây.`;
+            ? `Còn ${remaining}/${limit} lượt tự đề xuất phương án trong lượt Replay này (lỗi hoặc nhập trống không trừ lượt).`
+            : `Đã dùng hết ${limit}/${limit} lượt tự đề xuất cho lượt Replay này. Bạn vẫn có thể bấm xem tất cả các nhánh trên cây.`;
         }
         if (customInput) customInput.disabled = busy || remaining <= 0;
         if (customSubmit) customSubmit.disabled = busy || remaining <= 0;
+        updateCustomCharCount();
       }
     }
   }
 
-  async function navigateToNode(nodeId, { scrollToFocus = false } = {}) {
-    if (busy || !runState || nodeId === runState.active_node_id) return;
-    busy = true;
+  async function navigateToNode(nodeId, { scrollToFocus = false, focusMode = "heading" } = {}) {
+    if (busy || !runState) return;
+    if (nodeId === runState.active_node_id) {
+      restoreFocus(focusMode, nodeId);
+      return;
+    }
+    setBusyState(true);
     setError("");
     setStatus("Đang chuyển focus tới node đã chọn…");
+    announce("Đang tải kết quả mô phỏng của node đã chọn.");
     renderActiveNode(runState);
+    let succeeded = false;
     try {
       runState = await api.selectReplayNode(runId, nodeId);
       setStatus("");
+      succeeded = true;
     } catch (err) {
       setError(err.message || "Chưa chuyển được nhánh. Các nhánh đã mở vẫn được giữ nguyên.");
       setStatus("");
+      announce("Chưa chuyển được node. Vui lòng thử lại.");
     } finally {
-      busy = false;
+      setBusyState(false);
       renderActiveNode(runState);
-      if (scrollToFocus && focusCard && typeof focusCard.scrollIntoView === "function") {
-        focusCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (succeeded) {
+        const active = getNodeMap(runState).get(runState.active_node_id);
+        restoreFocus(focusMode, runState.active_node_id);
+        announce(buildNodeAnnouncement(active));
+        if (scrollToFocus && focusCard && typeof focusCard.scrollIntoView === "function") {
+          focusCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
       }
     }
   }
@@ -523,34 +706,51 @@
     const { parentOf } = deriveParentMap(runState, nodeMap);
     const active = nodeMap.get(runState.active_node_id);
     const parentId = active && (active.parent_id || parentOf.get(active.id));
-    if (parentId) await navigateToNode(parentId, { scrollToFocus: false });
+    if (parentId) await navigateToNode(parentId, { scrollToFocus: false, focusMode: "heading" });
   }
 
   async function chooseBranchOption(nodeId, optionId) {
     if (busy || !runState) return;
-    busy = true;
+    setBusyState(true);
     setError("");
     setStatus("Đang mở nhánh mô phỏng…");
+    announce("Đang mở nhánh mô phỏng đã chọn.");
     renderActiveNode(runState);
+    let succeeded = false;
     try {
       runState = await api.chooseReplayOption(runId, nodeId, optionId);
       setStatus("");
+      succeeded = true;
     } catch (err) {
       setError(err.message || "Chưa thể chọn nhánh này. Hãy thử lại.");
       setStatus("");
+      announce("Chưa thể mở nhánh này.");
     } finally {
-      busy = false;
+      setBusyState(false);
       renderActiveNode(runState);
+      if (succeeded) {
+        const active = getNodeMap(runState).get(runState.active_node_id);
+        restoreFocus("heading", runState.active_node_id);
+        announce(buildNodeAnnouncement(active));
+      }
     }
   }
 
   if (rewindParentBtn) rewindParentBtn.addEventListener("click", rewindStep);
   if (rewindParentTopBtn) rewindParentTopBtn.addEventListener("click", rewindStep);
   if (jumpRootBtn) {
-    jumpRootBtn.addEventListener("click", () => runState && navigateToNode(runState.root_node_id));
+    jumpRootBtn.addEventListener("click", () => {
+      if (runState) navigateToNode(runState.root_node_id, { scrollToFocus: false, focusMode: "heading" });
+    });
   }
   if (rewindRootBottomBtn) {
-    rewindRootBottomBtn.addEventListener("click", () => runState && navigateToNode(runState.root_node_id));
+    rewindRootBottomBtn.addEventListener("click", () => {
+      if (runState) navigateToNode(runState.root_node_id, { scrollToFocus: false, focusMode: "heading" });
+    });
+  }
+
+  if (customInput) {
+    customInput.addEventListener("input", updateCustomCharCount);
   }
 
   if (customForm) {
@@ -559,24 +759,37 @@
       if (busy || !runState || !customInput) return;
       const proposal = customInput.value.trim();
       if (!proposal) {
-        setError("Hãy mô tả ngắn phương án kỹ thuật bạn muốn thử nghiệm (ví dụ: dùng cột version + retry).");
+        setError(
+          "Hãy mô tả ngắn phương án kỹ thuật bạn muốn thử nghiệm (chưa trừ lượt tự đề xuất)."
+        );
         if (typeof customInput.focus === "function") customInput.focus();
         return;
       }
-      busy = true;
+      setBusyState(true);
       setError("");
       setStatus("Đang mô phỏng phương án tự đề xuất của bạn… Bài gốc và các nhánh cũ vẫn được giữ nguyên.");
+      announce("Đang mô phỏng phương án bạn tự đề xuất.");
       renderActiveNode(runState);
+      let succeeded = false;
       try {
         runState = await api.addCustomReplayBranch(runId, runState.active_node_id, proposal);
         customInput.value = "";
-        setStatus("Đã thêm nhánh thử nghiệm mới lên sơ đồ cây.");
+        updateCustomCharCount();
+        setStatus("Đã thêm nhánh mô phỏng mới lên sơ đồ cây.");
+        succeeded = true;
       } catch (err) {
-        setError(err.message || "Chưa mô phỏng được nhánh tự đề xuất. Hãy thử lại.");
+        const baseMsg = err.message || "Chưa mô phỏng được nhánh tự đề xuất.";
+        setError(`${baseMsg} Chưa trừ lượt tự đề xuất và nội dung bạn nhập vẫn được giữ nguyên.`);
         setStatus("");
+        announce("Chưa tạo được nhánh mới; lượt tự đề xuất chưa bị trừ.");
       } finally {
-        busy = false;
+        setBusyState(false);
         renderActiveNode(runState);
+        if (succeeded) {
+          const active = getNodeMap(runState).get(runState.active_node_id);
+          restoreFocus("heading", runState.active_node_id);
+          announce(buildNodeAnnouncement(active));
+        }
       }
     });
   }

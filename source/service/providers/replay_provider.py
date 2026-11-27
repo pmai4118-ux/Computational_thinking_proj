@@ -639,10 +639,10 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="stock: 1 → 0 → -1 · orders: 0 → 2",
                     trace_steps=[
-                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Instance A)", event="SELECT stock FROM inventory WHERE id=X → đọc được 1.", state_after="stock = 1"),
-                        GeneratedTraceStepDTO(time_label="t = 3ms (song song)", actor="Request 2 (Instance B)", event="SELECT stock FROM inventory WHERE id=X → cũng đọc được 1 (Read Committed không khóa SELECT).", state_after="stock = 1"),
-                        GeneratedTraceStepDTO(time_label="t = 8ms", actor="Request 1 (Instance A)", event="Pass if stock >= 1 → UPDATE stock = stock - 1 & INSERT order #1.", state_after="stock = 0, orders = 1"),
-                        GeneratedTraceStepDTO(time_label="t = 11ms (song song)", actor="Request 2 (Instance B)", event="Đã pass if từ trước → UPDATE stock = stock - 1 & INSERT order #2.", state_after="stock = -1, orders = 2 (VỠ)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Instance A)", event="SELECT stock FROM inventory WHERE id=X (không khóa dòng) → đọc được 1.", state_after="stock = 1, orders = 0, lock = không"),
+                        GeneratedTraceStepDTO(time_label="t = 3ms (song song)", actor="Request 2 (Instance B)", event="Đến song song, chạy SELECT stock (Read Committed không chặn đọc) → cũng đọc được 1.", state_after="stock = 1, orders = 0, lock = không"),
+                        GeneratedTraceStepDTO(time_label="t = 8ms", actor="Request 1 (Instance A)", event="Pass if stock >= 1 → UPDATE stock = stock - 1, INSERT order #1 → COMMIT & nhả khóa.", state_after="stock = 0, orders = 1, lock = đã nhả"),
+                        GeneratedTraceStepDTO(time_label="t = 11ms (song song)", actor="Request 2 (Instance B)", event="Đã pass if từ trước → tiếp tục UPDATE stock = stock - 1, INSERT order #2 → COMMIT.", state_after="stock = -1, orders = 2, trạng thái = VỠ"),
                     ],
                     is_terminal=True,
                     invariants=[
@@ -703,9 +703,9 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="stock: 1 → 0 (đã commit) · orders: 0 (INSERT lỗi)",
                     trace_steps=[
-                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="UPDATE stock = 0 WHERE stock >= 1 → COMMIT thành công.", state_after="stock = 0 đã lưu cứng"),
-                        GeneratedTraceStepDTO(time_label="t = 4ms (song song)", actor="Request 2", event="Đọc lại thấy stock = 0 → affected_rows = 0, trả báo hết hàng.", state_after="Req 2 kết thúc"),
-                        GeneratedTraceStepDTO(time_label="t = 9ms", actor="Request 1 (Tx 2)", event="INSERT INTO orders thất bại (lỗi constraint/timeout) → chỉ rollback Tx 2.", state_after="stock = 0, orders = 0 (MẤT HÀNG)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="Lấy khóa dòng & chạy UPDATE stock = 0 WHERE stock >= 1 → COMMIT & nhả khóa sớm.", state_after="stock = 0, orders = 0, lock = đã nhả"),
+                        GeneratedTraceStepDTO(time_label="t = 4ms (song song)", actor="Request 2", event="Đến song song, kiểm tra WHERE stock >= 1 thấy stock = 0 → không có dòng nào được cập nhật; kết thúc transaction và trả về hết hàng.", state_after="stock = 0, orders = 0, rowcount = 0"),
+                        GeneratedTraceStepDTO(time_label="t = 9ms", actor="Request 1 (Tx 2)", event="Mở Tx 2 để INSERT INTO orders nhưng gặp lỗi ràng buộc/timeout → ROLLBACK chỉ áp dụng cho Tx 2.", state_after="stock = 0, orders = 0, trạng thái = MẤT HÀNG"),
                     ],
                     is_terminal=True,
                     invariants=[
@@ -731,10 +731,10 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="Thành công: stock 1 → 0, orders 0 → 1 · Lỗi INSERT: rollback về stock = 1 · Thời gian lock ~5ms",
                     trace_steps=[
-                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="BEGIN; SET LOCAL lock_timeout = '500ms'; UPDATE stock = stock - 1 WHERE stock >= 1 (1 round-trip, rowcount = 1).", state_after="Giữ khóa FOR NO KEY UPDATE, stock tạm = 0"),
-                        GeneratedTraceStepDTO(time_label="t = 2ms (song song)", actor="Request 2 (Tx 2)", event="Đến song song ở instance B, chạy UPDATE tương tự → tạm chờ khóa dòng X.", state_after="Đang chờ Tx 1 (~3ms)"),
-                        GeneratedTraceStepDTO(time_label="t = 5ms", actor="Request 1 (Tx 1)", event="INSERT INTO orders thành công → COMMIT ngay (lỗi sẽ ROLLBACK trả stock = 1).", state_after="stock = 0, orders = 1"),
-                        GeneratedTraceStepDTO(time_label="t = 6ms", actor="Request 2 (Tx 2)", event="Nhận khóa, PostgreSQL kiểm tra lại WHERE stock >= 1 trên bản ghi vừa commit (0) → rowcount = 0 → báo hết hàng.", state_after="stock = 0, orders = 1 (AN TOÀN)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="BEGIN; SET LOCAL lock_timeout = '500ms'; lấy khóa nhẹ FOR NO KEY UPDATE và chạy UPDATE stock = stock - 1 WHERE stock >= 1 (1 round-trip, rowcount = 1).", state_after="stock = 0 (chưa commit), orders = 0, lock = Tx 1 (FOR NO KEY UPDATE)"),
+                        GeneratedTraceStepDTO(time_label="t = 2ms (song song)", actor="Request 2 (Tx 2)", event="Đến song song trên Instance B, chạy lệnh UPDATE tương tự → tạm chờ khóa dòng X từ Tx 1.", state_after="stock = 1 (committed), orders = 0, lock = Tx 2 chờ (~3ms)"),
+                        GeneratedTraceStepDTO(time_label="t = 5ms", actor="Request 1 (Tx 1)", event="INSERT INTO orders thành công → COMMIT & nhả khóa ngay (nếu INSERT lỗi sẽ ROLLBACK hoàn tác stock = 1).", state_after="stock = 0, orders = 1, lock = đã nhả"),
+                        GeneratedTraceStepDTO(time_label="t = 6ms", actor="Request 2 (Tx 2)", event="Nhận khóa, PostgreSQL kiểm tra lại WHERE stock >= 1 trên bản ghi vừa commit (0) → không có dòng nào được cập nhật; kết thúc transaction và trả về hết hàng.", state_after="stock = 0, orders = 1, rowcount = 0"),
                     ],
                     is_terminal=True,
                     invariants=[
@@ -760,10 +760,10 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="2 round-trips (SELECT FOR UPDATE → App → UPDATE/INSERT → COMMIT) · Mức khóa: FOR UPDATE",
                     trace_steps=[
-                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="BEGIN → SELECT stock ... FOR UPDATE (round-trip 1) → giữ khóa FOR UPDATE (chặn cả FK FOR KEY SHARE).", state_after="Tx 1 giữ khóa mạnh FOR UPDATE"),
-                        GeneratedTraceStepDTO(time_label="t = 4ms (song song)", actor="Request 2 (Instance B)", event="Đến song song, bị chặn ngay tại SELECT ... FOR UPDATE; không có lock_timeout/NOWAIT sẽ treo chờ.", state_after="Tx 2 đứng chờ trên connection pool"),
-                        GeneratedTraceStepDTO(time_label="t = 12ms", actor="Request 1 (Tx 1)", event="Round-trip 2: gửi UPDATE stock = 0 + INSERT order #1 → COMMIT (nếu lỡ nhét logic chậm ở giữa thì Tx 2 bị treo cả trăm/nghìn ms).", state_after="stock = 0, orders = 1"),
-                        GeneratedTraceStepDTO(time_label="t = 14ms", actor="Request 2 (Instance B)", event="Nhận khóa, đọc thấy stock = 0 → thoát sạch và báo hết hàng.", state_after="stock = 0, orders = 1 (Dữ liệu đúng, cần giữ tx ngắn)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="BEGIN → lấy khóa mạnh SELECT stock ... FOR UPDATE (round-trip 1, chặn cả kiểm tra khóa ngoại FOR KEY SHARE).", state_after="stock = 1, orders = 0, lock = Tx 1 (FOR UPDATE)"),
+                        GeneratedTraceStepDTO(time_label="t = 4ms (song song)", actor="Request 2 (Instance B)", event="Đến song song, bị chặn chờ khóa ngay tại SELECT ... FOR UPDATE; thiếu lock_timeout/NOWAIT sẽ giữ connection chờ.", state_after="stock = 1, orders = 0, lock = Tx 2 chờ"),
+                        GeneratedTraceStepDTO(time_label="t = 12ms", actor="Request 1 (Tx 1)", event="Round-trip 2: gửi UPDATE stock = 0 + INSERT order #1 → COMMIT & nhả khóa (nếu chèn tác vụ chậm ở giữa thì Tx 2 bị treo kéo dài).", state_after="stock = 0, orders = 1, lock = đã nhả"),
+                        GeneratedTraceStepDTO(time_label="t = 14ms", actor="Request 2 (Instance B)", event="Nhận khóa, đọc thấy stock = 0 → không cập nhật dữ liệu; kết thúc transaction và trả về hết hàng.", state_after="stock = 0, orders = 1, lock = đã nhả"),
                     ],
                     is_terminal=True,
                     invariants=[
@@ -970,9 +970,9 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="Sau T1: (100, 300) · Sau T2: (150, 250) · Tổng = 400 · Deadlocks = 0",
                     trace_steps=[
-                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="T1 (11111 → 22222)", event="Đọc 11111 = 200 >= 100 → trừ 11111 về 100, cộng 22222 lên 300 → COMMIT.", state_after="11111 = 100, 22222 = 300"),
-                        GeneratedTraceStepDTO(time_label="t = 3ms (song song)", actor="T2 (22222 → 11111)", event="Đến cùng lúc, đợi ở khóa 11111 rồi đọc 22222 = 300 >= 50 → chuyển về 150 / 250 → COMMIT.", state_after="11111 = 150, 22222 = 250"),
-                        GeneratedTraceStepDTO(time_label="t = 9ms", actor="Kiểm chứng bất biến", event="150 + 250 = 400, không ví nào âm, 0 deadlock phát sinh.", state_after="AN TOÀN TOÀN VẸN"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="T1 (11111 → 22222)", event="Lấy khóa tăng dần (11111 → 22222), đọc 11111 = 200 >= 100 → trừ 11111 về 100, cộng 22222 lên 300 → COMMIT & nhả khóa.", state_after="wallet(11111) = 100, wallet(22222) = 300, lock = đã nhả"),
+                        GeneratedTraceStepDTO(time_label="t = 3ms (song song)", actor="T2 (22222 → 11111)", event="Đến song song, chờ ở khóa 11111 rồi nhận khóa, đọc 22222 = 300 >= 50 → chuyển về 150 / 250 → COMMIT & nhả khóa.", state_after="wallet(11111) = 150, wallet(22222) = 250, lock = đã nhả"),
+                        GeneratedTraceStepDTO(time_label="t = 9ms", actor="Kết quả kỳ vọng (mô phỏng)", event="150 + 250 = 400, không ví nào âm, 0 vòng chờ deadlock phát sinh theo cơ chế khóa tăng dần.", state_after="tổng = 400, deadlocks = 0"),
                     ],
                     is_terminal=True,
                     invariants=[
