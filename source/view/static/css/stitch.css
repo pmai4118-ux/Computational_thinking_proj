@@ -16,8 +16,8 @@
   align-items: center;
   gap: 0.3125rem;
   background: var(--theme-tint, #eee5ff);
-  color: var(--theme-accent, #630ed4);
-  border: 1px solid rgba(124, 58, 237, 0.16);
+  color: var(--theme-accent, #0f766e);
+  border: 1px solid rgba(15, 118, 110, 0.16);
   border-radius: 999px;
   font-size: 0.6875rem;
   font-weight: 700;
@@ -30,8 +30,8 @@
   display: inline-grid;
   place-items: center;
   border-radius: 1rem;
-  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.25);
+  background: linear-gradient(135deg, #14b8a6, #115e59);
+  box-shadow: 0 6px 18px rgba(15, 118, 110, 0.25);
   color: #fff;
   flex-shrink: 0;
 }
@@ -64,7 +64,7 @@
   width: min(960px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
   padding: 0;
-  box-shadow: 0 24px 64px -12px rgba(124, 58, 237, 0.24), 0 0 0 1px rgba(124, 58, 237, 0.16);
+  box-shadow: 0 24px 64px -12px rgba(15, 118, 110, 0.24), 0 0 0 1px rgba(15, 118, 110, 0.16);
   color: var(--color-text);
   overflow-x: hidden;
 }
@@ -77,7 +77,7 @@
 .modal-accent-bar {
   height: 5px;
   width: 100%;
-  background: linear-gradient(90deg, #7c3aed, #a78bfa, #6d28d9);
+  background: linear-gradient(90deg, #0d9488, #2dd4bf, #115e59);
 }
 
 .modal-header {
@@ -138,9 +138,9 @@
   width: 1.625rem;
   height: 1.625rem;
   border-radius: 50%;
-  background: rgba(124, 58, 237, 0.12);
-  border: 1px solid rgba(124, 58, 237, 0.25);
-  color: var(--theme-accent, #7c3aed);
+  background: rgba(15, 118, 110, 0.12);
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  color: var(--theme-accent, #0d9488);
   font-size: 0.75rem;
   font-weight: 800;
   flex-shrink: 0;
@@ -156,7 +156,7 @@
   height: 1.5px;
   width: 100%;
   margin: 0.875rem 0;
-  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.35), transparent);
+  background: linear-gradient(90deg, transparent, rgba(15, 118, 110, 0.35), transparent);
 }
 
 .modal-divider::after {
@@ -168,7 +168,7 @@
   width: 2.25rem;
   height: 8px;
   border-radius: 9999px;
-  background: rgba(124, 58, 237, 0.2);
+  background: rgba(15, 118, 110, 0.2);
   filter: blur(4px);
 }
 
@@ -178,7 +178,7 @@
   border: 1px solid rgb(var(--theme-border-rgb, 216 204 240) / 0.85);
   border-radius: 1rem;
   padding: 0.8125rem 1rem;
-  box-shadow: 0 4px 20px -4px rgba(124, 58, 237, 0.06);
+  box-shadow: 0 4px 20px -4px rgba(15, 118, 110, 0.06);
 }
 
 .icon-button {
@@ -197,8 +197,8 @@
 
 .icon-button:hover {
   background: var(--theme-tint, #f3eeff);
-  color: var(--theme-accent, #7c3aed);
-  border-color: var(--theme-border, #c4b5fd);
+  color: var(--theme-accent, #0d9488);
+  border-color: var(--theme-border, #5eead4);
 }
 
 body:has(dialog[open]) {

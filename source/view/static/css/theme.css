@@ -3,37 +3,37 @@
 :root { color-scheme: light; }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-canvas: #161121;
-  --color-surface: #281f38;
-  --color-surface-elevated: #302540;
-  --color-surface-low: #221b30;
-  --color-surface-container: #2a213b;
-  --color-surface-high: #352d45;
-  --color-surface-highest: #40344f;
-  --color-subtle: #382451;
-  --color-border: #493b60;
-  --color-border-strong: #80689f;
-  --color-text: #f4edff;
-  --color-text-secondary: #ccc1e0;
-  --color-text-muted: #baacd0;
-  --color-accent-violet-subtle: #382451;
-  --color-hero-start: #302043;
-  --color-hero-end: #241b32;
-  --stitch-primary: #be9eff;
-  --stitch-secondary: #b394ef;
-  --stitch-on-surface: #f4edff;
-  --stitch-on-surface-variant: #ccc1e0;
-  --stitch-primary-fixed: #382451;
-  --stitch-primary-fixed-dim: #765896;
-  --stitch-on-primary-fixed: #eadbff;
-  --stitch-secondary-fixed: #3a2656;
-  --stitch-on-secondary-fixed: #e1cfff;
-  --stitch-tertiary-fixed: #39304f;
-  --stitch-outline: #baacd0;
-  --stitch-outline-variant: #77608f;
-  --surface-glass-bg: rgb(34 27 48 / .9);
-  --surface-glass-card: rgb(40 31 56 / .9);
-  --surface-glass-border: rgb(190 158 255 / .22);
+  --color-canvas: #0C1414;
+  --color-surface: #131E1E;
+  --color-surface-elevated: #182626;
+  --color-surface-low: #101919;
+  --color-surface-container: #162323;
+  --color-surface-high: #1E2E2E;
+  --color-surface-highest: #263939;
+  --color-subtle: #133432;
+  --color-border: #233535;
+  --color-border-strong: #3B5858;
+  --color-text: #ECF5F4;
+  --color-text-secondary: #B6CCCC;
+  --color-text-muted: #8FA8A8;
+  --color-accent-violet-subtle: #133432;
+  --color-hero-start: #122626;
+  --color-hero-end: #0F1A1A;
+  --stitch-primary: #2DD4BF;
+  --stitch-secondary: #5EEAD4;
+  --stitch-on-surface: #ECF5F4;
+  --stitch-on-surface-variant: #B6CCCC;
+  --stitch-primary-fixed: #133432;
+  --stitch-primary-fixed-dim: #1D4E4B;
+  --stitch-on-primary-fixed: #CCFBF1;
+  --stitch-secondary-fixed: #133432;
+  --stitch-on-secondary-fixed: #99F6E4;
+  --stitch-tertiary-fixed: #1E2E2E;
+  --stitch-outline: #8FA8A8;
+  --stitch-outline-variant: #354D4D;
+  --surface-glass-bg: rgb(16 25 25 / .92);
+  --surface-glass-card: rgb(19 30 30 / .94);
+  --surface-glass-border: rgb(45 212 191 / .2);
   --color-status-met-bg: #12392c;
   --color-status-met-text: #83e9b9;
   --color-status-unmet-bg: #4b202a;
@@ -42,20 +42,20 @@
   --color-status-unresolved-text: #f5cf7d;
   --color-status-error-bg: #4b202a;
   --color-status-error-text: #ffb2bc;
-  --color-evidence-highlight-bg: #462b68;
-  --color-evidence-highlight-active-bg: #604383;
-  --focus-ring-color: #c4a5ff;
-  --brand-50: #302043;
-  --brand-100: #382451;
-  --brand-200: #493260;
-  --theme-surface-rgb: 40 31 56;
-  --theme-tint-rgb: 44 34 61;
-  --theme-border-rgb: 119 96 143;
-  --theme-tint: #2c223d;
-  --theme-border: #493b60;
-  --theme-ink: #f4edff;
-  --theme-muted: #ccc1e0;
-  --theme-accent: #be9eff;
+  --color-evidence-highlight-bg: #134E4A;
+  --color-evidence-highlight-active-bg: #115E59;
+  --focus-ring-color: #2DD4BF;
+  --brand-50: #102424;
+  --brand-100: #133432;
+  --brand-200: #1B4845;
+  --theme-surface-rgb: 19 30 30;
+  --theme-tint-rgb: 22 35 35;
+  --theme-border-rgb: 53 77 77;
+  --theme-tint: #162323;
+  --theme-border: #233535;
+  --theme-ink: #ECF5F4;
+  --theme-muted: #B6CCCC;
+  --theme-accent: #2DD4BF;
   --theme-green-bg: #12392c;
   --theme-green-text: #83e9b9;
   --theme-yellow-bg: #403018;
@@ -68,16 +68,16 @@
   --theme-pink-text: #f1afe0;
 }
 html[data-theme="dark"] body {
-  background-image: radial-gradient(ellipse at 5% 0%, #35204c55, transparent 55%),
-    linear-gradient(180deg, #191225, #161121);
+  background-image: radial-gradient(ellipse at 5% 0%, #0f3a3744, transparent 55%),
+    linear-gradient(180deg, #0E1717, #0C1414);
 }
 /* Preserve readable white labels on brand-filled controls. */
 html[data-theme="dark"] :is(.site-nav__link--active, .btn--primary, .site-brand__mark, .session-owner-pill__avatar, .hub-step-badge) {
-  background: linear-gradient(125deg, #7c3aed, #630ed4);
+  background: linear-gradient(125deg, #0D9488, #0F766E);
   color: #fff;
 }
 html[data-theme="dark"] .coverage-count {
-  background-image: linear-gradient(120deg, #c9acff, #a985f6);
+  background-image: linear-gradient(120deg, #5EEAD4, #2DD4BF);
 }
 .theme-switch {
   display: inline-flex;
