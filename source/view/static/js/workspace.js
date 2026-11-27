@@ -20,6 +20,7 @@
   const sessionExpiredRecovery = document.querySelector("#session-expired-recovery");
   const api = window.InterviewApi;
   const sessionId = workspace.dataset.sessionId;
+  const deferredAssessment = workspace.dataset.evaluationTiming === "after_session";
   const questionId = workspace.dataset.questionId;
   const questionVersion = Number(workspace.dataset.questionVersion);
   const savedAnswerId = workspace.dataset.answerId;
@@ -368,22 +369,28 @@
       setStatus("Đã khôi phục bản nháp trên trình duyệt. Bản nháp chưa được lưu trên máy chủ.");
     }
   } else {
-    hideOpenReview();
-    setStatus("Bài đã lưu. Đang kiểm tra kết quả đánh giá gần nhất…");
-    readSavedEvaluation(pendingAnswer).then((state) => {
-      if (state === "processing") watchEvaluation(pendingAnswer);
-    }).catch((error) => {
-      if (error.status === 404) {
-        retryButton.hidden = false;
-        setStatus("Bài đã lưu nhưng chưa được đánh giá. Bạn có thể bắt đầu đánh giá bài đã lưu.");
-      } else if (error.code === "SESSION_EXPIRED" || error.status === 410) {
-        showSessionExpired(error);
-      } else if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
-        showSessionForbidden(error);
-      } else {
-        showFailure(error);
-      }
-    });
+    if (deferredAssessment) {
+      setStatus("Bài đã lưu. Điểm và nhận xét sẽ có sau khi kết thúc phiên.");
+      retryButton.hidden = true;
+      if (openReviewLink) openReviewLink.hidden = false;
+    } else {
+      hideOpenReview();
+      setStatus("Bài đã lưu. Đang kiểm tra kết quả đánh giá gần nhất…");
+      readSavedEvaluation(pendingAnswer).then((state) => {
+        if (state === "processing") watchEvaluation(pendingAnswer);
+      }).catch((error) => {
+        if (error.status === 404) {
+          retryButton.hidden = false;
+          setStatus("Bài đã lưu nhưng chưa được đánh giá. Bạn có thể bắt đầu đánh giá bài đã lưu.");
+        } else if (error.code === "SESSION_EXPIRED" || error.status === 410) {
+          showSessionExpired(error);
+        } else if (error.code === "SESSION_FORBIDDEN" || error.status === 403) {
+          showSessionForbidden(error);
+        } else {
+          showFailure(error);
+        }
+      });
+    }
   }
 
   answerField.addEventListener("input", () => {
@@ -478,9 +485,10 @@
       draftLabel.textContent = "Đã lưu câu trả lời trên máy chủ";
       answerField.readOnly = true;
       submitButton.hidden = true;
-      retryButton.hidden = false;
+      retryButton.hidden = deferredAssessment;
       setBusy(false);
-      await evaluateSavedAnswer(pendingAnswer);
+      if (deferredAssessment) reviewAnswer(pendingAnswer);
+      else await evaluateSavedAnswer(pendingAnswer);
     } catch (error) {
       if (error.code === "SESSION_EXPIRED" || error.status === 410) {
         showSessionExpired(error);

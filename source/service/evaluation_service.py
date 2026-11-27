@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import logging
 from uuid import uuid4
 
 from source.Model.evaluation import (
@@ -31,6 +32,10 @@ from source.service.providers.interfaces import (
     ProviderFailureError,
 )
 from source.service.scoring_service import RubricScoringService, ScoringError
+from source.service.competency_profile_service import CompetencyProfileService
+
+
+logger = logging.getLogger(__name__)
 
 
 class EvidenceValidationError(ProviderFailureError):
@@ -223,11 +228,13 @@ class EvaluationService:
         interpreter: EvidenceInterpreter | None = None,
         validator: EvidenceValidator | None = None,
         scorer: RubricScoringService | None = None,
+        profile_service: CompetencyProfileService | None = None,
     ) -> None:
         self._evaluation_repo = evaluation_repo
         self._session_repo = session_repo
         self._content_repo = content_repo
         self._interpreter = interpreter
+        self._profile_service = profile_service
         self.validator = validator or EvidenceValidator()
         self.scorer = scorer or RubricScoringService()
 
@@ -283,11 +290,13 @@ class EvaluationService:
         answer, question, rubric = self.get_saved_context(answer_ref)
         claim = self._evaluation_repo.claim_evaluation(answer_ref, question.ref, answer.rubric_ref)
         if claim.status is EvaluationStatus.COMPLETED:
+            self._refresh_profile_after_completion(answer, claim)
             return claim, build_feedback(claim, rubric)
         try:
             result = self._compute_result(answer, question, rubric, self._interpreter, None, claim)
             feedback = build_feedback(result, rubric)
             committed = self._evaluation_repo.complete_evaluation(claim, result)
+            self._refresh_profile_after_completion(answer, committed)
             return committed, feedback
         except ProviderFailureError as error:
             try:
@@ -326,12 +335,27 @@ class EvaluationService:
         if self._evaluation_repo is not None:
             cached = self._evaluation_repo.get_completed_evaluation_for_answer(answer.ref)
             if cached is not None:
+                self._refresh_profile_after_completion(answer, cached)
                 return cached
 
         result = self._compute_result(answer, question, rubric, interpreter, evaluation_id)
         if self._evaluation_repo is not None:
-            return self._evaluation_repo.save_evaluation(result)
+            saved = self._evaluation_repo.save_evaluation(result)
+            self._refresh_profile_after_completion(answer, saved)
+            return saved
         return result
+
+    def _refresh_profile_after_completion(
+        self, answer: Answer, result: EvaluationResult,
+    ) -> None:
+        if self._profile_service is None or result.status is not EvaluationStatus.COMPLETED:
+            return
+        try:
+            self._profile_service.refresh_for_answer(answer)
+        except Exception:
+            # The committed result is authoritative; profile reads and future session
+            # creation rebuild this disposable projection if an update is interrupted.
+            logger.exception("Could not refresh profile for completed evaluation %s", result.id)
 
     def _compute_result(
         self, answer: Answer, question: Question, rubric: Rubric,

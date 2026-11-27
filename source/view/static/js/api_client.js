@@ -117,7 +117,9 @@
 
   const api = {
     createSession(payload) {
-      return request("/sessions", { method: "POST", body: payload });
+      return request("/sessions", {
+        method: "POST", body: { evaluation_timing: "after_session", ...payload },
+      });
     },
     getSession(sessionId) {
       return request(`/sessions/${encode(sessionId)}`);

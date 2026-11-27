@@ -7,6 +7,7 @@
 <section class="card workspace-card" aria-labelledby="workspace-heading"
          data-workspace
          data-session-id="{{ session.session_id }}"
+         data-evaluation-timing="{{ session.evaluation_timing }}"
          data-question-id="{{ session.current_question.id if session.current_question else '' }}"
          data-question-version="{{ session.current_question.version if session.current_question else '' }}"
          data-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"

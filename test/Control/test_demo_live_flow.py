@@ -22,6 +22,7 @@ def test_demo_calls_real_antigravity_and_exposes_result(tmp_path: Path) -> None:
         "DATABASE_PATH": str(tmp_path / "demo-live.sqlite3"),
         "GEMINI_REQUEST_BUDGET": "2",
         "GEMINI_MAX_RETRIES": "0",
+        "ANTIGRAVITY_TIMEOUT_SECONDS": "240",
     })
     app = create_app(settings=settings)
     assert settings.provider is ProviderMode.ANTIGRAVITY
@@ -60,6 +61,9 @@ def test_demo_calls_real_antigravity_and_exposes_result(tmp_path: Path) -> None:
         )
         assert saved.status_code == 201
         answer = saved.json()["answer"]
+        assert client.post(
+            f"/api/sessions/{session_id}/end", json={"reason": "student_requested"}
+        ).status_code == 200
         result = client.post(
             f"/api/answers/{answer['answer_id']}/evaluate",
             json={"answer_revision": answer["revision"]},
@@ -80,6 +84,14 @@ def test_demo_calls_real_antigravity_and_exposes_result(tmp_path: Path) -> None:
         assert summary.status_code == 200
         assert summary.json()["completed_question_count"] == 1
         assert summary.json()["outcomes"][0]["total_score"] == evaluated["total_score"]
+        assert summary.json()["report"]["status"] == "complete"
+        assert summary.json()["report"]["overview"]["evaluated_count"] == 1
+        profile = client.get("/api/profile")
+        assert profile.status_code == 200
+        assert any(
+            item["latest_answer_ref"]["id"] == answer["answer_id"]
+            for item in profile.json()["entries"]
+        )
         assert client.get(f"{session_path}/summary").status_code == 200
         recommendations = client.get(f"/api/sessions/{session_id}/exercises")
         assert recommendations.status_code == 200

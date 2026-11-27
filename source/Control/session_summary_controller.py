@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
+
 from fastapi import APIRouter, Request
 
 from source.Control.interview_controller import (
@@ -15,10 +17,13 @@ from source.Control.schemas import (
     ObservedGapDTO,
     QuestionOutcomeSummaryDTO,
     SessionSummaryDTO,
+    SessionOverviewDTO,
+    SessionReportDTO,
     VersionedRefDTO,
 )
 from source.Model.ids import SessionId
 from source.service.recommendation_service import RecommendationService
+from source.service.session_report_service import SessionReportService
 
 
 class SessionSummaryController:
@@ -29,9 +34,11 @@ class SessionSummaryController:
         *,
         interview_controller: InterviewController,
         recommendation_service: RecommendationService,
+        report_service: SessionReportService,
     ) -> None:
         self._interview_controller = interview_controller
         self._recommendation_service = recommendation_service
+        self._report_service = report_service
 
     def get_summary(self, session_id: SessionId, *, owner_token: str | None) -> SessionSummaryDTO:
         # Delegate missing, foreign, and expired session checks to InterviewController.
@@ -41,6 +48,15 @@ class SessionSummaryController:
             session_id=session_id,
             owner_token_hash=owner_hash,
         )
+        three_part = asdict(self._report_service.build(
+            session_id=session_id, owner_token_hash=owner_hash,
+        ))
+        overview = SessionOverviewDTO.model_validate({
+            key: three_part[key] for key in (
+                "scope_note", "answered_count", "evaluated_count", "total_questions",
+                "axes", "strengths", "gaps",
+            )
+        })
         return SessionSummaryDTO(
             session_id=report.session_id,
             state=view.state,
@@ -88,6 +104,14 @@ class SessionSummaryController:
                     reason=gap.reason,
                 )
                 for gap in report.observed_gaps
+            ),
+            report=SessionReportDTO(
+                session_id=session_id,
+                status=three_part["status"],
+                overview=overview,
+                details=three_part["details"],
+                proposals=three_part["proposals"],
+                message=three_part["message"],
             ),
         )
 

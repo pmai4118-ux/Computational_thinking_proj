@@ -2,6 +2,8 @@
 
 Computational Thinking class project for **interviewUS** — a Vietnamese technical interview practice web app for **Backend Intern / Fresher** preparation with deterministic rubric scoring, exact answer-evidence quotes, failure/retry preservation, and reviewed exercise recommendations.
 
+Current integrated branch handoff: [NewDemo features, adaptive question rules and verification](docs/NEWDEMO_HANDOFF.md). The [Demo handoff](docs/DEMO_HANDOFF.md) retains earlier merge history.
+
 ---
 
 ## 1. Quick Start (Windows PowerShell, From a Clean Checkout)
@@ -23,7 +25,7 @@ uv run --locked python -m source.service.question_bank_service --database .local
 
 `uv sync --locked` creates `.venv`, installs the exact dependency versions locked in [uv.lock](uv.lock) (FastAPI, Pydantic, Jinja2, Uvicorn, pytest, httpx), and installs the local `source` package in editable mode.
 
-> **Verified locally on Windows x64 (CPython 3.11):** locked install, `uv pip check`, seed import validator, the integrated offline pytest suite (`250 passed, 3 skipped` on 25/11/2026), and all three Node UI suites (`16 passed`). The three opt-in live tests are described in [Demo handoff](docs/DEMO_HANDOFF.md). Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
+> **Verified locally on Windows x64 (CPython 3.11):** locked install and `uv pip check` at the earlier Demo handoff; on 27/11/2026 the seed import validator, offline pytest suite (**258 passed, 3 skipped**), four Node UI suites (**18 passed**), and both opt-in Antigravity checks (**2 passed**) were rerun. See [NewDemo handoff](docs/NEWDEMO_HANDOFF.md) for commands and limits. Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
 
 The normal application defaults to live `antigravity`; only the offline pytest suite skips two Antigravity calls and one optional Gemini API-key call until explicitly enabled. This keeps the repeatable code tests usable without an authenticated AI account or network. It does not establish grading accuracy; see the [held-out evaluation report](docs/evaluation_report.md) for current evidence and its limits.
 

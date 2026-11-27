@@ -246,6 +246,16 @@
       const response = await api.getEvaluation(sessionId, answerId, answerRevision);
       renderEvaluation(response);
     } catch (error) {
+      if (error.status === 404 && page.dataset.evaluationTiming === "after_session" && nextButton
+          && answerId === page.dataset.currentAnswerId
+          && answerRevision === Number(page.dataset.currentAnswerRevision)) {
+        statusBox.textContent = "Câu trả lời đã lưu. Điểm, căn cứ và đề xuất sẽ được tạo sau khi kết thúc phiên. Bạn có thể chuyển sang câu tiếp theo.";
+        statusBox.hidden = false;
+        errorBox.hidden = true;
+        nextButton.hidden = false;
+        retryButton.hidden = true;
+        return;
+      }
       statusBox.hidden = true;
       const canRetry = error.code !== "SESSION_EXPIRED" && error.code !== "SESSION_FORBIDDEN" && error.status !== 410 && error.status !== 403 && error.retryable !== false;
       errorBox.textContent = `${error.message || "Chưa tải được kết quả."} ${error.recoveryAction || "Bài trả lời gốc vẫn được giữ trên máy chủ."}`;

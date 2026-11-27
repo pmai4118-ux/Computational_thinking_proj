@@ -337,8 +337,11 @@ def build_pages_router(
 
         answer_id = saved.answer.answer_id
         revision = saved.answer.revision
-        result_url = f"/sessions/{session_id}/answers/{answer_id}/result?revision={revision}"
-        if evaluation_controller is not None:
+        session_view = await run_in_threadpool(
+            controller.get_session, SessionId(session_id), owner_token=owner_token
+        )
+        if session_view.evaluation_timing.value == "per_question" and evaluation_controller is not None:
+            result_url = f"/sessions/{session_id}/answers/{answer_id}/result?revision={revision}"
             try:
                 await run_in_threadpool(
                     evaluation_controller.evaluate,
@@ -359,7 +362,12 @@ def build_pages_router(
                     recovery_action=error.payload.recovery_action,
                 )
                 return HTMLResponse(content=html, status_code=error.status_code)
-        return RedirectResponse(url=result_url, status_code=status.HTTP_303_SEE_OTHER)
+            return RedirectResponse(url=result_url, status_code=status.HTTP_303_SEE_OTHER)
+        # The form-created interview follows the deferred-assessment contract.
+        return RedirectResponse(
+            url=f"/sessions/{session_id}/review?answer_id={answer_id}&revision={revision}",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
 
     @router.get("/sessions/{session_id}/answers/{answer_id}/result", response_model=None)
     def evaluation_result_page(

@@ -85,6 +85,16 @@ def test_u07_fixture_provider_flow_starts_answers_reviews_and_recommends(
     assert submitted.status_code == 201
     answer = submitted.json()["answer"]
 
+    # Form-created interviews defer assessment until the user finishes.
+    premature = ui_client.post(
+        f"/api/sessions/{session_id}/answers/{answer['answer_id']}/evaluate",
+        json={"answer_revision": answer["revision"]},
+    )
+    assert premature.status_code == 409
+    assert ui_client.post(
+        f"/api/sessions/{session_id}/end", json={"reason": "student_requested"}
+    ).status_code == 200
+
     evaluated = ui_client.post(
         f"/api/sessions/{session_id}/answers/{answer['answer_id']}/evaluate",
         json={"answer_revision": answer["revision"]},

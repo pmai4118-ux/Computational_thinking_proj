@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Iterator
 from uuid import uuid4
 
+from source.Model.competency_profile import CompetencyProfileEntry, RecentCriterionScore
 from source.Model.evaluation import (
     AnswerRevisionRef,
     CriterionCheck,
@@ -32,7 +33,7 @@ from source.Model.ids import (
     SourceId,
     VersionedRef,
 )
-from source.Model.interview import Answer, Session, SessionState
+from source.Model.interview import Answer, EvaluationTiming, Session, SessionState
 from source.Model.question import (
     Criterion,
     CriterionLevel,
@@ -55,7 +56,7 @@ from source.Model.repositories.interfaces import (
     RETRYABLE_EVALUATION_FAILURES,
 )
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 3
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
 EVALUATION_LEASE = timedelta(minutes=15)
 
@@ -137,6 +138,11 @@ class SQLiteRepositoryStore:
             with conn:
                 conn.executescript(ddl)
                 conn.execute("PRAGMA foreign_keys = ON;")
+                columns = {row[1] for row in conn.execute("PRAGMA table_info(sessions);")}
+                if "evaluation_timing" not in columns:
+                    conn.execute(
+                        "ALTER TABLE sessions ADD COLUMN evaluation_timing TEXT NOT NULL DEFAULT 'per_question';"
+                    )
                 conn.execute(
                     "INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, ?);",
                     (SCHEMA_VERSION, _dt_to_iso(datetime.now(UTC))),
@@ -605,6 +611,7 @@ class SQLiteRepositoryStore:
             answer_refs=a_refs,
             created_at=_iso_to_dt(row["created_at"]),
             updated_at=_iso_to_dt(row["updated_at"]),
+            evaluation_timing=EvaluationTiming(row["evaluation_timing"]),
         )
 
     def create_session(self, session: Session) -> Session:
@@ -623,8 +630,8 @@ class SQLiteRepositoryStore:
                     INSERT INTO sessions (
                         id, owner_token_hash, role, level, language, state,
                         question_refs_json, current_index, answer_refs_json,
-                        created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        created_at, updated_at, evaluation_timing
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     (
                         session.id,
@@ -638,6 +645,7 @@ class SQLiteRepositoryStore:
                         a_json,
                         _dt_to_iso(session.created_at),
                         _dt_to_iso(session.updated_at),
+                        session.evaluation_timing.value,
                     ),
                 )
         except sqlite3.IntegrityError as error:
@@ -680,7 +688,8 @@ class SQLiteRepositoryStore:
                     question_refs_json = ?,
                     current_index = ?,
                     answer_refs_json = ?,
-                    updated_at = ?
+                    updated_at = ?,
+                    evaluation_timing = ?
                 WHERE id = ?;
                 """,
                 (
@@ -693,6 +702,7 @@ class SQLiteRepositoryStore:
                     session.current_index,
                     a_json,
                     _dt_to_iso(session.updated_at),
+                    session.evaluation_timing.value,
                     session.id,
                 ),
             )
@@ -1118,6 +1128,80 @@ class SQLiteRepositoryStore:
                 (answer_ref.id, answer_ref.revision),
             ).fetchone()
             return None if row is None else self._load_evaluation_from_row(conn, row)
+
+    def replace_competency_profile(
+        self, owner_token_hash: str, entries: tuple[CompetencyProfileEntry, ...]
+    ) -> None:
+        """Atomically replace only this owner's derived rows."""
+        try:
+            with self._connect() as conn, conn:
+                conn.execute("BEGIN IMMEDIATE")
+                conn.execute(
+                    "DELETE FROM competency_profiles WHERE owner_token_hash=?",
+                    (owner_token_hash,),
+                )
+                conn.executemany(
+                    """INSERT INTO competency_profiles (
+                        owner_token_hash, skill_id, criterion_type, observed_count,
+                        met_count, unmet_count, unresolved_count, latest_status,
+                        latest_evaluated_at, latest_session_id, latest_answer_id,
+                        latest_answer_revision, latest_evaluation_id,
+                        latest_evaluation_version, latest_criterion_id, recent_scored_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    [
+                        (
+                            owner_token_hash, item.skill_id, item.criterion_type,
+                            item.observed_count, item.met_count, item.unmet_count,
+                            item.unresolved_count, item.latest_status.value,
+                            _dt_to_iso(item.latest_evaluated_at), item.latest_session_id,
+                            item.latest_answer_ref.id, item.latest_answer_ref.revision,
+                            item.latest_evaluation_id, item.latest_evaluation_version,
+                            item.latest_criterion_id,
+                            json.dumps([
+                                {"score": score.score, "maximum_score": score.maximum_score,
+                                 "status": score.status.value}
+                                for score in item.recent_scored
+                            ]),
+                        ) for item in entries
+                    ],
+                )
+        except sqlite3.IntegrityError as error:
+            raise RepositoryError(f"Cannot persist competency profile: {error}") from error
+
+    def list_competency_profile(
+        self, owner_token_hash: str
+    ) -> tuple[CompetencyProfileEntry, ...]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM competency_profiles WHERE owner_token_hash=? "
+                "ORDER BY skill_id, criterion_type",
+                (owner_token_hash,),
+            ).fetchall()
+        return tuple(
+            CompetencyProfileEntry(
+                skill_id=SkillId(row["skill_id"]),
+                criterion_type=row["criterion_type"],
+                observed_count=row["observed_count"],
+                met_count=row["met_count"],
+                unmet_count=row["unmet_count"],
+                unresolved_count=row["unresolved_count"],
+                latest_status=CriterionStatus(row["latest_status"]),
+                latest_evaluated_at=_iso_to_dt(row["latest_evaluated_at"]),
+                latest_session_id=SessionId(row["latest_session_id"]),
+                latest_answer_ref=AnswerRevisionRef(
+                    AnswerId(row["latest_answer_id"]), row["latest_answer_revision"]
+                ),
+                latest_evaluation_id=EvaluationId(row["latest_evaluation_id"]),
+                latest_evaluation_version=row["latest_evaluation_version"],
+                latest_criterion_id=CriterionId(row["latest_criterion_id"]),
+                recent_scored=tuple(
+                    RecentCriterionScore(
+                        score=item["score"], maximum_score=item["maximum_score"],
+                        status=CriterionStatus(item["status"]),
+                    ) for item in json.loads(row["recent_scored_json"])
+                ),
+            ) for row in rows
+        )
 
 
 __all__ = ["SCHEMA_VERSION", "SQLiteRepositoryStore"]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from source.Model.competency_profile import CompetencyProfileEntry
 from source.Model.evaluation import AnswerRevisionRef, EvaluationResult
 from source.Model.exercise import Exercise
 from source.Model.ids import (
@@ -147,7 +148,21 @@ class EvaluationRepository(Protocol):
     ) -> EvaluationResult | None: ...
 
 
+@runtime_checkable
+class CompetencyProfileRepository(Protocol):
+    """Materialized profile rows; assessed answers remain the source of truth."""
+
+    def replace_competency_profile(
+        self, owner_token_hash: str, entries: tuple[CompetencyProfileEntry, ...]
+    ) -> None: ...
+
+    def list_competency_profile(
+        self, owner_token_hash: str
+    ) -> tuple[CompetencyProfileEntry, ...]: ...
+
+
 __all__ = [
+    "CompetencyProfileRepository",
     "ContentRepository",
     "DuplicateRecordError",
     "DuplicateSubmissionConflictError",

@@ -93,6 +93,18 @@ class SavedEvaluationController:
                     recovery_action="Bắt đầu phiên luyện tập mới.",
                 ),
             )
+        if (session_view.evaluation_timing.value == "after_session"
+                and session_view.state.value not in ("completed", "ended_early")):
+            raise ApiControllerError(
+                status.HTTP_409_CONFLICT,
+                ApiErrorResponse(
+                    error_code=ErrorCode.INVALID_STATE_TRANSITION,
+                    message="Chỉ bắt đầu chấm điểm sau khi phiên phỏng vấn kết thúc.",
+                    session_id=session_id,
+                    answer_ref=AnswerRevisionRefDTO(id=answer_ref.id, revision=answer_ref.revision),
+                    recovery_action="Hoàn tất hoặc kết thúc sớm phiên, rồi mở trang tổng kết để đánh giá.",
+                ),
+            )
         try:
             result, feedback = self._evaluation_service.evaluate_saved_answer(answer_ref)
         except EvaluationInProgressError as error:

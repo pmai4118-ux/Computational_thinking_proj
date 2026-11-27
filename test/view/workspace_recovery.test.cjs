@@ -10,7 +10,7 @@ const script = fs.readFileSync(
   path.join(__dirname, "../../source/view/static/js/workspace.js"), "utf8"
 );
 
-function browser({ savedAnswerId = "", initialAnswerText = "", initialDraft = null, api }) {
+function browser({ savedAnswerId = "", initialAnswerText = "", initialDraft = null, evaluationTiming = "per_question", api }) {
   const handlers = new Map();
   const intervals = new Map();
   const elements = new Map();
@@ -33,6 +33,7 @@ function browser({ savedAnswerId = "", initialAnswerText = "", initialDraft = nu
   element("[data-workspace]").dataset = {
     sessionId: "session-1", questionId: "question-1", questionVersion: "1",
     answerId: savedAnswerId, answerRevision: "1",
+    evaluationTiming,
   };
   if (initialAnswerText) {
     element("#answer-text").value = initialAnswerText;
@@ -77,6 +78,21 @@ function browser({ savedAnswerId = "", initialAnswerText = "", initialDraft = nu
 }
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
+
+test("deferred interview saves an answer and opens the next-step review without calling AI", async () => {
+  let evaluationCalls = 0;
+  const page = browser({
+    evaluationTiming: "after_session",
+    api: {
+      submitAnswer: async () => ({ answer: { answer_id: "answer-1", revision: 1 } }),
+      evaluateAnswer: async () => { evaluationCalls += 1; },
+    },
+  });
+  page.element("#answer-text").value = "Câu trả lời đã lưu";
+  await page.handlers.get("#answer-form:submit")({ preventDefault() {} });
+  assert.equal(evaluationCalls, 0);
+  assert.match(page.navigation, /\/sessions\/session-1\/review\?answer_id=answer-1&revision=1/);
+});
 
 test("a timed-out saved answer stays available for retry without a score", async () => {
   const page = browser({

@@ -8,6 +8,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from source.Model.evaluation import CriterionStatus, EvaluationStatus
+from source.Model.competency_profile import CompetencyState, CompetencyTrend, EvidenceConfidence
 from source.Model.ids import (
     AnswerId,
     CriterionId,
@@ -19,6 +20,7 @@ from source.Model.ids import (
     SkillId,
     SourceId,
 )
+from source.Model.interview import EvaluationTiming
 
 
 class SessionState(StrEnum):
@@ -71,6 +73,44 @@ class AnswerRevisionRefDTO(BaseModel):
     revision: int = Field(ge=1)
 
 
+class RecentCriterionScoreDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    score: int = Field(ge=0)
+    maximum_score: int = Field(ge=1)
+    status: CriterionStatus
+
+
+class CompetencyProfileEntryDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    skill_id: SkillId
+    criterion_type: str
+    state: CompetencyState
+    trend: CompetencyTrend
+    evidence_confidence: EvidenceConfidence
+    observed_count: int = Field(ge=1)
+    met_count: int = Field(ge=0)
+    unmet_count: int = Field(ge=0)
+    unresolved_count: int = Field(ge=0)
+    selection_priority: float = Field(ge=0, le=1)
+    latest_status: CriterionStatus
+    latest_evaluated_at: datetime
+    latest_session_id: SessionId
+    latest_answer_ref: AnswerRevisionRefDTO
+    latest_evaluation_id: EvaluationId
+    latest_evaluation_version: int = Field(ge=1)
+    latest_criterion_id: CriterionId
+    recent_scored: tuple[RecentCriterionScoreDTO, ...] = ()
+
+
+class CompetencyProfileResponseDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    entries: tuple[CompetencyProfileEntryDTO, ...] = ()
+    message: str | None = None
+
+
 class SourceAttributionDTO(BaseModel):
     """Public source provenance shown alongside a question or exercise."""
 
@@ -119,6 +159,7 @@ class CreateSessionRequest(BaseModel):
     role: str = Field(default="backend_developer", min_length=1)
     level: str = Field(default="intern_fresher", min_length=1)
     language: str = Field(default="vi", min_length=1)
+    evaluation_timing: EvaluationTiming = EvaluationTiming.PER_QUESTION
 
 
 class SavedAnswerDTO(BaseModel):
@@ -141,6 +182,7 @@ class SessionViewDTO(BaseModel):
     role: str = Field(min_length=1)
     level: str = Field(min_length=1)
     language: str = Field(min_length=1)
+    evaluation_timing: EvaluationTiming = EvaluationTiming.PER_QUESTION
     demo_mode_label: str | None = None
     progress: SessionProgressDTO
     current_question: QuestionPromptDTO | None = None
@@ -367,6 +409,92 @@ class ObservedGapDTO(BaseModel):
     reason: str = Field(min_length=1)
 
 
+class ReportFindingDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    question_ref: VersionedRefDTO
+    answer_ref: AnswerRevisionRefDTO
+    evaluation_id: EvaluationId
+    criterion_id: CriterionId
+    criterion_label: str
+    criterion_type: str | None
+    axis_id: str | None
+    status: CriterionStatus
+    score: int | None
+    maximum_score: int
+    explanation: str
+    unresolved_reason: str | None
+    target_description: str
+    evidence: tuple[EvidenceItemDTO, ...] = ()
+
+
+class CompetencyAxisDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str
+    label: str
+    observed_count: int = Field(ge=0)
+    met_count: int = Field(ge=0)
+    gap_count: int = Field(ge=0)
+    unresolved_count: int = Field(ge=0)
+
+
+class ReportQuestionDetailDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    question_ref: VersionedRefDTO
+    prompt: str
+    category: str
+    skill_ids: tuple[SkillId, ...]
+    answer_ref: AnswerRevisionRefDTO | None
+    answer_text: str | None
+    evaluation_status: EvaluationStatus
+    total_score: int | None
+    maximum_score: int | None
+    failure_code: str | None = None
+    retryable: bool = False
+    findings: tuple[ReportFindingDTO, ...] = ()
+
+
+class ImprovementProposalDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    priority: int = Field(ge=1)
+    finding: ReportFindingDTO
+    priority_reason: str
+    goal: str
+    exercise_ids: tuple[ExerciseId, ...] = ()
+    exercise_titles: tuple[str, ...] = ()
+    estimated_minutes: int | None = None
+    alternate_question_available: bool = False
+    note: str
+
+
+class SessionOverviewDTO(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    scope_note: str
+    answered_count: int = Field(ge=0)
+    evaluated_count: int = Field(ge=0)
+    total_questions: int = Field(ge=1)
+    axes: tuple[CompetencyAxisDTO, ...] = ()
+    strengths: tuple[ReportFindingDTO, ...] = ()
+    gaps: tuple[ReportFindingDTO, ...] = ()
+
+
+class SessionReportDTO(BaseModel):
+    """Three-part report: overview, per-question details, then recommendations."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    session_id: SessionId
+    status: str
+    overview: SessionOverviewDTO
+    details: tuple[ReportQuestionDetailDTO, ...] = ()
+    proposals: tuple[ImprovementProposalDTO, ...] = ()
+    message: str | None = None
+
+
 class SessionSummaryDTO(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -379,6 +507,7 @@ class SessionSummaryDTO(BaseModel):
     unresolved_categories: tuple[str, ...] = ()
     outcomes: tuple[QuestionOutcomeSummaryDTO, ...] = ()
     observed_gaps: tuple[ObservedGapDTO, ...] = ()
+    report: SessionReportDTO | None = None
 
 
 class ExerciseRecommendationDTO(BaseModel):
@@ -448,6 +577,9 @@ class ApiErrorResponse(BaseModel):
 
 __all__ = [
     "AnswerRevisionRefDTO",
+    "CompetencyProfileEntryDTO",
+    "CompetencyProfileResponseDTO",
+    "RecentCriterionScoreDTO",
     "ApiErrorResponse",
     "CreateSessionRequest",
     "CriterionCheckDTO",
@@ -470,6 +602,7 @@ __all__ = [
     "SessionState",
     "StartPracticeRequest",
     "SessionSummaryDTO",
+    "SessionReportDTO",
     "SessionViewDTO",
     "SourceAttributionDTO",
     "SubmitAnswerRequest",

@@ -13,6 +13,9 @@ from source.Control.saved_evaluation_controller import (
     SavedEvaluationController,
     build_saved_evaluation_router,
 )
+from source.Control.competency_profile_controller import (
+    CompetencyProfileController, build_competency_profile_router,
+)
 from source.Control.exercise_controller import ExerciseController, build_exercise_router
 from source.Control.session_summary_controller import (
     SessionSummaryController,
@@ -24,14 +27,18 @@ from source.Control.interview_controller import (
     register_api_exception_handlers,
 )
 from source.Model.repositories.interfaces import (
+    CompetencyProfileRepository,
     ContentRepository,
     EvaluationRepository,
     SessionRepository,
 )
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
+from source.Model.repositories.memory_profile_repository import MemoryCompetencyProfileRepository
+from source.service.competency_profile_service import CompetencyProfileService
 from source.service.evaluation_service import EvaluationService
 from source.service.interview_service import InterviewService
 from source.service.recommendation_service import RecommendationService
+from source.service.session_report_service import SessionReportService
 from source.service.providers.factory import create_evidence_interpreter
 from source.service.providers.interfaces import EvidenceInterpreter
 from source.service.seed_loader import load_seed_catalog_into_repository
@@ -49,12 +56,16 @@ class AppContainer:
     content_repo: ContentRepository
     session_repo: SessionRepository
     evaluation_repo: EvaluationRepository
+    profile_repo: CompetencyProfileRepository
     interpreter: EvidenceInterpreter
     interview_service: InterviewService
     evaluation_service: EvaluationService
+    profile_service: CompetencyProfileService
+    profile_controller: CompetencyProfileController
     interview_controller: InterviewController
     saved_evaluation_controller: SavedEvaluationController
     recommendation_service: RecommendationService
+    report_service: SessionReportService
     exercise_controller: ExerciseController
     session_summary_controller: SessionSummaryController
 
@@ -65,6 +76,7 @@ def create_app(
     content_repo: ContentRepository | None = None,
     session_repo: SessionRepository | None = None,
     evaluation_repo: EvaluationRepository | None = None,
+    profile_repo: CompetencyProfileRepository | None = None,
     interpreter: EvidenceInterpreter | None = None,
     auto_seed: bool = True,
 ) -> FastAPI:
@@ -82,6 +94,14 @@ def create_app(
     assert resolved_session_repo is not None
     assert resolved_eval_repo is not None
 
+    resolved_profile_repo = profile_repo
+    if resolved_profile_repo is None:
+        resolved_profile_repo = (
+            resolved_session_repo if isinstance(resolved_session_repo, CompetencyProfileRepository)
+            else default_store if default_store is not None
+            else MemoryCompetencyProfileRepository()
+        )
+
     if auto_seed and not resolved_content_repo.list_skills():
         load_seed_catalog_into_repository(resolved_content_repo)
 
@@ -89,14 +109,21 @@ def create_app(
         interpreter if interpreter is not None else create_evidence_interpreter(resolved_settings)
     )
 
+    profile_service = CompetencyProfileService(
+        content_repo=resolved_content_repo, session_repo=resolved_session_repo,
+        evaluation_repo=resolved_eval_repo, profile_repo=resolved_profile_repo,
+    )
+    profile_controller = CompetencyProfileController(profile_service)
     interview_service = InterviewService(
         content_repo=resolved_content_repo,
         session_repo=resolved_session_repo,
         evaluation_repo=resolved_eval_repo,
+        profile_service=profile_service,
     )
     evaluation_service = EvaluationService(
         evaluation_repo=resolved_eval_repo, session_repo=resolved_session_repo,
         content_repo=resolved_content_repo, interpreter=resolved_interpreter,
+        profile_service=profile_service,
     )
     interview_controller = InterviewController(
         interview_service=interview_service,
@@ -112,6 +139,13 @@ def create_app(
         evaluation_repo=resolved_eval_repo,
         interview_service=interview_service,
     )
+    report_service = SessionReportService(
+        interview_service=interview_service,
+        content_repo=resolved_content_repo,
+        session_repo=resolved_session_repo,
+        evaluation_repo=resolved_eval_repo,
+        recommendation_service=recommendation_service,
+    )
     exercise_controller = ExerciseController(
         service=recommendation_service,
         interview_controller=interview_controller,
@@ -120,6 +154,7 @@ def create_app(
     session_summary_controller = SessionSummaryController(
         interview_controller=interview_controller,
         recommendation_service=recommendation_service,
+        report_service=report_service,
     )
 
     app = FastAPI(
@@ -131,12 +166,16 @@ def create_app(
         content_repo=resolved_content_repo,
         session_repo=resolved_session_repo,
         evaluation_repo=resolved_eval_repo,
+        profile_repo=resolved_profile_repo,
         interpreter=resolved_interpreter,
         interview_service=interview_service,
         evaluation_service=evaluation_service,
+        profile_service=profile_service,
+        profile_controller=profile_controller,
         interview_controller=interview_controller,
         saved_evaluation_controller=saved_evaluation_controller,
         recommendation_service=recommendation_service,
+        report_service=report_service,
         exercise_controller=exercise_controller,
         session_summary_controller=session_summary_controller,
     )
@@ -147,6 +186,7 @@ def create_app(
     app.include_router(build_saved_evaluation_router(saved_evaluation_controller))
     app.include_router(build_exercise_router(exercise_controller))
     app.include_router(build_session_summary_router(session_summary_controller))
+    app.include_router(build_competency_profile_router(profile_controller))
     app.include_router(build_pages_router(interview_controller, saved_evaluation_controller))
 
     @app.get("/health", tags=["system"])
