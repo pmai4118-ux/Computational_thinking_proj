@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.staticfiles import StaticFiles
 
 from source.config import Settings, load_settings
@@ -71,6 +71,26 @@ from source.view.pages import build_pages_router
 from source.Control.evaluation_controller import build_evaluation_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "view" / "static"
+
+
+class _RevalidatingStaticFiles(StaticFiles):
+    """Serve static assets with Cache-Control: no-cache to force ETag revalidation."""
+
+    def file_response(
+        self,
+        full_path,
+        stat_result,
+        scope,
+        status_code: int = 200,
+    ) -> Response:
+        response = super().file_response(
+            full_path,
+            stat_result,
+            scope,
+            status_code=status_code,
+        )
+        response.headers.setdefault("Cache-Control", "no-cache")
+        return response
 
 
 @dataclass(frozen=True, slots=True)
@@ -275,7 +295,7 @@ def create_app(
     )
 
     register_api_exception_handlers(app)
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    app.mount("/static", _RevalidatingStaticFiles(directory=str(STATIC_DIR)), name="static")
     app.include_router(build_interview_router(interview_controller))
     app.include_router(build_saved_evaluation_router(saved_evaluation_controller))
     app.include_router(build_exercise_router(exercise_controller))

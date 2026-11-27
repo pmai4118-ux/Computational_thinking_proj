@@ -180,3 +180,13 @@ test("failed draft save keeps the answer visible and stays on the question", asy
   assert.equal(page.element("#answer-text").value, "Bản nháp vẫn giữ trong ô");
   assert.match(page.element("#workspace-error").textContent, /Không lưu được/);
 });
+
+test("stale api client without saveDraft shows clear reload guidance instead of TypeError", async () => {
+  const page = browser({ api: {} });
+  input(page, "Nội dung cần giữ nguyên");
+  await page.handlers.get("#answer-form:submit")({ preventDefault() {} });
+  assert.equal(page.navigation, null);
+  assert.equal(page.element("#answer-text").value, "Nội dung cần giữ nguyên");
+  assert.match(page.element("#workspace-error").textContent, /Ctrl\+F5/);
+  assert.match(page.element("#draft-label").textContent, /Ctrl\+F5/);
+});

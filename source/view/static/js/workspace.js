@@ -49,6 +49,10 @@
   function saveDraft(text) {
     if (page.dataset.answerId) return Promise.resolve();
     saveChain = saveChain.catch(() => {}).then(async () => {
+      if (!api || typeof api.saveDraft !== "function") {
+        label.textContent = "Script trình duyệt chưa đồng bộ. Hãy tải lại trang (Ctrl+F5).";
+        throw new Error("Phiên bản script trình duyệt đã cũ; hãy nhấn Ctrl+F5 để tải lại trang.");
+      }
       label.textContent = "Đang lưu bản nháp…";
       await api.saveDraft(sessionId, { question_id: questionId, question_version: questionVersion, text });
       savedText = text;

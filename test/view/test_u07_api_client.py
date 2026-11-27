@@ -19,11 +19,15 @@ def test_u07_api_client_is_loaded_before_each_screen_script(
     for path, page_script in (("/", None), ("/setup", None), (f"/sessions/{session_id}", "workspace.js")):
         response = ui_client.get(path)
         assert response.status_code == 200
-        assert "/static/js/api_client.js" in response.text
+        assert "/static/js/api_client.js?v=" in response.text
         if page_script:
-            assert response.text.index("/static/js/api_client.js") < response.text.index(
+            assert response.text.index("/static/js/api_client.js?v=") < response.text.index(
                 f"/static/js/{page_script}"
             )
+    static_js = ui_client.get("/static/js/api_client.js")
+    assert static_js.status_code == 200
+    assert static_js.headers.get("cache-control") == "no-cache"
+    assert "saveDraft(" in static_js.text
 
     session = ui_session
     for index in range(session["progress"]["total_questions"]):
