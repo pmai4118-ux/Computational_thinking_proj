@@ -172,9 +172,13 @@
     }
     const invs = node.invariants || [];
     const safetyBroken = invs.some((i) => i.category !== "operational" && i.status === "broken");
-    const opRisk = invs.some((i) => i.category === "operational" && (i.status === "warning" || i.status === "broken"));
+    const opRisk = invs.some(
+      (i) => i.status === "warning" || (i.category === "operational" && i.status === "broken")
+    );
+    const hasUncertain = invs.some((i) => i.status === "uncertain");
     if (safetyBroken) return { cls: "badge--unmet", text: "Vỡ bất biến" };
     if (opRisk) return { cls: "badge--unresolved", text: "An toàn · Cảnh báo vận hành" };
+    if (hasUncertain || !invs.length) return { cls: "badge--unresolved", text: "Cần kiểm chứng" };
     return { cls: "badge--met", text: "An toàn · Ổn định" };
   }
 

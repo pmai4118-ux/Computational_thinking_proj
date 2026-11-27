@@ -184,16 +184,27 @@ def build_pages_router(
     """Mount practice pages and retained server-rendered evaluation routes."""
     router = APIRouter(tags=["pages"])
     env = create_template_environment()
-    welcome_template = env.get_template("welcome.html")
-    setup_template = env.get_template("setup.html")
-    result_template = env.get_template("evaluation_result.html")
-    workspace_template = env.get_template("workspace.html")
-    answer_review_template = env.get_template("answer_review.html")
-    summary_template = env.get_template("summary.html")
-    exercise_template = env.get_template("exercise.html")
-    profile_template = env.get_template("profile.html")
-    jd_template = env.get_template("jd_analysis.html")
-    replay_template = env.get_template("decision_replay.html")
+
+    class _LiveTemplate:
+        """Look up Jinja templates lazily so child templates never desync from base.html."""
+
+        def __init__(self, template_env: Environment, name: str) -> None:
+            self._env = template_env
+            self._name = name
+
+        def render(self, **context: object) -> str:
+            return self._env.get_template(self._name).render(**context)
+
+    welcome_template = _LiveTemplate(env, "welcome.html")
+    setup_template = _LiveTemplate(env, "setup.html")
+    result_template = _LiveTemplate(env, "evaluation_result.html")
+    workspace_template = _LiveTemplate(env, "workspace.html")
+    answer_review_template = _LiveTemplate(env, "answer_review.html")
+    summary_template = _LiveTemplate(env, "summary.html")
+    exercise_template = _LiveTemplate(env, "exercise.html")
+    profile_template = _LiveTemplate(env, "profile.html")
+    jd_template = _LiveTemplate(env, "jd_analysis.html")
+    replay_template = _LiveTemplate(env, "decision_replay.html")
 
     criterion_type_labels = {
         "behavior_explanation": "Giải thích hành vi mã",

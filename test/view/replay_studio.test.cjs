@@ -237,4 +237,5 @@ test("replay.js highlights matched quote, chooses branch without reload, and sub
   // Clicking rewind navigates cleanly back to parent node without reload!
   await studio.querySelector("#replay-rewind-parent-top").trigger("click");
   assert.deepEqual(selectCall, { runId: "replayrun.1", nodeId: "root" });
+  assert.match(collectText(studio.querySelector("#replay-tree-nav")), /An toàn · Cảnh báo vận hành/);
 });
