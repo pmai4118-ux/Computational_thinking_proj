@@ -1,35 +1,74 @@
+{% from "partials/icons.html" import icon -%}
+{% set current_nav = nav_active | default("interview") -%}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="/static/js/theme.js?v=20261127-global"></script>
   <title>{% block title %}Luyện phỏng vấn kỹ thuật Backend — interviewUS{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/tokens.css">
-  <link rel="stylesheet" href="/static/css/components.css?v=20261124-q05">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/tokens.css?v=20261127-stitch-v2">
+  <link rel="stylesheet" href="/static/css/components.css?v=20261127-stitch-v2">
+  {% if current_nav == 'learning_path' %}
+    <link rel="stylesheet" href="/static/css/stitch.css?v=20261127-stitch-v2">
+  {% endif %}
+  <link rel="stylesheet" href="/static/css/activity.css?v=20261127-1">
+  <link rel="stylesheet" href="/static/css/session_history.css?v=20261127">
   {% block extra_head %}{% endblock %}
+  <link rel="stylesheet" href="/static/css/theme.css?v=20261127-global">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
   <a class="skip-link" href="#main-content">Chuyển tới nội dung chính</a>
 
   <header class="site-header">
     <div class="site-header__inner">
-      <div class="site-brand">
-        <a class="site-brand__link" href="/">
-          <span class="site-brand__mark" aria-hidden="true">iU</span>
-          <span class="site-brand__text">interviewUS</span>
-        </a>
-        <span class="site-brand__subtitle">Luyện phỏng vấn Backend Intern / Fresher</span>
+      <div class="site-header__left">
+        <div class="site-brand">
+          <a class="site-brand__link" href="/">
+            <span class="site-brand__mark" aria-hidden="true">iU</span>
+            <span class="site-brand__text-wrap">
+              <span class="site-brand__text">interview<span class="site-brand__text-accent">US</span></span>
+              <span class="site-brand__subtitle">Luyện phỏng vấn kỹ thuật</span>
+            </span>
+          </a>
+        </div>
+
+        <nav class="site-nav" aria-label="Điều hướng chính">
+          <a class="site-nav__link {% if current_nav == 'home' %}site-nav__link--active{% endif %}" href="/" {% if current_nav == 'home' %}aria-current="page"{% endif %}>Trang chủ</a>
+          <a class="site-nav__link {% if current_nav == 'interview' %}site-nav__link--active{% endif %}" href="/interview" {% if current_nav == 'interview' %}aria-current="page"{% endif %}>Phỏng vấn ảo</a>
+          <a class="site-nav__link {% if current_nav == 'learning_path' %}site-nav__link--active{% endif %}" href="/learning-path" {% if current_nav == 'learning_path' %}aria-current="page"{% endif %}>Lộ trình Java</a>
+          <a class="site-nav__link {% if current_nav == 'history' %}site-nav__link--active{% endif %}" href="/history" {% if current_nav == 'history' %}aria-current="page"{% endif %}>Lịch sử phiên</a>
+        </nav>
       </div>
 
-      <nav class="site-nav" aria-label="Điều hướng chính">
-        <a class="site-nav__link" href="/">Bắt đầu</a>
-        <a class="site-nav__link" href="/setup">Thiết lập phiên</a>
+      <div class="site-header__right">
+        <div class="theme-switch" role="group" aria-label="Giao diện sáng tối">
+          <button type="button" class="theme-switch__button" data-theme-mode="light" aria-pressed="true" aria-label="Giao diện sáng" title="Giao diện sáng">
+            <span class="material-symbols-outlined" aria-hidden="true">light_mode</span><span class="theme-switch__label">Sáng</span>
+          </button>
+          <button type="button" class="theme-switch__button" data-theme-mode="dark" aria-pressed="false" aria-label="Giao diện tối" title="Giao diện tối">
+            <span class="material-symbols-outlined" aria-hidden="true">dark_mode</span><span class="theme-switch__label">Tối</span>
+          </button>
+        </div>
         {% if demo_mode_label %}
           <span class="badge badge--demo" role="status" aria-label="Chế độ dữ liệu: {{ demo_mode_label }}">
             {{ demo_mode_label }}
           </span>
         {% endif %}
-      </nav>
+        <div class="session-owner-pill" title="Phiên được gắn ẩn danh với trình duyệt hiện tại">
+          <span class="session-owner-pill__avatar" aria-hidden="true">
+            <span class="material-symbols-outlined" style="font-size: 16px;">shield_person</span>
+          </span>
+          <span class="session-owner-pill__meta">
+            <span class="session-owner-pill__title">Phiên ẩn danh</span>
+            <span class="session-owner-pill__sub">Intern / Fresher</span>
+          </span>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -52,16 +91,30 @@
     {% block content %}{% endblock %}
   </main>
 
+  {% block site_footer %}
   <footer class="site-footer">
     <div class="site-footer__inner">
-      <p>
-        Ngân hàng câu hỏi và bài tập được tuyển chọn từ nguồn mở có giấy phép đã xác minh.
-        Điểm số được tính bằng quy tắc Rubric minh bạch trên đoạn trích nguyên văn.
+      <div class="site-footer__brand">
+        <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px; color: var(--stitch-primary);">terminal</span>
+        <span>interviewUS</span>
+        <span aria-hidden="true">•</span>
+        <span>© 2026 Nền tảng tự luận kỹ thuật IT.</span>
+      </div>
+      <p class="site-footer__note">
+        Ngân hàng câu hỏi và bài tập từ nguồn mở có giấy phép đã xác minh. Điểm số tính bằng quy tắc Rubric trên trích dẫn nguyên văn.
       </p>
+      <div class="site-footer__links">
+        <a class="site-footer__link" href="/">Trang chủ</a>
+        <a class="site-footer__link" href="/interview">Phỏng vấn ảo</a>
+        <a class="site-footer__link" href="/learning-path">Lộ trình Java</a>
+        <a class="site-footer__link" href="/history">Lịch sử phiên</a>
+      </div>
     </div>
   </footer>
+  {% endblock %}
 
   <script src="/static/js/api_client.js" defer></script>
+  <script src="/static/js/activity.js?v=20261127-1" defer></script>
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>

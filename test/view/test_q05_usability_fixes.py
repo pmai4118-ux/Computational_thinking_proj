@@ -22,7 +22,7 @@ def test_q05_welcome_history_localizes_ended_early_and_links_directly_to_summary
     )
     assert ended.status_code == 200
 
-    welcome = ui_client.get("/")
+    welcome = ui_client.get("/interview")
     assert welcome.status_code == 200
     assert "Đã kết thúc sớm" in welcome.text
     assert "ended_early" not in welcome.text
@@ -162,7 +162,7 @@ def test_q05_welcome_and_summary_use_readable_session_labels_instead_of_raw_id_h
 ) -> None:
     session_id = ui_session["session_id"]
 
-    welcome = ui_client.get("/")
+    welcome = ui_client.get("/interview")
     assert welcome.status_code == 200
     assert f"<strong>Phiên {session_id}</strong>" not in welcome.text
     assert "Phiên luyện phỏng vấn" in welcome.text

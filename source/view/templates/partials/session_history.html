@@ -1,0 +1,88 @@
+{% set history_is_full = history_is_full | default(false) %}
+<section class="card session-history" aria-labelledby="history-heading" data-session-history data-history-scope="{{ 'all' if history_is_full else 'recent' }}">
+  <div class="stack">
+    <div class="welcome-history__head">
+      <div>
+        <h2 id="history-heading">{{ 'Toàn bộ phiên đã lưu' if history_is_full else '3 phiên gần nhất' }}</h2>
+        <p class="text-secondary reading-measure">
+          {{ 'Các phiên được sắp từ mới nhất đến cũ nhất.' if history_is_full else 'Tiếp tục phiên đang làm hoặc xem lại kết quả gần đây.' }}
+        </p>
+      </div>
+      <div class="action-row history-preview-actions">
+        {% if history_total is defined %}<span class="badge">{{ sessions|default([])|length }}{% if not history_is_full %} / {{ history_total }}{% endif %} phiên</span>{% endif %}
+        {% if not history_is_full %}<a class="btn btn--secondary" href="/history" data-history-all>Xem tất cả {{ icon('arrow') }}</a>{% endif %}
+      </div>
+    </div>
+
+    {% if sessions is defined and sessions %}
+      <ul class="session-list">
+        {% for item in sessions %}
+          <li class="session-item" data-session-id="{{ item.session_id }}">
+            <div class="stack" style="gap: var(--space-1);">
+              <div>
+                {% set display = (session_labels.get(item.session_id) if session_labels is defined else None) %}
+                <strong>
+                  {% if display %}
+                    {{ display.title }}
+                  {% elif item.progress.total_questions == 1 %}
+                    Lượt luyện bổ trợ (1 câu)
+                  {% else %}
+                    Phiên luyện phỏng vấn ({{ item.progress.total_questions }} câu)
+                  {% endif %}
+                </strong>
+                {% if item.state.value == "in_progress" %}
+                  <span class="badge badge--unresolved">
+                    Đang thực hiện · Câu {{ item.progress.current_index + 1 }}/{{ item.progress.total_questions }}
+                  </span>
+                {% elif item.state.value == "completed" %}
+                  <span class="badge badge--met">
+                    Đã hoàn thành · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu
+                  </span>
+                {% elif item.state.value == "ended_early" %}
+                  <span class="badge">
+                    Đã kết thúc sớm · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu có kết quả
+                  </span>
+                {% elif item.state.value == "expired" %}
+                  <span class="badge badge--error">
+                    Đã hết hạn · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu có kết quả
+                  </span>
+                {% else %}
+                  <span class="badge">
+                    Đã lưu · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu
+                  </span>
+                {% endif %}
+              </div>
+              <span class="text-secondary" style="font-size: var(--font-size-sm);">
+                Vai trò: Backend Developer (Intern / Fresher) · Tiếng Việt · {{ item.progress.total_questions }} câu
+              </span>
+              <span class="form-hint" style="font-size: var(--font-size-xs);">
+                Mã tham chiếu: <code>{{ item.session_id }}</code>
+              </span>
+            </div>
+
+            <div class="action-row">
+              {% if item.state.value == "in_progress" %}
+                <a class="btn btn--primary" href="/sessions/{{ item.session_id }}">Tiếp tục phiên</a>
+              {% else %}
+                <a class="btn btn--secondary" href="/sessions/{{ item.session_id }}/summary">Xem tổng kết</a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="card card--subtle">
+        <p style="margin-top: 0;">
+          {% if sessions is not defined %}
+            Mở lịch sử để xem các phiên đã lưu của bạn.
+          {% else %}
+            Chưa có phiên luyện tập nào trên trình duyệt này. Bạn có thể thiết lập phiên 4 câu ngay bây giờ.
+          {% endif %}
+        </p>
+        <div class="action-row">
+          <a class="btn btn--secondary" href="/setup">Thiết lập phiên đầu tiên</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>

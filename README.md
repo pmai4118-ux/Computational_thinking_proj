@@ -1,5 +1,16 @@
 # Computational_thinking_proj
 
+## Java Backend self-study roadmap (27/11/2026)
+
+Open **`/learning-path`** in the running app. The new link catalog contains
+24 lessons, 78 reading units, 48 sourced local practices and 87 resources;
+the same data is available as [Markdown](docs/JAVA_BACKEND_ROADMAP.md) and
+[JSON](data/learning/java_backend_v1.json). Confirm a goal and time budget to
+create a deterministic prerequisite plan. Reading is free by default; paid
+Coursera programs and potentially billed cloud labs are clearly distinguished.
+Progress checkboxes are self-reported, not mastery scores. See
+[implementation and limits](docs/JAVA_BACKEND_IMPLEMENTATION.md).
+
 Computational Thinking class project for **interviewUS** — a Vietnamese technical interview practice web app for **Backend Intern / Fresher** preparation with deterministic rubric scoring, exact answer-evidence quotes, failure/retry preservation, and reviewed exercise recommendations.
 
 Current integrated branch handoff: [NewDemo features, adaptive question rules and verification](docs/NEWDEMO_HANDOFF.md). The [Demo handoff](docs/DEMO_HANDOFF.md) retains earlier merge history.
@@ -183,3 +194,20 @@ Example requests:
 - “Have `ct_change_reviewer` review the current diff against the E05 acceptance criteria.”
 
 Use [docs/TASK_BREAKDOWN.md](docs/TASK_BREAKDOWN.md) and [docs/TASK_INSTRUCTIONS.md](docs/TASK_INSTRUCTIONS.md) to find task IDs and acceptance criteria.
+
+
+## 8. UI Stitch và lộ trình Java Backend
+
+Mở `/learning-path` để chọn chặng, đọc lesson và tạo kế hoạch theo quỹ thời gian.
+Sidebar có thể thu gọn trên desktop và mở như menu trên mobile.
+Font Be Vietnam Pro hỗ trợ tiếng Việt; UI dùng HTML/CSS/JS thật thay cho ảnh mẫu.
+
+Xem [bàn giao UI và kiểm tra](docs/STITCH_UI_IMPLEMENTATION.md),
+[nguồn thiết kế gốc](design/stitch-java-backend/README.md) và
+[học liệu Java Backend](docs/JAVA_BACKEND_ROADMAP.md).
+
+
+### Loading và ôn tập
+
+Xem [bàn giao loading UX](docs/LOADING_UX_HANDOFF.md) để chạy lại kiểm tra
+AI đang đối chiếu, tiến độ thực, retry và endpoint luyện câu khác đã gỡ (410).

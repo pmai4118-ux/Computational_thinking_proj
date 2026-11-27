@@ -140,7 +140,7 @@ function runWorkspaceWithSavedAnswer(api) {
   return { element };
 }
 
-function runEvidencePage(api) {
+function runEvidencePage(api, clock = null) {
   const elements = new Map();
   const root = new FakeNode("section");
   root.dataset = {
@@ -175,8 +175,14 @@ function runEvidencePage(api) {
     location: { origin: "http://localhost", assign() {} },
   };
 
+  if (clock) {
+    window.setTimeout = (callback) => { const id = ++clock.nextId; clock.timers.set(id, callback); return id; };
+    window.clearTimeout = (id) => clock.timers.delete(id);
+  }
+
   vm.runInNewContext(evidenceScript, {
     window,
+    Date: clock ? { now: () => clock.now } : Date,
     document: {
       querySelector,
       createElement: (tag) => new FakeNode(tag),
@@ -308,4 +314,27 @@ test("Q06-02: review page on processing evaluation shows status and reload butto
   assert.equal(page.querySelector("#retry-review-evaluation").hidden, true);
   assert.equal(page.querySelector("#retry-review-load").hidden, false);
   assert.match(page.querySelector("#review-status").textContent, /đang được AI đối chiếu rubric/);
+});
+
+
+test("review polling uses GET only and stops after 150 seconds with a recovery message", async () => {
+  const clock = { now: 1000, nextId: 0, timers: new Map() };
+  let reads = 0;
+  let evaluations = 0;
+  const page = runEvidencePage({
+    getEvaluation: async () => { reads++; return { result: {
+      status: "processing", answer_text: "Bài gốc đã lưu", criterion_checks: [],
+    } }; },
+    evaluateAnswer: async () => { evaluations++; },
+  }, clock);
+  await flush();
+  assert.equal(clock.timers.size, 1);
+  clock.now += 151000;
+  const [id, tick] = [...clock.timers][0]; clock.timers.delete(id); tick();
+  await flush();
+  assert.equal(reads, 2);
+  assert.equal(evaluations, 0);
+  assert.equal(clock.timers.size, 0);
+  assert.match(page.querySelector("#review-status").textContent, /mất nhiều thời gian/);
+  assert.equal(page.querySelector("#retry-review-load").hidden, false);
 });

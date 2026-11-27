@@ -287,3 +287,23 @@ representations, session ownership, retry/idempotency and transitions. F02 must
 implement the remaining Session/Answer/Exercise classes and invariant checks.
 P05 must supply a reviewed question, rubric and source set.
 E09: evaluate_saved_answer consumes an AnswerRevisionRef and returns its committed EvaluationResult plus feedback derived with the saved rubric version. save_evaluation(..., reuse_completed=True) returns the existing completed result for that revision or atomically stores the new result with its checks.
+
+## Additive contract — Java self-study catalog (27/11/2026)
+
+`data/learning/java_backend_v1.json` uses `schema_version=java-roadmap/1.0` and
+is separate from the approved interview seed. See `source/Model/learning_path.py`
+for the validated fields and `JAVA_BACKEND_IMPLEMENTATION.md` for the API.
+Each lesson has stable ID, prerequisite IDs, skill IDs, at least three reading
+units and two sourced local practices. Access/edition/publication date/check
+date are distinct. `curated_single_researcher` does not mean independently
+approved grading content. Completion is self-reported and never overwrites
+Answer, EvaluationResult or competency-profile evidence.
+
+
+## Compatibility change — 27/11/2026
+
+Alternate-question practice has been removed at the user's request. The legacy
+availability flags in recommendation/report DTOs remain for compatibility and
+are always false. The former creation endpoint returns 410 FEATURE_RETIRED
+after ownership validation. No data migration or deletion of historic sessions,
+answers, evaluations, or learning-catalog practices is performed.

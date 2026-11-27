@@ -152,7 +152,7 @@ def _evaluated_answer(
     return session_id, answer.ref, target.id
 
 
-def test_i06_orders_prerequisites_and_exposes_reviewed_detail_and_alternate(tmp_path: Path) -> None:
+def test_i06_orders_prerequisites_and_keeps_guidance_after_practice_retirement(tmp_path: Path) -> None:
     store = InMemoryRepositoryStore()
     app = _app(tmp_path, store)
     with TestClient(app) as client:
@@ -171,7 +171,7 @@ def test_i06_orders_prerequisites_and_exposes_reviewed_detail_and_alternate(tmp_
             "revision": answer_ref.revision,
         }
         assert target["recommendation_reason"]
-        assert target["eligible_alternate_question_available"] is True
+        assert target["eligible_alternate_question_available"] is False
 
         detail = client.get(f"/api/exercises/{target_id}?version=1")
         assert detail.status_code == 200
@@ -187,12 +187,11 @@ def test_i06_orders_prerequisites_and_exposes_reviewed_detail_and_alternate(tmp_
                 "exercise_id": target_id,
             },
         )
-        assert practice.status_code == 201
-        assert practice.json()["progress"]["total_questions"] == 1
-        original = store.get_answer(answer_ref)
-        assert original is not None
-        assert practice.json()["current_question"]["id"] != original.question_ref.id
-        assert store.get_session(practice.json()["session_id"]) is not None
+        assert practice.status_code == 410
+        assert practice.json()["error_code"] == "FEATURE_RETIRED"
+        assert store.get_answer(answer_ref) is not None
+        original_session = store.get_session(session_id)
+        assert len(store.list_sessions_by_owner(original_session.owner_token_hash)) == 1
 
 
 def test_i06_unresolved_evidence_never_creates_a_gap(tmp_path: Path) -> None:
@@ -241,7 +240,7 @@ def test_i06_no_reviewed_match_is_explicit_and_foreign_session_is_forbidden(tmp_
         assert owner.get("/api/exercises/exercise.unknown").status_code == 404
 
 
-def test_i06_practice_requires_owned_answer_and_different_reviewed_question(tmp_path: Path) -> None:
+def test_retired_practice_still_checks_session_ownership(tmp_path: Path) -> None:
     store = SingleVariantStore()
     app = _app(tmp_path, store)
     with TestClient(app) as owner, TestClient(app) as stranger:
@@ -256,8 +255,8 @@ def test_i06_practice_requires_owned_answer_and_different_reviewed_question(tmp_
             "exercise_id": "exercise.backend.rollback_invariant_test",
         }
         assert stranger.post(url, json=payload).status_code == 403
-        assert owner.post(url, json={**payload, "answer_revision": 2}).status_code == 422
-        assert owner.post(url, json=payload).status_code == 409
+        assert owner.post(url, json={**payload, "answer_revision": 2}).status_code == 410
+        assert owner.post(url, json=payload).status_code == 410
         suggestions = owner.get(f"/api/sessions/{session_id}/exercises").json()["recommendations"]
         assert all(not item["eligible_alternate_question_available"] for item in suggestions)
 
@@ -303,7 +302,7 @@ def test_i06_draft_rubric_variant_cannot_be_used_for_practice(
                 "exercise_id": "exercise.backend.rollback_invariant_test",
             },
         )
-        assert practice.status_code == 409
+        assert practice.status_code == 410
 
 
 def test_i06_invalid_prerequisite_chain_is_not_recommended(tmp_path: Path) -> None:
@@ -343,7 +342,7 @@ def test_i06_sqlite_repository_serves_seeded_reviewed_exercises(tmp_path: Path) 
         )
 
 
-def test_i06_shared_exercise_keeps_each_gap_available_for_practice(tmp_path: Path) -> None:
+def test_shared_exercise_keeps_gap_guidance_but_cannot_create_practice(tmp_path: Path) -> None:
     store = InMemoryRepositoryStore()
     app = _app(tmp_path, store)
     with TestClient(app) as client:
@@ -369,8 +368,8 @@ def test_i06_shared_exercise_keeps_each_gap_available_for_practice(tmp_path: Pat
                     "exercise_id": item["exercise_id"],
                 },
             )
-            assert practice.status_code == 201
-            assert practice.json()["progress"]["total_questions"] == 1
+            assert practice.status_code == 410
+            assert practice.json()["error_code"] == "FEATURE_RETIRED"
 
 
 def test_i06_detail_uses_requested_reviewed_version(tmp_path: Path) -> None:
@@ -476,10 +475,8 @@ def test_i06_antigravity_evaluation_flows_into_recommendations_without_another_c
         assert recommendations.json()["demo_mode_label"] is None
         assert recommendations.json()["recommendations"]
         assert all(item["recommendation_reason"] for item in recommendations.json()["recommendations"])
-        first = next(
-            item for item in recommendations.json()["recommendations"]
-            if item["eligible_alternate_question_available"]
-        )
+        first = recommendations.json()["recommendations"][0]
+        assert first["eligible_alternate_question_available"] is False
         practice = client.post(
             f"/api/sessions/{session_id}/answers/{answer_id}/practice",
             json={
@@ -488,8 +485,8 @@ def test_i06_antigravity_evaluation_flows_into_recommendations_without_another_c
                 "exercise_id": first["exercise_id"],
             },
         )
-        assert practice.status_code == 201
-        assert practice.json()["current_question"]["id"] != question["id"]
+        assert practice.status_code == 410
+        assert practice.json()["error_code"] == "FEATURE_RETIRED"
         assert len(calls) == 1
 
 

@@ -393,7 +393,15 @@ class InterviewService:
         return self._build_snapshot(session)
 
     def list_owner_sessions(self, *, owner_token_hash: str) -> tuple[Session, ...]:
-        return self._session_repo.list_sessions_by_owner(owner_token_hash)
+        """Present newest sessions first, consistently across repository adapters."""
+        sessions = self._session_repo.list_sessions_by_owner(owner_token_hash)
+        def history_order(session: Session) -> tuple[datetime, str]:
+            created_at = session.created_at or datetime.min.replace(tzinfo=UTC)
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=UTC)
+            return created_at, session.id
+
+        return tuple(sorted(sessions, key=history_order, reverse=True))
 
     def submit_answer(
         self,

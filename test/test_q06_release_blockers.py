@@ -179,7 +179,7 @@ def test_q06_expired_session_status_is_localized_in_welcome_and_summary(
         assert stored is not None
         session_repo.update_session(replace(stored, state=SessionState.EXPIRED))
 
-        welcome = client.get("/")
+        welcome = client.get("/interview")
         assert welcome.status_code == 200
         assert "Đã hết hạn" in welcome.text
 

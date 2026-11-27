@@ -97,12 +97,8 @@ def test_demo_calls_real_antigravity_and_exposes_result(tmp_path: Path) -> None:
         assert recommendations.status_code == 200
         assert client.get(f"{session_path}/exercises").status_code == 200
 
-        eligible = next(
-            (item for item in recommendations.json()["recommendations"]
-             if item["eligible_alternate_question_available"]),
-            None,
-        )
-        assert eligible is not None, "The omitted test criterion should create a practiceable gap."
+        eligible = recommendations.json()["recommendations"][0]
+        assert eligible["eligible_alternate_question_available"] is False
         gap = eligible["matched_gap"]
         assert gap["answer_ref"] == {"id": answer["answer_id"], "revision": answer["revision"]}
         practice = client.post(
@@ -113,9 +109,8 @@ def test_demo_calls_real_antigravity_and_exposes_result(tmp_path: Path) -> None:
                 "exercise_id": eligible["exercise_id"],
             },
         )
-        assert practice.status_code == 201
-        assert practice.json()["current_question"]["id"] != question["id"]
-        assert client.get(f"/sessions/{practice.json()['session_id']}").status_code == 200
+        assert practice.status_code == 410
+        assert practice.json()["error_code"] == "FEATURE_RETIRED"
 
         print({
             "provider": "antigravity",
@@ -124,5 +119,5 @@ def test_demo_calls_real_antigravity_and_exposes_result(tmp_path: Path) -> None:
             "score": evaluated["total_score"],
             "maximum_score": evaluated["maximum_score"],
             "recommendations": len(recommendations.json()["recommendations"]),
-            "practice_created": True,
+            "practice_created": False,
         })

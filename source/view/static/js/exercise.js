@@ -14,7 +14,7 @@
   const list = document.querySelector("#exercise-list");
   const empty = document.querySelector("#exercise-empty");
   const emptyReason = document.querySelector("#exercise-empty-reason");
-  let startingPractice = false;
+  const activity = window.InterviewActivity?.mount("exercise-activity", statusBox);
 
   const skillLabels = {
     "skill.programming.code_semantics": "Ngữ nghĩa mã nguồn & ngôn ngữ lập trình",
@@ -73,6 +73,7 @@
 
   async function loadExerciseDetail(item, button, detail) {
     button.disabled = true;
+    window.InterviewActivity?.buttonBusy(button, true);
     button.textContent = "Đang tải hướng dẫn…";
     errorBox.hidden = true;
     try {
@@ -95,38 +96,8 @@
       errorBox.focus();
       button.textContent = "Thử tải lại hướng dẫn";
       button.disabled = false;
-    }
-  }
-
-  async function startPractice(item, button) {
-    const gap = item.matched_gap || {};
-    const answer = gap.answer_ref;
-    if (startingPractice || !answer || !answer.id || !answer.revision) return;
-    startingPractice = true;
-    button.disabled = true;
-    button.textContent = "Đang tạo lượt luyện…";
-    errorBox.hidden = true;
-    statusBox.textContent = "Đang chọn câu hỏi đã duyệt khác câu gốc…";
-    statusBox.hidden = false;
-    try {
-      const created = await api.startPractice(sessionId, answer.id, {
-        answer_revision: answer.revision,
-        criterion_id: gap.criterion_id,
-        exercise_id: item.exercise_id,
-      });
-      if (!created.session_id || !created.current_question) {
-        throw new Error("Phiên luyện mới chưa có câu hỏi hợp lệ.");
-      }
-      window.location.assign(`/sessions/${encodeURIComponent(created.session_id)}`);
-    } catch (error) {
-      errorBox.textContent = [error.message || "Chưa thể tạo lượt luyện lại.", error.recoveryAction].filter(Boolean).join(" ");
-      errorBox.hidden = false;
-      errorBox.focus();
-      statusBox.hidden = true;
-      const canRetry = error.code !== "SESSION_EXPIRED" && error.code !== "SESSION_FORBIDDEN" && error.status !== 410 && error.status !== 403;
-      button.textContent = canRetry ? "Thử tạo lượt luyện lại" : "Không thể tạo lượt luyện";
-      button.disabled = !canRetry;
-      startingPractice = false;
+    } finally {
+      window.InterviewActivity?.buttonBusy(button, false);
     }
   }
 
@@ -142,9 +113,6 @@
           skillIds: [],
           reasons: [],
           reasonKeys: new Set(),
-          practiceTargets: [],
-          practiceKeys: new Set(),
-          hasEligibleAlternate: false,
         };
         groups.set(key, group);
       }
@@ -160,17 +128,6 @@
       if (!group.reasonKeys.has(reasonKey)) {
         group.reasonKeys.add(reasonKey);
         group.reasons.push(reasonText);
-      }
-      if (item.eligible_alternate_question_available) {
-        group.hasEligibleAlternate = true;
-        const answer = gap.answer_ref;
-        if (answer && answer.id) {
-          const practiceKey = `${answer.id}@${answer.revision || 1}`;
-          if (!group.practiceKeys.has(practiceKey)) {
-            group.practiceKeys.add(practiceKey);
-            group.practiceTargets.push(item);
-          }
-        }
       }
     }
     return Array.from(groups.values());
@@ -229,27 +186,6 @@
     if (source.required_notice) sourceSection.append(node("p", "form-hint", source.required_notice));
     card.append(sourceSection);
 
-    const actionSection = node("section", "exercise-card__section");
-    actionSection.append(node("h3", "", "Luyện lại bằng câu hỏi khác"));
-    if (group.practiceTargets.length > 0) {
-      const actions = node("div", "exercise-card__practice-actions");
-      for (const target of group.practiceTargets) {
-        const targetGap = target.matched_gap || {};
-        const label = group.practiceTargets.length > 1 && targetGap.criterion_label
-          ? `Luyện lại với câu hỏi khác (${targetGap.criterion_label})`
-          : "Luyện lại với câu hỏi khác";
-        const button = node("button", "btn btn--primary", label);
-        button.type = "button";
-        button.addEventListener("click", () => startPractice(target, button));
-        actions.append(button);
-      }
-      actionSection.append(actions);
-    } else if (group.hasEligibleAlternate) {
-      actionSection.append(node("p", "form-hint", "Chưa có mã bài trả lời đã chấm để bắt đầu lượt luyện lại."));
-    } else {
-      actionSection.append(node("p", "form-hint", "Phiên này chưa có biến thể khác đủ điều kiện cho bài tập này."));
-    }
-    card.append(actionSection);
     return card;
   }
 
@@ -275,11 +211,14 @@
       emptyReason.textContent = data.message || "Chưa có bài tập phù hợp với điểm thiếu đã xác nhận trong phiên.";
     }
     ensureFilterResetLink(noMatches ? empty : content);
+    activity?.stop();
     content.hidden = false;
+    window.InterviewActivity?.reveal(content);
     statusBox.hidden = true;
   }
 
   async function loadRecommendations() {
+    activity?.start({ kind: "loading", title: "Đang chuẩn bị hướng dẫn ôn tập", description: "Tìm học liệu có nguồn gắn với điểm thiếu đã được xác nhận trong phiên." });
     statusBox.hidden = false;
     statusBox.textContent = "Đang tải đề xuất từ phiên…";
     errorBox.hidden = true;
@@ -288,6 +227,7 @@
       const payload = await api.getExerciseRecommendations(sessionId);
       renderRecommendations(payload);
     } catch (error) {
+      activity?.stop();
       statusBox.hidden = true;
       errorBox.textContent = `${error.message || "Chưa tải được bài tập."} ${error.recoveryAction || "Không có bài luyện thay thế nào được tự tạo."}`;
       errorBox.hidden = false;

@@ -530,7 +530,7 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
         assert target_rec.matched_gap is not None
         assert target_rec.matched_gap.answer_ref.id is not None
 
-        # Step 6: Start Targeted Practice Retry with Alternate Question
+        # Step 6: The retired alternate-question endpoint cannot create a session
         practice_resp = client.post(
             f"/api/sessions/{session_id}/answers/{target_rec.matched_gap.answer_ref.id}/practice",
             json={
@@ -539,13 +539,10 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
                 "exercise_id": target_rec.exercise_id,
             },
         )
-        assert practice_resp.status_code == 201
-        practice_session = SessionViewDTO.model_validate(practice_resp.json())
-        assert practice_session.session_id != session_id
-        assert practice_session.progress.total_questions == 1
-        assert practice_session.progress.current_index == 0
-        assert practice_session.current_question is not None
-        assert practice_session.state.value == "in_progress"
+        assert practice_resp.status_code == 410
+        assert practice_resp.json()["error_code"] == "FEATURE_RETIRED"
+        assert target_rec.eligible_alternate_question_available is False
+
 
 
 # =============================================================================

@@ -144,30 +144,48 @@ def build_pages_router(
     router = APIRouter(tags=["pages"])
     env = create_template_environment()
     welcome_template = env.get_template("welcome.html")
+    interview_intro_template = env.get_template("interview_intro.html")
     setup_template = env.get_template("setup.html")
+    history_template = env.get_template("history.html")
     result_template = env.get_template("evaluation_result.html")
     workspace_template = env.get_template("workspace.html")
     answer_review_template = env.get_template("answer_review.html")
     summary_template = env.get_template("summary.html")
     exercise_template = env.get_template("exercise.html")
 
-    @router.get("/", response_class=HTMLResponse)
-    def welcome_page(request: Request) -> HTMLResponse:
+    def history_context(request: Request, *, recent_only: bool) -> dict[str, object]:
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
         sessions = controller.list_sessions_for_owner(owner_token=owner_token)
-        session_labels = _build_session_labels(
-            controller, sessions, owner_token=owner_token
-        )
-        html = welcome_template.render(
+        labels = _build_session_labels(controller, sessions, owner_token=owner_token)
+        return {
+            "sessions": sessions[:3] if recent_only else sessions,
+            "session_labels": labels,
+            "history_total": len(sessions),
+            "history_is_full": not recent_only,
+        }
+
+    @router.get("/", response_class=HTMLResponse)
+    def welcome_page() -> HTMLResponse:
+        return HTMLResponse(welcome_template.render(
             demo_mode_label=controller.demo_mode_label,
-            sessions=sessions,
-            session_labels=session_labels,
-        )
-        return HTMLResponse(content=html)
+        ))
+
+    @router.get("/interview", response_class=HTMLResponse)
+    def interview_intro_page(request: Request) -> HTMLResponse:
+        return HTMLResponse(interview_intro_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            **history_context(request, recent_only=True),
+        ))
+
+    @router.get("/history", response_class=HTMLResponse)
+    def history_page(request: Request) -> HTMLResponse:
+        return HTMLResponse(history_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            **history_context(request, recent_only=False),
+        ))
 
     @router.get("/setup", response_class=HTMLResponse)
-    def setup_page(request: Request) -> HTMLResponse:
-        _ = request
+    def setup_page() -> HTMLResponse:
         html = setup_template.render(
             demo_mode_label=controller.demo_mode_label,
             selected_role="backend_developer",
@@ -236,16 +254,11 @@ def build_pages_router(
                 owner_token=owner_token,
             )
         except ApiControllerError as error:
-            sessions = controller.list_sessions_for_owner(owner_token=owner_token)
-            session_labels = _build_session_labels(
-                controller, sessions, owner_token=owner_token
-            )
-            html = welcome_template.render(
+            html = interview_intro_template.render(
                 demo_mode_label=controller.demo_mode_label,
-                sessions=sessions,
-                session_labels=session_labels,
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
+                **history_context(request, recent_only=True),
             )
             return None, HTMLResponse(content=html, status_code=error.status_code)
 

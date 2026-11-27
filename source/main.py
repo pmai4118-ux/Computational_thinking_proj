@@ -16,6 +16,7 @@ from source.Control.saved_evaluation_controller import (
 from source.Control.competency_profile_controller import (
     CompetencyProfileController, build_competency_profile_router,
 )
+from source.Control.learning_path_controller import build_learning_path_router
 from source.Control.exercise_controller import ExerciseController, build_exercise_router
 from source.Control.session_summary_controller import (
     SessionSummaryController,
@@ -39,10 +40,12 @@ from source.service.evaluation_service import EvaluationService
 from source.service.interview_service import InterviewService
 from source.service.recommendation_service import RecommendationService
 from source.service.session_report_service import SessionReportService
+from source.service.learning_path_service import LearningPathService
 from source.service.providers.factory import create_evidence_interpreter
 from source.service.providers.interfaces import EvidenceInterpreter
 from source.service.seed_loader import load_seed_catalog_into_repository
 from source.view.pages import build_pages_router
+from source.view.learning_pages import build_learning_pages_router
 from source.Control.evaluation_controller import build_evaluation_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "view" / "static"
@@ -68,6 +71,7 @@ class AppContainer:
     report_service: SessionReportService
     exercise_controller: ExerciseController
     session_summary_controller: SessionSummaryController
+    learning_path_service: LearningPathService
 
 
 def create_app(
@@ -156,6 +160,7 @@ def create_app(
         recommendation_service=recommendation_service,
         report_service=report_service,
     )
+    learning_path_service = LearningPathService()
 
     app = FastAPI(
         title="interviewUS — Luyện phỏng vấn kỹ thuật Backend",
@@ -178,6 +183,7 @@ def create_app(
         report_service=report_service,
         exercise_controller=exercise_controller,
         session_summary_controller=session_summary_controller,
+        learning_path_service=learning_path_service,
     )
 
     register_api_exception_handlers(app)
@@ -187,6 +193,8 @@ def create_app(
     app.include_router(build_exercise_router(exercise_controller))
     app.include_router(build_session_summary_router(session_summary_controller))
     app.include_router(build_competency_profile_router(profile_controller))
+    app.include_router(build_learning_path_router(learning_path_service, profile_service))
+    app.include_router(build_learning_pages_router(demo_mode_label=resolved_settings.demo_label))
     app.include_router(build_pages_router(interview_controller, saved_evaluation_controller))
 
     @app.get("/health", tags=["system"])

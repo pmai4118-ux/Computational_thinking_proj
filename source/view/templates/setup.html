@@ -1,98 +1,280 @@
 {% extends "base.html" %}
+{% set nav_active = "interview" %}
 
-{% block title %}Thiết lập phiên luyện tập — interviewUS{% endblock %}
+{% block title %}Phòng phỏng vấn ảo — Thiết lập phiên — interviewUS{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/css/interview_hub.css?v=20261127-fullweb">
+{% endblock %}
 
 {% block content %}
-<div class="grid-two">
-  <section class="card" aria-labelledby="setup-heading">
-    <form method="post" action="/setup" class="stack" novalidate id="setup-form">
+<div class="hub-stage" data-interview-hub>
+  <div class="hub-content">
+    <!-- Hero Header -->
+    <section class="hub-hero" aria-labelledby="setup-heading">
       <div>
-        <h1 id="setup-heading">Thiết lập phiên luyện tập</h1>
-        <p class="text-secondary reading-measure">
-          Chỉ chọn thông tin cần thiết để hệ thống rút đúng bộ 4 câu hỏi đã kiểm duyệt.
-          Ứng dụng không thu thập họ tên, email hay hồ sơ CV.
+        <h1 id="setup-heading" class="hub-hero__title">Phòng phỏng vấn ảo</h1>
+        <p class="hub-hero__subtitle">
+          Luyện phản biện kỹ thuật 1-on-1 — Tự luận &amp; đối chiếu rubric trên trích dẫn nguyên văn
         </p>
       </div>
-
-      <div class="form-field">
-        <label class="form-label" for="role-select">Vai trò mục tiêu</label>
-        <select
-          id="role-select"
-          name="role"
-          class="form-select"
-          {% if field_errors and field_errors.get("role") %}aria-invalid="true" aria-describedby="role-error"{% endif %}
-        >
-          <option value="backend_developer" {% if selected_role == "backend_developer" %}selected{% endif %}>
-            Backend Developer
-          </option>
-        </select>
-        {% if field_errors and field_errors.get("role") %}
-          <p id="role-error" class="form-error">{{ field_errors.get("role") }}</p>
-        {% endif %}
+      <div class="hub-status-pill" role="status">
+        <span class="hub-status-pill__dot" aria-hidden="true"></span>
+        <span>Phản hồi được tạo sau khi gửi bài</span>
       </div>
+    </section>
 
-      <div class="form-field">
-        <label class="form-label" for="level-select">Cấp độ phỏng vấn</label>
-        <select
-          id="level-select"
-          name="level"
-          class="form-select"
-          {% if field_errors and field_errors.get("level") %}aria-invalid="true" aria-describedby="level-error"{% endif %}
-        >
-          <option value="intern_fresher" {% if selected_level == "intern_fresher" %}selected{% endif %}>
-            Intern / Fresher
-          </option>
-        </select>
-        {% if field_errors and field_errors.get("level") %}
-          <p id="level-error" class="form-error">{{ field_errors.get("level") }}</p>
-        {% endif %}
-      </div>
+    <section id="setup-activity" aria-label="Trạng thái chuẩn bị phiên" hidden></section>
+    <form method="post" action="/setup" class="hub-form" novalidate id="setup-form">
+      <input type="hidden" name="evaluation_timing" id="evaluation-timing-input" value="after_session">
 
-      <div class="form-field">
-        <label class="form-label" for="language-select">Ngôn ngữ đề bài và phản hồi</label>
-        <select id="language-select" name="language" class="form-select">
-          <option value="vi" {% if selected_language == "vi" %}selected{% endif %}>
-            Tiếng Việt (kèm thuật ngữ kỹ thuật chuẩn)
-          </option>
-        </select>
-      </div>
+      <!-- Bước 01: Chọn Chế Độ -->
+      <section class="hub-step-section" aria-labelledby="step-mode-heading">
+        <div class="hub-step-header">
+          <div class="hub-step-title-group">
+            <span class="hub-step-badge" aria-hidden="true">01</span>
+            <h2 id="step-mode-heading" class="hub-step-heading">Chọn Chế Độ</h2>
+          </div>
+          <span class="form-hint">Chọn thời điểm AI đối chiếu rubric cho bài làm của bạn</span>
+        </div>
 
-      <div class="action-row">
-        <button type="submit" class="btn btn--primary">Xác nhận bắt đầu</button>
-        <a class="btn btn--secondary" href="/">Quay lại trang bắt đầu</a>
-      </div>
+        <div class="hub-mode-grid" id="mode-selector-group" role="group" aria-label="Chế độ đánh giá phiên phỏng vấn">
+          <button type="button"
+                  class="hub-mode-card hub-mode-card--active"
+                  id="mode-card-realistic"
+                  data-mode-card="after_session"
+                  aria-pressed="true">
+            <span class="hub-mode-card__bar" aria-hidden="true"></span>
+            <div class="hub-mode-card__top">
+              <span class="hub-mode-card__icon" aria-hidden="true">
+                {{ icon('shield') }}
+              </span>
+              <div class="hub-mode-card__top-right">
+                <span class="hub-recommended-pill">Khuyên dùng</span>
+                <span class="hub-mode-radio" aria-hidden="true">
+                  {{ icon('check') }}
+                </span>
+              </div>
+            </div>
+            <div>
+              <h3 class="hub-mode-card__title">Mô phỏng thực tế</h3>
+              <p class="hub-mode-card__desc">Trả lời trọn bộ 4 câu rồi chấm cuối phiên • Không gợi ý</p>
+            </div>
+            <div class="hub-mode-card__meter">
+              <span class="hub-mode-card__meter-label">Thời điểm chấm</span>
+              <span class="hub-mode-card__meter-value">
+                <span class="hub-meter-bars" aria-hidden="true">
+                  <span class="hub-meter-bar hub-meter-bar--filled"></span>
+                  <span class="hub-meter-bar hub-meter-bar--filled"></span>
+                  <span class="hub-meter-bar hub-meter-bar--filled"></span>
+                  <span class="hub-meter-bar hub-meter-bar--filled"></span>
+                </span>
+                <span>Phản hồi cuối phiên</span>
+              </span>
+            </div>
+          </button>
+
+          <button type="button"
+                  class="hub-mode-card"
+                  id="mode-card-guided"
+                  data-mode-card="per_question"
+                  aria-pressed="false">
+            <span class="hub-mode-card__bar" aria-hidden="true"></span>
+            <div class="hub-mode-card__top">
+              <span class="hub-mode-card__icon" aria-hidden="true">
+                {{ icon('book') }}
+              </span>
+              <div class="hub-mode-card__top-right">
+                <span class="hub-mode-radio" aria-hidden="true">
+                  {{ icon('check') }}
+                </span>
+              </div>
+            </div>
+            <div>
+              <h3 class="hub-mode-card__title">Luyện có hướng dẫn</h3>
+              <p class="hub-mode-card__desc">Nhận phản hồi ngay sau từng câu • Chưa có gợi ý trước khi nộp</p>
+            </div>
+            <div class="hub-mode-card__meter">
+              <span class="hub-mode-card__meter-label">Thời điểm chấm</span>
+              <span class="hub-mode-card__meter-value">
+                <span class="hub-meter-bars" aria-hidden="true">
+                  <span class="hub-meter-bar hub-meter-bar--soft"></span>
+                  <span class="hub-meter-bar hub-meter-bar--soft"></span>
+                  <span class="hub-meter-bar"></span>
+                  <span class="hub-meter-bar"></span>
+                </span>
+                <span>Phản hồi từng câu</span>
+              </span>
+            </div>
+          </button>
+        </div>
+        <noscript>
+          <p class="form-hint">Khi tắt JavaScript, biểu mẫu mặc định tạo phiên với chế độ đánh giá cuối phiên (4 câu).</p>
+        </noscript>
+      </section>
+
+      <!-- Bước 02: Chọn Câu Hỏi / Chủ Đề Phỏng Vấn -->
+      <section class="hub-panel" aria-labelledby="step-topics-heading">
+        <div class="hub-panel__header">
+          <div class="hub-step-title-group">
+            <span class="hub-step-badge" aria-hidden="true">02</span>
+            <div>
+              <h2 id="step-topics-heading" class="hub-step-heading">Chọn Câu Hỏi / Chủ Đề Phỏng Vấn</h2>
+              <p class="hub-step-sub">Hệ thống rút đúng bộ 4 câu hỏi đã kiểm duyệt theo blueprint hiện tại</p>
+            </div>
+          </div>
+          <div class="action-row">
+            <span class="hub-blueprint-pill">
+              {{ icon('shield') }}
+              <span>Theo blueprint hiện tại</span>
+            </span>
+            <a class="btn btn--ghost" href="/learning-path">Xem lộ trình Java tự học</a>
+          </div>
+        </div>
+
+        <div class="hub-fields-two">
+          <div class="hub-field-box">
+            <div class="hub-field-box__top">
+              <span class="hub-field-box__label">
+                {{ icon('layers') }}
+                <span>1. Chủ đề phỏng vấn</span>
+              </span>
+              <span class="hub-field-box__chip">4 nhóm câu</span>
+            </div>
+            <div class="hub-field-box__value hub-field-box__value--readonly">
+              <div>Cố định theo blueprint MVP (chưa hỗ trợ lọc chủ đề riêng)</div>
+              <div class="hub-blueprint-tags" aria-label="Các nhóm câu hỏi trong phiên">
+                <span class="hub-blueprint-tag">Kiến thức lập trình</span>
+                <span class="hub-blueprint-tag">Tình huống kỹ thuật</span>
+                <span class="hub-blueprint-tag">Giải thích thuật toán</span>
+                <span class="hub-blueprint-tag">Đánh giá mã nguồn</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="hub-field-box">
+            <div class="hub-field-box__top">
+              <span class="hub-field-box__label">
+                {{ icon('book') }}
+                <span>2. Nguồn / Bộ câu hỏi</span>
+              </span>
+              <span class="hub-field-box__chip">4 câu cố định</span>
+            </div>
+            <div class="hub-field-box__value hub-field-box__value--readonly">
+              <div>Ngân hàng câu hỏi tự luận đã kiểm duyệt (phiên chuẩn 4 câu)</div>
+              <p class="form-hint" style="margin-top: 0.25rem;">
+                Ứng dụng không thu thập họ tên, email hay hồ sơ CV. Bộ học liệu Java Backend nằm ở mục Lộ trình Java.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bước 03: Cấu Hình Phiên Phỏng Vấn -->
+      <section class="hub-panel" aria-labelledby="step-config-heading">
+        <div class="hub-panel__header">
+          <div class="hub-step-title-group">
+            <span class="hub-step-badge" aria-hidden="true">03</span>
+            <div>
+              <h2 id="step-config-heading" class="hub-step-heading">Cấu Hình Phiên Phỏng Vấn</h2>
+              <p class="hub-step-sub">Xác nhận vị trí ứng tuyển, thời lượng ước tính và cấp độ phù hợp</p>
+            </div>
+          </div>
+          <span class="hub-blueprint-pill">
+            {{ icon('settings') }}
+            <span>Cấu hình chuẩn MVP</span>
+          </span>
+        </div>
+
+        <div class="hub-fields-three">
+          <div class="hub-field-box">
+            <div class="hub-field-box__top">
+              <label class="hub-field-box__label" for="role-select">
+                {{ icon('user') }}
+                <span>1. Vị trí phỏng vấn</span>
+              </label>
+              <span class="hub-field-box__chip">Backend</span>
+            </div>
+            <select
+              id="role-select"
+              name="role"
+              class="hub-select"
+              {% if field_errors and field_errors.get("role") %}aria-invalid="true" aria-describedby="role-error"{% endif %}
+            >
+              <option value="backend_developer" {% if selected_role == "backend_developer" %}selected{% endif %}>
+                Backend Developer
+              </option>
+            </select>
+            {% if field_errors and field_errors.get("role") %}
+              <p id="role-error" class="form-error">{{ field_errors.get("role") }}</p>
+            {% endif %}
+          </div>
+
+          <div class="hub-field-box">
+            <div class="hub-field-box__top">
+              <span class="hub-field-box__label">
+                {{ icon('clock') }}
+                <span>2. Thời lượng &amp; Số câu</span>
+              </span>
+              <span class="hub-field-box__chip">25–35 phút</span>
+            </div>
+            <div class="hub-field-box__value hub-field-box__value--readonly">
+              4 câu • 25–35 phút ước tính (không khóa đếm ngược; có thể kết thúc sớm)
+            </div>
+          </div>
+
+          <div class="hub-field-box">
+            <div class="hub-field-box__top">
+              <label class="hub-field-box__label" for="level-select">
+                {{ icon('shield') }}
+                <span>3. Cấp độ ứng tuyển</span>
+              </label>
+              <span class="hub-field-box__chip">Fresher</span>
+            </div>
+            <select
+              id="level-select"
+              name="level"
+              class="hub-select"
+              {% if field_errors and field_errors.get("level") %}aria-invalid="true" aria-describedby="level-error"{% endif %}
+            >
+              <option value="intern_fresher" {% if selected_level == "intern_fresher" %}selected{% endif %}>
+                Intern / Fresher
+              </option>
+            </select>
+            {% if field_errors and field_errors.get("level") %}
+              <p id="level-error" class="form-error">{{ field_errors.get("level") }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="hub-language-row">
+          <label class="form-label" for="language-select" style="font-size: 0.875rem;">
+            Ngôn ngữ đề bài và phản hồi
+          </label>
+          <select id="language-select" name="language" class="hub-select hub-language-row__select">
+            <option value="vi" {% if selected_language == "vi" %}selected{% endif %}>
+              Tiếng Việt (kèm thuật ngữ kỹ thuật chuẩn)
+            </option>
+          </select>
+        </div>
+
+        <div id="setup-api-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
+
+        <div class="stack" style="gap: 0.75rem;">
+          <button type="submit" id="start-session-btn" class="btn btn--primary hub-cta">
+            <span>Xác nhận bắt đầu phỏng vấn</span>
+            {{ icon('arrow') }}
+          </button>
+          <div class="action-row" style="justify-content: space-between;">
+            <a class="btn btn--secondary" href="/interview">Quay lại Phỏng vấn ảo</a>
+            <span class="form-hint" id="selected-mode-hint">Đang chọn: Mô phỏng thực tế (chấm sau khi kết thúc phiên)</span>
+          </div>
+        </div>
+      </section>
     </form>
-  </section>
-
-  <aside class="card card--subtle" aria-labelledby="format-heading">
-    <div class="stack">
-      <h2 id="format-heading">Định dạng phiên và lưu ý</h2>
-      <ul class="meta-list">
-        <li><strong>Câu 1 — Kiến thức lập trình:</strong> Dự đoán kết quả, giải thích ngữ nghĩa và sửa hợp đồng hàm.</li>
-        <li><strong>Câu 2 — Tình huống kỹ thuật:</strong> Phân tích tranh chấp/khóa dữ liệu và thiết kế transaction nhất quán.</li>
-        <li><strong>Câu 3 — Giải thích thuật toán:</strong> Trình bày tính đúng đắn, độ phức tạp và ca kiểm thử biên.</li>
-        <li><strong>Câu 4 — Đánh giá mã nguồn:</strong> Kiểm chứng độc lập đoạn mã gợi ý, sửa lỗi và viết test.</li>
-      </ul>
-      <p class="form-hint">
-        <strong>Thời lượng ước tính:</strong> khoảng 25–35 phút cho trọn vẹn 4 câu (ước tính tham khảo; bạn có thể kết thúc phiên sớm bất kỳ lúc nào).
-      </p>
-    </div>
-  </aside>
+  </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
-<script>
-  (() => {
-    const form = document.querySelector("#setup-form");
-    if (!form) return;
-    form.addEventListener("submit", () => {
-      const btn = form.querySelector("button[type=submit]");
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = "Đang khởi tạo phiên…";
-      }
-    });
-  })();
-</script>
+  <script src="/static/js/interview_hub.js?v=20261127-activity" defer></script>
 {% endblock %}

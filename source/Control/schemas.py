@@ -35,6 +35,7 @@ class SessionState(StrEnum):
 class ErrorCode(StrEnum):
     """Standard machine-readable error codes returned by controller endpoints."""
 
+    FEATURE_RETIRED = "FEATURE_RETIRED"
     INVALID_INPUT = "INVALID_INPUT"
     SESSION_NOT_FOUND = "SESSION_NOT_FOUND"
     SESSION_FORBIDDEN = "SESSION_FORBIDDEN"

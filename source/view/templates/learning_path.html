@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% set nav_active = "learning_path" %}
+{% block title %}Lộ trình cá nhân hóa Java Backend — interviewUS{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/learning_path.css?v=20261127-stitch-v4">{% endblock %}
+{% block content %}
+<div class="roadmap-meta"><span class="violet-pill">Java Backend · Học theo chặng</span><span class="muted">Tài liệu chính thức &amp; thực hành có nguồn</span></div>
+<p id="learning-loading" class="card" role="status">Đang chuẩn bị không gian học tập…</p>
+<div id="learning-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
+<button id="learning-reload" class="btn btn--secondary" type="button" hidden>Tải lại học liệu</button>
+
+<section id="learning-activity" aria-label="Trạng thái tải lộ trình" hidden></section>
+<div id="learning-content" hidden>
+  <!-- Baseline Skill Assessment Banner (Kiểm tra đầu vào) -->
+  <section class="baseline-banner card" aria-labelledby="baseline-heading">
+    <span class="feature-icon" aria-hidden="true">{{ icon('chart') }}</span>
+    <div class="baseline-copy">
+      <div class="baseline-eyebrow-row">
+        <span class="stitch-eyebrow">Kiểm tra đầu vào</span>
+        <span class="violet-pill" id="baseline-status-pill">Chưa làm kiểm tra đầu vào</span>
+      </div>
+      <h2 id="baseline-heading">Kiểm tra kiến thức nền tảng Backend Java</h2>
+      <p id="baseline-summary-copy">
+        Thực hiện phiên phỏng vấn ảo 4 câu để đối chiếu rubric và ghi nhận điểm cần củng cố (chưa có đánh giá Java chuyên biệt).
+      </p>
+    </div>
+    <div class="baseline-right">
+      <div class="baseline-actions">
+        <a class="btn btn--primary" id="baseline-start-btn" href="/setup">
+          <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px;">quiz</span>
+          <span id="baseline-start-label">Kiểm tra đầu vào</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roadmap Personalization Banner -->
+  <section class="roadmap-banner card">
+    <span class="feature-icon" aria-hidden="true">{{ icon('settings') }}</span>
+    <div>
+      <div class="roadmap-title">
+        <h1>Lộ trình cá nhân hóa</h1>
+        <span class="violet-pill">Theo mục tiêu của bạn</span>
+        <span class="plan-status-tag is-unconfigured" id="plan-config-tag">Chưa thiết lập</span>
+      </div>
+      <div class="roadmap-chips">
+        <span class="pill">{{ icon('book') }} Java Backend Developer</span>
+        <span class="pill" id="budget-chip">{{ icon('clock') }} 8 giờ/tuần · 12 tuần</span>
+        <span class="learning-note" id="catalog-count"></span>
+      </div>
+    </div>
+    <button class="btn btn--primary" id="open-learning-settings" type="button">{{ icon('settings') }} Thiết lập lộ trình</button>
+  </section>
+
+  <div class="roadmap-layout">
+    <aside class="phase-sidebar card" aria-labelledby="phase-heading">
+      <div class="phase-intro">
+        <span class="stitch-eyebrow">Lộ trình Backend Java</span>
+        <h2 id="phase-heading">Chọn chặng học</h2>
+        <p>Nền tảng vững, từng bước tiến xa.</p>
+      </div>
+      <nav id="phase-list" aria-label="Các chặng Java Backend"></nav>
+      <div class="phase-tip">
+        {{ icon('bulb') }}
+        <p>Chọn một bài để mở tài liệu và bài thực hành. Bạn luôn có thể xem trước các bài tiên quyết.</p>
+      </div>
+      <a class="phase-source-link" href="#course-heading">Xem khóa học tham khảo {{ icon('arrow') }}</a>
+    </aside>
+
+    <div class="roadmap-main">
+      <header class="phase-heading card">
+        <span class="phase-heading-icon">{{ icon('route') }}</span>
+        <div>
+          <span class="stitch-eyebrow">Đang khám phá</span>
+          <h2 id="active-phase-title">Java nền tảng</h2>
+        </div>
+        <span id="phase-progress-label" class="violet-pill"></span>
+      </header>
+      <div class="lesson-toolbar">
+        <label class="search-field" for="lesson-search">
+          {{ icon('search') }}
+          <input id="lesson-search" type="search" placeholder="Tìm Java, Spring, transaction…" aria-label="Tìm lesson hoặc chủ đề">
+        </label>
+        <p id="lesson-filter-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="roadmap-canvas" id="lesson-list"></div>
+      <section class="plan-strip card">
+        <span class="phase-heading-icon">{{ icon('shield') }}</span>
+        <div>
+          <h3>Luyện cách trình bày và lập luận</h3>
+          <p>Phiên phỏng vấn Backend · tự luận · phản hồi theo rubric</p>
+        </div>
+        <a class="btn btn--secondary" href="/setup">Luyện phỏng vấn {{ icon('arrow') }}</a>
+      </section>
+      <section class="card learning-plan" aria-labelledby="plan-result-heading">
+        <div class="plan-heading-row">
+          <div>
+            <span class="stitch-eyebrow">Quỹ thời gian của bạn</span>
+            <h2 id="plan-result-heading">Kế hoạch học tập</h2>
+          </div>
+          <button id="download-plan" class="btn btn--secondary" type="button" hidden>{{ icon('download') }} Tải kế hoạch</button>
+        </div>
+        <p id="plan-status" role="status" aria-live="polite">Thiết lập mục tiêu và xác nhận quỹ thời gian để tạo kế hoạch của riêng bạn.</p>
+        <div id="plan-result"></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card learning-courses" aria-labelledby="course-heading">
+    <div class="course-heading">
+      <span class="feature-icon">{{ icon('book') }}</span>
+      <div>
+        <h2 id="course-heading">Học từ những nguồn đáng tin cậy</h2>
+        <p>Tài liệu miễn phí là phần chính. Chương trình trả phí được ghi rõ để tham khảo.</p>
+      </div>
+    </div>
+    <div id="course-list"></div>
+    <p id="catalog-provenance" class="form-hint"></p>
+  </section>
+</div>
+
+<!-- Modal Cấu hình Mục tiêu & Quỹ thời gian (Stitch-aligned, gọn chữ) -->
+<dialog class="stitch-modal settings-modal" id="learning-settings" aria-labelledby="plan-heading">
+  <div class="modal-accent-bar" aria-hidden="true"></div>
+  <form id="learning-form">
+    <header class="modal-header settings-modal__header">
+      <div class="settings-modal__title-wrap">
+        <span class="feature-icon settings-modal__icon" aria-hidden="true">
+          <span class="material-symbols-outlined">tune</span>
+        </span>
+        <div>
+          <div class="settings-modal__badges">
+            <span class="violet-pill">
+              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 14px;">auto_awesome</span>
+              Mục tiêu &amp; quỹ thời gian
+            </span>
+          </div>
+          <h2 id="plan-heading">Thiết lập mục tiêu &amp; lịch học</h2>
+          <p>Sắp xếp bài học theo tiên quyết và quỹ giờ hàng tuần của bạn.</p>
+        </div>
+      </div>
+      <button class="icon-button settings-close-btn" id="close-learning-settings" type="button" aria-label="Đóng cấu hình">{{ icon('close') }}</button>
+    </header>
+
+    <div class="modal-content settings-modal__body">
+      <!-- Section 1: Mục tiêu & Ưu tiên -->
+      <section class="modal-section settings-section" aria-labelledby="settings-sec-1">
+        <div class="settings-section__head">
+          <h3 id="settings-sec-1"><span class="step-number">1</span> Mục tiêu &amp; Ưu tiên</h3>
+        </div>
+
+        <div class="settings-field-group">
+          <div class="settings-track-chips" role="group" aria-label="Chọn nhanh mục tiêu lộ trình">
+            <button type="button" class="settings-track-chip" data-track-chip="foundation">
+              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">school</span>
+              <span>Nền tảng Java &amp; SQL</span>
+            </button>
+            <button type="button" class="settings-track-chip is-selected" data-track-chip="backend">
+              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">terminal</span>
+              <span>Java Backend Intern / Fresher</span>
+            </button>
+            <button type="button" class="settings-track-chip" data-track-chip="advanced">
+              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">layers</span>
+              <span>Toàn bộ &amp; nâng cao</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-glass-inner">
+          <div class="settings-inner-head">
+            <span class="settings-mini-label">Ưu tiên nội dung</span>
+            <div class="settings-mode-tabs" role="group" aria-label="Chọn nhanh chế độ ưu tiên">
+              <button type="button" class="settings-mode-tab is-active" data-mode-tab="full_track" aria-pressed="true">
+                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">route</span>
+                <span>Toàn bộ mục tiêu</span>
+              </button>
+              <button type="button" class="settings-mode-tab" data-mode-tab="confirmed_gaps" aria-pressed="false">
+                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">fact_check</span>
+                <span>Điểm cần củng cố</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="learning-budget settings-select-grid">
+            <div class="settings-select-field">
+              <label for="learning-track">Mục tiêu</label>
+              <select id="learning-track" class="form-select">
+                <option value="foundation">Nền tảng Java, web và SQL</option>
+                <option value="backend" selected>Java Backend Intern / Fresher</option>
+                <option value="advanced">Toàn bộ &amp; nâng cao tùy chọn</option>
+              </select>
+            </div>
+            <div class="settings-select-field">
+              <label for="learning-mode">Ưu tiên</label>
+              <select id="learning-mode" class="form-select">
+                <option value="full_track">Theo toàn bộ mục tiêu</option>
+                <option value="confirmed_gaps">Điểm cần củng cố có bằng chứng</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-profile-row">
+            <label class="learning-check" style="margin: 0;">
+              <input id="learning-profile" type="checkbox" checked>
+              <span>Dùng điểm thiếu từ hồ sơ trình duyệt</span>
+            </label>
+            <span class="form-hint" id="settings-profile-hint">Tự liên kết nếu có bằng chứng.</span>
+          </div>
+
+          <div class="settings-accordions">
+            <details class="learning-completed">
+              <summary>Bài đã học (tự đánh dấu)</summary>
+              <div id="completed-lessons"></div>
+            </details>
+            <details class="learning-completed">
+              <summary>Chọn riêng lesson (tùy chọn)</summary>
+              <div id="target-lessons"></div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <div class="modal-divider" aria-hidden="true"></div>
+
+      <!-- Section 2: Thời gian dự kiến -->
+      <section class="modal-section settings-section" aria-labelledby="settings-sec-2">
+        <div class="settings-section__head">
+          <h3 id="settings-sec-2"><span class="step-number">2</span> Thời gian dự kiến</h3>
+          <span class="settings-section__meta" id="settings-weeks-summary">12 tuần</span>
+        </div>
+
+        <div class="settings-time-grid">
+          <div class="modal-glass-inner settings-timeline-card">
+            <div class="settings-date-flow">
+              <div class="settings-date-col">
+                <span class="settings-mini-label">Bắt đầu</span>
+                <strong id="settings-date-start">Hôm nay</strong>
+              </div>
+              <span class="settings-date-arrow" aria-hidden="true">{{ icon('arrow') }}</span>
+              <div class="settings-date-col settings-date-col--end">
+                <span class="settings-mini-label" style="color: var(--stitch-primary);">Dự kiến xong</span>
+                <strong id="settings-date-end" style="color: var(--stitch-primary);">Sau 12 tuần</strong>
+              </div>
+            </div>
+            <div class="settings-inline-input">
+              <label for="learning-weeks">Số tuần (1–52)</label>
+              <input id="learning-weeks" class="form-input" type="number" min="1" max="52" step="1" value="12" required>
+            </div>
+          </div>
+
+          <div class="modal-glass-inner settings-presets-card">
+            <span class="settings-mini-label">Mốc gợi ý</span>
+            <div class="duration-chips" aria-label="Chọn nhanh số tuần">
+              <button type="button" data-weeks="4"><strong>4 tuần</strong><small>Tốc hành</small></button>
+              <button type="button" data-weeks="8"><strong>8 tuần</strong><small>Tập trung</small></button>
+              <button type="button" data-weeks="12" class="is-selected"><strong>12 tuần</strong><small>Khuyên dùng</small></button>
+              <button type="button" data-weeks="24"><strong>24 tuần</strong><small>Thong thả</small></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="modal-divider" aria-hidden="true"></div>
+
+      <!-- Section 3: Quỹ giờ mỗi tuần -->
+      <section class="modal-section settings-section" aria-labelledby="settings-sec-3">
+        <div class="settings-section__head">
+          <h3 id="settings-sec-3"><span class="step-number">3</span> Quỹ giờ mỗi tuần</h3>
+          <div class="settings-hours-summary">
+            <span class="violet-pill" id="settings-hours-pill">8 giờ / tuần</span>
+          </div>
+        </div>
+
+        <div class="modal-glass-inner settings-hours-card">
+          <div class="settings-inner-head">
+            <span class="settings-mini-label">Giờ học / tuần</span>
+            <span class="settings-section__meta">Tổng ước tính: <strong id="settings-total-hours" style="color: var(--stitch-primary);">96 giờ</strong></span>
+          </div>
+
+          <div class="hours-chips" aria-label="Chọn nhanh số giờ mỗi tuần">
+            <button type="button" data-hours="4"><strong>4 giờ</strong><small>Nhẹ</small></button>
+            <button type="button" data-hours="8" class="is-selected"><strong>8 giờ</strong><small>Khuyên dùng</small></button>
+            <button type="button" data-hours="12"><strong>12 giờ</strong><small>Tập trung</small></button>
+            <button type="button" data-hours="15"><strong>15 giờ</strong><small>Tăng tốc</small></button>
+            <button type="button" data-hours="20"><strong>20 giờ</strong><small>Chuyên sâu</small></button>
+          </div>
+
+          <div class="settings-hours-footer">
+            <div class="settings-hours-custom">
+              <label for="learning-hours">Tùy chỉnh (1–40 giờ)</label>
+              <input id="learning-hours" class="form-input" type="number" min="1" max="40" step="1" value="8" required>
+            </div>
+            <span class="pill settings-slot-pill">
+              {{ icon('clock') }}
+              <span>Xếp lịch theo tuần</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section class="modal-section confirmation-card">
+        <label class="learning-check" style="margin: 0;">
+          <input id="learning-confirm" type="checkbox" required>
+          <span>Tôi xác nhận mục tiêu và quỹ thời gian (tiến độ tự khai lưu trên trình duyệt này).</span>
+        </label>
+      </section>
+
+      <section id="plan-activity" aria-label="Trạng thái tạo kế hoạch" hidden></section>
+      <p id="settings-error" class="alert alert--error" role="alert" hidden></p>
+    </div>
+
+    <div class="modal-divider" style="margin: 0;" aria-hidden="true"></div>
+
+    <footer class="modal-footer">
+      <span class="learning-note settings-preview-note">
+        <span class="settings-live-dot" aria-hidden="true"></span>
+        <span id="settings-preview">24 lesson · 78 bài học nhỏ · 48 bài thực hành</span>
+      </span>
+      <div class="modal-actions">
+        <button class="btn btn--secondary" id="cancel-learning-settings" type="button">Hủy bỏ</button>
+        <button class="btn btn--primary" id="create-plan" type="submit">Áp dụng lộ trình {{ icon('arrow') }}</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+
+<dialog class="stitch-modal lesson-dialog" id="lesson-dialog" aria-labelledby="lesson-dialog-title">
+  <div class="lesson-modal-glare" aria-hidden="true"></div>
+  <header class="modal-header lesson-dialog__header">
+    <div class="lesson-dialog__head-main">
+      <div class="lesson-dialog__top-row">
+        <span id="lesson-dialog-meta" class="violet-pill lesson-meta-pill"></span>
+        <button id="close-lesson" class="icon-button" type="button" aria-label="Đóng bài học">{{ icon('close') }}</button>
+      </div>
+      <h2 id="lesson-dialog-title"></h2>
+      <p id="lesson-dialog-description" class="lesson-specs-bar"></p>
+      <div id="lesson-dialog-prereq" class="lesson-prereq-host" hidden></div>
+    </div>
+  </header>
+  <div class="modal-content lesson-dialog__body" id="lesson-body"></div>
+  <footer class="modal-footer lesson-dialog__footer">
+    <label class="learning-check lesson-complete-control">
+      <input type="checkbox" id="lesson-complete">
+      <span>Tôi đã học xong lesson này <small>(tự đánh dấu)</small></span>
+    </label>
+    <button id="next-lesson" class="btn btn--primary lesson-next-btn" type="button">Bài tiếp theo {{ icon('arrow') }}</button>
+  </footer>
+</dialog>
+{% endblock %}
+{% block extra_scripts %}<script src="/static/js/learning_path.js?v=20261127-stitch-v4" defer></script>{% endblock %}

@@ -10,6 +10,7 @@
   const draftLabel = document.querySelector("[data-draft-label]");
   const errorBox = document.querySelector("#workspace-error");
   const statusBox = document.querySelector("#workspace-status");
+  const activity = window.InterviewActivity?.mount("workspace-activity", statusBox);
   const submitButton = document.querySelector("#submit-answer");
   const retryButton = document.querySelector("#retry-evaluation");
   const openReviewLink = document.querySelector("#open-review");
@@ -18,6 +19,16 @@
   const confirmEndButton = document.querySelector("#confirm-end-session");
   const cancelEndButton = document.querySelector("#cancel-end-session");
   const sessionExpiredRecovery = document.querySelector("#session-expired-recovery");
+
+  const outlineWrap = document.querySelector("#argument-outline-wrap");
+  const boxesContainer = document.querySelector("#argument-boxes-container");
+  const addBoxButton = document.querySelector("#add-argument-box");
+  const canonicalWrap = document.querySelector("#canonical-answer-wrap");
+  const viewSwitch = document.querySelector("#editor-view-switch");
+  const modeOutlineBtn = document.querySelector("#mode-outline-btn");
+  const modePlainBtn = document.querySelector("#mode-plain-btn");
+  const toolbar = document.querySelector("#editor-toolbar");
+
   const api = window.InterviewApi;
   const sessionId = workspace.dataset.sessionId;
   const deferredAssessment = workspace.dataset.evaluationTiming === "after_session";
@@ -26,10 +37,17 @@
   const savedAnswerId = workspace.dataset.answerId;
   const savedAnswerRevision = Number(workspace.dataset.answerRevision || "1");
   const draftKey = `draft:${sessionId}:${questionId}`;
+  const structuredDraftKey = `draft:v2:${sessionId}:${questionId}:v${questionVersion}`;
   const submissionKey = `submission:${sessionId}:${questionId}`;
   const answerKey = `saved-answer:${sessionId}:${questionId}`;
   const MAX_POLLING_DURATION_MS = 150000;
   const LEAVE_CONFIRM_MESSAGE = "Bạn có chắc chắn muốn rời khỏi phiên làm bài? Bản nháp chưa gửi chưa được lưu trên máy chủ.";
+  const DEFAULT_BOX_TITLES = [
+    "Phân tích vấn đề",
+    "Phương án và đánh đổi",
+    "Cách xác minh",
+  ];
+
   let busy = false;
   let allowingNavigation = false;
   let statusPoll = null;
@@ -39,6 +57,10 @@
     ? { answer_id: savedAnswerId, revision: savedAnswerRevision }
     : null;
   let committedText = savedAnswerId && answerField ? answerField.value : null;
+  let outlineBoxes = [];
+  let outlineActive = false;
+  let editorMode = "outline";
+  let lastFocusedTextarea = null;
 
   const storage = {
     get(key) {
@@ -101,15 +123,273 @@
 
   function setBusy(value) {
     busy = value;
+    if (!value) activity?.stop();
+    if (!value) for (const button of [submitButton, retryButton, endButton, confirmEndButton]) window.InterviewActivity?.buttonBusy(button, false);
     if (submitButton) submitButton.disabled = value;
     retryButton.disabled = value;
     if (endButton) endButton.disabled = value;
     if (confirmEndButton) confirmEndButton.disabled = value;
     if (cancelEndButton) cancelEndButton.disabled = value;
+    if (addBoxButton) addBoxButton.disabled = value;
   }
 
   function updateCounter() {
-    counter.textContent = `${answerField.value.length.toLocaleString("vi-VN")} / 20.000 ký tự`;
+    if (!answerField || !counter) return;
+    const len = answerField.value.length;
+    counter.textContent = `${len.toLocaleString("vi-VN")} / 20.000 ký tự`;
+    if (counter.classList) {
+      counter.classList.toggle("workspace-counter--over", len > 20000);
+    }
+  }
+
+  function serializeOutlineBoxes(boxes) {
+    const parts = [];
+    for (const box of boxes) {
+      const body = (box.content || "").trim();
+      if (!body) continue;
+      const heading = (box.title || "").trim();
+      if (heading) {
+        parts.push(`${heading}:\n${box.content}`);
+      } else {
+        parts.push(box.content);
+      }
+    }
+    return parts.join("\n\n");
+  }
+
+  function syncFromOutlineBoxes() {
+    if (!outlineActive || !answerField || answerField.readOnly) return;
+    answerField.value = serializeOutlineBoxes(outlineBoxes);
+    const savedStructured = storage.set(
+      structuredDraftKey,
+      JSON.stringify({ version: 2, boxes: outlineBoxes })
+    );
+    const savedPlain = storage.set(draftKey, answerField.value);
+    if (draftLabel) {
+      draftLabel.textContent = (savedStructured || savedPlain)
+        ? `Bản nháp trong tab này, chưa lưu máy chủ • ${outlineBoxes.length} khung luận điểm`
+        : "Bản nháp đang hiển thị; trình duyệt không cho phép lưu cục bộ.";
+    }
+    updateCounter();
+    setError("");
+  }
+
+  function setEditorViewMode(nextMode) {
+    editorMode = nextMode === "plain" ? "plain" : "outline";
+    if (!outlineWrap || !canonicalWrap) return;
+
+    if (editorMode === "plain" || !outlineActive) {
+      outlineWrap.hidden = true;
+      canonicalWrap.hidden = false;
+      if (canonicalWrap.classList) canonicalWrap.classList.remove("sr-only");
+    } else {
+      outlineWrap.hidden = false;
+      canonicalWrap.hidden = false;
+      if (canonicalWrap.classList) canonicalWrap.classList.add("sr-only");
+    }
+
+    if (modeOutlineBtn) {
+      modeOutlineBtn.setAttribute("aria-pressed", editorMode === "outline" ? "true" : "false");
+      if (modeOutlineBtn.classList) {
+        modeOutlineBtn.classList.toggle("workspace-mode-switch__btn--active", editorMode === "outline");
+      }
+    }
+    if (modePlainBtn) {
+      modePlainBtn.setAttribute("aria-pressed", editorMode === "plain" ? "true" : "false");
+      if (modePlainBtn.classList) {
+        modePlainBtn.classList.toggle("workspace-mode-switch__btn--active", editorMode === "plain");
+      }
+    }
+  }
+
+  function renderOutlineBoxes() {
+    if (!boxesContainer || typeof document.createElement !== "function") return;
+    boxesContainer.replaceChildren();
+
+    outlineBoxes.forEach((box, idx) => {
+      const card = document.createElement("div");
+      card.className = "argument-box";
+
+      const head = document.createElement("div");
+      head.className = "argument-box__head";
+
+      const titleWrap = document.createElement("div");
+      titleWrap.className = "argument-box__title-wrap";
+
+      const num = document.createElement("span");
+      num.className = "argument-box__num";
+      num.textContent = String(idx + 1);
+
+      const titleInput = document.createElement("input");
+      titleInput.type = "text";
+      titleInput.className = "argument-box__heading-input";
+      titleInput.value = box.title;
+      titleInput.placeholder = `Luận điểm ${idx + 1}`;
+      titleInput.setAttribute("aria-label", `Tiêu đề khung luận điểm ${idx + 1}`);
+      titleInput.addEventListener("input", () => {
+        box.title = titleInput.value;
+        syncFromOutlineBoxes();
+      });
+
+      titleWrap.append(num, titleInput);
+      head.append(titleWrap);
+
+      if (outlineBoxes.length > 1) {
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "btn btn--ghost";
+        removeBtn.style.minHeight = "2rem";
+        removeBtn.style.padding = "0.125rem 0.5rem";
+        removeBtn.textContent = "Xóa";
+        removeBtn.setAttribute("aria-label", `Xóa khung luận điểm ${idx + 1}`);
+        removeBtn.addEventListener("click", () => {
+          outlineBoxes.splice(idx, 1);
+          renderOutlineBoxes();
+          syncFromOutlineBoxes();
+        });
+        head.append(removeBtn);
+      }
+
+      const textarea = document.createElement("textarea");
+      textarea.className = "argument-box__textarea";
+      textarea.rows = 3;
+      textarea.value = box.content;
+      textarea.placeholder = "Nhập lập luận, dẫn chứng hoặc các bước kiểm tra…";
+      textarea.setAttribute("aria-label", `Nội dung ${box.title || `luận điểm ${idx + 1}`}`);
+      textarea.addEventListener("focus", () => {
+        lastFocusedTextarea = textarea;
+      });
+      textarea.addEventListener("input", () => {
+        box.content = textarea.value;
+        syncFromOutlineBoxes();
+      });
+
+      card.append(head, textarea);
+      boxesContainer.append(card);
+    });
+  }
+
+  function initOutlineEditor({ initialPlainDraft = null } = {}) {
+    if (
+      !outlineWrap ||
+      !boxesContainer ||
+      typeof document.createElement !== "function" ||
+      typeof document.querySelectorAll !== "function"
+    ) {
+      return;
+    }
+
+    let loadedStructured = null;
+    try {
+      const raw = storage.get(structuredDraftKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.version === 2 && Array.isArray(parsed.boxes) && parsed.boxes.length > 0) {
+          loadedStructured = parsed.boxes.map((b) => ({
+            title: typeof b.title === "string" ? b.title : "",
+            content: typeof b.content === "string" ? b.content : "",
+          }));
+        }
+      }
+    } catch (_error) {
+      loadedStructured = null;
+    }
+
+    if (loadedStructured) {
+      outlineBoxes = loadedStructured;
+      answerField.value = serializeOutlineBoxes(outlineBoxes);
+      setStatus("Đã khôi phục bản nháp khung luận điểm trong tab trình duyệt.");
+    } else if (initialPlainDraft !== null && initialPlainDraft !== "") {
+      // Preserve legacy plain-text draft verbatim in one box with empty title so serialization never alters it.
+      outlineBoxes = [{ title: "", content: initialPlainDraft }];
+      answerField.value = initialPlainDraft;
+    } else if (answerField && answerField.value && answerField.value.trim()) {
+      outlineBoxes = [{ title: "", content: answerField.value }];
+    } else {
+      outlineBoxes = DEFAULT_BOX_TITLES.map((title) => ({ title, content: "" }));
+    }
+
+    outlineActive = true;
+    renderOutlineBoxes();
+    if (viewSwitch) viewSwitch.hidden = false;
+    if (toolbar) toolbar.hidden = false;
+    setEditorViewMode("outline");
+
+    if (addBoxButton) {
+      addBoxButton.addEventListener("click", () => {
+        outlineBoxes.push({
+          title: `Luận điểm ${outlineBoxes.length + 1}`,
+          content: "",
+        });
+        renderOutlineBoxes();
+        syncFromOutlineBoxes();
+      });
+    }
+
+    if (modeOutlineBtn) {
+      modeOutlineBtn.addEventListener("click", () => {
+        if (editorMode === "plain" && answerField) {
+          const plain = answerField.value;
+          if (plain !== serializeOutlineBoxes(outlineBoxes)) {
+            outlineBoxes = [{ title: "", content: plain }];
+            renderOutlineBoxes();
+          }
+        }
+        setEditorViewMode("outline");
+      });
+    }
+
+    if (modePlainBtn) {
+      modePlainBtn.addEventListener("click", () => {
+        syncFromOutlineBoxes();
+        setEditorViewMode("plain");
+        if (answerField) answerField.focus();
+      });
+    }
+
+    if (toolbar) {
+      const insertButtons = document.querySelectorAll("[data-insert-snippet]");
+      for (const btn of insertButtons) {
+        btn.addEventListener("click", () => {
+          const snippet = btn.getAttribute("data-insert-snippet") || "";
+          const target = editorMode === "plain"
+            ? answerField
+            : (lastFocusedTextarea || boxesContainer.querySelector(".argument-box__textarea"));
+          if (!target || target.readOnly) return;
+          const start = typeof target.selectionStart === "number" ? target.selectionStart : target.value.length;
+          const end = typeof target.selectionEnd === "number" ? target.selectionEnd : target.value.length;
+          const before = target.value.slice(0, start);
+          const after = target.value.slice(end);
+          target.value = `${before}${snippet}${after}`;
+          if (typeof target.setSelectionRange === "function") {
+            const caret = start + snippet.length;
+            target.setSelectionRange(caret, caret);
+          }
+          target.focus();
+          if (target === answerField) {
+            storage.set(draftKey, answerField.value);
+            updateCounter();
+          } else {
+            const boxIndex = Array.from(boxesContainer.querySelectorAll(".argument-box__textarea")).indexOf(target);
+            if (boxIndex >= 0 && outlineBoxes[boxIndex]) {
+              outlineBoxes[boxIndex].content = target.value;
+              syncFromOutlineBoxes();
+            }
+          }
+        });
+      }
+    }
+  }
+
+  function disableOutlineForReadOnlyServerAnswer() {
+    outlineActive = false;
+    if (outlineWrap) outlineWrap.hidden = true;
+    if (viewSwitch) viewSwitch.hidden = true;
+    if (toolbar) toolbar.hidden = true;
+    if (canonicalWrap) {
+      canonicalWrap.hidden = false;
+      if (canonicalWrap.classList) canonicalWrap.classList.remove("sr-only");
+    }
   }
 
   function createSubmissionId() {
@@ -207,6 +487,7 @@
   }
 
   function stopWaiting() {
+    activity?.stop();
     if (statusPoll !== null) window.clearInterval(statusPoll);
     if (waitNotice !== null) window.clearInterval(waitNotice);
     statusPoll = null;
@@ -214,6 +495,7 @@
   }
 
   function showWaiting() {
+    activity?.start({ kind: "assessment", title: "AI đang đối chiếu câu trả lời", description: "Bài đã lưu nguyên vẹn. AI đang trích bằng chứng để đối chiếu với rubric; điểm được tính theo các tiêu chí đã công bố." });
     hideOpenReview();
     waitStartedAt = Date.now();
     setStatus("Bài đã lưu. AI đang đối chiếu câu trả lời với rubric; việc này có thể mất hơn một phút. Bạn có thể quay lại trang này để xem kết quả.");
@@ -233,6 +515,7 @@
     retryButton.hidden = !canRetry;
     if (!canRetry) {
       answerField.readOnly = false;
+      disableOutlineForReadOnlyServerAnswer();
       if (submitButton) {
         submitButton.textContent = "Gửi bản trả lời mới";
         submitButton.hidden = false;
@@ -368,7 +651,9 @@
       answerField.value = restoredDraft;
       setStatus("Đã khôi phục bản nháp trên trình duyệt. Bản nháp chưa được lưu trên máy chủ.");
     }
+    initOutlineEditor({ initialPlainDraft: restoredDraft });
   } else {
+    disableOutlineForReadOnlyServerAnswer();
     if (deferredAssessment) {
       setStatus("Bài đã lưu. Điểm và nhận xét sẽ có sau khi kết thúc phiên.");
       retryButton.hidden = true;
@@ -396,8 +681,11 @@
   answerField.addEventListener("input", () => {
     if (!answerField.readOnly) {
       const stored = storage.set(draftKey, answerField.value);
+      if (outlineActive && editorMode === "plain") {
+        storage.remove(structuredDraftKey);
+      }
       draftLabel.textContent = stored
-        ? "Bản nháp trên trình duyệt (chưa lưu máy chủ)"
+        ? "Bản nháp trong tab này, chưa lưu máy chủ"
         : "Bản nháp đang hiển thị; trình duyệt không cho phép lưu cục bộ.";
     }
     updateCounter();
@@ -428,6 +716,8 @@
       if (busy) return;
       setBusy(true);
       setError("");
+      window.InterviewActivity?.buttonBusy(confirmEndButton, true);
+      activity?.start({ kind: "loading", title: "Đang kết thúc phiên", description: "Giữ các bài đã gửi và chuẩn bị trang tổng kết." });
       setStatus("Đang kết thúc phiên và lưu tổng kết…");
       try {
         await api.endSession(sessionId);
@@ -451,10 +741,19 @@
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (busy || !submitButton) return;
+    if (outlineActive && editorMode === "outline") {
+      syncFromOutlineBoxes();
+    }
     const text = answerField.value;
     if (!text.trim()) {
       setError("Vui lòng nhập câu trả lời trước khi gửi.");
-      answerField.focus();
+      if (outlineActive && editorMode === "outline" && boxesContainer) {
+        const firstBoxInput = boxesContainer.querySelector(".argument-box__textarea");
+        if (firstBoxInput) firstBoxInput.focus();
+        else answerField.focus();
+      } else {
+        answerField.focus();
+      }
       return;
     }
     if (text.length > 20000) {
@@ -471,7 +770,11 @@
     };
     setBusy(true);
     setError("");
+    window.InterviewActivity?.buttonBusy(submitButton, true);
     setStatus("Đang lưu nguyên văn câu trả lời…");
+    activity?.start({ kind: "saving", title: "Đang lưu câu trả lời của bạn", description: "Bản nháp vẫn được giữ trong tab này. Chờ máy chủ xác nhận trước khi chuyển bước." });
+    const writingFields = [answerField, ...(typeof boxesContainer?.querySelectorAll === "function" ? boxesContainer.querySelectorAll("input, textarea, button") : [])].map(field => ({ field, disabled: field.disabled }));
+    for (const item of writingFields) item.field.disabled = true;
     try {
       const submitted = await api.submitAnswer(sessionId, requestBody);
       pendingAnswer = {
@@ -481,9 +784,11 @@
       committedText = text;
       storage.set(answerKey, JSON.stringify(pendingAnswer));
       storage.remove(draftKey);
+      storage.remove(structuredDraftKey);
       storage.remove(submissionKey);
       draftLabel.textContent = "Đã lưu câu trả lời trên máy chủ";
       answerField.readOnly = true;
+      disableOutlineForReadOnlyServerAnswer();
       submitButton.hidden = true;
       retryButton.hidden = deferredAssessment;
       setBusy(false);
@@ -504,6 +809,7 @@
         answerField.focus();
       }
     } finally {
+      for (const item of writingFields) item.field.disabled = item.disabled;
       if (statusPoll === null && submitButton && !submitButton.hidden) setBusy(false);
     }
   });
