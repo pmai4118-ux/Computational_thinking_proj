@@ -38,7 +38,7 @@ from source.service.providers.antigravity_provider import (
 from source.service.providers.interfaces import ProviderErrorKind, ProviderFailureError
 
 MAX_PREBUILT_DEPTH = 3
-MAX_PREBUILT_NODES = 12
+MAX_PREBUILT_NODES = 16
 
 
 class _StrictModel(BaseModel):
@@ -1107,7 +1107,7 @@ class AntigravityReplaySimulator:
         budget_path = (
             None
             if str(settings.database_path) == ":memory:"
-            else Path(settings.database_path).with_suffix(".budget.sqlite3")
+            else Path(settings.database_path)
         )
         return cls(
             model_id=settings.antigravity_model or DEFAULT_ANTIGRAVITY_MODEL,
@@ -1140,7 +1140,12 @@ class AntigravityReplaySimulator:
             f"{timeout_arg}s",
         ]
 
-    def _invoke_structured(self, prompt: str, schema: dict[str, Any]) -> dict[str, Any]:
+    def _invoke_structured(
+        self,
+        prompt: str,
+        schema: dict[str, Any],
+        validator: Any | None = None,
+    ) -> Any:
         # Resolve executable via AntigravityProvider helper
         helper = AntigravityProvider(
             model_id=self.model_id,
@@ -1194,7 +1199,7 @@ class AntigravityReplaySimulator:
                     )
 
                 with tempfile.TemporaryDirectory(prefix="interview-replay-agy-") as workdir:
-                    runner = self._runner or helper._run_bounded_subprocess
+                    runner = self._runner or helper._bounded_runner
                     proc = runner(
                         command,
                         input=stdin_ndjson,
@@ -1230,7 +1235,17 @@ class AntigravityReplaySimulator:
                     retryable=False,
                 )
             try:
-                return self._extract_json_result(proc.returncode, proc.stdout, proc.stderr)
+                raw_dict = self._extract_json_result(proc.returncode, proc.stdout, proc.stderr)
+                if validator is not None:
+                    try:
+                        return validator(raw_dict)
+                    except (ValidationError, ValueError) as err:
+                        raise AntigravityProviderError(
+                            ProviderErrorKind.INVALID_OUTPUT,
+                            f"Invalid AI Decision Replay payload: {err}",
+                            retryable=True,
+                        ) from None
+                return raw_dict
             except AntigravityProviderError as err:
                 if (
                     attempt >= self.limits.max_retries
@@ -1315,16 +1330,13 @@ class AntigravityReplaySimulator:
             f"{user_json}"
         )
         schema = GeneratedTreeResponseDTO.model_json_schema()
-        raw_dict = self._invoke_structured(prompt, schema)
-        try:
+
+        def _validate_tree(raw_dict: dict[str, Any]) -> tuple[GeneratedTreeResponseDTO, str, tuple[ReplayTreeNode, ...]]:
             dto = GeneratedTreeResponseDTO.model_validate(raw_dict)
             root_id, nodes = validate_and_anchor_tree(dto, answer_text=answer_text)
-        except (ValidationError, ValueError) as err:
-            raise ProviderFailureError(
-                ProviderErrorKind.INVALID_OUTPUT,
-                f"Invalid AI Decision Replay tree: {err}",
-                retryable=True,
-            ) from None
+            return dto, root_id, nodes
+
+        dto, root_id, nodes = self._invoke_structured(prompt, schema, validator=_validate_tree)
         return ReplayTreeGenerationResult(
             title=dto.title,
             summary=dto.summary,
@@ -1360,15 +1372,9 @@ class AntigravityReplaySimulator:
             f"{user_json}"
         )
         schema = GeneratedCustomBranchResponseDTO.model_json_schema()
-        raw_dict = self._invoke_structured(prompt, schema)
-        try:
-            dto = GeneratedCustomBranchResponseDTO.model_validate(raw_dict)
-        except (ValidationError, ValueError) as err:
-            raise ProviderFailureError(
-                ProviderErrorKind.INVALID_OUTPUT,
-                f"Invalid AI custom replay branch: {err}",
-                retryable=True,
-            ) from None
+        dto: GeneratedCustomBranchResponseDTO = self._invoke_structured(
+            prompt, schema, validator=GeneratedCustomBranchResponseDTO.model_validate
+        )
         now = datetime.now(UTC)
         node = ReplayTreeNode(
             id=new_node_id,

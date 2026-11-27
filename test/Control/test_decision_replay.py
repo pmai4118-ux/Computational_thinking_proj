@@ -318,3 +318,108 @@ def test_standalone_replay_and_html_studio_page_render_cleanly(tmp_path: Path) -
         assert "data-replay-studio" in page.text
         assert "/static/js/replay.js?v=" in page.text
         assert "replay-initial-data" in page.text
+
+
+def test_antigravity_replay_simulator_default_runner_and_structured_retry(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import json
+    import subprocess
+    from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
+    from source.service.question_bank_service import QuestionBankService
+    from source.service.providers.antigravity_provider import AntigravityProvider
+    from source.service.providers.replay_provider import AntigravityReplaySimulator
+
+    store = SQLiteRepositoryStore(tmp_path / "agy-replay.sqlite3")
+    QuestionBankService().import_seed(store)
+    case_q = next(
+        q for q in store.list_approved_questions(role="backend_developer", level="intern_fresher", language="vi")
+        if q.category == "technical_case"
+    )
+
+    # Verify AntigravityProvider exposes _bounded_runner (regression check for AttributeError)
+    assert hasattr(AntigravityProvider, "_bounded_runner")
+
+    valid_tree = {
+        "title": "Live Replay Test",
+        "summary": "Live summary",
+        "root_node_id": "root",
+        "nodes": [
+            {
+                "id": "root",
+                "parent_id": None,
+                "branch_label": "Xuất phát",
+                "depth": 0,
+                "origin": "answer_start",
+                "answer_alignment": "matched_from_answer",
+                "answer_quote": "khóa dòng trong transaction",
+                "title": "Root node",
+                "situation": "Tình huống gốc",
+                "consequence_summary": "Tóm tắt",
+                "system_impact": "Tác động",
+                "tradeoff_note": "Đánh đổi",
+                "assumptions_used": ["PostgreSQL Read Committed"],
+                "state_delta": "stock = 1",
+                "trace_steps": [{"actor": "Req 1", "event": "Đọc stock = 1", "state_after": "stock = 1"}],
+                "is_terminal": False,
+                "invariants": [],
+                "comparison_note": None,
+                "options": [
+                    {
+                        "option_id": "o1",
+                        "label": "Thử UPDATE nguyên tử",
+                        "action_summary": "Mô tả",
+                        "target_node_id": "leaf1",
+                    }
+                ],
+            },
+            {
+                "id": "leaf1",
+                "parent_id": "root",
+                "branch_label": "UPDATE nguyên tử",
+                "depth": 1,
+                "origin": "prebuilt_branch",
+                "answer_alignment": "what_if_branch",
+                "answer_quote": None,
+                "title": "Kết cục an toàn",
+                "situation": "Kết thúc nhánh",
+                "consequence_summary": "Giữ bất biến",
+                "system_impact": "Không âm kho",
+                "tradeoff_note": "Cần kiểm tra rowcount",
+                "assumptions_used": ["PostgreSQL Read Committed"],
+                "state_delta": "stock: 1 -> 0",
+                "trace_steps": [{"actor": "DB", "event": "Commit", "state_after": "stock = 0"}],
+                "is_terminal": True,
+                "invariants": [{"name": "stock >= 0", "status": "preserved", "detail": "An toàn"}],
+                "comparison_note": "Bảo toàn bất biến.",
+                "options": [],
+            },
+        ],
+    }
+
+    calls = {"count": 0}
+
+    def fake_bounded_runner(self, command, *, input, timeout, cwd, env, creationflags, encoding, **options):
+        del self, command, input, timeout, cwd, env, creationflags, encoding, options
+        calls["count"] += 1
+        if calls["count"] == 1:
+            # First attempt returns broken topology -> should trigger automatic retry!
+            bad = dict(valid_tree, root_node_id="missing_root")
+            payload = {"event": "result", "result": {"status": "SUCCESS", "structured_output": bad}}
+        else:
+            payload = {"event": "result", "result": {"status": "SUCCESS", "structured_output": valid_tree}}
+        return subprocess.CompletedProcess(["agy"], 0, json.dumps(payload, ensure_ascii=False) + "\n", "")
+
+    monkeypatch.setattr(AntigravityProvider, "executable_path", lambda self: "C:/fake/agy.exe")
+    monkeypatch.setattr(AntigravityProvider, "_bounded_runner", fake_bounded_runner)
+
+    sim = AntigravityReplaySimulator()
+    result = sim.generate_initial_tree(
+        question=case_q,
+        answer_text="Em dùng khóa dòng trong transaction để tránh âm kho.",
+    )
+    assert calls["count"] == 2
+    assert result.root_node_id == "root"
+    assert result.nodes[0].answer_alignment == "matched_from_answer"
+    assert result.nodes[0].answer_quote == "khóa dòng trong transaction"
+    assert result.nodes[0].answer_quote_start == 8
