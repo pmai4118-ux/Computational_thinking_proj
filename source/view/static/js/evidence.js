@@ -200,6 +200,103 @@
     if (firstSelection) {
       selectCriterion(firstSelection.button, firstSelection.check, { scrollToHighlight: false });
     }
+    if (data.status === "completed") {
+      loadAdaptiveProbePlan();
+    }
+  }
+
+  async function loadAdaptiveProbePlan() {
+    const probeSection = document.querySelector("#adaptive-probe-section");
+    if (!probeSection || typeof api.getFollowUpPlan !== "function") return;
+    const probePolicy = document.querySelector("#probe-policy");
+    const probeReason = document.querySelector("#probe-reason");
+    const probePrompt = document.querySelector("#probe-prompt");
+    const probeForm = document.querySelector("#probe-form");
+    const probeResponse = document.querySelector("#probe-response");
+    const probeSubmit = document.querySelector("#probe-submit");
+    const probeError = document.querySelector("#probe-error");
+    const probeResults = document.querySelector("#probe-results");
+    const probeVariantNote = document.querySelector("#probe-variant-note");
+
+    const renderPlan = (plan) => {
+      probeSection.hidden = false;
+      if (probePolicy) {
+        probePolicy.textContent = `${plan.policy_summary} (Câu này: ${plan.answer_probes_used}/${plan.answer_probe_limit} · Phiên này: ${plan.session_probes_used}/${plan.session_probe_limit}).`;
+      }
+      if (probeVariantNote) probeVariantNote.textContent = plan.alternate_variant_note || "";
+      if (probeError) probeError.hidden = true;
+      if (probeResults) {
+        probeResults.replaceChildren();
+        for (const item of plan.existing_probes || []) {
+          const box = element("article", "card card--subtle stack");
+          box.append(element("p", "", `Tiêu chí đào sâu: ${item.criterion_label} (${item.outcome_status || item.status})`));
+          if (item.response_text) box.append(element("p", "text-secondary", `Phần làm rõ đã gửi: ${item.response_text}`));
+          if (item.outcome_score !== null && item.outcome_score !== undefined) {
+            box.append(element("p", "", `Điểm sau làm rõ: ${item.outcome_score} / ${item.outcome_max_score}`));
+          }
+          if (item.outcome_explanation) box.append(element("p", "", item.outcome_explanation));
+          probeResults.append(box);
+        }
+      }
+      if (plan.can_probe && plan.probe_prompt) {
+        if (probeReason) probeReason.textContent = plan.choice_reason || "";
+        if (probePrompt) probePrompt.textContent = plan.probe_prompt;
+        if (probeForm) {
+          probeForm.hidden = false;
+          probeForm.dataset.criterionId = plan.recommended_criterion_id || "";
+        }
+      } else {
+        const stopLabels = {
+          all_criteria_met: "Tất cả tiêu chí của câu trả lời này đã đạt — dừng hỏi đào sâu.",
+          answer_probe_limit_reached: "Đã hoàn tất 1/1 lượt hỏi đào sâu cho câu trả lời này (đạt điều kiện dừng).",
+          session_probe_limit_reached: "Đã đạt giới hạn 2/2 lượt hỏi đào sâu trong phiên này (đạt điều kiện dừng).",
+          session_expired: "Phiên đã hết hạn nên không mở thêm lượt hỏi đào sâu.",
+        };
+        if (probeReason) probeReason.textContent = stopLabels[plan.stop_reason] || "";
+        if (probePrompt) probePrompt.textContent = "";
+        if (probeForm) probeForm.hidden = true;
+      }
+    };
+
+    try {
+      const plan = await api.getFollowUpPlan(sessionId, answerId, answerRevision);
+      renderPlan(plan);
+      if (probeForm && !probeForm.dataset.bound) {
+        probeForm.dataset.bound = "1";
+        probeForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const text = probeResponse ? probeResponse.value.trim() : "";
+          if (!text) {
+            if (probeError) {
+              probeError.textContent = "Vui lòng nhập nội dung làm rõ trước khi gửi.";
+              probeError.hidden = false;
+            }
+            return;
+          }
+          if (probeSubmit) probeSubmit.disabled = true;
+          if (probeError) probeError.hidden = true;
+          try {
+            await api.submitFollowUp(sessionId, answerId, {
+              answer_revision: answerRevision,
+              criterion_id: probeForm.dataset.criterionId || null,
+              response_text: text,
+            });
+            if (probeResponse) probeResponse.value = "";
+            const updatedPlan = await api.getFollowUpPlan(sessionId, answerId, answerRevision);
+            renderPlan(updatedPlan);
+          } catch (err) {
+            if (probeError) {
+              probeError.textContent = err.message || "Chưa gửi được câu trả lời đào sâu.";
+              probeError.hidden = false;
+            }
+          } finally {
+            if (probeSubmit) probeSubmit.disabled = false;
+          }
+        });
+      }
+    } catch (_error) {
+      probeSection.hidden = true;
+    }
   }
 
   async function retrySavedEvaluation() {

@@ -13,8 +13,7 @@ def test_demo_defaults_to_real_antigravity_without_api_key() -> None:
     assert settings.provider is ProviderMode.ANTIGRAVITY
     assert settings.demo_label is None
     assert settings.database_path == Path(".local/interview.sqlite3")
-    assert settings.gemini_api_key is None
-    assert settings.gemini_model is None
+    assert settings.antigravity_model == "gemini-4-hydrogen-medium"
 
 
 def test_fixture_mode_is_explicit_and_labels_sample_results() -> None:
@@ -24,40 +23,18 @@ def test_fixture_mode_is_explicit_and_labels_sample_results() -> None:
     assert settings.demo_label == "Dữ liệu minh họa"
 
 
-def test_live_mode_requires_a_key_and_a_model() -> None:
-    env = {"EVALUATION_PROVIDER": "gemini"}
-    with pytest.raises(ConfigurationError, match="GEMINI_API_KEY"):
-        load_settings(env)
-    with pytest.raises(ConfigurationError, match="GEMINI_MODEL") as error:
-        load_settings({**env, "GEMINI_API_KEY": "synthetic-key"})
-
-    assert "synthetic-key" not in str(error.value)
-
-
-def test_live_settings_mask_the_key_and_have_no_demo_label() -> None:
-    settings = load_settings({
-        "EVALUATION_PROVIDER": "gemini",
-        "GEMINI_API_KEY": "synthetic-key",
-        "GEMINI_MODEL": "synthetic-model",
-        "GEMINI_TIMEOUT_SECONDS": "2.5",
-    })
-
-    assert settings.provider is ProviderMode.GEMINI
-    assert settings.demo_label is None
-    assert settings.gemini_timeout_seconds == 2.5
-    assert "synthetic-key" not in repr(settings)
+def test_removed_gemini_api_mode_is_rejected() -> None:
+    with pytest.raises(ConfigurationError, match="EVALUATION_PROVIDER"):
+        load_settings({"EVALUATION_PROVIDER": "gemini"})
 
 
 @pytest.mark.parametrize(
     ("variable", "value"),
     [
         ("EVALUATION_PROVIDER", "unknown"),
+        ("EVALUATION_PROVIDER", "gemini"),
         ("DATABASE_PATH", ""),
         ("DATABASE_PATH", "."),
-        ("GEMINI_TIMEOUT_SECONDS", "not-a-number"),
-        ("GEMINI_TIMEOUT_SECONDS", "nan"),
-        ("GEMINI_TIMEOUT_SECONDS", "inf"),
-        ("GEMINI_TIMEOUT_SECONDS", "0"),
     ],
 )
 def test_invalid_settings_name_the_variable(variable: str, value: str) -> None:
@@ -126,7 +103,7 @@ def test_configured_local_databases_and_sidecars_are_git_ignored(
     assert set(result.stdout.splitlines()) == set(expected)
 
 
-def test_antigravity_settings_default_to_gemini_38_flash_without_api_key() -> None:
+def test_antigravity_settings_default_to_gemini_4_hydrogen_medium_without_api_key() -> None:
     settings = load_settings(
         {
             "EVALUATION_PROVIDER": "antigravity",
@@ -138,8 +115,7 @@ def test_antigravity_settings_default_to_gemini_38_flash_without_api_key() -> No
 
     assert settings.provider is ProviderMode.ANTIGRAVITY
     assert settings.demo_label is None
-    assert settings.gemini_api_key is None
-    assert settings.antigravity_model == "gemini-3.8-flash-medium"
+    assert settings.antigravity_model == "gemini-4-hydrogen-medium"
     assert settings.antigravity_timeout_seconds == 120.0
     assert settings.antigravity_executable == "agy"
 
@@ -147,7 +123,7 @@ def test_antigravity_settings_default_to_gemini_38_flash_without_api_key() -> No
 @pytest.mark.parametrize(
     ("variable", "value"),
     [
-        ("ANTIGRAVITY_MODEL", "models/gemini-3.8-flash-medium"),
+        ("ANTIGRAVITY_MODEL", "models/gemini-4-hydrogen-medium"),
         ("ANTIGRAVITY_TIMEOUT_SECONDS", "true"),
         ("ANTIGRAVITY_TIMEOUT_SECONDS", "0"),
         ("ANTIGRAVITY_TIMEOUT_SECONDS", "301"),

@@ -25,7 +25,7 @@ uv run --locked python -m source.service.question_bank_service --database .local
 
 `uv sync --locked` creates `.venv`, installs the exact dependency versions locked in [uv.lock](uv.lock) (FastAPI, Pydantic, Jinja2, Uvicorn, pytest, httpx), and installs the local `source` package in editable mode.
 
-> **Verified locally on Windows x64 (CPython 3.11):** locked install and `uv pip check` at the earlier Demo handoff; after merging `origin/NewDemo` into `codex/mvp-flow`, the seed import validator (`blocked: false`, 4 skills, 9 sources, 8 rubrics, 8 questions, 5 exercises), offline pytest suite (**268 passed, 3 skipped**), and four Node UI suites (**17 passed, 0 failed**) passed. The three opt-in live tests (`DEMO_LIVE_TEST=1`, `E09_LIVE_TEST=1`, `RUN_GEMINI_LIVE_TEST=1`) remain skipped until enabled against an authenticated provider. Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
+> **Verified locally on Windows x64 (CPython 3.11):** locked install and `uv pip check` at the earlier Demo handoff; on `codex/mvp-flow` (Antigravity `gemini-4-hydrogen-medium` + `fixture`, without Gemini REST API mode, with `/profile`, `/jd`, bounded adaptive follow-up probing, and `/replays`), the seed import validator (`blocked: false`, 4 skills, 9 sources, 8 rubrics, 8 questions, 5 exercises), offline pytest suite (**258 passed, 2 skipped**), and four Node UI suites (**17 passed, 0 failed**) passed. The two opt-in live Antigravity tests (`DEMO_LIVE_TEST=1`, `E09_LIVE_TEST=1`) remain skipped until enabled against an authenticated `agy` session. Clean-machine verification by a separate teammate is tracked in [demo script](docs/demo_script.md#6-clean-machine-verification-checklist-q07-step-3).
 
 The normal application defaults to live `antigravity`; only the offline pytest suite skips two Antigravity calls and one optional Gemini API-key call until explicitly enabled. This keeps the repeatable code tests usable without an authenticated AI account or network. It does not establish grading accuracy; see the [held-out evaluation report](docs/evaluation_report.md) for current evidence and its limits.
 
@@ -59,19 +59,16 @@ See [data/seed/README.md](data/seed/README.md) for full C08 validation and block
 
 | Variable | Default | Valid Range / Purpose |
 | --- | --- | --- |
-| `EVALUATION_PROVIDER` | `antigravity` | `antigravity` (primary live AI via `agy`), `gemini` (fallback live REST API), or `fixture` (explicit offline deterministic demo/testing, labeled **Dữ liệu minh họa**). |
+| `EVALUATION_PROVIDER` | `antigravity` | `antigravity` (live AI via `agy`) or `fixture` (explicit offline deterministic demo/testing, labeled **Dữ liệu minh họa**). |
 | `DATABASE_PATH` | `.local/interview.sqlite3` | SQLite file path. Inside the checkout, must be under `.local/` or end with `.sqlite3`. Relative paths resolve from the working directory (launch from repo root). |
-| `ANTIGRAVITY_MODEL` | `gemini-3.8-flash-medium` | Model slug listed by `agy models` (without a `models/` prefix). |
+| `ANTIGRAVITY_MODEL` | `gemini-4-hydrogen-medium` | Model slug listed by `agy models` (without a `models/` prefix). |
 | `ANTIGRAVITY_TIMEOUT_SECONDS` | `120` | Finite number between `1` and `300` seconds per Antigravity evaluation attempt. |
 | `ANTIGRAVITY_EXECUTABLE` | `agy` | CLI binary name or full path to `agy.exe` on Windows (`.cmd`/`.bat` shims are rejected). |
-| `GEMINI_API_KEY` | *(unset)* | Required only when `EVALUATION_PROVIDER=gemini`. Inject on the server only; never in client JS, docs, or Git. |
-| `GEMINI_MODEL` | *(unset)* | Required only when `EVALUATION_PROVIDER=gemini` (e.g., an available `generateContent` model for your account; see [docs/ai_decision.md](docs/ai_decision.md)). |
-| `GEMINI_TIMEOUT_SECONDS` | `30` | Finite number between `1` and `120` seconds in `gemini` mode. |
 | `GEMINI_MAX_RETRIES` | `1` (`0` in `run_demo.ps1`) | `0` or `1` automatic transient retry. `run_demo.ps1` sets `0` so the student explicitly decides whether to retry after a timeout. |
 | `GEMINI_REQUEST_BUDGET` | `50` | Cumulative request cap persisted in SQLite (`gemini_budget` table) across restarts; `0` blocks all live calls. |
 | `GEMINI_INPUT_BYTES` | `250000` | Maximum UTF-8 request payload size in bytes. |
 | `GEMINI_RESPONSE_BYTES` | `1000000` | Maximum response payload size in bytes. |
-| `GEMINI_OUTPUT_TOKENS` | `4096` | Maximum output token limit for Gemini REST requests. |
+| `GEMINI_OUTPUT_TOKENS` | `4096` | Reserved shared output limit setting. |
 
 ---
 
@@ -96,21 +93,7 @@ The application **never** silently falls back to `fixture` when live AI fails. O
    ```
 4. Open `http://127.0.0.1:8000/` in your browser and verify `http://127.0.0.1:8000/health` returns `{"status":"ok","provider":"antigravity","demo_mode_label":null}`.
 
-### Mode B — Alternative Live Mode (`gemini` REST API Key)
-
-Use this mode only on a server where you supply your own Google AI Studio key (never commit the key):
-
-```powershell
-$env:EVALUATION_PROVIDER = "gemini"
-$env:GEMINI_MODEL = "gemini-3.5-flash"
-$env:GEMINI_API_KEY = "<paste-your-key-in-this-shell-only>"
-$env:DATABASE_PATH = ".local/interview-gemini.sqlite3"
-uv run --locked uvicorn source.main:create_app --factory --host 127.0.0.1 --port 8000
-```
-
-Check [docs/ai_decision.md](docs/ai_decision.md) for verified model availability and quota notes.
-
-### Mode C — Offline Deterministic Mode (`fixture`, Development / Testing Only)
+### Mode B — Offline Deterministic Mode (`fixture`, Development / Testing Only)
 
 Use this mode when running offline without AI credentials. Every page displays the **Dữ liệu minh họa** badge. **Do not present fixture scores as evidence of live AI grading quality.**
 
@@ -164,7 +147,7 @@ Remove-Item Env:E09_LIVE_TEST
 | `PSSecurityException` (`running scripts is disabled`) on `.\run_demo.ps1` | Run `powershell -NoProfile -ExecutionPolicy Bypass -File .\run_demo.ps1`. |
 | `Python environment missing. Run uv sync --locked first.` | Run `uv sync --locked` from the repository root to create `.venv`. |
 | `Antigravity CLI (agy) is missing` or model unavailable | Install/sign in via `agy`, run `agy models`, or set `$env:ANTIGRAVITY_EXECUTABLE = "$env:LOCALAPPDATA\agy\bin\agy.exe"`. |
-| `ConfigurationError: Set GEMINI_API_KEY...` | You selected `EVALUATION_PROVIDER=gemini` without exporting `GEMINI_API_KEY` and `GEMINI_MODEL`. Export both or switch back to `antigravity` / `fixture`. |
+| `ConfigurationError: Set EVALUATION_PROVIDER...` | Only `antigravity` and `fixture` are supported (the Gemini REST API mode was removed). Set `EVALUATION_PROVIDER=antigravity` or `fixture`. |
 | `504 PROVIDER_TIMEOUT` during evaluation | Live Antigravity calls can take 45–80 seconds. Your answer is already saved (`total_score=null`); click **Thử đánh giá lại** or raise `ANTIGRAVITY_TIMEOUT_SECONDS` (up to `300`). |
 | Updated seed questions do not appear | Existing SQLite files keep prior immutable versions. Set `$env:DATABASE_PATH = ".local/interview-fresh.sqlite3"` and restart. |
 | Port `8000` already in use | Stop the other process or pass `--port 8001` to `uvicorn`. |

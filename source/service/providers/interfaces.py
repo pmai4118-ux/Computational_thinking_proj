@@ -1,6 +1,6 @@
 """Provider-agnostic interface for answer evidence interpretation (E01).
 
-Implementations (such as `FixtureProvider` and `GeminiProvider`) inspect a saved
+Implementations (such as `FixtureProvider` and `AntigravityProvider`) inspect a saved
 student answer against a `Question` and `Rubric` and return structured criterion
 observations and verbatim quotes. Numeric scores are never produced by providers.
 """
@@ -42,6 +42,15 @@ class ProviderFailureError(RuntimeError):
 
 
 @dataclass(frozen=True, slots=True)
+class QuoteSpan:
+    """Verified or candidate verbatim span inside the student's saved answer."""
+
+    quote: str
+    start_offset: int
+    end_offset: int
+
+
+@dataclass(frozen=True, slots=True)
 class CriterionObservation:
     """Provider observation for one criterion without any final numeric score."""
 
@@ -54,6 +63,7 @@ class CriterionObservation:
     observation: str | None = None
     unresolved_reason: str | None = None
     satisfied_expected_indexes: tuple[int, ...] | None = None
+    extra_quotes: tuple[QuoteSpan, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,4 +96,5 @@ __all__ = [
     "InterpretationBatch",
     "ProviderErrorKind",
     "ProviderFailureError",
+    "QuoteSpan",
 ]

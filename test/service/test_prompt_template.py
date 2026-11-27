@@ -8,14 +8,12 @@ from source.Model.ids import CriterionId, QuestionId, RubricId, SkillId, SourceI
 from source.Model.question import Criterion, CriterionLevel, Question, Rubric
 from source.service.prompts import PROMPT_FILE, PROMPT_VERSION, InterpretationPromptBuilder
 from source.service.providers.antigravity_provider import AntigravityProvider
-from source.service.providers.gemini_provider import GeminiProvider
 from source.service.providers.interfaces import EvidenceInterpreter
 
 
-def test_e03_prompt_isolates_untrusted_student_answer_and_gemini_conforms_to_protocol() -> None:
+def test_e03_prompt_isolates_untrusted_student_answer_and_antigravity_conforms_to_protocol() -> None:
     assert PROMPT_FILE.exists()
     assert isinstance(AntigravityProvider(), EvidenceInterpreter)
-    assert isinstance(GeminiProvider(api_key='synthetic-key', model_id='gemini-2.5-flash'), EvidenceInterpreter)
     rubric = Rubric(
         id=RubricId('rubric.e03'),
         version=1,

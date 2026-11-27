@@ -53,6 +53,7 @@
     {% if session.state == "in_progress" %}<a class="btn btn--primary" href="/sessions/{{ session.session_id }}">Tiếp tục phiên</a>{% endif %}
     <a class="btn btn--primary" href="/setup">Bắt đầu phiên mới</a>
     <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập</a>
+    <a class="btn btn--ghost" href="/profile">Xem hồ sơ năng lực</a>
   </div>
 </section>
 {% endblock %}

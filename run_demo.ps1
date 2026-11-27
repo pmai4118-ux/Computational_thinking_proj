@@ -40,7 +40,7 @@ function Resolve-AntigravityExecutable {
 
 $agyExe = Resolve-AntigravityExecutable
 
-$selectedModel = if ($env:ANTIGRAVITY_MODEL) { $env:ANTIGRAVITY_MODEL } else { 'gemini-3.8-flash-medium' }
+$selectedModel = if ($env:ANTIGRAVITY_MODEL) { $env:ANTIGRAVITY_MODEL } else { 'gemini-4-hydrogen-medium' }
 $ErrorActionPreference = 'Continue'
 $modelList = & $agyExe models 2>&1
 $modelCheckExitCode = $LASTEXITCODE

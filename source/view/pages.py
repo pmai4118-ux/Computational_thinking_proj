@@ -13,12 +13,22 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import ValidationError
 
+from source.Control.competency_profile_controller import CompetencyProfileController
+from source.Control.decision_replay_controller import (
+    ChooseReplayOptionRequest,
+    DecisionReplayController,
+)
 from source.Control.interview_controller import (
     ApiControllerError,
     InterviewController,
     OWNER_COOKIE_NAME,
     apply_owner_cookie,
     ensure_owner_cookie_token,
+)
+from source.Control.job_analysis_controller import (
+    CreateJobAnalysisRequest,
+    JobAnalysisController,
+    JobAnalysisDetailDTO,
 )
 from source.Control.schemas import CreateSessionRequest, NextQuestionRequest, SaveDraftRequest, SubmitAnswerRequest
 from source.Control.saved_evaluation_controller import SavedEvaluationController
@@ -136,9 +146,37 @@ async def _read_setup_body_with_limit(request: Request) -> bytes | None:
     return await _read_body_with_limit(request, max_bytes=MAX_SETUP_FORM_BODY_BYTES)
 
 
+def _build_jd_highlight_segments(detail: JobAnalysisDetailDTO) -> list[dict[str, object]]:
+    """Slice raw JD text into non-overlapping highlighted and plain segments for safe rendering."""
+    raw = detail.raw_text
+    spans: list[tuple[int, int, str]] = []
+    for gap in detail.skill_gaps:
+        for ev in gap.evidence:
+            spans.append((ev.start_offset, ev.end_offset, gap.skill_label))
+    for term in detail.unmatched_terms:
+        spans.append((term.start_offset, term.end_offset, f"{term.term_label} (ngoài MVP)"))
+    spans.sort(key=lambda item: (item[0], -(item[1] - item[0])))
+
+    segments: list[dict[str, object]] = []
+    cursor = 0
+    for start, end, label in spans:
+        if start < cursor or end > len(raw) or start >= end:
+            continue
+        if start > cursor:
+            segments.append({"text": raw[cursor:start], "highlighted": False, "label": ""})
+        segments.append({"text": raw[start:end], "highlighted": True, "label": label})
+        cursor = end
+    if cursor < len(raw):
+        segments.append({"text": raw[cursor:], "highlighted": False, "label": ""})
+    return segments
+
+
 def build_pages_router(
     controller: InterviewController,
     evaluation_controller: SavedEvaluationController | None = None,
+    profile_controller: CompetencyProfileController | None = None,
+    job_analysis_controller: JobAnalysisController | None = None,
+    decision_replay_controller: DecisionReplayController | None = None,
 ) -> APIRouter:
     """Mount practice pages and retained server-rendered evaluation routes."""
     router = APIRouter(tags=["pages"])
@@ -150,6 +188,30 @@ def build_pages_router(
     answer_review_template = env.get_template("answer_review.html")
     summary_template = env.get_template("summary.html")
     exercise_template = env.get_template("exercise.html")
+    profile_template = env.get_template("profile.html")
+    jd_template = env.get_template("jd_analysis.html")
+    replay_template = env.get_template("decision_replay.html")
+
+    criterion_type_labels = {
+        "behavior_explanation": "Giải thích hành vi mã",
+        "contract_preservation": "Giữ hợp đồng & hành vi bên gọi",
+        "test_design": "Thiết kế ca kiểm thử",
+        "failure_analysis": "Phân tích lỗi & tranh chấp",
+        "invariant_preservation": "Bảo vệ bất biến dữ liệu",
+        "correctness_argument": "Lập luận tính đúng đắn",
+        "complexity_analysis": "Phân tích độ phức tạp",
+    }
+    trend_labels = {
+        "improving": "Đang tiến bộ",
+        "stable": "Ổn định",
+        "declining": "Cần lưu ý",
+        "insufficient_history": "Mới quan sát 1 lần",
+    }
+    confidence_labels = {
+        "limited": "Bằng chứng còn ít",
+        "mixed": "Kết quả qua các phiên không đồng đều",
+        "consistent": "Quan sát lặp lại ổn định",
+    }
 
     @router.get("/", response_class=HTMLResponse)
     def welcome_page(request: Request) -> HTMLResponse:
@@ -162,6 +224,47 @@ def build_pages_router(
             demo_mode_label=controller.demo_mode_label,
             sessions=sessions,
             session_labels=session_labels,
+        )
+        return HTMLResponse(content=html)
+
+    @router.get("/profile", response_class=HTMLResponse)
+    def profile_page(request: Request) -> HTMLResponse:
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        if profile_controller is None:
+            from source.Control.schemas import CompetencyProfileResponseDTO
+
+            profile_dto = CompetencyProfileResponseDTO(
+                message="Hồ sơ năng lực chưa được cấu hình."
+            )
+            labels: dict[str, str] = {}
+        else:
+            profile_dto = profile_controller.read(owner_token)
+            labels = profile_controller.skill_labels()
+
+        grouped: dict[str, list[object]] = {}
+        for entry in profile_dto.entries:
+            grouped.setdefault(str(entry.skill_id), []).append(entry)
+        grouped_entries = [
+            {
+                "skill_id": skill_id,
+                "skill_label": labels.get(skill_id, skill_id),
+                "entries": entries,
+            }
+            for skill_id, entries in grouped.items()
+        ]
+        counts = {
+            "strength": sum(1 for e in profile_dto.entries if e.state.value == "observed_strength"),
+            "practice": sum(1 for e in profile_dto.entries if e.state.value == "needs_practice"),
+            "unresolved": sum(1 for e in profile_dto.entries if e.state.value == "unresolved"),
+        }
+        html = profile_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            profile=profile_dto,
+            grouped_entries=grouped_entries,
+            counts=counts,
+            criterion_type_labels=criterion_type_labels,
+            trend_labels=trend_labels,
+            confidence_labels=confidence_labels,
         )
         return HTMLResponse(content=html)
 
@@ -513,6 +616,235 @@ def build_pages_router(
             skill_id=request.query_params.get("skill_id"),
         )
         return HTMLResponse(content=html)
+
+    @router.get("/jd", response_class=HTMLResponse)
+    def jd_index_page(request: Request) -> HTMLResponse:
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        history = (
+            job_analysis_controller.list_for_owner(owner_token=owner_token).analyses
+            if job_analysis_controller is not None
+            else ()
+        )
+        html = jd_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            history=history,
+            detail=None,
+            highlighted_segments=(),
+            form_values={},
+        )
+        return HTMLResponse(content=html)
+
+    @router.post("/jd", response_model=None)
+    async def submit_jd_page(request: Request) -> Response:
+        if job_analysis_controller is None:
+            return HTMLResponse("Tính năng phân tích JD chưa được cấu hình.", status_code=503)
+        body = await _read_body_with_limit(request, max_bytes=MAX_ANSWER_FORM_BODY_BYTES)
+        if body is None:
+            html = jd_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                history=job_analysis_controller.list_for_owner(
+                    owner_token=request.cookies.get(OWNER_COOKIE_NAME)
+                ).analyses,
+                detail=None,
+                highlighted_segments=(),
+                form_values={},
+                error_message="Nội dung JD gửi lên vượt quá giới hạn dung lượng.",
+                recovery_action="Hãy rút gọn văn bản JD xuống dưới 30.000 ký tự và thử lại.",
+            )
+            return HTMLResponse(content=html, status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+        parsed = parse_qs(
+            body.decode("utf-8", errors="replace"),
+            keep_blank_values=True,
+            max_num_fields=12,
+        )
+        form_values = {
+            "raw_text": _first_form_value(parsed, "raw_text", ""),
+            "title": _first_form_value(parsed, "title", ""),
+            "company": _first_form_value(parsed, "company", ""),
+            "source_url": _first_form_value(parsed, "source_url", ""),
+            "published_at": _first_form_value(parsed, "published_at", ""),
+        }
+        token, created_new = ensure_owner_cookie_token(request.cookies.get(OWNER_COOKIE_NAME))
+        try:
+            payload = CreateJobAnalysisRequest(
+                raw_text=form_values["raw_text"],
+                title=form_values["title"] or None,
+                company=form_values["company"] or None,
+                source_url=form_values["source_url"] or None,
+                published_at=form_values["published_at"] or None,
+            )
+            created = await run_in_threadpool(
+                job_analysis_controller.create, payload, owner_token=token
+            )
+        except (ValidationError, ApiControllerError) as error:
+            msg = (
+                error.payload.message
+                if isinstance(error, ApiControllerError)
+                else "Vui lòng nhập nội dung mô tả công việc hợp lệ trước khi phân tích."
+            )
+            html = jd_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                history=job_analysis_controller.list_for_owner(owner_token=token).analyses,
+                detail=None,
+                highlighted_segments=(),
+                form_values=form_values,
+                error_message=msg,
+                recovery_action="Kiểm tra lại nội dung JD hoặc đường dẫn nguồn rồi gửi lại.",
+            )
+            resp = HTMLResponse(content=html, status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+            if created_new:
+                apply_owner_cookie(resp, token)
+            return resp
+        redirect = RedirectResponse(
+            url=f"/jd/{created.analysis_id}", status_code=status.HTTP_303_SEE_OTHER
+        )
+        if created_new:
+            apply_owner_cookie(redirect, token)
+        return redirect
+
+    @router.get("/jd/{analysis_id}", response_class=HTMLResponse)
+    def jd_detail_page(analysis_id: str, request: Request) -> HTMLResponse:
+        if job_analysis_controller is None:
+            return HTMLResponse("Tính năng phân tích JD chưa được cấu hình.", status_code=503)
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        history = job_analysis_controller.list_for_owner(owner_token=owner_token).analyses
+        try:
+            detail = job_analysis_controller.get(analysis_id, owner_token=owner_token)
+        except ApiControllerError as error:
+            html = jd_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                history=history,
+                detail=None,
+                highlighted_segments=(),
+                form_values={},
+                error_message=error.payload.message,
+                recovery_action=error.payload.recovery_action,
+            )
+            return HTMLResponse(content=html, status_code=error.status_code)
+        html = jd_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            history=history,
+            detail=detail,
+            highlighted_segments=_build_jd_highlight_segments(detail),
+            form_values={},
+        )
+        return HTMLResponse(content=html)
+
+    @router.get("/replays", response_class=HTMLResponse)
+    def replays_index_page(request: Request) -> HTMLResponse:
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        scenarios = (
+            decision_replay_controller.list_scenarios().scenarios
+            if decision_replay_controller is not None
+            else ()
+        )
+        recent_runs = (
+            decision_replay_controller.list_runs_for_owner(owner_token=owner_token)
+            if decision_replay_controller is not None
+            else ()
+        )
+        html = replay_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            scenarios=scenarios,
+            recent_runs=recent_runs,
+            active_run=None,
+        )
+        return HTMLResponse(content=html)
+
+    @router.post("/replays/{scenario_id}/start", response_model=None)
+    async def start_replay_page(scenario_id: str, request: Request) -> Response:
+        if decision_replay_controller is None:
+            return HTMLResponse("Decision Replay chưa được cấu hình.", status_code=503)
+        token, created_new = ensure_owner_cookie_token(request.cookies.get(OWNER_COOKIE_NAME))
+        try:
+            run = await run_in_threadpool(
+                decision_replay_controller.start_run, scenario_id, owner_token=token
+            )
+        except ApiControllerError as error:
+            html = replay_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                scenarios=decision_replay_controller.list_scenarios().scenarios,
+                recent_runs=decision_replay_controller.list_runs_for_owner(owner_token=token),
+                active_run=None,
+                error_message=error.payload.message,
+                recovery_action=error.payload.recovery_action,
+            )
+            return HTMLResponse(content=html, status_code=error.status_code)
+        redirect = RedirectResponse(
+            url=f"/replays/runs/{run.run_id}", status_code=status.HTTP_303_SEE_OTHER
+        )
+        if created_new:
+            apply_owner_cookie(redirect, token)
+        return redirect
+
+    @router.get("/replays/runs/{run_id}", response_class=HTMLResponse)
+    def replay_run_page(run_id: str, request: Request) -> HTMLResponse:
+        if decision_replay_controller is None:
+            return HTMLResponse("Decision Replay chưa được cấu hình.", status_code=503)
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        try:
+            active_run = decision_replay_controller.get_run(run_id, owner_token=owner_token)
+        except ApiControllerError as error:
+            html = replay_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                scenarios=decision_replay_controller.list_scenarios().scenarios,
+                recent_runs=decision_replay_controller.list_runs_for_owner(owner_token=owner_token),
+                active_run=None,
+                error_message=error.payload.message,
+                recovery_action=error.payload.recovery_action,
+            )
+            return HTMLResponse(content=html, status_code=error.status_code)
+        html = replay_template.render(
+            demo_mode_label=controller.demo_mode_label,
+            scenarios=(),
+            recent_runs=(),
+            active_run=active_run,
+        )
+        return HTMLResponse(content=html)
+
+    @router.post("/replays/runs/{run_id}/choose", response_model=None)
+    async def choose_replay_option_page(run_id: str, request: Request) -> Response:
+        if decision_replay_controller is None:
+            return HTMLResponse("Decision Replay chưa được cấu hình.", status_code=503)
+        body = await _read_body_with_limit(request, max_bytes=MAX_SETUP_FORM_BODY_BYTES)
+        if body is None:
+            return HTMLResponse("Yêu cầu quá lớn.", status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+        parsed = parse_qs(
+            body.decode("utf-8", errors="replace"),
+            keep_blank_values=True,
+            max_num_fields=8,
+        )
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        try:
+            payload = ChooseReplayOptionRequest(
+                checkpoint_id=_first_form_value(parsed, "checkpoint_id", ""),
+                option_id=_first_form_value(parsed, "option_id", ""),
+            )
+            await run_in_threadpool(
+                decision_replay_controller.choose, run_id, payload, owner_token=owner_token
+            )
+        except (ValidationError, ApiControllerError) as error:
+            msg = (
+                error.payload.message
+                if isinstance(error, ApiControllerError)
+                else "Lựa chọn gửi lên không hợp lệ."
+            )
+            code = error.status_code if isinstance(error, ApiControllerError) else 422
+            try:
+                active_run = decision_replay_controller.get_run(run_id, owner_token=owner_token)
+            except ApiControllerError:
+                active_run = None
+            html = replay_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                scenarios=decision_replay_controller.list_scenarios().scenarios if active_run is None else (),
+                recent_runs=(),
+                active_run=active_run,
+                error_message=msg,
+            )
+            return HTMLResponse(content=html, status_code=code)
+        return RedirectResponse(
+            url=f"/replays/runs/{run_id}", status_code=status.HTTP_303_SEE_OTHER
+        )
 
     return router
 

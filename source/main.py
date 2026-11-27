@@ -10,6 +10,18 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from source.config import Settings, load_settings
+from source.Control.adaptive_probe_controller import (
+    AdaptiveProbeController,
+    build_adaptive_probe_router,
+)
+from source.Control.decision_replay_controller import (
+    DecisionReplayController,
+    build_decision_replay_router,
+)
+from source.Control.job_analysis_controller import (
+    JobAnalysisController,
+    build_job_analysis_router,
+)
 from source.Control.saved_evaluation_controller import (
     SavedEvaluationController,
     build_saved_evaluation_router,
@@ -30,15 +42,26 @@ from source.Control.interview_controller import (
 from source.Model.repositories.interfaces import (
     CompetencyProfileRepository,
     ContentRepository,
+    DecisionReplayRepository,
     EvaluationRepository,
+    FollowUpProbeRepository,
+    JobPostingRepository,
     SessionRepository,
 )
 from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
 from source.Model.repositories.memory_profile_repository import MemoryCompetencyProfileRepository
+from source.Model.repositories.memory_feature_repositories import (
+    MemoryDecisionReplayRepository,
+    MemoryFollowUpProbeRepository,
+    MemoryJobPostingRepository,
+)
+from source.service.adaptive_probe_service import AdaptiveProbeService
 from source.service.competency_profile_service import CompetencyProfileService
+from source.service.decision_replay_service import DecisionReplayService
 from source.service.evaluation_service import EvaluationService
 from source.service.evaluation_queue import EvaluationQueue
 from source.service.interview_service import InterviewService
+from source.service.job_analysis_service import JobAnalysisService
 from source.service.recommendation_service import RecommendationService
 from source.service.session_report_service import SessionReportService
 from source.service.providers.factory import create_evidence_interpreter
@@ -71,6 +94,12 @@ class AppContainer:
     report_service: SessionReportService
     exercise_controller: ExerciseController
     session_summary_controller: SessionSummaryController
+    job_analysis_service: JobAnalysisService
+    job_analysis_controller: JobAnalysisController
+    adaptive_probe_service: AdaptiveProbeService
+    adaptive_probe_controller: AdaptiveProbeController
+    decision_replay_service: DecisionReplayService
+    decision_replay_controller: DecisionReplayController
 
 
 def create_app(
@@ -116,7 +145,7 @@ def create_app(
         content_repo=resolved_content_repo, session_repo=resolved_session_repo,
         evaluation_repo=resolved_eval_repo, profile_repo=resolved_profile_repo,
     )
-    profile_controller = CompetencyProfileController(profile_service)
+    profile_controller = CompetencyProfileController(profile_service, resolved_content_repo)
     interview_service = InterviewService(
         content_repo=resolved_content_repo,
         session_repo=resolved_session_repo,
@@ -162,6 +191,43 @@ def create_app(
         report_service=report_service,
     )
 
+    resolved_job_repo: JobPostingRepository = (
+        resolved_session_repo if isinstance(resolved_session_repo, JobPostingRepository)
+        else default_store if default_store is not None
+        else MemoryJobPostingRepository()
+    )
+    resolved_probe_repo: FollowUpProbeRepository = (
+        resolved_session_repo if isinstance(resolved_session_repo, FollowUpProbeRepository)
+        else default_store if default_store is not None
+        else MemoryFollowUpProbeRepository()
+    )
+    resolved_replay_repo: DecisionReplayRepository = (
+        resolved_session_repo if isinstance(resolved_session_repo, DecisionReplayRepository)
+        else default_store if default_store is not None
+        else MemoryDecisionReplayRepository()
+    )
+    job_analysis_service = JobAnalysisService(
+        content_repo=resolved_content_repo,
+        job_repo=resolved_job_repo,
+        profile_service=profile_service,
+    )
+    job_analysis_controller = JobAnalysisController(job_analysis_service)
+    adaptive_probe_service = AdaptiveProbeService(
+        interview_service=interview_service,
+        content_repo=resolved_content_repo,
+        session_repo=resolved_session_repo,
+        evaluation_repo=resolved_eval_repo,
+        probe_repo=resolved_probe_repo,
+        evaluation_service=evaluation_service,
+        interpreter=resolved_interpreter,
+    )
+    adaptive_probe_controller = AdaptiveProbeController(
+        interview_controller=interview_controller,
+        probe_service=adaptive_probe_service,
+    )
+    decision_replay_service = DecisionReplayService(replay_repo=resolved_replay_repo)
+    decision_replay_controller = DecisionReplayController(decision_replay_service)
+
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         try:
@@ -192,6 +258,12 @@ def create_app(
         report_service=report_service,
         exercise_controller=exercise_controller,
         session_summary_controller=session_summary_controller,
+        job_analysis_service=job_analysis_service,
+        job_analysis_controller=job_analysis_controller,
+        adaptive_probe_service=adaptive_probe_service,
+        adaptive_probe_controller=adaptive_probe_controller,
+        decision_replay_service=decision_replay_service,
+        decision_replay_controller=decision_replay_controller,
     )
 
     register_api_exception_handlers(app)
@@ -201,7 +273,18 @@ def create_app(
     app.include_router(build_exercise_router(exercise_controller))
     app.include_router(build_session_summary_router(session_summary_controller))
     app.include_router(build_competency_profile_router(profile_controller))
-    app.include_router(build_pages_router(interview_controller, saved_evaluation_controller))
+    app.include_router(build_job_analysis_router(job_analysis_controller))
+    app.include_router(build_adaptive_probe_router(adaptive_probe_controller))
+    app.include_router(build_decision_replay_router(decision_replay_controller))
+    app.include_router(
+        build_pages_router(
+            interview_controller,
+            saved_evaluation_controller,
+            profile_controller=profile_controller,
+            job_analysis_controller=job_analysis_controller,
+            decision_replay_controller=decision_replay_controller,
+        )
+    )
 
     @app.get("/health", tags=["system"])
     def health_check() -> dict[str, str | None]:

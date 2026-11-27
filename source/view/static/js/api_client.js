@@ -167,6 +167,16 @@
         body: payload,
       });
     },
+    getFollowUpPlan(sessionId, answerId, answerRevision) {
+      const query = answerRevision == null ? "" : `?revision=${encode(answerRevision)}`;
+      return request(`/sessions/${encode(sessionId)}/answers/${encode(answerId)}/follow-up${query}`);
+    },
+    submitFollowUp(sessionId, answerId, payload) {
+      return request(`/sessions/${encode(sessionId)}/answers/${encode(answerId)}/follow-up`, {
+        method: "POST",
+        body: payload,
+      });
+    },
   };
 
   window.InterviewApi = Object.freeze(api);

@@ -95,7 +95,7 @@ def test_f05_create_app_wires_antigravity_provider_when_configured(tmp_path: Pat
         provider=ProviderMode.ANTIGRAVITY,
         database_path=tmp_path / "unused_ag.sqlite3",
         gemini_timeout_seconds=30.0,
-        antigravity_model="gemini-3.8-flash-medium",
+        antigravity_model="gemini-4-hydrogen-medium",
         antigravity_timeout_seconds=120.0,
         antigravity_executable="agy",
     )
@@ -107,7 +107,7 @@ def test_f05_create_app_wires_antigravity_provider_when_configured(tmp_path: Pat
     )
     interpreter = app.state.container.interpreter
     assert isinstance(interpreter, AntigravityProvider)
-    assert interpreter.model_id == "gemini-3.8-flash-medium"
+    assert interpreter.model_id == "gemini-4-hydrogen-medium"
     with TestClient(app) as client:
         assert client.get("/health").json() == {
             "status": "ok",

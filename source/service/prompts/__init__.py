@@ -8,7 +8,7 @@ from pathlib import Path
 from source.Model.question import Question, Rubric
 
 PROMPT_FILE = Path(__file__).with_name("interpret_answer.txt")
-PROMPT_VERSION = "interpret_answer/v1"
+PROMPT_VERSION = "interpret_answer/v2"
 
 
 class InterpretationPromptBuilder:

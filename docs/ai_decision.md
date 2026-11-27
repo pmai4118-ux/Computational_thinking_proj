@@ -5,24 +5,24 @@
 | Mã công việc | P07 — Khảo sát Gemini, SDK, quota và ngân sách |
 | Người thực hiện | hwngMP (`member-1`) |
 | Phụ thuộc | [P03 (`data_contract.md`)](data_contract.md), [P05 (`rubric_guide.md`)](rubric_guide.md), [F06 (`source/config.py`)](../source/config.py) |
-| Đầu ra | `docs/ai_decision.md`, [`.env.example`](../.env.example), [`source/config.py`](../source/config.py), [`source/service/providers/antigravity_provider.py`](../source/service/providers/antigravity_provider.py), [`source/service/providers/gemini_provider.py`](../source/service/providers/gemini_provider.py) |
+| Đầu ra | `docs/ai_decision.md`, [`.env.example`](../.env.example), [`source/config.py`](../source/config.py), [`source/service/providers/antigravity_provider.py`](../source/service/providers/antigravity_provider.py) |
 
 ---
 
-## 1. So sánh 2 phương án kết nối AI (từ PoC `evaluateAnswer`) & Chốt phương án nhóm
+## 1. Lựa chọn kết nối AI & Chốt phương án nhóm
 
-Từ quá trình thử nghiệm trên nhánh tham khảo `evaluateAnswer`, nhóm đánh giá **hai phương thức chạy đánh giá AI thật** (cùng chế độ ngoại tuyến `fixture` để phát triển không cần tài khoản):
+Nhóm chốt **một phương thức chạy đánh giá AI thật duy nhất qua Antigravity CLI (`antigravity`)** cùng chế độ ngoại tuyến `fixture` (`Dữ liệu minh họa`) để phát triển/kiểm thử không cần tài khoản. Chế độ gọi Gemini Developer REST API bằng API key (`gemini`) đã được loại bỏ khỏi ứng dụng.
 
-| Tiêu chí | Phương án A — Nối trực tiếp qua **Antigravity CLI (`antigravity`)** *(Nhóm chọn dùng chính)* | Phương án B — Gọi Gemini REST API qua **API Key (`gemini`)** *(Phương án dự phòng)* |
-| --- | --- | --- |
-| **Biến cấu hình** | `EVALUATION_PROVIDER=antigravity`<br>`ANTIGRAVITY_MODEL=gemini-3.8-flash-medium` (`120s` timeout) | `EVALUATION_PROVIDER=gemini`<br>`GEMINI_MODEL=gemini-2.5-flash-lite` (hoặc `gemini-2.5-flash`) + `GEMINI_API_KEY` |
-| **Model đã chốt** | **`gemini-3.8-flash-medium`** (*Gemini 3.8 Flash (Medium)* trong `agy models`) | `gemini-2.5-flash` / `gemini-2.5-flash-lite` |
-| **Cơ chế xác thực** | Phiên đăng nhập **Antigravity CLI (`agy`)** cục bộ trên máy server (`--input-format stream-json`, `--output-format stream-json`); tự động xóa biến `GEMINI_API_KEY`/`GOOGLE_API_KEY` khỏi môi trường con để không gọi nhầm API key. | Khóa `GEMINI_API_KEY` đọc qua `SecretStr` tại server (`x-goog-api-key` tới `generativelanguage.googleapis.com`). |
-| **Ràng buộc an toàn** | Chạy trong thư mục rỗng tạm thời (`TemporaryDirectory`), tắt slash command (`--disable-slash-commands`), chặn toàn bộ tool (`command`, `read_file`, `write_file`, `read_url`, `execute_url`, `mcp`), chỉ nhận tool `finish` và schema `AntigravityAssessmentResponse` khóa theo `criterion_id` (`--json-schema`). Trên Windows yêu cầu tệp `.exe` gốc (từ chối `.cmd`/`.bat` shim). | `responseMimeType="application/json"` + `responseJsonSchema` (`AnswerInterpretationResponse`), không cần SDK ngoài nhờ `urllib.request`, chặn `250 KB` input / `1 MB` output, lọc phần `thought: true`. |
-| **Quyết định nhóm** | **CHỌN LÀM PROVIDER CHẠY THẬT CHÍNH** của nhóm (`gemini-3.8-flash-medium` qua `agy`), không cần cấp phát hoặc chia sẻ `GEMINI_API_KEY` trả phí. | **GIỮ LẠI LÀM ADAPTER TÙY CHỌN** qua cùng giao diện `EvidenceInterpreter` khi cần chạy trên server không có `agy`. |
+| Tiêu chí | Antigravity CLI (`antigravity`) *(Provider chạy thật duy nhất)* |
+| --- | --- |
+| **Biến cấu hình** | `EVALUATION_PROVIDER=antigravity`<br>`ANTIGRAVITY_MODEL=gemini-4-hydrogen-medium` (`120s` timeout) |
+| **Model hiện tại** | **`gemini-4-hydrogen-medium`** (*Gemini 4 Hydrogen (Medium)* trong `agy models`, nâng cấp từ `gemini-3.8-flash-medium` trước đó) |
+| **Cơ chế xác thực** | Phiên đăng nhập **Antigravity CLI (`agy`)** cục bộ trên máy server (`--input-format stream-json`, `--output-format stream-json`); tự động xóa biến `GEMINI_API_KEY`/`GOOGLE_API_KEY` khỏi môi trường con. |
+| **Ràng buộc an toàn** | Chạy trong thư mục rỗng tạm thời (`TemporaryDirectory`), tắt slash command (`--disable-slash-commands`), chặn toàn bộ tool (`command`, `read_file`, `write_file`, `read_url`, `execute_url`, `mcp`), chỉ nhận tool `finish` và schema `AntigravityAssessmentResponse` khóa theo `criterion_id` (`--json-schema`). Trên Windows yêu cầu tệp `.exe` gốc (từ chối `.cmd`/`.bat` shim). |
+| **Quyết định nhóm** | **CHỌN LÀM PROVIDER CHẠY THẬT DUY NHẤT** của nhóm (`gemini-4-hydrogen-medium` qua `agy`), không dùng API key rời. |
 
 ### Phân tách trách nhiệm AI và Python (Computational Thinking boundary)
-- Cả **Antigravity (`gemini-3.8-flash-medium`)** và **Gemini API** **chỉ** thực hiện trích xuất bằng chứng theo tiêu chí (`status` thuộc `met | unmet | insufficient_evidence`, `quote` + offsets hoặc `observation`, `explanation`, `unresolved_reason`).
+- **Antigravity (`gemini-4-hydrogen-medium`)** **chỉ** thực hiện trích xuất bằng chứng theo tiêu chí (`status` thuộc `met | unmet | insufficient_evidence`, `quote` + offsets hoặc `observation`, `explanation`, `unresolved_reason`).
 - Không có provider nào được phép trả điểm số (`score` hoặc `total_score`). Việc xác thực độ bao phủ tiêu chí, đối chiếu đoạn trích nguyên văn (`E05`) và tính điểm theo bảng quy tắc rubric (`E06`) luôn do mã Python thực hiện.
 
 ---

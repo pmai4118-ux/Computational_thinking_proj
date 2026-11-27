@@ -117,14 +117,14 @@ def test_p07_antigravity_provider_uses_gemini_38_flash_isolated_cli_and_strips_a
         return subprocess.CompletedProcess(command, 0, stream, "")
 
     provider = AntigravityProvider.from_settings(settings, runner=fake_runner)
-    assert provider.model_id == DEFAULT_ANTIGRAVITY_MODEL == "gemini-3.8-flash-medium"
+    assert provider.model_id == DEFAULT_ANTIGRAVITY_MODEL == "gemini-4-hydrogen-medium"
 
     call_result = provider.interpret_answer(
         question=question,
         rubric=rubric,
         answer_text=answer_text,
     )
-    assert call_result.model_id == "gemini-3.8-flash-medium"
+    assert call_result.model_id == "gemini-4-hydrogen-medium"
     assert len(call_result.observations) == 2
 
     obs_race = call_result.observations[0]
@@ -135,7 +135,7 @@ def test_p07_antigravity_provider_uses_gemini_38_flash_isolated_cli_and_strips_a
 
     assert len(recorded_calls) == 1
     cmd, opts = recorded_calls[0]
-    assert cmd[cmd.index("--model") + 1] == "gemini-3.8-flash-medium"
+    assert cmd[cmd.index("--model") + 1] == "gemini-4-hydrogen-medium"
     cli_settings = json.loads(cmd[cmd.index("--settings") + 1])
     assert cli_settings["useG1Credits"] is False
     assert "command(*)" in cli_settings["permissions"]["deny"]
@@ -230,14 +230,112 @@ def test_p07_antigravity_rejects_print_timeout_tool_calls_and_cmd_shim(
         assert provider.executable_path() is None
 
 
-def test_p07_ai_decision_records_antigravity_gemini_38_flash_choice() -> None:
+def test_p07_ai_decision_records_antigravity_gemini_4_hydrogen_choice() -> None:
     doc = (Path(__file__).resolve().parents[1] / "docs" / "ai_decision.md").read_text(
         encoding="utf-8"
     )
     assert "EVALUATION_PROVIDER=antigravity" in doc
-    assert "gemini-3.8-flash-medium" in doc
+    assert "gemini-4-hydrogen-medium" in doc
     assert "AntigravityAssessmentResponse" in doc
     env_example = (Path(__file__).resolve().parents[1] / ".env.example").read_text(
         encoding="utf-8"
     )
-    assert "ANTIGRAVITY_MODEL=gemini-3.8-flash-medium" in env_example
+    assert "ANTIGRAVITY_MODEL=gemini-4-hydrogen-medium" in env_example
+
+
+def test_antigravity_disambiguates_repeated_quote_normalizes_crlf_and_retries_invalid_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    question, rubric = _sample_question_and_rubric()
+    answer_text = "Khóa hàng bằng SELECT FOR UPDATE.\r\nSau đó khóa hàng lại lần nữa bằng SELECT FOR UPDATE."
+    # Repeated substring "SELECT FOR UPDATE" appears near index 15 and near index 72.
+    # Also test CRLF vs LF normalization and multi-quote support.
+    first_bad = subprocess.CompletedProcess(
+        [],
+        0,
+        json.dumps(
+            {
+                "event": "result",
+                "result": {
+                    "status": "SUCCESS",
+                    "structured_output": {
+                        "criterion_checks": {
+                            "c03.race": {
+                                "status": "met",
+                                "quote": "fabricated phrase",
+                                "start_offset": 0,
+                                "end_offset": 17,
+                                "explanation": "Bad quote.",
+                                "satisfied_expected_indexes": [0],
+                            },
+                            "c03.concurrent_tests": {
+                                "status": "unmet",
+                                "observation": "Missing tests.",
+                                "explanation": "Missing tests.",
+                                "satisfied_expected_indexes": [],
+                            },
+                        }
+                    },
+                },
+            }
+        ),
+        "",
+    )
+    second_ok = subprocess.CompletedProcess(
+        [],
+        0,
+        json.dumps(
+            {
+                "event": "result",
+                "result": {
+                    "status": "SUCCESS",
+                    "structured_output": {
+                        "criterion_checks": {
+                            "c03.race": {
+                                "status": "met",
+                                "quote": "SELECT FOR UPDATE",
+                                "start_offset": 70,
+                                "end_offset": 87,
+                                "additional_quotes": [
+                                    {
+                                        "quote": "Khóa hàng bằng SELECT FOR UPDATE.\nSau đó",
+                                        "start_offset": 0,
+                                        "end_offset": 40,
+                                    }
+                                ],
+                                "explanation": "Đã nêu khóa hàng ở hai vị trí.",
+                                "satisfied_expected_indexes": [0],
+                            },
+                            "c03.concurrent_tests": {
+                                "status": "unmet",
+                                "observation": "Thiếu kiểm thử.",
+                                "explanation": "Thiếu kiểm thử.",
+                                "satisfied_expected_indexes": [],
+                            },
+                        }
+                    },
+                },
+            },
+            ensure_ascii=False,
+        ),
+        "",
+    )
+    calls: list[str] = []
+
+    def fake_runner(command: list[str], **options: object) -> subprocess.CompletedProcess[str]:
+        calls.append(str(options["input"]))
+        return first_bad if len(calls) == 1 else second_ok
+
+    provider = AntigravityProvider(runner=fake_runner)
+    monkeypatch.setattr(provider, "executable_path", lambda: "agy.exe")
+    result = provider.interpret_answer(question=question, rubric=rubric, answer_text=answer_text)
+
+    assert len(calls) == 2
+    assert "VALIDATION CORRECTION" in calls[1]
+    race = result.observations[0]
+    assert race.start_offset == answer_text.rfind("SELECT FOR UPDATE")
+    assert answer_text[race.start_offset : race.end_offset] == race.quote
+    assert len(race.extra_quotes) == 1
+    extra = race.extra_quotes[0]
+    assert answer_text[extra.start_offset : extra.end_offset] == extra.quote
+    assert "\r\n" in extra.quote

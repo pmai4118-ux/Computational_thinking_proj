@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 
 {% block title %}Kết quả câu trả lời — interviewUS{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="/static/css/results.css">{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/results.css">
+<link rel="stylesheet" href="/static/css/features.css?v=20261127-p1">
+{% endblock %}
 
 {% block content %}
 <section class="card results-page" data-answer-review
@@ -57,6 +60,27 @@
         <pre id="answer-source" class="answer-source"></pre>
       </section>
     </div>
+    <section id="adaptive-probe-section" class="probe-panel" aria-labelledby="probe-heading" hidden>
+      <div>
+        <h2 id="probe-heading">Hỏi đào sâu có giới hạn (Adaptive Follow-up)</h2>
+        <p id="probe-policy" class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);"></p>
+      </div>
+      <p id="probe-reason" style="margin: 0; font-size: var(--font-size-sm);"></p>
+      <p id="probe-prompt" style="margin: 0; font-weight: 600;"></p>
+      <form id="probe-form" class="stack" hidden>
+        <div class="form-field">
+          <label class="form-label" for="probe-response">Câu trả lời làm rõ (bài gốc vẫn giữ nguyên)</label>
+          <textarea id="probe-response" class="form-textarea" rows="4" maxlength="5000"
+                    placeholder="Bổ sung giải thích trực tiếp bằng văn bản cho tiêu chí đang hỏi đào sâu..."></textarea>
+        </div>
+        <div class="action-row">
+          <button id="probe-submit" class="btn btn--primary" type="submit">Gửi câu trả lời làm rõ</button>
+        </div>
+      </form>
+      <div id="probe-error" class="alert alert--error" role="alert" hidden></div>
+      <div id="probe-results" class="stack"></div>
+      <p id="probe-variant-note" class="form-hint" style="margin: 0;"></p>
+    </section>
   </div>
   <div class="action-row">
     {% if session.state == "in_progress" and session.current_answer and answer_id == session.current_answer.answer_id and answer_revision|int == session.current_answer.revision %}

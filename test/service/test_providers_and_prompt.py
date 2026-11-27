@@ -25,7 +25,6 @@ from source.service.evaluation_service import EvaluationService
 from source.service.prompts import PROMPT_FILE, PROMPT_VERSION, InterpretationPromptBuilder
 from source.service.providers.antigravity_provider import AntigravityProvider
 from source.service.providers.fixture_provider import DEMO_MODE_LABEL, FixtureProvider
-from source.service.providers.gemini_provider import GeminiProvider
 from source.service.providers.interfaces import EvidenceInterpreter, ProviderFailureError
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -82,14 +81,12 @@ def _inventory_question_and_rubric() -> tuple[Question, Rubric]:
     return question, rubric
 
 
-def test_e01_fixture_antigravity_and_gemini_providers_implement_evidence_interpreter() -> None:
+def test_e01_fixture_and_antigravity_providers_implement_evidence_interpreter() -> None:
     fixture_provider = FixtureProvider.from_json_file(FIXTURE_OUTPUTS_PATH)
     antigravity_provider = AntigravityProvider()
-    gemini_provider = GeminiProvider(api_key="synthetic-key", model_id="gemini-2.5-flash")
 
     assert isinstance(fixture_provider, EvidenceInterpreter)
     assert isinstance(antigravity_provider, EvidenceInterpreter)
-    assert isinstance(gemini_provider, EvidenceInterpreter)
 
 
 def test_e02_fixture_provider_evaluates_offline_with_demo_mode_label_and_error_case() -> None:

@@ -26,7 +26,7 @@ from source.service.evaluation_service import (
     EvidenceValidationError,
     EvidenceValidator,
 )
-from source.service.providers.interfaces import CriterionObservation, InterpretationBatch
+from source.service.providers.interfaces import CriterionObservation, InterpretationBatch, QuoteSpan
 from source.service.scoring_service import RubricScoringService
 
 
@@ -408,3 +408,60 @@ def test_q01_unresolved_evidence_remains_null_through_evaluation(q01_case) -> No
     assert result.criterion_checks[1].score == 0
     assert result.total_score is None
     assert result.maximum_score == 4
+
+
+def test_evidence_validator_accepts_multi_span_quotes_and_rejects_met_without_quote() -> None:
+    answer, _question, rubric = _fixture_answer_and_rubric()
+    validator = EvidenceValidator()
+
+    multi_batch = InterpretationBatch(
+        observations=(
+            CriterionObservation(
+                criterion_id=CriterionId("crit.a"),
+                status=CriterionStatus.MET,
+                quote="Alpha exact span",
+                start_offset=0,
+                end_offset=16,
+                extra_quotes=(
+                    QuoteSpan(quote="Beta observation.", start_offset=21, end_offset=38),
+                ),
+                explanation="Demonstrated in two distinct spans.",
+                satisfied_expected_indexes=(0,),
+            ),
+            CriterionObservation(
+                criterion_id=CriterionId("crit.b"),
+                status=CriterionStatus.UNMET,
+                observation="Missing B details.",
+                explanation="Missing B.",
+                satisfied_expected_indexes=(),
+            ),
+        ),
+        model_id="antigravity",
+        prompt_version="interpret_answer/v2",
+    )
+    validated = validator.validate_batch(answer=answer, rubric=rubric, batch=multi_batch)
+    assert len(validated[0].evidence) == 2
+    assert validated[0].evidence[1].quote == "Beta observation."
+
+    met_without_quote = InterpretationBatch(
+        observations=(
+            CriterionObservation(
+                criterion_id=CriterionId("crit.a"),
+                status=CriterionStatus.MET,
+                observation="Claimed met without verbatim text.",
+                explanation="Should be rejected.",
+                satisfied_expected_indexes=(0,),
+            ),
+            CriterionObservation(
+                criterion_id=CriterionId("crit.b"),
+                status=CriterionStatus.UNMET,
+                observation="Missing B.",
+                explanation="Missing B.",
+                satisfied_expected_indexes=(),
+            ),
+        ),
+        model_id="antigravity",
+        prompt_version="interpret_answer/v2",
+    )
+    with pytest.raises(EvidenceValidationError, match="requires at least one verbatim quote"):
+        validator.validate_batch(answer=answer, rubric=rubric, batch=met_without_quote)

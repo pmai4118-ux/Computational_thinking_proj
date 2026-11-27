@@ -23,6 +23,7 @@ class RubricScoringService:
         *,
         status: CriterionStatus,
         satisfied_expected_indexes: tuple[int, ...] | None = None,
+        required_expected_indexes: tuple[int, ...] = (),
     ) -> int | None:
         total_expected = len(criterion.expected_evidence)
         if satisfied_expected_indexes is not None:
@@ -50,6 +51,7 @@ class RubricScoringService:
                 f"Criterion {criterion.id} with {status.value} requires satisfied_expected_indexes."
             )
 
+        satisfied_set = set(satisfied_expected_indexes)
         if status is CriterionStatus.MET:
             if len(satisfied_expected_indexes) != total_expected:
                 raise ScoringError(
@@ -64,6 +66,8 @@ class RubricScoringService:
                 f"Criterion {criterion.id} marked UNMET cannot satisfy all expected items."
             )
         if satisfied_count == 0 or len(sorted_levels) < 3:
+            return sorted_levels[0].score
+        if required_expected_indexes and not set(required_expected_indexes).issubset(satisfied_set):
             return sorted_levels[0].score
 
         intermediate_idx = min(

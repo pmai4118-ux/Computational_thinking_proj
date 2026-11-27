@@ -1,6 +1,6 @@
 """P07/E04 Antigravity CLI structured-output adapter conforming to E01 `EvidenceInterpreter`.
 
-Runs the signed-in local Antigravity CLI (`agy`, defaulting to `gemini-3.8-flash-medium`)
+Runs the signed-in local Antigravity CLI (`agy`, defaulting to `gemini-4-hydrogen-medium`)
 inside an isolated empty directory with all agent tools disabled and API-key variables
 cleared so evaluation strictly uses the member's Antigravity subscription session.
 """
@@ -34,9 +34,10 @@ from source.service.providers.interfaces import (
     InterpretationBatch,
     ProviderErrorKind,
     ProviderFailureError,
+    QuoteSpan,
 )
 
-DEFAULT_ANTIGRAVITY_MODEL = "gemini-3.8-flash-medium"
+DEFAULT_ANTIGRAVITY_MODEL = "gemini-4-hydrogen-medium"
 DEFAULT_ANTIGRAVITY_EXECUTABLE = "agy"
 DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS = 120.0
 MAX_REQUEST_BYTES = 250_000
@@ -65,6 +66,22 @@ class _EvidenceShapeError(ValueError):
     """Static diagnostic safe to expose without student data."""
 
 
+class AntigravityQuoteDTO(_StrictModel):
+    """Additional verbatim quote span emitted by Antigravity for one criterion."""
+
+    quote: str = Field(min_length=1)
+    start_offset: int | None = Field(default=None, ge=0)
+    end_offset: int | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def _validate_offsets(self) -> AntigravityQuoteDTO:
+        if (self.start_offset is not None) != (self.end_offset is not None):
+            raise _EvidenceShapeError("Additional quotes require both offsets or both null.")
+        if self.start_offset is not None and self.end_offset is not None and self.end_offset <= self.start_offset:
+            raise _EvidenceShapeError("end_offset must be greater than start_offset.")
+        return self
+
+
 class AntigravityCriterionDTO(_StrictModel):
     """Structured observation emitted by Antigravity for one criterion (no numeric score)."""
 
@@ -72,6 +89,7 @@ class AntigravityCriterionDTO(_StrictModel):
     quote: str | None = None
     start_offset: int | None = Field(default=None, ge=0)
     end_offset: int | None = Field(default=None, ge=0)
+    additional_quotes: list[AntigravityQuoteDTO] | None = None
     observation: str | None = None
     explanation: str = Field(min_length=1)
     unresolved_reason: str | None = None
@@ -82,16 +100,23 @@ class AntigravityCriterionDTO(_StrictModel):
         has_quote = self.quote is not None and bool(self.quote)
         has_offsets = self.start_offset is not None and self.end_offset is not None
         has_partial_offset = (self.start_offset is not None) != (self.end_offset is not None)
+        has_extra_quotes = bool(self.additional_quotes)
         has_observation = self.observation is not None and bool(self.observation.strip())
 
         if has_partial_offset:
             raise _EvidenceShapeError("Provide both start_offset and end_offset, or leave both null.")
         if has_offsets and not has_quote:
             raise _EvidenceShapeError("Offsets require a non-empty quote.")
-        if has_quote and has_observation:
+        if has_extra_quotes and not has_quote:
+            raise _EvidenceShapeError("additional_quotes requires a primary quote.")
+        if self.additional_quotes is not None and len(self.additional_quotes) > 2:
+            raise _EvidenceShapeError("Provide at most 2 additional_quotes per criterion.")
+        if (has_quote or has_extra_quotes) and has_observation:
             raise _EvidenceShapeError("Provide either a literal quote or an observation, not both.")
         if not has_quote and not has_observation:
             raise _EvidenceShapeError("Each criterion check requires either a quote or an observation.")
+        if self.status is CriterionStatus.MET and not has_quote:
+            raise _EvidenceShapeError("Criteria marked met require at least one verbatim quote.")
         if has_quote and has_offsets:
             assert self.quote is not None
             assert self.start_offset is not None
@@ -114,45 +139,98 @@ class AntigravityCallResult:
     elapsed_ms: int
 
 
-def _resolve_quote_offsets(
+def _resolve_single_quote_span(
     criterion_id: str,
-    dto: AntigravityCriterionDTO,
+    quote: str,
+    start_offset: int | None,
+    end_offset: int | None,
     answer_text: str,
-) -> AntigravityCriterionDTO:
-    """Verify the quote and repair inaccurate offsets only when its location is unique."""
-    if dto.quote is None:
-        return dto
+) -> QuoteSpan:
+    """Verify a quote and repair offsets safely via unique or closest-offset matching."""
     if (
-        dto.start_offset is not None
-        and dto.end_offset is not None
-        and dto.end_offset <= len(answer_text)
-        and dto.end_offset - dto.start_offset == len(dto.quote)
-        and answer_text[dto.start_offset:dto.end_offset] == dto.quote
+        start_offset is not None
+        and end_offset is not None
+        and end_offset <= len(answer_text)
+        and end_offset - start_offset == len(quote)
+        and answer_text[start_offset:end_offset] == quote
     ):
-        return dto
-    first = answer_text.find(dto.quote)
-    if first == -1:
+        return QuoteSpan(quote=quote, start_offset=start_offset, end_offset=end_offset)
+
+    exact_matches: list[tuple[int, int]] = []
+    pos = answer_text.find(quote)
+    while pos != -1:
+        exact_matches.append((pos, pos + len(quote)))
+        pos = answer_text.find(quote, pos + 1)
+
+    candidates = exact_matches
+    if not candidates:
+        tokens = quote.split()
+        if tokens:
+            pattern = re.compile(r"\s+".join(re.escape(token) for token in tokens))
+            candidates = [(m.start(), m.end()) for m in pattern.finditer(answer_text)]
+
+    if not candidates:
         raise AntigravityProviderError(
             ProviderErrorKind.INVALID_OUTPUT,
             f"Antigravity returned a quote for '{criterion_id}' that is not present in the answer.",
             retryable=True,
         )
-    if answer_text.find(dto.quote, first + 1) != -1:
-        raise AntigravityProviderError(
-            ProviderErrorKind.INVALID_OUTPUT,
-            f"Quote for '{criterion_id}' has ambiguous offsets in the answer.",
-            retryable=True,
+
+    if len(candidates) == 1:
+        s, e = candidates[0]
+        return QuoteSpan(quote=answer_text[s:e], start_offset=s, end_offset=e)
+
+    if start_offset is not None:
+        near = [pair for pair in candidates if abs(pair[0] - start_offset) <= 2]
+        if len(near) == 1:
+            s, e = near[0]
+            return QuoteSpan(quote=answer_text[s:e], start_offset=s, end_offset=e)
+
+    raise AntigravityProviderError(
+        ProviderErrorKind.INVALID_OUTPUT,
+        f"Quote for '{criterion_id}' has ambiguous offsets in the answer.",
+        retryable=True,
+    )
+
+
+def _resolve_quote_offsets(
+    criterion_id: str,
+    dto: AntigravityCriterionDTO,
+    answer_text: str,
+) -> AntigravityCriterionDTO:
+    """Verify primary and additional quotes, repairing offsets safely when unambiguous."""
+    if dto.quote is None:
+        return dto
+    primary = _resolve_single_quote_span(
+        criterion_id, dto.quote, dto.start_offset, dto.end_offset, answer_text
+    )
+    resolved_extras: list[AntigravityQuoteDTO] = []
+    seen = {(primary.start_offset, primary.end_offset)}
+    for extra in dto.additional_quotes or ():
+        span = _resolve_single_quote_span(
+            criterion_id, extra.quote, extra.start_offset, extra.end_offset, answer_text
         )
+        if (span.start_offset, span.end_offset) not in seen:
+            seen.add((span.start_offset, span.end_offset))
+            resolved_extras.append(
+                AntigravityQuoteDTO(
+                    quote=span.quote,
+                    start_offset=span.start_offset,
+                    end_offset=span.end_offset,
+                )
+            )
     return dto.model_copy(
         update={
-            "start_offset": first,
-            "end_offset": first + len(dto.quote),
+            "quote": primary.quote,
+            "start_offset": primary.start_offset,
+            "end_offset": primary.end_offset,
+            "additional_quotes": resolved_extras if dto.additional_quotes is not None else None,
         }
     )
 
 
 class AntigravityProvider:
-    """Adapter calling local signed-in `agy` CLI with `--model gemini-3.8-flash-medium`."""
+    """Adapter calling local signed-in `agy` CLI with `--model gemini-4-hydrogen-medium`."""
 
     provider_name = "antigravity"
 
@@ -482,6 +560,15 @@ class AntigravityProvider:
         for criterion in rubric.criteria:
             dto = AntigravityCriterionDTO.model_validate(raw_checks[criterion.id])
             resolved = _resolve_quote_offsets(criterion.id, dto, answer_text)
+            extra_quotes = tuple(
+                QuoteSpan(
+                    quote=extra.quote,
+                    start_offset=extra.start_offset,
+                    end_offset=extra.end_offset,
+                )
+                for extra in (resolved.additional_quotes or ())
+                if extra.start_offset is not None and extra.end_offset is not None
+            )
             observations.append(
                 CriterionObservation(
                     criterion_id=CriterionId(criterion.id),
@@ -497,6 +584,7 @@ class AntigravityProvider:
                         if resolved.satisfied_expected_indexes is not None
                         else None
                     ),
+                    extra_quotes=extra_quotes,
                 )
             )
         return tuple(observations)
@@ -530,9 +618,25 @@ class AntigravityProvider:
         command = self.build_command(executable, rubric)
         started = time.perf_counter()
         request_id = uuid4().hex
+        correction_hint: str | None = None
         for attempt in range(self.limits.max_retries + 1):
             outcome = "OK"
             tick = time.perf_counter()
+            attempt_prompt = (
+                prompt
+                if correction_hint is None
+                else (
+                    f"{prompt}\n\n"
+                    f"VALIDATION CORRECTION (attempt {attempt + 1}): {correction_hint} "
+                    "Return strict JSON matching the schema with verbatim quotes copied directly from student_answer.text."
+                )
+            )
+            attempt_stdin = (
+                json.dumps({"event": "user", "message": {"content": attempt_prompt}}, ensure_ascii=False)
+                + "\n"
+            )
+            if len(attempt_stdin.encode("utf-8")) > self.limits.input_bytes:
+                raise AntigravityProviderError(ProviderErrorKind.INPUT_LIMIT, "Request exceeds byte limit.")
             try:
                 try:
                     reserved = self._budget.reserve()
@@ -540,12 +644,21 @@ class AntigravityProvider:
                     raise AntigravityProviderError(ProviderErrorKind.CONFIG, "Cannot reserve request budget.") from None
                 if not reserved:
                     raise AntigravityProviderError(ProviderErrorKind.QUOTA, "Configured request budget exhausted.")
-                return self._run_attempt(command, stdin_ndjson, started, rubric, answer_text)
+                return self._run_attempt(command, attempt_stdin, started, rubric, answer_text)
             except AntigravityProviderError as error:
                 outcome = error.code
-                if (attempt >= self.limits.max_retries or not error.retryable or
-                        error.code not in {ProviderErrorKind.TIMEOUT, ProviderErrorKind.QUOTA}):
+                if (
+                    attempt >= self.limits.max_retries
+                    or not error.retryable
+                    or error.code not in {
+                        ProviderErrorKind.TIMEOUT,
+                        ProviderErrorKind.QUOTA,
+                        ProviderErrorKind.INVALID_OUTPUT,
+                    }
+                ):
                     raise
+                if error.code is ProviderErrorKind.INVALID_OUTPUT:
+                    correction_hint = error.message
             finally:
                 logging.getLogger(__name__).info(
                     "agy request_id=%s attempt=%d elapsed_ms=%d outcome=%s",

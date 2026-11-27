@@ -11,7 +11,15 @@ from pathlib import Path
 from typing import Iterator
 from uuid import uuid4
 
+from source.Model.adaptive_probe import FollowUpProbe, ProbeStatus, ProbeTriggerKind
 from source.Model.competency_profile import CompetencyProfileEntry, RecentCriterionScore
+from source.Model.decision_replay import ReplayRun, ReplayStepRecord
+from source.Model.job_posting import (
+    JobAnalysisRecord,
+    JobPosting,
+    JobSkillEvidence,
+    UnmatchedJobTerm,
+)
 from source.Model.evaluation import (
     AnswerRevisionRef,
     CriterionCheck,
@@ -1356,6 +1364,306 @@ class SQLiteRepositoryStore:
                 ),
             ) for row in rows
         )
+
+    def save_job_analysis(self, record: JobAnalysisRecord) -> JobAnalysisRecord:
+        posting = record.posting
+        matched_json = json.dumps(
+            [
+                {
+                    "skill_id": str(item.skill_id),
+                    "matched_term": item.matched_term,
+                    "quote": item.quote,
+                    "start_offset": item.start_offset,
+                    "end_offset": item.end_offset,
+                }
+                for item in record.matched_skills
+            ],
+            ensure_ascii=False,
+        )
+        unmatched_json = json.dumps(
+            [
+                {
+                    "term_label": item.term_label,
+                    "quote": item.quote,
+                    "start_offset": item.start_offset,
+                    "end_offset": item.end_offset,
+                    "reason": item.reason,
+                }
+                for item in record.unmatched_terms
+            ],
+            ensure_ascii=False,
+        )
+        try:
+            with self._connect() as conn, conn:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO job_analyses (
+                        id, owner_token_hash, title, company, raw_text, source_url,
+                        published_at, collected_at, normalization_version,
+                        matched_skills_json, unmatched_terms_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (
+                        posting.id,
+                        posting.owner_token_hash,
+                        posting.title,
+                        posting.company,
+                        posting.raw_text,
+                        posting.source_url,
+                        posting.published_at,
+                        _dt_to_iso(posting.collected_at),
+                        posting.normalization_version,
+                        matched_json,
+                        unmatched_json,
+                    ),
+                )
+        except sqlite3.IntegrityError as error:
+            raise RepositoryError(f"Cannot persist job analysis: {error}") from error
+        return record
+
+    @staticmethod
+    def _row_to_job_analysis(row: sqlite3.Row) -> JobAnalysisRecord:
+        collected_at = _iso_to_dt(row["collected_at"])
+        assert collected_at is not None
+        posting = JobPosting(
+            id=row["id"],
+            owner_token_hash=row["owner_token_hash"],
+            title=row["title"],
+            company=row["company"],
+            raw_text=row["raw_text"],
+            source_url=row["source_url"],
+            published_at=row["published_at"],
+            collected_at=collected_at,
+            normalization_version=row["normalization_version"],
+        )
+        matched = tuple(
+            JobSkillEvidence(
+                skill_id=SkillId(item["skill_id"]),
+                matched_term=item["matched_term"],
+                quote=item["quote"],
+                start_offset=int(item["start_offset"]),
+                end_offset=int(item["end_offset"]),
+            )
+            for item in json.loads(row["matched_skills_json"])
+        )
+        unmatched = tuple(
+            UnmatchedJobTerm(
+                term_label=item["term_label"],
+                quote=item["quote"],
+                start_offset=int(item["start_offset"]),
+                end_offset=int(item["end_offset"]),
+                reason=item["reason"],
+            )
+            for item in json.loads(row["unmatched_terms_json"])
+        )
+        return JobAnalysisRecord(
+            posting=posting,
+            matched_skills=matched,
+            unmatched_terms=unmatched,
+        )
+
+    def get_job_analysis(self, analysis_id: str) -> JobAnalysisRecord | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM job_analyses WHERE id = ?;", (analysis_id,)
+            ).fetchone()
+        return None if row is None else self._row_to_job_analysis(row)
+
+    def list_job_analyses_by_owner(self, owner_token_hash: str) -> tuple[JobAnalysisRecord, ...]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM job_analyses WHERE owner_token_hash = ? ORDER BY collected_at DESC, id DESC;",
+                (owner_token_hash,),
+            ).fetchall()
+        return tuple(self._row_to_job_analysis(row) for row in rows)
+
+    def save_probe(self, probe: FollowUpProbe) -> FollowUpProbe:
+        try:
+            with self._connect() as conn, conn:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO follow_up_probes (
+                        id, session_id, owner_token_hash, answer_id, answer_revision,
+                        question_id, question_version, rubric_id, rubric_version,
+                        criterion_id, criterion_label, trigger_kind, probe_prompt,
+                        choice_reason, status, response_text, outcome_status,
+                        outcome_score, outcome_max_score, outcome_explanation,
+                        outcome_quote, created_at, answered_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (
+                        probe.id,
+                        probe.session_id,
+                        probe.owner_token_hash,
+                        probe.answer_ref.id,
+                        probe.answer_ref.revision,
+                        probe.question_ref.id,
+                        probe.question_ref.version,
+                        probe.rubric_ref.id,
+                        probe.rubric_ref.version,
+                        probe.criterion_id,
+                        probe.criterion_label,
+                        probe.trigger_kind.value,
+                        probe.probe_prompt,
+                        probe.choice_reason,
+                        probe.status.value,
+                        probe.response_text,
+                        probe.outcome_status.value if probe.outcome_status else None,
+                        probe.outcome_score,
+                        probe.outcome_max_score,
+                        probe.outcome_explanation,
+                        probe.outcome_quote,
+                        _dt_to_iso(probe.created_at),
+                        _dt_to_iso(probe.answered_at),
+                    ),
+                )
+        except sqlite3.IntegrityError as error:
+            raise RepositoryError(f"Cannot persist follow-up probe: {error}") from error
+        return probe
+
+    @staticmethod
+    def _row_to_probe(row: sqlite3.Row) -> FollowUpProbe:
+        created_at = _iso_to_dt(row["created_at"])
+        assert created_at is not None
+        return FollowUpProbe(
+            id=row["id"],
+            session_id=SessionId(row["session_id"]),
+            owner_token_hash=row["owner_token_hash"],
+            answer_ref=AnswerRevisionRef(AnswerId(row["answer_id"]), int(row["answer_revision"])),
+            question_ref=VersionedRef(QuestionId(row["question_id"]), int(row["question_version"])),
+            rubric_ref=VersionedRef(RubricId(row["rubric_id"]), int(row["rubric_version"])),
+            criterion_id=CriterionId(row["criterion_id"]),
+            criterion_label=row["criterion_label"],
+            trigger_kind=ProbeTriggerKind(row["trigger_kind"]),
+            probe_prompt=row["probe_prompt"],
+            choice_reason=row["choice_reason"],
+            status=ProbeStatus(row["status"]),
+            response_text=row["response_text"],
+            outcome_status=CriterionStatus(row["outcome_status"]) if row["outcome_status"] else None,
+            outcome_score=row["outcome_score"],
+            outcome_max_score=row["outcome_max_score"],
+            outcome_explanation=row["outcome_explanation"],
+            outcome_quote=row["outcome_quote"],
+            created_at=created_at,
+            answered_at=_iso_to_dt(row["answered_at"]),
+        )
+
+    def get_probe(self, probe_id: str) -> FollowUpProbe | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM follow_up_probes WHERE id = ?;", (probe_id,)
+            ).fetchone()
+        return None if row is None else self._row_to_probe(row)
+
+    def list_probes_for_session(self, session_id: SessionId) -> tuple[FollowUpProbe, ...]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM follow_up_probes WHERE session_id = ? ORDER BY created_at ASC, id ASC;",
+                (session_id,),
+            ).fetchall()
+        return tuple(self._row_to_probe(row) for row in rows)
+
+    def list_probes_for_answer(self, answer_ref: AnswerRevisionRef) -> tuple[FollowUpProbe, ...]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM follow_up_probes WHERE answer_id = ? AND answer_revision = ? ORDER BY created_at ASC, id ASC;",
+                (answer_ref.id, answer_ref.revision),
+            ).fetchall()
+        return tuple(self._row_to_probe(row) for row in rows)
+
+    def save_replay_run(self, run: ReplayRun) -> ReplayRun:
+        steps_json = json.dumps(
+            [
+                {
+                    "step_number": step.step_number,
+                    "checkpoint_id": step.checkpoint_id,
+                    "checkpoint_title": step.checkpoint_title,
+                    "option_id": step.option_id,
+                    "option_label": step.option_label,
+                    "consequence_summary": step.consequence_summary,
+                    "system_impact": step.system_impact,
+                    "tradeoff_note": step.tradeoff_note,
+                    "outcome_tag": step.outcome_tag,
+                    "decided_at": _dt_to_iso(step.decided_at),
+                }
+                for step in run.steps
+            ],
+            ensure_ascii=False,
+        )
+        try:
+            with self._connect() as conn, conn:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO decision_replay_runs (
+                        id, scenario_id, scenario_version, owner_token_hash,
+                        current_checkpoint_id, completed, steps_json,
+                        linked_session_id, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    """,
+                    (
+                        run.id,
+                        run.scenario_id,
+                        run.scenario_version,
+                        run.owner_token_hash,
+                        run.current_checkpoint_id,
+                        1 if run.completed else 0,
+                        steps_json,
+                        str(run.linked_session_id) if run.linked_session_id else None,
+                        _dt_to_iso(run.created_at),
+                        _dt_to_iso(run.updated_at),
+                    ),
+                )
+        except sqlite3.IntegrityError as error:
+            raise RepositoryError(f"Cannot persist replay run: {error}") from error
+        return run
+
+    @staticmethod
+    def _row_to_replay_run(row: sqlite3.Row) -> ReplayRun:
+        created_at = _iso_to_dt(row["created_at"])
+        updated_at = _iso_to_dt(row["updated_at"])
+        assert created_at is not None and updated_at is not None
+        steps = tuple(
+            ReplayStepRecord(
+                step_number=int(item["step_number"]),
+                checkpoint_id=item["checkpoint_id"],
+                checkpoint_title=item["checkpoint_title"],
+                option_id=item["option_id"],
+                option_label=item["option_label"],
+                consequence_summary=item["consequence_summary"],
+                system_impact=item["system_impact"],
+                tradeoff_note=item["tradeoff_note"],
+                outcome_tag=item["outcome_tag"],
+                decided_at=_iso_to_dt(item["decided_at"]) or updated_at,
+            )
+            for item in json.loads(row["steps_json"])
+        )
+        return ReplayRun(
+            id=row["id"],
+            scenario_id=row["scenario_id"],
+            scenario_version=int(row["scenario_version"]),
+            owner_token_hash=row["owner_token_hash"],
+            current_checkpoint_id=row["current_checkpoint_id"],
+            completed=bool(row["completed"]),
+            steps=steps,
+            linked_session_id=SessionId(row["linked_session_id"]) if row["linked_session_id"] else None,
+            created_at=created_at,
+            updated_at=updated_at,
+        )
+
+    def get_replay_run(self, run_id: str) -> ReplayRun | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM decision_replay_runs WHERE id = ?;", (run_id,)
+            ).fetchone()
+        return None if row is None else self._row_to_replay_run(row)
+
+    def list_replay_runs_by_owner(self, owner_token_hash: str) -> tuple[ReplayRun, ...]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM decision_replay_runs WHERE owner_token_hash = ? ORDER BY updated_at DESC, id DESC;",
+                (owner_token_hash,),
+            ).fetchall()
+        return tuple(self._row_to_replay_run(row) for row in rows)
 
 
 __all__ = ["SCHEMA_VERSION", "SQLiteRepositoryStore"]

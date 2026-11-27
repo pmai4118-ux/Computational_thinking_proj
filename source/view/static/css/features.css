@@ -1,0 +1,171 @@
+/* Shared styles for Profile (/profile), JD Analysis (/jd), Decision Replay (/replays),
+ * and Adaptive Follow-up Probing panels. Consumes tokens.css variables directly.
+ */
+
+.summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--space-3);
+}
+
+.metric-box {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-elevated);
+}
+
+.metric-box__value {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--color-text);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.metric-box__label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.skill-group {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.profile-entry-list,
+.gap-table-list,
+.replay-list,
+.timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.profile-entry {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface-elevated);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.profile-entry__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.score-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.score-chip {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-strong);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+.jd-raw-viewer {
+  white-space: pre-wrap;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  background-color: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  max-height: 24rem;
+  overflow-y: auto;
+}
+
+.jd-raw-viewer mark {
+  background-color: var(--color-evidence-highlight-bg);
+  color: var(--color-text);
+  border-bottom: 2px solid var(--color-evidence-highlight-border);
+  padding: 0 0.125rem;
+  border-radius: 2px;
+}
+
+.disclosure-block {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface-elevated);
+}
+
+.disclosure-block summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.timeline-item {
+  position: relative;
+  border-left: 3px solid var(--color-primary);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-surface-elevated);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.timeline-item__step {
+  font-weight: 700;
+  color: var(--color-primary-active);
+  margin: 0 0 var(--space-1) 0;
+  font-size: var(--font-size-sm);
+}
+
+.option-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.option-card:hover {
+  border-color: var(--color-primary);
+}
+
+.probe-panel {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background-color: var(--color-surface-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 48rem) {
+  .grid-two,
+  .split-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-entry {
+    flex-direction: column;
+  }
+}

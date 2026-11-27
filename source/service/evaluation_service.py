@@ -91,7 +91,7 @@ class EvidenceValidator:
         validated: list[ValidatedCriterionObservation] = []
         for cid in expected_ids:
             obs = by_id[cid]
-            evidence_item = self._validate_evidence_span(answer=answer, obs=obs)
+            evidence_items = self._validate_evidence_spans(answer=answer, obs=obs)
             if not obs.explanation or not obs.explanation.strip():
                 raise EvidenceValidationError(
                     f"Empty explanation returned for criterion '{cid}'."
@@ -105,7 +105,7 @@ class EvidenceValidator:
                 ValidatedCriterionObservation(
                     criterion_id=cid,
                     status=obs.status,
-                    evidence=(evidence_item,),
+                    evidence=evidence_items,
                     explanation=obs.explanation.strip(),
                     unresolved_reason=(
                         obs.unresolved_reason.strip() if obs.unresolved_reason else None
@@ -116,11 +116,46 @@ class EvidenceValidator:
         return tuple(validated)
 
     @staticmethod
-    def _validate_evidence_span(
+    def _validate_single_quote(
+        *,
+        answer: Answer,
+        criterion_id: CriterionId,
+        quote: str,
+        start_offset: int,
+        end_offset: int,
+    ) -> Evidence:
+        if (
+            isinstance(start_offset, bool)
+            or isinstance(end_offset, bool)
+            or start_offset < 0
+            or end_offset <= start_offset
+            or end_offset > len(answer.text)
+        ):
+            raise EvidenceValidationError(
+                f"Criterion '{criterion_id}' offsets [{start_offset}:{end_offset}] "
+                f"are out of bounds for answer length {len(answer.text)}."
+            )
+        actual_slice = answer.text[start_offset:end_offset]
+        if actual_slice != quote:
+            raise EvidenceValidationError(
+                f"Fabricated or misaligned quote for '{criterion_id}': "
+                f"answer[{start_offset}:{end_offset}] does not match quote."
+            )
+        return Evidence(
+            answer_ref=answer.ref,
+            quote=quote,
+            start_offset=start_offset,
+            end_offset=end_offset,
+            observation=None,
+        )
+
+    @classmethod
+    def _validate_evidence_spans(
+        cls,
         *,
         answer: Answer,
         obs: CriterionObservation,
-    ) -> Evidence:
+    ) -> tuple[Evidence, ...]:
         has_any_quote_field = any(
             item is not None for item in (obs.quote, obs.start_offset, obs.end_offset)
         )
@@ -129,15 +164,20 @@ class EvidenceValidator:
             and obs.start_offset is not None
             and obs.end_offset is not None
         )
+        has_extra_quotes = bool(obs.extra_quotes)
         has_observation = obs.observation is not None and bool(obs.observation.strip())
 
-        if has_any_quote_field and has_observation:
+        if (has_any_quote_field or has_extra_quotes) and has_observation:
             raise EvidenceValidationError(
                 f"Criterion '{obs.criterion_id}' mixes literal quote fields with an observation."
             )
         if has_any_quote_field and not has_all_quote_fields:
             raise EvidenceValidationError(
                 f"Criterion '{obs.criterion_id}' has incomplete quote/offset fields."
+            )
+        if has_extra_quotes and not has_all_quote_fields:
+            raise EvidenceValidationError(
+                f"Criterion '{obs.criterion_id}' provides extra quotes without a primary quote."
             )
         if not has_all_quote_fields and not has_observation:
             raise EvidenceValidationError(
@@ -148,38 +188,50 @@ class EvidenceValidator:
             assert obs.quote is not None
             assert obs.start_offset is not None
             assert obs.end_offset is not None
-            if (
-                isinstance(obs.start_offset, bool)
-                or isinstance(obs.end_offset, bool)
-                or obs.start_offset < 0
-                or obs.end_offset <= obs.start_offset
-                or obs.end_offset > len(answer.text)
-            ):
+            if len(obs.extra_quotes) > 2:
                 raise EvidenceValidationError(
-                    f"Criterion '{obs.criterion_id}' offsets [{obs.start_offset}:{obs.end_offset}] "
-                    f"are out of bounds for answer length {len(answer.text)}."
+                    f"Criterion '{obs.criterion_id}' exceeds the maximum of 3 verbatim quotes."
                 )
-            actual_slice = answer.text[obs.start_offset : obs.end_offset]
-            if actual_slice != obs.quote:
-                raise EvidenceValidationError(
-                    f"Fabricated or misaligned quote for '{obs.criterion_id}': "
-                    f"answer[{obs.start_offset}:{obs.end_offset}] does not match quote."
-                )
-            return Evidence(
-                answer_ref=answer.ref,
+            primary = cls._validate_single_quote(
+                answer=answer,
+                criterion_id=obs.criterion_id,
                 quote=obs.quote,
                 start_offset=obs.start_offset,
                 end_offset=obs.end_offset,
-                observation=None,
+            )
+            spans = [primary]
+            seen_bounds = {(primary.start_offset, primary.end_offset)}
+            for extra in obs.extra_quotes:
+                verified = cls._validate_single_quote(
+                    answer=answer,
+                    criterion_id=obs.criterion_id,
+                    quote=extra.quote,
+                    start_offset=extra.start_offset,
+                    end_offset=extra.end_offset,
+                )
+                bounds = (verified.start_offset, verified.end_offset)
+                if bounds in seen_bounds:
+                    raise EvidenceValidationError(
+                        f"Criterion '{obs.criterion_id}' repeats the same quote span {bounds}."
+                    )
+                seen_bounds.add(bounds)
+                spans.append(verified)
+            return tuple(spans)
+
+        if obs.status is CriterionStatus.MET:
+            raise EvidenceValidationError(
+                f"Criterion '{obs.criterion_id}' marked met requires at least one verbatim quote."
             )
 
         assert obs.observation is not None
-        return Evidence(
-            answer_ref=answer.ref,
-            quote=None,
-            start_offset=None,
-            end_offset=None,
-            observation=obs.observation.strip(),
+        return (
+            Evidence(
+                answer_ref=answer.ref,
+                quote=None,
+                start_offset=None,
+                end_offset=None,
+                observation=obs.observation.strip(),
+            ),
         )
 
 

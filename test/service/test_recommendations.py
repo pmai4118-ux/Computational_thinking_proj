@@ -473,7 +473,7 @@ def test_i06_antigravity_evaluation_flows_into_recommendations_without_another_c
         provider=ProviderMode.ANTIGRAVITY,
         database_path=tmp_path / "integrated.sqlite3",
         gemini_timeout_seconds=10.0,
-        antigravity_model="gemini-3.8-flash-medium",
+        antigravity_model="gemini-4-hydrogen-medium",
         antigravity_executable="agy.exe",
     )
     calls: list[str] = []

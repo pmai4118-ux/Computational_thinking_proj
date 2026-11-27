@@ -40,9 +40,6 @@ def test_q07_env_example_has_placeholders_only_and_validates_with_load_settings(
         "ANTIGRAVITY_MODEL",
         "ANTIGRAVITY_TIMEOUT_SECONDS",
         "ANTIGRAVITY_EXECUTABLE",
-        "GEMINI_TIMEOUT_SECONDS",
-        "GEMINI_MODEL",
-        "GEMINI_API_KEY",
         "GEMINI_MAX_RETRIES",
         "GEMINI_REQUEST_BUDGET",
         "GEMINI_INPUT_BYTES",
@@ -50,12 +47,12 @@ def test_q07_env_example_has_placeholders_only_and_validates_with_load_settings(
         "GEMINI_OUTPUT_TOKENS",
     }
     assert expected_keys.issubset(values.keys())
-    assert values["GEMINI_API_KEY"] == ""
-    assert values["GEMINI_MODEL"] == ""
+    assert "GEMINI_API_KEY" not in values
+    assert "GEMINI_MODEL" not in values
 
     ag_settings = load_settings(values)
     assert ag_settings.provider is ProviderMode.ANTIGRAVITY
-    assert ag_settings.antigravity_model == "gemini-3.8-flash-medium"
+    assert ag_settings.antigravity_model == "gemini-4-hydrogen-medium"
     assert ag_settings.antigravity_timeout_seconds == 120.0
     assert ag_settings.gemini_limits.max_retries == 1
     assert ag_settings.gemini_limits.request_budget == 50
@@ -64,7 +61,7 @@ def test_q07_env_example_has_placeholders_only_and_validates_with_load_settings(
     assert fixture_settings.provider is ProviderMode.FIXTURE
     assert fixture_settings.demo_label == "Dữ liệu minh họa"
 
-    with pytest.raises(ConfigurationError, match="GEMINI_API_KEY"):
+    with pytest.raises(ConfigurationError, match="EVALUATION_PROVIDER"):
         load_settings({**values, "EVALUATION_PROVIDER": "gemini"})
 
 
@@ -81,7 +78,6 @@ def test_q07_readme_and_demo_script_cover_install_import_modes_and_valid_paths()
         assert "run_demo.ps1" in doc_text
 
     assert "source.main:create_app" in readme
-    assert "GEMINI_API_KEY" in readme
     assert "GEMINI_REQUEST_BUDGET" in readme
     assert "docs/demo_script.md" in readme
 

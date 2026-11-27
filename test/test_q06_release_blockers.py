@@ -211,7 +211,7 @@ def test_q06_run_demo_script_resolves_configured_antigravity_exe() -> None:
     assert "ANTIGRAVITY_EXECUTABLE" in script
     assert r"agy\bin\agy.exe" in script
     assert "& $agyExe models" in script
-    assert "gemini-3.8-flash-medium" in script
+    assert "gemini-4-hydrogen-medium" in script
 
 
 def test_q06_mvcs_layer_import_boundaries_hold() -> None:

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Decision Replay — Tình huống kỹ thuật — interviewUS{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/features.css?v=20261127-p1">
+{% endblock %}
+
+{% block content %}
+{% if active_run %}
+<section class="card stack" aria-labelledby="replay-run-heading">
+  <div class="results-header">
+    <div>
+      <h1 id="replay-run-heading">{{ active_run.scenario.title }}</h1>
+      <p class="text-secondary reading-measure" style="margin: 0;">{{ active_run.scenario.summary }}</p>
+    </div>
+    <div class="action-row">
+      <form method="post" action="/replays/{{ active_run.scenario.id }}/start">
+        <button type="submit" class="btn btn--secondary">Thử nhánh quyết định khác</button>
+      </form>
+      <a class="btn btn--ghost" href="/replays">Danh sách kịch bản</a>
+    </div>
+  </div>
+
+  <details class="disclosure-block" open>
+    <summary>Giả định hệ thống đã công bố (chỉ hiển thị hệ quả đã kiểm duyệt)</summary>
+    <ul style="margin: var(--space-2) 0 0 0; padding-left: 1.25rem;">
+      {% for assumption in active_run.scenario.assumptions %}
+        <li>{{ assumption }}</li>
+      {% endfor %}
+    </ul>
+  </details>
+
+  {% if active_run.current_checkpoint %}
+    <section class="skill-group" aria-labelledby="checkpoint-heading">
+      <h2 id="checkpoint-heading">{{ active_run.current_checkpoint.title }}</h2>
+      <p style="margin: 0;"><strong>Tình huống:</strong> {{ active_run.current_checkpoint.situation }}</p>
+      <p style="margin: 0;"><strong>Câu hỏi quyết định:</strong> {{ active_run.current_checkpoint.question }}</p>
+      <div class="stack">
+        {% for opt in active_run.current_checkpoint.options %}
+          <form method="post" action="/replays/runs/{{ active_run.run_id }}/choose" class="option-card">
+            <input type="hidden" name="checkpoint_id" value="{{ active_run.current_checkpoint.id }}">
+            <input type="hidden" name="option_id" value="{{ opt.id }}">
+            <strong>{{ opt.label }}</strong>
+            <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);">{{ opt.action_summary }}</p>
+            <div class="action-row">
+              <button type="submit" class="btn btn--primary">Chọn phương án này</button>
+            </div>
+          </form>
+        {% endfor %}
+      </div>
+    </section>
+  {% else %}
+    <div class="alert alert--status" role="status">
+      <p class="alert__title">
+        Đã hoàn tất toàn bộ {{ active_run.steps | length }} điểm chốt ({{ active_run.recommended_steps_count }} lựa chọn khuyến nghị · {{ active_run.risky_steps_count }} lựa chọn rủi ro cao).
+      </p>
+      <p class="alert__hint">
+        Bạn có thể bấm "Thử nhánh quyết định khác" để so sánh hệ quả của các thiết kế khác nhau mà không làm thay đổi bài phỏng vấn gốc.
+      </p>
+    </div>
+  {% endif %}
+
+  <section class="stack" aria-labelledby="timeline-heading">
+    <h2 id="timeline-heading">Dòng thời gian quyết định &amp; hệ quả (Timeline)</h2>
+    {% if active_run.steps %}
+      <ol class="timeline-list">
+        {% for step in active_run.steps %}
+          <li class="timeline-item">
+            <p class="timeline-item__step">Bước {{ step.step_number }} · {{ step.checkpoint_title }}</p>
+            <div class="profile-entry__meta" style="margin-bottom: var(--space-2);">
+              <strong>Quyết định: {{ step.option_label }}</strong>
+              {% if step.outcome_tag == "recommended" %}
+                <span class="badge badge--met">Phương án khuyến nghị</span>
+              {% elif step.outcome_tag == "risky" %}
+                <span class="badge badge--unmet">Rủi ro nghiêm trọng</span>
+              {% else %}
+                <span class="badge badge--unresolved">Đánh đổi cần lưu ý</span>
+              {% endif %}
+            </div>
+            <p style="margin: 0 0 var(--space-1) 0;"><strong>Hệ quả kỹ thuật:</strong> {{ step.consequence_summary }}</p>
+            <p style="margin: 0 0 var(--space-1) 0;"><strong>Tác động hệ thống:</strong> {{ step.system_impact }}</p>
+            <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);"><strong>Đánh đổi:</strong> {{ step.tradeoff_note }}</p>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="text-secondary" style="margin: 0;">Chưa có quyết định nào được ghi nhận. Hãy chọn một phương án ở điểm chốt đầu tiên phía trên.</p>
+    {% endif %}
+  </section>
+</section>
+{% else %}
+<section class="card stack" aria-labelledby="replays-catalog-heading">
+  <div>
+    <h1 id="replays-catalog-heading">Tình huống Decision Replay đã kiểm duyệt</h1>
+    <p class="text-secondary reading-measure">
+      Thực hành ra quyết định theo từng điểm chốt kiến trúc Backend và xem hệ quả thực tế trên dòng thời gian. Toàn bộ hệ quả và giả định đều được biên soạn và kiểm duyệt sẵn, không suy diễn bởi AI và không ảnh hưởng tới kết quả phiên phỏng vấn gốc.
+    </p>
+  </div>
+
+  <ul class="replay-list">
+    {% for scenario in scenarios %}
+      <li class="skill-group">
+        <div class="results-header">
+          <div>
+            <h2>{{ scenario.title }}</h2>
+            <p class="text-secondary reading-measure" style="margin: 0;">{{ scenario.summary }}</p>
+            <p class="form-hint" style="margin-top: var(--space-2);">
+              {{ scenario.checkpoint_count }} điểm chốt · Nguồn tham chiếu: <code>{{ scenario.source_id }}</code>
+            </p>
+          </div>
+          <form method="post" action="/replays/{{ scenario.id }}/start">
+            <button type="submit" class="btn btn--primary">Bắt đầu tình huống</button>
+          </form>
+        </div>
+        <ul style="margin: 0; padding-left: 1.25rem; font-size: var(--font-size-sm);">
+          {% for assumption in scenario.assumptions %}
+            <li class="text-secondary">{{ assumption }}</li>
+          {% endfor %}
+        </ul>
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if recent_runs %}
+    <section class="stack" aria-labelledby="replay-history-heading">
+      <h2 id="replay-history-heading">Lượt chạy gần đây trên trình duyệt này</h2>
+      <ul class="profile-entry-list">
+        {% for run in recent_runs %}
+          <li class="profile-entry">
+            <div>
+              <strong>{{ run.scenario.title }}</strong>
+              <span class="badge {% if run.completed %}badge--met{% else %}badge--unresolved{% endif %}">
+                {% if run.completed %}Hoàn tất ({{ run.steps | length }} bước){% else %}Đang chạy ({{ run.steps | length }} bước){% endif %}
+              </span>
+            </div>
+            <a class="btn btn--secondary" href="/replays/runs/{{ run.run_id }}">
+              {% if run.completed %}Xem timeline{% else %}Tiếp tục{% endif %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

@@ -9,12 +9,23 @@ from source.Control.schemas import (
     AnswerRevisionRefDTO, CompetencyProfileEntryDTO, CompetencyProfileResponseDTO,
     RecentCriterionScoreDTO,
 )
+from source.Model.repositories.interfaces import ContentRepository
 from source.service.competency_profile_service import CompetencyProfileService
 
 
 class CompetencyProfileController:
-    def __init__(self, service: CompetencyProfileService) -> None:
+    def __init__(
+        self,
+        service: CompetencyProfileService,
+        content_repo: ContentRepository | None = None,
+    ) -> None:
         self._service = service
+        self._content_repo = content_repo
+
+    def skill_labels(self) -> dict[str, str]:
+        if self._content_repo is None:
+            return {}
+        return {str(skill.id): skill.label for skill in self._content_repo.list_skills()}
 
     def read(self, owner_token: str | None) -> CompetencyProfileResponseDTO:
         if not owner_token:

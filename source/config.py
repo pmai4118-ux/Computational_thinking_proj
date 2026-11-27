@@ -8,9 +8,7 @@ from os import environ
 from pathlib import Path
 import re
 
-from pydantic import SecretStr
-
-DEFAULT_ANTIGRAVITY_MODEL = "gemini-3.8-flash-medium"
+DEFAULT_ANTIGRAVITY_MODEL = "gemini-4-hydrogen-medium"
 DEFAULT_ANTIGRAVITY_EXECUTABLE = "agy"
 DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS = 120.0
 _MODEL_SLUG_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$")
@@ -23,7 +21,6 @@ class ConfigurationError(ValueError):
 class ProviderMode(StrEnum):
     FIXTURE = "fixture"
     ANTIGRAVITY = "antigravity"
-    GEMINI = "gemini"
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,13 +56,10 @@ class GeminiLimits:
 class Settings:
     provider: ProviderMode
     database_path: Path
-    gemini_timeout_seconds: float
-    gemini_model: str | None = None
-    gemini_api_key: SecretStr | None = None
+    gemini_timeout_seconds: float = 30.0
     antigravity_model: str | None = None
     antigravity_timeout_seconds: float = DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS
     antigravity_executable: str = DEFAULT_ANTIGRAVITY_EXECUTABLE
-
     gemini_limits: GeminiLimits = GeminiLimits()
 
     @property
@@ -132,64 +126,41 @@ def load_settings(variables: Mapping[str, str] | None = None) -> Settings:
         provider = ProviderMode(env.get("EVALUATION_PROVIDER", "antigravity").strip())
     except ValueError:
         raise ConfigurationError(
-            "Set EVALUATION_PROVIDER to fixture, antigravity, or gemini."
+            "Set EVALUATION_PROVIDER to antigravity or fixture."
         ) from None
 
     database_path = _database_file(env.get("DATABASE_PATH", ".local/interview.sqlite3").strip())
-    gemini_timeout = _parse_timeout(
-        env.get("GEMINI_TIMEOUT_SECONDS"),
-        default="30",
-        variable_name="GEMINI_TIMEOUT_SECONDS",
-    )
 
     if provider is ProviderMode.FIXTURE:
-        return Settings(provider, database_path, gemini_timeout)
+        return Settings(provider=provider, database_path=database_path)
 
-    if provider is ProviderMode.ANTIGRAVITY:
-        ag_model = env.get("ANTIGRAVITY_MODEL", "").strip() or DEFAULT_ANTIGRAVITY_MODEL
-        if not _MODEL_SLUG_PATTERN.fullmatch(ag_model):
-            raise ConfigurationError(
-                "Set ANTIGRAVITY_MODEL to a valid model slug from 'agy models' "
-                "(e.g. gemini-3.8-flash-medium) without the 'models/' prefix."
-            )
-        ag_timeout = _parse_timeout(
-            env.get("ANTIGRAVITY_TIMEOUT_SECONDS"),
-            default=str(int(DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS)),
-            variable_name="ANTIGRAVITY_TIMEOUT_SECONDS",
-            max_seconds=300.0,
-            allow_blank_default=True,
-        )
-        if ag_timeout < 1.0:
-            raise ConfigurationError(
-                "Set ANTIGRAVITY_TIMEOUT_SECONDS to a finite number between 1 and 300."
-            )
-        ag_executable = (
-            env.get("ANTIGRAVITY_EXECUTABLE", "").strip() or DEFAULT_ANTIGRAVITY_EXECUTABLE
-        )
-        if "\0" in ag_executable:
-            raise ConfigurationError("Set ANTIGRAVITY_EXECUTABLE to a valid CLI executable name or path.")
-        return Settings(
-            provider=provider,
-            database_path=database_path,
-            gemini_timeout_seconds=gemini_timeout,
-            gemini_limits=GeminiLimits.from_env(env),
-            antigravity_model=ag_model,
-            antigravity_timeout_seconds=ag_timeout,
-            antigravity_executable=ag_executable,
-        )
-
-    api_key = env.get("GEMINI_API_KEY", "").strip()
-    if not api_key:
+    ag_model = env.get("ANTIGRAVITY_MODEL", "").strip() or DEFAULT_ANTIGRAVITY_MODEL
+    if not _MODEL_SLUG_PATTERN.fullmatch(ag_model):
         raise ConfigurationError(
-            "Set GEMINI_API_KEY in the server environment for live API-key evaluation, "
-            "or use EVALUATION_PROVIDER=antigravity / fixture."
+            "Set ANTIGRAVITY_MODEL to a valid model slug from 'agy models' "
+            "(e.g. gemini-4-hydrogen-medium) without the 'models/' prefix."
         )
-    model = env.get("GEMINI_MODEL", "").strip()
-    if not model:
+    ag_timeout = _parse_timeout(
+        env.get("ANTIGRAVITY_TIMEOUT_SECONDS"),
+        default=str(int(DEFAULT_ANTIGRAVITY_TIMEOUT_SECONDS)),
+        variable_name="ANTIGRAVITY_TIMEOUT_SECONDS",
+        max_seconds=300.0,
+        allow_blank_default=True,
+    )
+    if ag_timeout < 1.0:
         raise ConfigurationError(
-            "Set GEMINI_MODEL to an API model ID or use EVALUATION_PROVIDER=antigravity / fixture."
+            "Set ANTIGRAVITY_TIMEOUT_SECONDS to a finite number between 1 and 300."
         )
-    if not 1 <= gemini_timeout <= 120:
-        raise ConfigurationError("Set GEMINI_TIMEOUT_SECONDS between 1 and 120.")
-    return Settings(provider, database_path, gemini_timeout, model, SecretStr(api_key),
-                    gemini_limits=GeminiLimits.from_env(env))
+    ag_executable = (
+        env.get("ANTIGRAVITY_EXECUTABLE", "").strip() or DEFAULT_ANTIGRAVITY_EXECUTABLE
+    )
+    if "\0" in ag_executable:
+        raise ConfigurationError("Set ANTIGRAVITY_EXECUTABLE to a valid CLI executable name or path.")
+    return Settings(
+        provider=provider,
+        database_path=database_path,
+        gemini_limits=GeminiLimits.from_env(env),
+        antigravity_model=ag_model,
+        antigravity_timeout_seconds=ag_timeout,
+        antigravity_executable=ag_executable,
+    )

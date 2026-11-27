@@ -183,3 +183,65 @@ CREATE TABLE IF NOT EXISTS competency_profiles (
     FOREIGN KEY (skill_id) REFERENCES skills (id),
     FOREIGN KEY (latest_session_id) REFERENCES sessions (id)
 );
+
+CREATE TABLE IF NOT EXISTS job_analyses (
+    id TEXT PRIMARY KEY,
+    owner_token_hash TEXT NOT NULL,
+    title TEXT,
+    company TEXT,
+    raw_text TEXT NOT NULL,
+    source_url TEXT,
+    published_at TEXT,
+    collected_at TEXT NOT NULL,
+    normalization_version TEXT NOT NULL,
+    matched_skills_json TEXT NOT NULL,
+    unmatched_terms_json TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_job_analyses_owner ON job_analyses (owner_token_hash);
+
+CREATE TABLE IF NOT EXISTS follow_up_probes (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    owner_token_hash TEXT NOT NULL,
+    answer_id TEXT NOT NULL,
+    answer_revision INTEGER NOT NULL CHECK (answer_revision >= 1),
+    question_id TEXT NOT NULL,
+    question_version INTEGER NOT NULL CHECK (question_version >= 1),
+    rubric_id TEXT NOT NULL,
+    rubric_version INTEGER NOT NULL CHECK (rubric_version >= 1),
+    criterion_id TEXT NOT NULL,
+    criterion_label TEXT NOT NULL,
+    trigger_kind TEXT NOT NULL,
+    probe_prompt TEXT NOT NULL,
+    choice_reason TEXT NOT NULL,
+    status TEXT NOT NULL,
+    response_text TEXT,
+    outcome_status TEXT,
+    outcome_score INTEGER,
+    outcome_max_score INTEGER,
+    outcome_explanation TEXT,
+    outcome_quote TEXT,
+    created_at TEXT NOT NULL,
+    answered_at TEXT,
+    FOREIGN KEY (session_id) REFERENCES sessions (id),
+    FOREIGN KEY (answer_id, answer_revision) REFERENCES answers (id, revision)
+);
+
+CREATE INDEX IF NOT EXISTS idx_follow_up_probes_session ON follow_up_probes (session_id);
+CREATE INDEX IF NOT EXISTS idx_follow_up_probes_answer ON follow_up_probes (answer_id, answer_revision);
+
+CREATE TABLE IF NOT EXISTS decision_replay_runs (
+    id TEXT PRIMARY KEY,
+    scenario_id TEXT NOT NULL,
+    scenario_version INTEGER NOT NULL CHECK (scenario_version >= 1),
+    owner_token_hash TEXT NOT NULL,
+    current_checkpoint_id TEXT,
+    completed INTEGER NOT NULL CHECK (completed IN (0, 1)),
+    steps_json TEXT NOT NULL,
+    linked_session_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_decision_replay_runs_owner ON decision_replay_runs (owner_token_hash);

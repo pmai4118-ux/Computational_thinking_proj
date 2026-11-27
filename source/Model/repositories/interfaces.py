@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from source.Model.adaptive_probe import FollowUpProbe
 from source.Model.competency_profile import CompetencyProfileEntry
+from source.Model.decision_replay import ReplayRun
+from source.Model.job_posting import JobAnalysisRecord
 from source.Model.evaluation import AnswerRevisionRef, EvaluationResult
 from source.Model.exercise import Exercise
 from source.Model.ids import (
@@ -175,10 +178,48 @@ class CompetencyProfileRepository(Protocol):
     ) -> tuple[CompetencyProfileEntry, ...]: ...
 
 
+@runtime_checkable
+class JobPostingRepository(Protocol):
+    """Persistence contract for original JDs and their derived evidence-linked analyses."""
+
+    def save_job_analysis(self, record: JobAnalysisRecord) -> JobAnalysisRecord: ...
+
+    def get_job_analysis(self, analysis_id: str) -> JobAnalysisRecord | None: ...
+
+    def list_job_analyses_by_owner(self, owner_token_hash: str) -> tuple[JobAnalysisRecord, ...]: ...
+
+
+@runtime_checkable
+class FollowUpProbeRepository(Protocol):
+    """Persistence contract for bounded adaptive follow-up probes."""
+
+    def save_probe(self, probe: FollowUpProbe) -> FollowUpProbe: ...
+
+    def get_probe(self, probe_id: str) -> FollowUpProbe | None: ...
+
+    def list_probes_for_session(self, session_id: SessionId) -> tuple[FollowUpProbe, ...]: ...
+
+    def list_probes_for_answer(self, answer_ref: AnswerRevisionRef) -> tuple[FollowUpProbe, ...]: ...
+
+
+@runtime_checkable
+class DecisionReplayRepository(Protocol):
+    """Persistence contract for owner-scoped Decision Replay traversal runs."""
+
+    def save_replay_run(self, run: ReplayRun) -> ReplayRun: ...
+
+    def get_replay_run(self, run_id: str) -> ReplayRun | None: ...
+
+    def list_replay_runs_by_owner(self, owner_token_hash: str) -> tuple[ReplayRun, ...]: ...
+
+
 __all__ = [
     "CompetencyProfileRepository",
     "ContentRepository",
+    "DecisionReplayRepository",
     "DuplicateRecordError",
+    "FollowUpProbeRepository",
+    "JobPostingRepository",
     "DuplicateSubmissionConflictError",
     "EvaluationInProgressError",
     "EvaluationRepository",
