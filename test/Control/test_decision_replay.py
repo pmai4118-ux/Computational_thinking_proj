@@ -423,3 +423,127 @@ def test_antigravity_replay_simulator_default_runner_and_structured_retry(
     assert result.nodes[0].answer_alignment == "matched_from_answer"
     assert result.nodes[0].answer_quote == "khóa dòng trong transaction"
     assert result.nodes[0].answer_quote_start == 8
+
+
+def test_repair_tree_links_heals_missing_parent_ids_on_cached_runs(tmp_path: Path) -> None:
+    """Existing runs saved with null child parent_id auto-heal tree edges and rewind paths."""
+    from datetime import UTC, datetime
+    from source.Model.decision_replay import (
+        ReplayInvariantCheck,
+        ReplayOptionBranch,
+        ReplayRun,
+        ReplayTraceStep,
+        ReplayTreeNode,
+    )
+    from source.Model.evaluation import AnswerRevisionRef
+    from source.Model.ids import AnswerId, QuestionId, SessionId
+    from source.Model.repositories.sqlite_repository import SQLiteRepositoryStore
+    from source.Control.interview_controller import hash_owner_token
+    from source.service.question_bank_service import QuestionBankService
+    from source.service.decision_replay_service import DecisionReplayService
+
+    store = SQLiteRepositoryStore(tmp_path / "heal-replay.sqlite3")
+    QuestionBankService().import_seed(store)
+    owner = "owner-heal-1"
+    owner_hash = hash_owner_token(owner)
+    now = datetime.now(UTC)
+
+    # Deliberately save a cached tree where child parent_id is None and visited misses intermediate step
+    broken_run = ReplayRun(
+        id="replayrun.brokenlinks",
+        question_id=QuestionId("case.c03.inventory_race.v1"),
+        question_version=1,
+        owner_token_hash=owner_hash,
+        root_node_id="node_root",
+        active_node_id="node_leaf",
+        visited_node_ids=("node_root", "node_leaf"),
+        nodes=(
+            ReplayTreeNode(
+                id="node_root",
+                parent_id=None,
+                branch_label="Gốc",
+                depth=0,
+                origin="answer_start",
+                answer_alignment="unspecified",
+                title="Root",
+                situation="Start",
+                consequence_summary="Start",
+                system_impact="Start",
+                tradeoff_note="Start",
+                options=(
+                    ReplayOptionBranch("o1", "Bước 1", "Desc 1", "node_mid"),
+                ),
+            ),
+            ReplayTreeNode(
+                id="node_mid",
+                parent_id=None,  # Missing parent!
+                branch_label="Nhánh giữa",
+                depth=0,  # Wrong depth!
+                origin="prebuilt_branch",
+                answer_alignment="what_if_branch",
+                title="Mid",
+                situation="Mid",
+                consequence_summary="Mid",
+                system_impact="Mid",
+                tradeoff_note="Mid",
+                options=(
+                    ReplayOptionBranch("o2", "Bước 2", "Desc 2", "node_leaf"),
+                ),
+            ),
+            ReplayTreeNode(
+                id="node_leaf",
+                parent_id=None,  # Missing parent!
+                branch_label="Kết cục",
+                depth=0,
+                origin="prebuilt_branch",
+                answer_alignment="what_if_branch",
+                title="Leaf",
+                situation="Leaf",
+                consequence_summary="Leaf",
+                system_impact="Leaf",
+                tradeoff_note="Leaf",
+                trace_steps=(ReplayTraceStep("Req 1", "Lock", "held", "t = 0ms"),),
+                is_terminal=True,
+                invariants=(
+                    ReplayInvariantCheck("Safety 1", "preserved", "OK", category="safety"),
+                    ReplayInvariantCheck("Operational", "warning", "Wait spike", category="operational"),
+                ),
+                comparison_note="Compare cleanly.",
+            ),
+        ),
+        created_at=now,
+        updated_at=now,
+        title="Heal Test",
+        summary="Heal Summary",
+        linked_session_id=SessionId("session.heal"),
+        linked_answer_ref=AnswerRevisionRef(AnswerId("answer.heal"), 1),
+    )
+    store.save_replay_run(broken_run)
+
+    app = create_app(
+        settings=load_settings({
+            "EVALUATION_PROVIDER": "fixture",
+            "DATABASE_PATH": str(tmp_path / "heal-replay.sqlite3"),
+        }),
+        interpreter=FixtureProvider(),
+    )
+    with TestClient(app) as client:
+        client.cookies.set("interview_owner_id", owner)
+        fetched = client.get("/api/replays/runs/replayrun.brokenlinks")
+        assert fetched.status_code == 200
+        data = fetched.json()
+        assert data["active_path_ids"] == ["node_root", "node_mid", "node_leaf"]
+        by_id = {n["id"]: n for n in data["nodes"]}
+        assert by_id["node_mid"]["parent_id"] == "node_root"
+        assert by_id["node_mid"]["depth"] == 1
+        assert by_id["node_leaf"]["parent_id"] == "node_mid"
+        assert by_id["node_leaf"]["depth"] == 2
+        assert by_id["node_leaf"]["invariants"][1]["category"] == "operational"
+        assert by_id["node_leaf"]["trace_steps"][0]["time_label"] == "t = 0ms"
+
+        rewound = client.post(
+            "/api/replays/runs/replayrun.brokenlinks/rewind",
+            json={"node_id": "node_mid"},
+        )
+        assert rewound.status_code == 200
+        assert rewound.json()["active_node_id"] == "node_mid"

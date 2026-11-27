@@ -576,19 +576,20 @@ class DecisionReplayService:
     def build_run_context(
         self, run: ReplayRun, *, question: Question | None = None
     ) -> ReplayRunContext:
+        repaired_run = self._repair_tree_links(run)
         resolved_question = question
         if resolved_question is None and self._content_repo is not None:
             resolved_question = self._content_repo.get_question(
-                VersionedRef(run.question_id, run.question_version)
+                VersionedRef(repaired_run.question_id, repaired_run.question_version)
             )
         answer = (
-            self._session_repo.get_answer(run.linked_answer_ref)
-            if self._session_repo is not None and run.linked_answer_ref is not None
+            self._session_repo.get_answer(repaired_run.linked_answer_ref)
+            if self._session_repo is not None and repaired_run.linked_answer_ref is not None
             else None
         )
         evaluation = (
-            self._evaluation_repo.get_latest_evaluation_for_answer(run.linked_answer_ref)
-            if self._evaluation_repo is not None and run.linked_answer_ref is not None
+            self._evaluation_repo.get_latest_evaluation_for_answer(repaired_run.linked_answer_ref)
+            if self._evaluation_repo is not None and repaired_run.linked_answer_ref is not None
             else None
         )
         completed_eval = (
@@ -596,15 +597,64 @@ class DecisionReplayService:
             if evaluation is not None and evaluation.status is EvaluationStatus.COMPLETED
             else None
         )
-        path_ids = self._path_to_node(run.node_map(), run.active_node_id)
+        path_ids = self._path_to_node(repaired_run.node_map(), repaired_run.active_node_id)
         return ReplayRunContext(
-            run=run,
+            run=repaired_run,
             question=resolved_question,
             linked_answer_text=answer.text if answer is not None else None,
             linked_total_score=completed_eval.total_score if completed_eval is not None else None,
             linked_maximum_score=completed_eval.maximum_score if completed_eval is not None else None,
             linked_evaluation_status=evaluation.status.value if evaluation is not None else None,
             active_path_ids=path_ids,
+        )
+
+    @staticmethod
+    def _repair_tree_links(run: ReplayRun) -> ReplayRun:
+        """Guarantee parent_id & depth are populated from options[].target_node_id even on older cached runs."""
+        by_id = {n.id: n for n in run.nodes}
+        if run.root_node_id not in by_id:
+            return run
+        parent_of: dict[str, str | None] = {run.root_node_id: None}
+        depth_of: dict[str, int] = {run.root_node_id: 0}
+        queue = [run.root_node_id]
+        seen = {run.root_node_id}
+        while queue:
+            current_id = queue.pop(0)
+            current = by_id[current_id]
+            for opt in current.options:
+                target = opt.target_node_id
+                if target in by_id and target not in seen:
+                    seen.add(target)
+                    parent_of[target] = current_id
+                    depth_of[target] = depth_of[current_id] + 1
+                    queue.append(target)
+
+        changed = False
+        repaired_nodes: list[ReplayTreeNode] = []
+        for node in run.nodes:
+            expected_parent = parent_of.get(node.id, node.parent_id)
+            expected_depth = depth_of.get(node.id, node.depth)
+            if node.parent_id != expected_parent or node.depth != expected_depth:
+                changed = True
+                repaired_nodes.append(
+                    replace(node, parent_id=expected_parent, depth=expected_depth)
+                )
+            else:
+                repaired_nodes.append(node)
+
+        if not changed:
+            return run
+        visited = list(run.visited_node_ids)
+        # Ensure all ancestors along active_node_id are also present in visited_node_ids.
+        repaired_map = {n.id: n for n in repaired_nodes}
+        active_path = DecisionReplayService._path_to_node(repaired_map, run.active_node_id)
+        for pid in active_path:
+            if pid not in visited:
+                visited.append(pid)
+        return replace(
+            run,
+            nodes=tuple(repaired_nodes),
+            visited_node_ids=tuple(visited),
         )
 
     def _collect_readonly_eval_notes(self, answer_ref: AnswerRevisionRef) -> tuple[str, ...]:

@@ -71,6 +71,7 @@ class ReplayTraceStepDTO(BaseModel):
     actor: str
     event: str
     state_after: str | None = None
+    time_label: str | None = None
 
 
 class ReplayInvariantDTO(BaseModel):
@@ -79,6 +80,7 @@ class ReplayInvariantDTO(BaseModel):
     name: str
     status: str
     detail: str
+    category: str = "safety"
 
 
 class ReplayOptionDTO(BaseModel):
@@ -277,6 +279,7 @@ class DecisionReplayController:
                     actor=s.actor,
                     event=s.event,
                     state_after=s.state_after,
+                    time_label=s.time_label,
                 )
                 for s in node.trace_steps
             ),
@@ -286,6 +289,7 @@ class DecisionReplayController:
                     name=inv.name,
                     status=inv.status,
                     detail=inv.detail,
+                    category=inv.category,
                 )
                 for inv in node.invariants
             ),

@@ -138,9 +138,12 @@ test("replay.js highlights matched quote, chooses branch without reload, and sub
         tradeoff_note: "Kiểm tra rowcount",
         assumptions_used: ["2 instance"],
         state_delta: "stock: 1 -> 0",
-        trace_steps: [{ actor: "DB", event: "Commit", state_after: "stock = 0" }],
+        trace_steps: [{ actor: "DB", event: "Commit", state_after: "stock = 0", time_label: "t = 8ms" }],
         is_terminal: true,
-        invariants: [{ name: "stock >= 0", status: "preserved", detail: "Đạt" }],
+        invariants: [
+          { category: "safety", name: "stock >= 0", status: "preserved", detail: "Đạt" },
+          { category: "operational", name: "Độ trễ & lock wait", status: "warning", detail: "Cảnh báo chờ khóa" },
+        ],
         comparison_note: "Khắc phục lỗ hổng khóa cục bộ.",
         options: [],
       },
@@ -149,9 +152,19 @@ test("replay.js highlights matched quote, chooses branch without reload, and sub
 
   let chosenCall = null;
   let customCall = null;
+  let selectCall = null;
   const studio = mountReplayStudio({
     initialRun: baseRun,
     api: {
+      selectReplayNode: async (runId, nodeId) => {
+        selectCall = { runId, nodeId };
+        return {
+          ...baseRun,
+          active_node_id: nodeId,
+          active_path_ids: nodeId === "root" ? ["root"] : ["root", nodeId],
+          visited_node_ids: ["root", "leaf1"],
+        };
+      },
       chooseReplayOption: async (runId, nodeId, optionId) => {
         chosenCall = { runId, nodeId, optionId };
         return {
@@ -177,9 +190,12 @@ test("replay.js highlights matched quote, chooses branch without reload, and sub
           tradeoff_note: "Thêm hạ tầng",
           assumptions_used: ["2 instance"],
           state_delta: "TTL expiry",
-          trace_steps: [{ actor: "Redis", event: "Lock 5s", state_after: "locked" }],
+          trace_steps: [{ actor: "Redis", event: "Lock 5s", state_after: "locked", time_label: "t = 0ms" }],
           is_terminal: true,
-          invariants: [{ name: "stock >= 0", status: "uncertain", detail: "Phụ thuộc TTL" }],
+          invariants: [
+            { category: "safety", name: "stock >= 0", status: "uncertain", detail: "Phụ thuộc TTL" },
+            { category: "operational", name: "Rủi ro Redis TTL", status: "warning", detail: "Lease expiry" },
+          ],
           comparison_note: "Cần transaction DB.",
           options: [],
         };
@@ -195,12 +211,14 @@ test("replay.js highlights matched quote, chooses branch without reload, and sub
     },
   });
 
-  // Initial render highlights exact matched quote in left panel and shows non-terminal options.
+  // Initial render highlights exact matched quote in left panel, shows visual tree & hides top rewind on root.
   assert.match(collectText(studio.querySelector("#replay-answer-source")), /khóa cục bộ/);
+  assert.match(collectText(studio.querySelector("#replay-tree-nav")), /UPDATE nguyên tử/);
+  assert.equal(studio.querySelector("#replay-rewind-parent-top").hidden, true);
   assert.equal(studio.querySelector("#replay-ending-section").hidden, true);
   assert.equal(studio.querySelector("#replay-options-section").hidden, false);
 
-  // Submit custom branch from root.
+  // Submit custom branch from root -> shows separated Safety vs Operational groups + active Rewind buttons.
   studio.querySelector("#replay-custom-input").value = "Thử dùng Redis lock TTL 5s";
   await studio.querySelector("#replay-custom-form").trigger("submit");
   assert.deepEqual(customCall, {
@@ -209,5 +227,14 @@ test("replay.js highlights matched quote, chooses branch without reload, and sub
     text: "Thử dùng Redis lock TTL 5s",
   });
   assert.equal(studio.querySelector("#replay-ending-section").hidden, false);
+  assert.equal(studio.querySelector("#replay-rewind-parent").hidden, false);
+  assert.equal(studio.querySelector("#replay-rewind-parent-top").hidden, false);
+  assert.match(collectText(studio.querySelector("#replay-outcome-summary")), /0\/1 Đạt/);
+  assert.match(collectText(studio.querySelector("#replay-outcome-summary")), /Cảnh báo rủi ro/);
+  assert.match(collectText(studio.querySelector("#replay-operational-list")), /Lease expiry/);
   assert.match(studio.querySelector("#replay-node-title").textContent, /Kết cục Redis/);
+
+  // Clicking rewind navigates cleanly back to parent node without reload!
+  await studio.querySelector("#replay-rewind-parent-top").trigger("click");
+  assert.deepEqual(selectCall, { runId: "replayrun.1", nodeId: "root" });
 });

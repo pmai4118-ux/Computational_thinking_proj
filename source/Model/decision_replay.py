@@ -16,15 +16,17 @@ class ReplayTraceStep:
     actor: str
     event: str
     state_after: str | None = None
+    time_label: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class ReplayInvariantCheck:
-    """Non-scored invariant outcome shown at a terminal Replay node."""
+    """Non-scored outcome shown at a terminal Replay node (Safety vs Operational)."""
 
     name: str
-    status: str  # "preserved" | "broken" | "uncertain"
+    status: str  # "preserved" | "warning" | "broken" | "uncertain"
     detail: str
+    category: str = "safety"  # "safety" | "operational"
 
 
 @dataclass(frozen=True, slots=True)

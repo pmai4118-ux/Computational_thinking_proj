@@ -328,29 +328,13 @@ class SQLiteRepositoryStore:
                     ).fetchone()
                     existing_question = self._row_to_question(row)
                     if existing_question != question:
-                        # Safely backfill newly added nullable metadata columns on pre-existing DBs.
-                        can_backfill_coding = (
-                            existing_question.coding_config is None
-                            and question.coding_config is not None
-                        )
-                        can_backfill_grounding = (
-                            existing_question.replay_grounding is None
-                            and question.replay_grounding is not None
-                        )
+                        # Safely backfill or sync metadata columns when core versioned question fields match.
                         backfilled = replace(
                             existing_question,
-                            coding_config=(
-                                question.coding_config
-                                if can_backfill_coding
-                                else existing_question.coding_config
-                            ),
-                            replay_grounding=(
-                                question.replay_grounding
-                                if can_backfill_grounding
-                                else existing_question.replay_grounding
-                            ),
+                            coding_config=question.coding_config,
+                            replay_grounding=question.replay_grounding,
                         )
-                        if (can_backfill_coding or can_backfill_grounding) and backfilled == question:
+                        if backfilled == question:
                             conn.execute(
                                 """UPDATE questions
                                    SET coding_config_json = ?, replay_grounding_json = ?
@@ -1738,6 +1722,7 @@ class SQLiteRepositoryStore:
                             "actor": step.actor,
                             "event": step.event,
                             "state_after": step.state_after,
+                            "time_label": step.time_label,
                         }
                         for step in node.trace_steps
                     ],
@@ -1747,6 +1732,7 @@ class SQLiteRepositoryStore:
                             "name": inv.name,
                             "status": inv.status,
                             "detail": inv.detail,
+                            "category": inv.category,
                         }
                         for inv in node.invariants
                     ],
@@ -1834,6 +1820,7 @@ class SQLiteRepositoryStore:
                         actor=str(s["actor"]),
                         event=str(s["event"]),
                         state_after=s.get("state_after"),
+                        time_label=s.get("time_label"),
                     )
                     for s in n.get("trace_steps", ())
                 ),
@@ -1843,6 +1830,7 @@ class SQLiteRepositoryStore:
                         name=str(inv["name"]),
                         status=str(inv["status"]),
                         detail=str(inv["detail"]),
+                        category=str(inv.get("category", "safety")),
                     )
                     for inv in n.get("invariants", ())
                 ),

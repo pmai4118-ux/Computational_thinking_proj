@@ -49,12 +49,14 @@ class GeneratedTraceStepDTO(_StrictModel):
     actor: str = Field(min_length=1)
     event: str = Field(min_length=1)
     state_after: str | None = None
+    time_label: str | None = None
 
 
 class GeneratedInvariantDTO(_StrictModel):
     name: str = Field(min_length=1)
-    status: Literal["preserved", "broken", "uncertain"]
+    status: Literal["preserved", "warning", "broken", "uncertain"]
     detail: str = Field(min_length=1)
+    category: Literal["safety", "operational"] = "safety"
 
 
 class GeneratedOptionDTO(_StrictModel):
@@ -169,13 +171,15 @@ def validate_and_anchor_tree(
     if root.parent_id is not None or root.depth != 0:
         raise ValueError("Root node must have parent_id=None and depth=0.")
 
-    # Verify acyclic reachability & strict depth bounds
+    # Verify strict acyclic tree topology & derive canonical parent_id and depth from edges.
     state: dict[str, int] = {}
+    computed_parent: dict[str, str | None] = {raw.root_node_id: None}
+    computed_depth: dict[str, int] = {raw.root_node_id: 0}
 
     def dfs(node_id: str, expected_depth: int) -> None:
         state[node_id] = 1
         node = by_id[node_id]
-        if node.depth > MAX_PREBUILT_DEPTH:
+        if expected_depth > MAX_PREBUILT_DEPTH:
             raise ValueError(f"Node '{node_id}' exceeds max prebuilt depth {MAX_PREBUILT_DEPTH}.")
         if node.is_terminal:
             if node.options:
@@ -194,10 +198,17 @@ def validate_and_anchor_tree(
                     raise ValueError(
                         f"Option '{opt.option_id}' points to missing node '{opt.target_node_id}'."
                     )
+                if opt.target_node_id == raw.root_node_id:
+                    raise ValueError("Cycle detected: option targets root node.")
                 if state.get(opt.target_node_id) == 1:
                     raise ValueError(f"Cycle detected in replay tree at '{opt.target_node_id}'.")
-                if state.get(opt.target_node_id, 0) == 0:
-                    dfs(opt.target_node_id, expected_depth + 1)
+                if opt.target_node_id in computed_parent:
+                    raise ValueError(
+                        f"Node '{opt.target_node_id}' has multiple parents; strict tree required."
+                    )
+                computed_parent[opt.target_node_id] = node_id
+                computed_depth[opt.target_node_id] = expected_depth + 1
+                dfs(opt.target_node_id, expected_depth + 1)
         state[node_id] = 2
 
     dfs(raw.root_node_id, 0)
@@ -236,9 +247,9 @@ def validate_and_anchor_tree(
         anchored_nodes.append(
             ReplayTreeNode(
                 id=item.id,
-                parent_id=item.parent_id,
+                parent_id=computed_parent[item.id],
                 branch_label=item.branch_label,
-                depth=item.depth,
+                depth=computed_depth[item.id],
                 origin=item.origin,
                 answer_alignment=alignment,
                 title=item.title,
@@ -256,6 +267,7 @@ def validate_and_anchor_tree(
                         actor=s.actor,
                         event=s.event,
                         state_after=s.state_after,
+                        time_label=s.time_label,
                     )
                     for s in item.trace_steps
                 ),
@@ -265,6 +277,7 @@ def validate_and_anchor_tree(
                         name=inv.name,
                         status=inv.status,
                         detail=inv.detail,
+                        category=inv.category,
                     )
                     for inv in item.invariants
                 ),
@@ -364,80 +377,116 @@ class FixtureReplaySimulator:
 
         if any(k in lower for k in ("redis", "redlock", "distributed lock", "etcd", "zookeeper")):
             title = "Thử nhánh tự đề xuất: Khóa phân tán (Redis / Distributed Lock)"
-            state_delta = "Khóa ở Redis TTL → trừ DB; rủi ro nếu hết TTL khi DB chậm hoặc ghi đơn lỗi chưa rollback"
+            state_delta = "Khóa ở Redis TTL → trừ DB; rủi ro hết TTL hoặc giữ DB lock nếu tác vụ chậm"
             trace = (
-                ReplayTraceStep("Request 1", "Xin khóa phân tán key=lock:resource với TTL = 5s thành công.", "lock_holder = Req 1"),
-                ReplayTraceStep("Request 2", "Xin cùng khóa bị từ chối hoặc chờ retry trong lúc Req 1 đang xử lý.", "Req 2 đợi/trả 429"),
-                ReplayTraceStep("GC / Mạng chậm", "Nếu Req 1 bị treo > 5s, khóa TTL tự hết hạn trong khi giao dịch DB cũ chưa kịp commit.", "2 request có thể cùng vào DB nếu DB không kiểm tra thêm"),
-                ReplayTraceStep("PostgreSQL", "Cần kết hợp ràng buộc nguyên tử ở DB và chung 1 transaction mới bảo đảm rollback khi tạo đơn lỗi.", "Phụ thuộc lớp bảo vệ tại DB"),
+                ReplayTraceStep("Request 1", "Xin khóa phân tán key=lock:resource với TTL = 5s thành công.", "lock_holder = Req 1", "t = 0ms"),
+                ReplayTraceStep("Request 2 (Instance 2)", "Đến song song, xin cùng khóa bị từ chối hoặc chờ retry trong lúc Req 1 đang chạy.", "Req 2 đợi/trả 429", "t = 5ms (song song)"),
+                ReplayTraceStep("GC / Mạng chậm", "Nếu Req 1 bị treo > 5s, khóa TTL tự hết hạn trong khi giao dịch DB cũ chưa kịp commit.", "2 request có thể cùng vào DB nếu DB không kiểm tra thêm", "t = 5100ms"),
+                ReplayTraceStep("PostgreSQL", "Cần kết hợp điều kiện nguyên tử ở DB (và SET LOCAL lock_timeout nếu cần) + chung 1 transaction mới bảo đảm rollback khi tạo đơn lỗi.", "Phụ thuộc lớp bảo vệ tại DB", "t = 5150ms"),
             )
             impact = "Giảm xung đột sớm trước khi chạm DB, nhưng khóa TTL bên ngoài không tự bảo đảm tính nguyên tử khi ghi DB thất bại."
             tradeoff = "Thêm hạ tầng phụ (Redis) và rủi ro khóa hết hạn sớm (lease expiry); vẫn nên giữ ràng buộc WHERE/transaction tại PostgreSQL làm tuyến phòng thủ cuối."
-            inv_checks = tuple(
+            inv_checks = (
+                *(
+                    ReplayInvariantCheck(
+                        name=inv,
+                        status="uncertain" if idx == 0 else ("broken" if "rollback" in inv.lower() and "transaction" not in lower else "uncertain"),
+                        detail="Phụ thuộc thời hạn TTL của khóa phân tán và việc vẫn giữ kiểm tra/transaction tại PostgreSQL.",
+                        category="safety",
+                    )
+                    for idx, inv in enumerate(invariants_src)
+                ),
                 ReplayInvariantCheck(
-                    name=inv,
-                    status="uncertain" if idx == 0 else ("broken" if "rollback" in inv.lower() and "transaction" not in lower else "uncertain"),
-                    detail="Phụ thuộc thời hạn TTL của khóa phân tán và việc vẫn giữ kiểm tra/transaction tại PostgreSQL.",
-                )
-                for idx, inv in enumerate(invariants_src)
+                    name="Độ phức tạp vận hành & Rủi ro hết TTL / độ trễ mạng Redis",
+                    status="warning",
+                    detail="Phụ thuộc kết nối Redis và đồng bộ clock/TTL; nếu Redis gián đoạn hoặc lease expiry xảy ra giữa chừng sẽ cần DB lock/retry bảo vệ.",
+                    category="operational",
+                ),
             )
             comparison = "Nhánh tự đề xuất giải quyết được hạn chế khóa cục bộ giữa nhiều instance, nhưng phát sinh rủi ro hết TTL và vẫn cần ranh giới transaction tại DB."
         elif any(k in lower for k in ("version", "optimistic", "cas", "compare-and-swap")):
             title = "Thử nhánh tự đề xuất: Optimistic Locking (cột version + retry)"
             state_delta = "Req 1 cập nhật version 1 → 2 (1 row); Req 2 cập nhật version 1 (0 rows → conflict/retry)"
             trace = (
-                ReplayTraceStep("Request 1 & 2", "Cùng đọc dòng hiện tại với version = 1 (không giữ khóa dòng lúc đọc).", "version = 1"),
-                ReplayTraceStep("Request 1", "Chạy UPDATE ... SET version = version + 1 WHERE id = ? AND version = 1 trong cùng transaction.", "affected_rows = 1, version = 2"),
-                ReplayTraceStep("Request 2", "Chạy UPDATE cùng điều kiện version = 1 nhưng thấy version đã lên 2 → affected_rows = 0.", "Xung đột được phát hiện, không ghi đè"),
-                ReplayTraceStep("Ứng dụng", "Req 2 nhận xung đột và đọc lại trạng thái mới (hết hàng hoặc retry có giới hạn).", "Dữ liệu nhất quán"),
+                ReplayTraceStep("Request 1 & 2", "Cùng đọc dòng hiện tại với version = 1 (không giữ khóa dòng lúc đọc).", "version = 1", "t = 0ms (song song)"),
+                ReplayTraceStep("Request 1", "Chạy UPDATE ... SET version = version + 1 WHERE id = ? AND version = 1 trong cùng transaction.", "affected_rows = 1, version = 2", "t = 8ms"),
+                ReplayTraceStep("Request 2", "Chạy UPDATE cùng điều kiện version = 1 nhưng thấy version đã lên 2 → affected_rows = 0.", "Xung đột được phát hiện, không ghi đè", "t = 12ms"),
+                ReplayTraceStep("Ứng dụng", "Req 2 nhận xung đột và đọc lại trạng thái mới (hết hàng hoặc retry có giới hạn).", "Dữ liệu nhất quán", "t = 18ms"),
             )
             impact = "Không giữ khóa dòng lâu như SELECT FOR UPDATE; vẫn đảm bảo không ghi đè mất cập nhật."
-            tradeoff = "Phải cài đặt vòng retry có giới hạn và kiểm tra affected_rows == 1; khi tranh chấp cực cao sẽ tốn lượt thử lại."
-            inv_checks = tuple(
+            tradeoff = "Phải cài đặt vòng retry có giới hạn và kiểm tra affected_rows == 1; khi tranh chấp cực cao trên 1 hot row sẽ tốn nhiều lượt retry."
+            inv_checks = (
+                *(
+                    ReplayInvariantCheck(
+                        name=inv,
+                        status="preserved" if ("rollback" not in inv.lower() or "transaction" in lower or "rollback" in lower) else "uncertain",
+                        detail="Cột version ngăn ghi đè đồng thời; cần gom bước cập nhật tiếp theo trong cùng transaction để rollback trọn vẹn.",
+                        category="safety",
+                    )
+                    for inv in invariants_src
+                ),
                 ReplayInvariantCheck(
-                    name=inv,
-                    status="preserved" if ("rollback" not in inv.lower() or "transaction" in lower or "rollback" in lower) else "uncertain",
-                    detail="Cột version ngăn ghi đè đồng thời; cần gom bước cập nhật tiếp theo trong cùng transaction để rollback trọn vẹn.",
-                )
-                for inv in invariants_src
+                    name="Tỷ lệ xung đột & chi phí retry trên hot row",
+                    status="warning",
+                    detail="Giảm giữ lock nhưng nhiều request đến đồng thời sẽ gặp affected_rows = 0 và phải backoff/retry có giới hạn.",
+                    category="operational",
+                ),
             )
-            comparison = "Optimistic Locking là đánh đổi hợp lệ thay cho Pessimistic Lock khi tỷ lệ xung đột thấp, miễn đi kèm transaction thống nhất."
-        elif any(k in lower for k in ("order by", "for update", "where stock", "transaction", "rollback", "min(")):
+            comparison = "Optimistic Locking là đánh đổi hợp lệ thay cho Pessimistic Lock khi tỷ lệ xung đột thấp-trung bình, miễn giữ chung 1 transaction rollback."
+        elif any(k in lower for k in ("order by", "for update", "where stock", "transaction", "rollback", "min(", "lock_timeout", "nowait")):
             title = "Thử nhánh tự đề xuất: Đồng bộ và khóa ngay tại tầng cơ sở dữ liệu"
-            state_delta = "PostgreSQL tuần tự hóa truy cập dòng chia sẻ trong cùng 1 transaction nguyên tử"
+            state_delta = "PostgreSQL tuần tự hóa truy cập dòng chia sẻ trong cùng 1 transaction ngắn gọn"
             trace = (
-                ReplayTraceStep("Request 1", "Bắt đầu transaction và khóa/cập nhật điều kiện ngay tại PostgreSQL.", "Dòng được khóa an toàn"),
-                ReplayTraceStep("Request 2", "Chờ khóa hoặc đọc trạng thái sau khi Req 1 commit nên không vượt điều kiện bất biến.", "Không ghi đè sai"),
-                ReplayTraceStep("Kiểm tra lỗi", "Nếu bước ghi sau thất bại, PostgreSQL rollback toàn bộ transaction về trạng thái ban đầu.", "Bất biến được giữ nguyên"),
+                ReplayTraceStep("Request 1", "Mở transaction ngắn (có thể kèm SET LOCAL lock_timeout), khóa/cập nhật điều kiện ngay tại PostgreSQL.", "Dòng được khóa an toàn", "t = 0ms"),
+                ReplayTraceStep("Request 2 (Instance 2)", "Đến đồng thời, chờ khóa ngắn hoặc fail-fast theo lock_timeout rồi kiểm tra lại điều kiện mới nhất.", "Không ghi đè sai", "t = 3ms (song song)"),
+                ReplayTraceStep("PostgreSQL", "Nếu bước ghi sau thất bại, tự động rollback toàn bộ transaction; giữ không gọi API chậm bên trong lock.", "Bất biến được giữ nguyên", "t = 12ms"),
             )
             impact = "Bảo vệ đúng bất biến ngay tại nguồn chân lý (database) trên mọi số lượng instance."
-            tradeoff = "Cần giữ transaction ngắn gọn, không gọi mạng ngoài khi đang giữ khóa dòng, và phải viết test đồng thời + test rollback."
-            inv_checks = tuple(
+            tradeoff = "Bất kỳ tác vụ chậm nào đặt trước COMMIT (dù dùng UPDATE hay SELECT FOR UPDATE) đều kéo dài lock; nên dùng transaction ngắn + SET LOCAL lock_timeout hoặc NOWAIT."
+            inv_checks = (
+                *(
+                    ReplayInvariantCheck(
+                        name=inv,
+                        status="preserved",
+                        detail="Cơ chế khóa/điều kiện nguyên tử và transaction trong phương án tự đề xuất đáp ứng bất biến này.",
+                        category="safety",
+                    )
+                    for inv in invariants_src
+                ),
                 ReplayInvariantCheck(
-                    name=inv,
-                    status="preserved",
-                    detail="Cơ chế khóa/điều kiện nguyên tử và transaction trong phương án tự đề xuất đáp ứng bất biến này.",
-                )
-                for inv in invariants_src
+                    name="Độ rộng cửa sổ khóa & bảo vệ connection pool",
+                    status="preserved" if ("lock_timeout" in lower or "nowait" in lower or "ngắn" in lower) else "warning",
+                    detail="An toàn vận hành nếu giữ transaction thuần thao tác DB và đặt van an toàn SET LOCAL lock_timeout / NOWAIT khi tải cao.",
+                    category="operational",
+                ),
             )
-            comparison = "Hướng tự đề xuất bám sát ràng buộc DB dùng chung; bước tiếp theo quan trọng là bổ sung kịch bản kiểm thử song song để chứng minh thực tế."
+            comparison = "Hướng tự đề xuất bám sát ràng buộc DB dùng chung; giữ transaction gọn và cấu hình lock_timeout sẽ bảo vệ cả Safety lẫn Operational."
         else:
             title = "Thử nhánh tự đề xuất của bạn"
             state_delta = "Đề xuất chưa nêu đủ cơ chế khóa tại DB chung hoặc ranh giới rollback"
             trace = (
-                ReplayTraceStep("Request 1", f"Áp dụng hướng thử nghiệm: \"{proposal[:120]}\".", "Bắt đầu xử lý đồng thời"),
-                ReplayTraceStep("Request 2", "Đến song song trên instance thứ hai trong cùng thời điểm.", "Hai luồng chạm cùng tài nguyên chia sẻ"),
-                ReplayTraceStep("PostgreSQL", "Chưa có xác nhận rõ về khóa cấp dòng chung và rollback cùng transaction nên kết quả còn rủi ro khi chạy đa instance.", "Trạng thái cần kiểm chứng thêm"),
+                ReplayTraceStep("Request 1", f"Áp dụng hướng thử nghiệm: \"{proposal[:120]}\".", "Bắt đầu xử lý đồng thời", "t = 0ms"),
+                ReplayTraceStep("Request 2 (Instance 2)", "Đến song song trên instance thứ hai ngay trong lúc Request 1 đang chạy.", "Hai luồng chạm cùng tài nguyên chia sẻ", "t = 4ms (song song)"),
+                ReplayTraceStep("PostgreSQL", "Chưa có xác nhận rõ về khóa cấp dòng chung và rollback cùng transaction nên kết quả còn rủi ro khi chạy đa instance.", "Trạng thái cần kiểm chứng thêm", "t = 10ms"),
             )
             impact = "Phương án chưa chốt tường minh ranh giới đồng bộ giữa các instance và cách khôi phục khi bước ghi sau bị lỗi."
             tradeoff = "Cần chỉ rõ: (1) đồng bộ đặt tại DB chia sẻ ra sao, (2) bước cập nhật & ghi phụ có chung transaction rollback không."
-            inv_checks = tuple(
+            inv_checks = (
+                *(
+                    ReplayInvariantCheck(
+                        name=inv,
+                        status="uncertain",
+                        detail="Mô tả phương án tự nhập chưa đủ chi tiết về khóa chia sẻ và ranh giới rollback để khẳng định bảo toàn bất biến.",
+                        category="safety",
+                    )
+                    for inv in invariants_src
+                ),
                 ReplayInvariantCheck(
-                    name=inv,
-                    status="uncertain",
-                    detail="Mô tả phương án tự nhập chưa đủ chi tiết về khóa chia sẻ và ranh giới rollback để khẳng định bảo toàn bất biến.",
-                )
-                for inv in invariants_src
+                    name="Rủi ro vận hành & tắc nghẽn đồng thời",
+                    status="warning",
+                    detail="Chưa rõ cơ chế xử lý hàng đợi/timeout (lock_timeout/NOWAIT) khi nhiều request tranh chấp cùng lúc.",
+                    category="operational",
+                ),
             )
             comparison = "Bạn có thể tua lại điểm rẽ trước và bổ sung rõ cơ chế khóa DB hoặc ranh giới transaction để so sánh kết cục cụ thể hơn."
 
@@ -590,16 +639,17 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="stock: 1 → 0 → -1 · orders: 0 → 2",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="Request 1 (Instance A)", event="SELECT stock FROM inventory WHERE id=X → đọc được 1.", state_after="stock = 1"),
-                        GeneratedTraceStepDTO(actor="Request 2 (Instance B)", event="SELECT stock FROM inventory WHERE id=X → cũng đọc được 1 (Read Committed không khóa SELECT).", state_after="stock = 1"),
-                        GeneratedTraceStepDTO(actor="Request 1 (Instance A)", event="Pass if stock >= 1 → UPDATE stock = stock - 1 & INSERT order #1.", state_after="stock = 0, orders = 1"),
-                        GeneratedTraceStepDTO(actor="Request 2 (Instance B)", event="Đã pass if từ trước → UPDATE stock = stock - 1 & INSERT order #2.", state_after="stock = -1, orders = 2 (VỠ)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Instance A)", event="SELECT stock FROM inventory WHERE id=X → đọc được 1.", state_after="stock = 1"),
+                        GeneratedTraceStepDTO(time_label="t = 3ms (song song)", actor="Request 2 (Instance B)", event="SELECT stock FROM inventory WHERE id=X → cũng đọc được 1 (Read Committed không khóa SELECT).", state_after="stock = 1"),
+                        GeneratedTraceStepDTO(time_label="t = 8ms", actor="Request 1 (Instance A)", event="Pass if stock >= 1 → UPDATE stock = stock - 1 & INSERT order #1.", state_after="stock = 0, orders = 1"),
+                        GeneratedTraceStepDTO(time_label="t = 11ms (song song)", actor="Request 2 (Instance B)", event="Đã pass if từ trước → UPDATE stock = stock - 1 & INSERT order #2.", state_after="stock = -1, orders = 2 (VỠ)"),
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name="Tối đa chỉ 1 đơn hàng thành công", status="broken", detail="Cả 2 đơn đều được ghi nhận vì 2 instance cùng đọc snapshot stock = 1."),
-                        GeneratedInvariantDTO(name="Không âm kho (stock >= 0)", status="broken", detail="Tồn kho rơi xuống -1 sau khi Request 2 trừ tiếp."),
-                        GeneratedInvariantDTO(name="Rollback toàn vẹn khi ghi đơn lỗi", status="broken", detail="Không có ranh giới transaction đồng bộ giữa kiểm tra, trừ kho và tạo đơn."),
+                        GeneratedInvariantDTO(category="safety", name="Tối đa chỉ 1 đơn hàng thành công", status="broken", detail="Cả 2 đơn đều được ghi nhận vì 2 instance cùng đọc snapshot stock = 1."),
+                        GeneratedInvariantDTO(category="safety", name="Không âm kho (stock >= 0)", status="broken", detail="Tồn kho rơi xuống -1 sau khi Request 2 trừ tiếp."),
+                        GeneratedInvariantDTO(category="safety", name="Rollback toàn vẹn khi ghi đơn lỗi", status="broken", detail="Không có ranh giới transaction đồng bộ giữa kiểm tra, trừ kho và tạo đơn."),
+                        GeneratedInvariantDTO(category="operational", name="Tính đúng đắn vận hành (không overselling)", status="broken", detail="Phát sinh đơn lỗi phải bồi hoàn/hủy tay sau sự cố."),
                     ],
                     comparison_note="Nhánh này minh họa trực tiếp lý do khóa trong RAM hoặc SELECT-rồi-UPDATE tách rời thất bại dưới tải đồng thời nhiều instance.",
                 ),
@@ -611,16 +661,16 @@ class FixtureReplaySimulator:
                     origin="prebuilt_branch",
                     answer_alignment="what_if_branch",
                     title="Điểm rẽ tiếp theo: Ranh giới Transaction giữa trừ kho và tạo đơn",
-                    situation="Lệnh UPDATE ... WHERE stock >= 1 đã chặn được hai request cùng trừ kho. Tuy nhiên bước INSERT vào bảng orders có thể lỗi ràng buộc hoặc rớt kết nối giữa chừng.",
-                    consequence_summary="Tồn kho đã được khóa ngắn ở bước UPDATE; quyết định tiếp theo là đặt INSERT orders trong cùng transaction hay tách ra 2 transaction riêng.",
-                    system_impact="Nếu đặt sai ranh giới transaction, lỗi ghi đơn sẽ làm tồn kho bị mất vĩnh viễn dù không có đơn hàng nào.",
-                    tradeoff_note="Gom chung 1 transaction giữ toàn vẹn nghiệp vụ; tách transaction làm mất khả năng rollback tự động của PostgreSQL.",
+                    situation="Lệnh UPDATE ... WHERE stock >= 1 đã chặn được hai request cùng trừ kho ngay trong 1 round-trip với khóa nhẹ FOR NO KEY UPDATE. Tuy nhiên bước INSERT vào bảng orders có thể lỗi ràng buộc hoặc rớt kết nối.",
+                    consequence_summary="Tồn kho đã được khóa ở bước UPDATE; quyết định tiếp theo là đặt INSERT orders trong cùng transaction gọn hay tách ra 2 transaction riêng.",
+                    system_impact="Nếu đặt sai ranh giới transaction (hoặc chèn tác vụ chậm vào trong transaction trước khi COMMIT), hệ thống sẽ mất hàng hoặc nghẽn lock tương ứng.",
+                    tradeoff_note="So với SELECT FOR UPDATE cùng giữ transaction gọn: UPDATE WHERE giảm 1 round-trip mạng và lấy khóa FOR NO KEY UPDATE thay vì FOR UPDATE (tránh chặn khóa ngoại FOR KEY SHARE từ bảng orders).",
                     assumptions_used=assumptions,
-                    state_delta="Req 1 giữ khóa dòng tại UPDATE (stock: 1 → 0, rowcount = 1); chờ quyết định ghi orders",
+                    state_delta="Req 1 giữ khóa dòng nhẹ (FOR NO KEY UPDATE) tại UPDATE (stock: 1 → 0, rowcount = 1)",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="Request 1", event="Chạy UPDATE inventory SET stock = stock - 1 WHERE id=X AND stock >= 1.", state_after="Khóa dòng X, stock tạm = 0, rowcount = 1"),
-                        GeneratedTraceStepDTO(actor="Request 2", event="Chạy cùng lệnh UPDATE và phải chờ khóa dòng X từ Request 1.", state_after="Request 2 đang chờ khóa"),
-                        GeneratedTraceStepDTO(actor="Điểm rẽ", event="Bước tiếp theo là INSERT vào bảng orders (có thể phát sinh lỗi DB/constraint).", state_after="Chọn ranh giới transaction bên dưới"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1", event="Chạy UPDATE inventory SET stock = stock - 1 WHERE id=X AND stock >= 1.", state_after="Khóa FOR NO KEY UPDATE, stock tạm = 0, rowcount = 1"),
+                        GeneratedTraceStepDTO(time_label="t = 4ms (song song)", actor="Request 2 (Instance B)", event="Đến cùng lúc, chạy lệnh UPDATE tương tự và chờ mở khóa (nếu đặt SET LOCAL lock_timeout sẽ fail-fast khi chờ quá lâu).", state_after="Request 2 đang chờ khóa"),
+                        GeneratedTraceStepDTO(time_label="t = 8ms", actor="Điểm rẽ", event="Bước tiếp theo là INSERT vào bảng orders (có thể phát sinh lỗi DB/constraint).", state_after="Chọn ranh giới transaction bên dưới"),
                     ],
                     is_terminal=False,
                     options=[
@@ -632,8 +682,8 @@ class FixtureReplaySimulator:
                         ),
                         GeneratedOptionDTO(
                             option_id="opt_same_tx_verify",
-                            label="Gom UPDATE tồn kho + INSERT orders trong cùng 1 transaction, rollback nếu lỗi và kiểm thử đồng thời",
-                            action_summary="Giữ nguyên tử cả hai thao tác trên cùng kết nối DB; trả hết hàng nếu rowcount == 0.",
+                            label="Gom UPDATE tồn kho + INSERT orders trong cùng 1 transaction gọn, kiểm tra rowcount == 1",
+                            action_summary="Giữ nguyên tử cả hai thao tác trên cùng kết nối DB; tuyệt đối không gọi tác vụ chậm bên trong transaction.",
                             target_node_id="n_atomic_same_tx_leaf",
                         ),
                     ],
@@ -653,45 +703,47 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="stock: 1 → 0 (đã commit) · orders: 0 (INSERT lỗi)",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="Request 1 (Tx 1)", event="UPDATE stock = 0 WHERE stock >= 1 → COMMIT thành công.", state_after="stock = 0 đã lưu cứng"),
-                        GeneratedTraceStepDTO(actor="Request 2", event="Đọc lại thấy stock = 0 → affected_rows = 0, trả báo hết hàng.", state_after="Req 2 kết thúc"),
-                        GeneratedTraceStepDTO(actor="Request 1 (Tx 2)", event="INSERT INTO orders thất bại (lỗi constraint/timeout) → chỉ rollback Tx 2.", state_after="stock = 0, orders = 0 (MẤT HÀNG)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="UPDATE stock = 0 WHERE stock >= 1 → COMMIT thành công.", state_after="stock = 0 đã lưu cứng"),
+                        GeneratedTraceStepDTO(time_label="t = 4ms (song song)", actor="Request 2", event="Đọc lại thấy stock = 0 → affected_rows = 0, trả báo hết hàng.", state_after="Req 2 kết thúc"),
+                        GeneratedTraceStepDTO(time_label="t = 9ms", actor="Request 1 (Tx 2)", event="INSERT INTO orders thất bại (lỗi constraint/timeout) → chỉ rollback Tx 2.", state_after="stock = 0, orders = 0 (MẤT HÀNG)"),
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name="Tối đa chỉ 1 đơn hàng thành công", status="preserved", detail="Không tạo quá 1 đơn, nhưng thực tế tạo 0 đơn dù còn hàng."),
-                        GeneratedInvariantDTO(name="Không âm kho (stock >= 0)", status="preserved", detail="Lệnh WHERE stock >= 1 giữ tồn kho không âm."),
-                        GeneratedInvariantDTO(name="Rollback toàn vẹn khi ghi đơn lỗi", status="broken", detail="Tx 1 đã COMMIT nên không thể tự hoàn tác stock về 1 khi INSERT orders thất bại."),
+                        GeneratedInvariantDTO(category="safety", name="Tối đa chỉ 1 đơn hàng thành công", status="preserved", detail="Không tạo quá 1 đơn, nhưng thực tế tạo 0 đơn dù còn hàng."),
+                        GeneratedInvariantDTO(category="safety", name="Không âm kho (stock >= 0)", status="preserved", detail="Lệnh WHERE stock >= 1 giữ tồn kho không âm."),
+                        GeneratedInvariantDTO(category="safety", name="Rollback toàn vẹn khi ghi đơn lỗi", status="broken", detail="Tx 1 đã COMMIT nên không thể tự hoàn tác stock về 1 khi INSERT orders thất bại."),
+                        GeneratedInvariantDTO(category="operational", name="Khả dụng tồn kho (không thất thoát hàng oan)", status="broken", detail="Hàng biến mất trên hệ thống dù chưa tạo được đơn hàng."),
                     ],
                     comparison_note="Nhánh này cho thấy dù đã chặn được âm kho ở lệnh UPDATE, việc tách transaction vẫn phá vỡ yêu cầu rollback khi tạo đơn lỗi.",
                 ),
                 GeneratedNodeDTO(
                     id="n_atomic_same_tx_leaf",
                     parent_id="n_atomic_tx_choice",
-                    branch_label="Chung 1 transaction + kiểm tra rowcount",
+                    branch_label="Chung 1 transaction gọn + kiểm tra rowcount",
                     depth=2,
                     origin="prebuilt_branch",
                     answer_alignment="what_if_branch",
-                    title="Kết cục: Bảo toàn trọn vẹn bất biến với thời gian giữ khóa ngắn",
-                    situation="UPDATE có điều kiện WHERE stock >= 1 và INSERT orders chạy chung trong 1 transaction PostgreSQL, kèm kiểm tra affected_rows == 1.",
-                    consequence_summary="Chỉ tối đa 1 request trừ kho và tạo đơn thành công; request thứ 2 nhận rowcount = 0 (hết hàng). Nếu INSERT orders lỗi, PostgreSQL tự rollback khôi phục stock = 1.",
-                    system_impact="Đáp ứng đồng thời không âm kho, tối đa 1 đơn và rollback toàn vẹn, đồng thời khóa dòng chỉ giữ trong phạm vi ngắn.",
-                    tradeoff_note="Phải kiểm tra tường minh rowcount == 1 ở code ứng dụng để báo đúng lỗi hết hàng, và cần bộ test bắn 2 request đồng thời + giả lập lỗi INSERT để chứng minh rollback.",
+                    title="Kết cục: Bảo toàn trọn vẹn bất biến với cửa sổ giữ khóa hẹp nhất",
+                    situation="UPDATE WHERE stock >= 1 và INSERT orders nằm chung 1 transaction ngắn (không chèn gọi mạng/tác vụ chậm bên trong), kèm SET LOCAL lock_timeout phòng nghẽn khi quá tải.",
+                    consequence_summary="Chỉ tối đa 1 request trừ kho và tạo đơn thành công; request thứ 2 nhận rowcount = 0. Nếu INSERT lỗi, PostgreSQL tự rollback khôi phục stock = 1.",
+                    system_impact="Đáp ứng đồng thời 3 bất biến dữ liệu và giữ cửa sổ lock hẹp (1 round-trip lấy khóa nhẹ FOR NO KEY UPDATE, không chặn kiểm tra FK FOR KEY SHARE).",
+                    tradeoff_note="Cần kiểm tra rowcount == 1 để trả hết hàng; vẫn tuyệt đối tránh đặt tác vụ chậm vào giữa UPDATE và COMMIT (vì lệnh UPDATE vẫn giữ lock tới khi COMMIT), và nên cấu hình SET LOCAL lock_timeout.",
                     assumptions_used=assumptions,
-                    state_delta="Thành công: stock 1 → 0, orders 0 → 1 · Hoặc lỗi INSERT: rollback về stock = 1, orders = 0",
+                    state_delta="Thành công: stock 1 → 0, orders 0 → 1 · Lỗi INSERT: rollback về stock = 1 · Thời gian lock ~5ms",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="Request 1 (Tx 1)", event="BEGIN → UPDATE stock = stock - 1 WHERE stock >= 1 (rowcount = 1).", state_after="Giữ khóa dòng X, stock tạm = 0"),
-                        GeneratedTraceStepDTO(actor="Request 2 (Tx 2)", event="BEGIN → chạy UPDATE tương tự và chờ khóa dòng X từ Tx 1.", state_after="Đang chờ Tx 1 kết thúc"),
-                        GeneratedTraceStepDTO(actor="Request 1 (Tx 1)", event="INSERT INTO orders thành công → COMMIT (nếu lỗi sẽ ROLLBACK trả stock = 1).", state_after="stock = 0, orders = 1"),
-                        GeneratedTraceStepDTO(actor="Request 2 (Tx 2)", event="Nhận khóa, PostgreSQL đánh giá lại WHERE stock >= 1 trên bản ghi mới (0) → rowcount = 0 → trả hết hàng.", state_after="stock = 0, orders = 1 (AN TOÀN)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="BEGIN; SET LOCAL lock_timeout = '500ms'; UPDATE stock = stock - 1 WHERE stock >= 1 (1 round-trip, rowcount = 1).", state_after="Giữ khóa FOR NO KEY UPDATE, stock tạm = 0"),
+                        GeneratedTraceStepDTO(time_label="t = 2ms (song song)", actor="Request 2 (Tx 2)", event="Đến song song ở instance B, chạy UPDATE tương tự → tạm chờ khóa dòng X.", state_after="Đang chờ Tx 1 (~3ms)"),
+                        GeneratedTraceStepDTO(time_label="t = 5ms", actor="Request 1 (Tx 1)", event="INSERT INTO orders thành công → COMMIT ngay (lỗi sẽ ROLLBACK trả stock = 1).", state_after="stock = 0, orders = 1"),
+                        GeneratedTraceStepDTO(time_label="t = 6ms", actor="Request 2 (Tx 2)", event="Nhận khóa, PostgreSQL kiểm tra lại WHERE stock >= 1 trên bản ghi vừa commit (0) → rowcount = 0 → báo hết hàng.", state_after="stock = 0, orders = 1 (AN TOÀN)"),
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name="Tối đa chỉ 1 đơn hàng thành công", status="preserved", detail="Chỉ giao dịch nhận affected_rows = 1 mới tiến tới INSERT orders."),
-                        GeneratedInvariantDTO(name="Không âm kho (stock >= 0)", status="preserved", detail="Điều kiện WHERE stock >= 1 được PostgreSQL kiểm tra lại sau khi mở khóa dòng."),
-                        GeneratedInvariantDTO(name="Rollback toàn vẹn khi ghi đơn lỗi", status="preserved", detail="UPDATE và INSERT nằm chung 1 transaction nên lỗi INSERT tự hoàn tác stock = 1."),
+                        GeneratedInvariantDTO(category="safety", name="Tối đa chỉ 1 đơn hàng thành công", status="preserved", detail="Chỉ giao dịch nhận affected_rows = 1 mới tiến tới INSERT orders."),
+                        GeneratedInvariantDTO(category="safety", name="Không âm kho (stock >= 0)", status="preserved", detail="Điều kiện WHERE stock >= 1 được PostgreSQL đánh giá lại sau khi Tx 1 commit."),
+                        GeneratedInvariantDTO(category="safety", name="Rollback toàn vẹn khi ghi đơn lỗi", status="preserved", detail="UPDATE và INSERT nằm chung 1 transaction nên lỗi INSERT tự hoàn tác stock = 1."),
+                        GeneratedInvariantDTO(category="operational", name="Hiệu năng & An toàn vận hành (cửa sổ khóa hẹp)", status="preserved", detail="Giảm 1 round-trip so với SELECT FOR UPDATE, dùng khóa nhẹ FOR NO KEY UPDATE và giữ tx ngắn gọn kèm lock_timeout."),
                     ],
-                    comparison_note="So với khóa cục bộ hoặc tách transaction, nhánh này bảo toàn đủ cả 3 bất biến cốt lõi mà vẫn giữ phạm vi khóa gọn.",
+                    comparison_note="Khi cả hai đều giữ transaction gọn, Atomic Conditional UPDATE tối ưu hơn SELECT ... FOR UPDATE nhờ bớt 1 round-trip, lấy khóa nhẹ FOR NO KEY UPDATE và tránh bẫy chèn logic chậm giữa bước SELECT và UPDATE.",
                 ),
                 GeneratedNodeDTO(
                     id="n_pessimistic_leaf",
@@ -700,26 +752,27 @@ class FixtureReplaySimulator:
                     depth=1,
                     origin="prebuilt_branch",
                     answer_alignment="what_if_branch",
-                    title="Kết cục: An toàn dữ liệu cao với khóa bi quan cấp dòng (Pessimistic Lock)",
-                    situation="Giao dịch mở BEGIN, khóa dòng tồn kho ngay lúc đọc bằng SELECT stock FROM inventory WHERE id = X FOR UPDATE, kiểm tra stock >= 1 rồi UPDATE và INSERT orders trước khi COMMIT.",
-                    consequence_summary="Request 2 bị chặn ngay ở câu SELECT ... FOR UPDATE cho tới khi Request 1 commit hoặc rollback, bảo vệ toàn bộ bất biến.",
-                    system_impact="Giữ tính đúng tuyệt đối trên nhiều instance; tuy nhiên dòng bị khóa lâu hơn từ lúc đọc tới lúc commit.",
-                    tradeoff_note="Rất an toàn khi cần đọc nhiều trường để tính toán trước khi trừ kho, nhưng TUYỆT ĐỐI không được gọi API mạng bên ngoài khi đang mở transaction để tránh nghẽn connection pool.",
+                    title="Kết cục: Pessimistic Lock (SELECT ... FOR UPDATE) — An toàn dữ liệu nhưng nhạy cảm với cửa sổ khóa",
+                    situation="Giao dịch chạy SELECT stock ... FOR UPDATE rồi kiểm tra ở ứng dụng, sau đó mới gửi UPDATE và INSERT orders trong cùng 1 transaction.",
+                    consequence_summary="Nếu transaction giữ ngắn gọn chỉ gồm các lệnh SQL thì an toàn cả dữ liệu lẫn vận hành; nhưng vì tách đọc-ghi làm 2 round-trip nên dễ vô tình nhét thêm xử lý chậm giữa SELECT và COMMIT gây nghẽn connection pool.",
+                    system_impact="Dữ liệu chính xác tuyệt đối; nhưng khóa FOR UPDATE mạnh hơn (chặn cả FOR KEY SHARE khi bảng con check FK) và cửa sổ lock rộng hơn 1 round-trip so với Atomic UPDATE.",
+                    tradeoff_note="Lưu ý quan trọng: tác vụ chậm đặt trong transaction khiến MỌI loại lock (kể cả UPDATE ... WHERE) đều giữ khóa gây nghẽn, không chỉ riêng SELECT FOR UPDATE. Nên đặt SET LOCAL lock_timeout hoặc NOWAIT để fail-fast khi hàng bị tranh chấp nóng.",
                     assumptions_used=assumptions,
-                    state_delta="Tx 1 giữ khóa từ SELECT FOR UPDATE đến COMMIT → stock: 1 → 0, orders: 1; Tx 2 thấy stock = 0",
+                    state_delta="2 round-trips (SELECT FOR UPDATE → App → UPDATE/INSERT → COMMIT) · Mức khóa: FOR UPDATE",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="Request 1 (Tx 1)", event="BEGIN → SELECT stock ... FOR UPDATE → khóa dòng X và đọc stock = 1.", state_after="Tx 1 giữ khóa dòng X"),
-                        GeneratedTraceStepDTO(actor="Request 2 (Tx 2)", event="BEGIN → SELECT stock ... FOR UPDATE → phải chờ Tx 1 nhả khóa.", state_after="Tx 2 đứng chờ"),
-                        GeneratedTraceStepDTO(actor="Request 1 (Tx 1)", event="UPDATE stock = 0 + INSERT order #1 → COMMIT (lỗi INSERT sẽ tự rollback).", state_after="stock = 0, orders = 1"),
-                        GeneratedTraceStepDTO(actor="Request 2 (Tx 2)", event="Lấy được khóa, đọc thấy stock = 0 → thoát sạch và báo hết hàng.", state_after="stock = 0, orders = 1 (AN TOÀN)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="Request 1 (Tx 1)", event="BEGIN → SELECT stock ... FOR UPDATE (round-trip 1) → giữ khóa FOR UPDATE (chặn cả FK FOR KEY SHARE).", state_after="Tx 1 giữ khóa mạnh FOR UPDATE"),
+                        GeneratedTraceStepDTO(time_label="t = 4ms (song song)", actor="Request 2 (Instance B)", event="Đến song song, bị chặn ngay tại SELECT ... FOR UPDATE; không có lock_timeout/NOWAIT sẽ treo chờ.", state_after="Tx 2 đứng chờ trên connection pool"),
+                        GeneratedTraceStepDTO(time_label="t = 12ms", actor="Request 1 (Tx 1)", event="Round-trip 2: gửi UPDATE stock = 0 + INSERT order #1 → COMMIT (nếu lỡ nhét logic chậm ở giữa thì Tx 2 bị treo cả trăm/nghìn ms).", state_after="stock = 0, orders = 1"),
+                        GeneratedTraceStepDTO(time_label="t = 14ms", actor="Request 2 (Instance B)", event="Nhận khóa, đọc thấy stock = 0 → thoát sạch và báo hết hàng.", state_after="stock = 0, orders = 1 (Dữ liệu đúng, cần giữ tx ngắn)"),
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name="Tối đa chỉ 1 đơn hàng thành công", status="preserved", detail="SELECT FOR UPDATE tuần tự hóa các giao dịch tranh chấp trên cùng dòng."),
-                        GeneratedInvariantDTO(name="Không âm kho (stock >= 0)", status="preserved", detail="Giao dịch thứ hai đọc thấy stock = 0 sau khi giao dịch một commit."),
-                        GeneratedInvariantDTO(name="Rollback toàn vẹn khi ghi đơn lỗi", status="preserved", detail="Mọi thao tác trừ kho và ghi đơn thuộc chung một DB transaction."),
+                        GeneratedInvariantDTO(category="safety", name="Tối đa chỉ 1 đơn hàng thành công", status="preserved", detail="SELECT FOR UPDATE tuần tự hóa các giao dịch tranh chấp trên cùng dòng."),
+                        GeneratedInvariantDTO(category="safety", name="Không âm kho (stock >= 0)", status="preserved", detail="Giao dịch thứ hai đọc thấy stock = 0 sau khi giao dịch một commit."),
+                        GeneratedInvariantDTO(category="safety", name="Rollback toàn vẹn khi ghi đơn lỗi", status="preserved", detail="Mọi thao tác trừ kho và ghi đơn thuộc chung một DB transaction."),
+                        GeneratedInvariantDTO(category="operational", name="Độ rộng cửa sổ khóa & rủi ro nghẽn (FOR UPDATE + 2 round-trips)", status="warning", detail="Tốn thêm 1 round-trip mạng, dùng khóa mạnh FOR UPDATE và dễ vướng bẫy chèn logic chậm vào giữa SELECT và UPDATE nếu thiếu lock_timeout/NOWAIT."),
                     ],
-                    comparison_note="Cả SELECT FOR UPDATE lẫn Conditional Atomic UPDATE đều giữ đủ 3 bất biến; khác biệt nằm ở thời lượng giữ khóa và nhu cầu đọc nhiều trường trước khi ghi.",
+                    comparison_note="Khác biệt cốt lõi khi giữ transaction gọn: SELECT ... FOR UPDATE cần 2 round-trips và lấy khóa FOR UPDATE nặng hơn khóa FOR NO KEY UPDATE của Atomic UPDATE, đồng thời dễ phát sinh khe hở chèn logic chậm ở code ứng dụng.",
                 ),
             ],
         )
@@ -826,16 +879,17 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="T1 giữ 11111 chờ 22222 ↔ T2 giữ 22222 chờ 11111 → DB abort 1 bên",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="T1 (11111 → 22222)", event="UPDATE wallets ... WHERE wallet_id = 11111 → giữ khóa dòng 11111.", state_after="Lock(11111) = T1"),
-                        GeneratedTraceStepDTO(actor="T2 (22222 → 11111)", event="UPDATE wallets ... WHERE wallet_id = 22222 → giữ khóa dòng 22222.", state_after="Lock(22222) = T2"),
-                        GeneratedTraceStepDTO(actor="T1 & T2", event="T1 xin khóa 22222 (bị chặn bởi T2), đồng thời T2 xin khóa 11111 (bị chặn bởi T1).", state_after="CIRCULAR WAIT (Deadlock)"),
-                        GeneratedTraceStepDTO(actor="PostgreSQL", event="Hết deadlock_timeout → hủy T2 (ERROR 40P01), T1 chạy tiếp; T2 phải thử lại từ đầu.", state_after="Phát sinh deadlock + tốn độ trễ chờ"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="T1 (11111 → 22222)", event="UPDATE wallets ... WHERE wallet_id = 11111 → giữ khóa dòng 11111.", state_after="Lock(11111) = T1"),
+                        GeneratedTraceStepDTO(time_label="t = 2ms (song song)", actor="T2 (22222 → 11111)", event="Đến cùng lúc, UPDATE wallets ... WHERE wallet_id = 22222 → giữ khóa dòng 22222.", state_after="Lock(22222) = T2"),
+                        GeneratedTraceStepDTO(time_label="t = 5ms (song song)", actor="T1 & T2", event="T1 xin khóa 22222 (bị chặn bởi T2), đồng thời T2 xin khóa 11111 (bị chặn bởi T1).", state_after="CIRCULAR WAIT (Deadlock)"),
+                        GeneratedTraceStepDTO(time_label="t = 1005ms", actor="PostgreSQL", event="Hết deadlock_timeout → hủy T2 (ERROR 40P01), T1 chạy tiếp; T2 phải thử lại từ đầu.", state_after="Phát sinh deadlock + tốn độ trễ chờ"),
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name="Không phát sinh vòng chờ khóa (deadlock)", status="broken", detail="Thứ tự khóa ngược chiều 11111↔22222 vẫn liên tục gây deadlock."),
-                        GeneratedInvariantDTO(name="Bảo toàn tổng số dư hai ví", status="preserved", detail="PostgreSQL rollback giao dịch bị hủy nên tổng vẫn là 400."),
-                        GeneratedInvariantDTO(name="Không ví nào có số dư âm", status="preserved", detail="Điều kiện balance >= amount vẫn ngăn âm số dư."),
+                        GeneratedInvariantDTO(category="safety", name="Không phát sinh vòng chờ khóa (deadlock)", status="broken", detail="Thứ tự khóa ngược chiều 11111↔22222 vẫn liên tục gây deadlock."),
+                        GeneratedInvariantDTO(category="safety", name="Bảo toàn tổng số dư hai ví", status="preserved", detail="PostgreSQL rollback giao dịch bị hủy nên tổng vẫn là 400."),
+                        GeneratedInvariantDTO(category="safety", name="Không ví nào có số dư âm", status="preserved", detail="Điều kiện balance >= amount vẫn ngăn âm số dư."),
+                        GeneratedInvariantDTO(category="operational", name="Độ trễ đuôi & áp lực retry deadlock", status="warning", detail="Chờ hết deadlock_timeout mới abort làm tăng tail latency và tái thử nhiều lần khi tải cao."),
                     ],
                     comparison_note="Retry giúp hệ thống không mất tiền nhưng chưa loại bỏ được nguyên nhân gốc rễ là vòng chờ khóa ngược chiều.",
                 ),
@@ -854,15 +908,16 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="wallet(11111): 200 → 100 · wallet(22222): 200 · Tổng: 400 → 300 (VỠ)",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="T1 (Tx 1)", event="Trừ 100 từ ví 11111 và COMMIT thành công.", state_after="11111 = 100, 22222 = 200"),
-                        GeneratedTraceStepDTO(actor="Ứng dụng", event="Instance crash hoặc rớt kết nối DB trước khi thực thi Tx 2 cộng 100 cho ví 22222.", state_after="Tx 2 không chạy"),
-                        GeneratedTraceStepDTO(actor="Hệ thống", event="Kiểm tra tổng số dư: 100 + 200 = 300 ≠ 400 ban đầu.", state_after="MẤT 100 ĐIỂM (VỠ BẤT BIẾN)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="T1 (Tx 1)", event="Trừ 100 từ ví 11111 và COMMIT thành công.", state_after="11111 = 100, 22222 = 200"),
+                        GeneratedTraceStepDTO(time_label="t = 6ms", actor="Ứng dụng", event="Instance crash hoặc rớt kết nối DB trước khi thực thi Tx 2 cộng 100 cho ví 22222.", state_after="Tx 2 không chạy"),
+                        GeneratedTraceStepDTO(time_label="t = 10ms", actor="Hệ thống", event="Kiểm tra tổng số dư: 100 + 200 = 300 ≠ 400 ban đầu.", state_after="MẤT 100 ĐIỂM (VỠ BẤT BIẾN)"),
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name="Không phát sinh vòng chờ khóa (deadlock)", status="preserved", detail="Mỗi transaction chỉ giữ khóa 1 dòng."),
-                        GeneratedInvariantDTO(name="Bảo toàn tổng số dư hai ví", status="broken", detail="Trừ ví nguồn đã commit nhưng cộng ví đích thất bại làm hụt 100 điểm."),
-                        GeneratedInvariantDTO(name="Không ví nào có số dư âm", status="preserved", detail="Số dư không âm nhưng tổng tiền bị thất thoát."),
+                        GeneratedInvariantDTO(category="safety", name="Không phát sinh vòng chờ khóa (deadlock)", status="preserved", detail="Mỗi transaction chỉ giữ khóa 1 dòng."),
+                        GeneratedInvariantDTO(category="safety", name="Bảo toàn tổng số dư hai ví", status="broken", detail="Trừ ví nguồn đã commit nhưng cộng ví đích thất bại làm hụt 100 điểm."),
+                        GeneratedInvariantDTO(category="safety", name="Không ví nào có số dư âm", status="preserved", detail="Số dư không âm nhưng tổng tiền bị thất thoát."),
+                        GeneratedInvariantDTO(category="operational", name="Chi phí đối soát & sửa dữ liệu lệch", status="broken", detail="Phải đối soát thủ công vì sổ cái mất cân bằng."),
                     ],
                     comparison_note="Nhánh này cho thấy cái giá của việc né deadlock bằng cách phá bỏ ranh giới transaction.",
                 ),
@@ -915,15 +970,16 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="Sau T1: (100, 300) · Sau T2: (150, 250) · Tổng = 400 · Deadlocks = 0",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="T1 (11111 → 22222)", event="Đọc 11111 = 200 >= 100 → trừ 11111 về 100, cộng 22222 lên 300 → COMMIT.", state_after="11111 = 100, 22222 = 300"),
-                        GeneratedTraceStepDTO(actor="T2 (22222 → 11111)", event="Lấy được khóa (11111, 22222), đọc 22222 = 300 >= 50 → trừ 22222 về 250, cộng 11111 lên 150 → COMMIT.", state_after="11111 = 150, 22222 = 250"),
-                        GeneratedTraceStepDTO(actor="Kiểm chứng bất biến", event="150 + 250 = 400, không ví nào âm, 0 deadlock phát sinh.", state_after="AN TOÀN TOÀN VẸN"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms", actor="T1 (11111 → 22222)", event="Đọc 11111 = 200 >= 100 → trừ 11111 về 100, cộng 22222 lên 300 → COMMIT.", state_after="11111 = 100, 22222 = 300"),
+                        GeneratedTraceStepDTO(time_label="t = 3ms (song song)", actor="T2 (22222 → 11111)", event="Đến cùng lúc, đợi ở khóa 11111 rồi đọc 22222 = 300 >= 50 → chuyển về 150 / 250 → COMMIT.", state_after="11111 = 150, 22222 = 250"),
+                        GeneratedTraceStepDTO(time_label="t = 9ms", actor="Kiểm chứng bất biến", event="150 + 250 = 400, không ví nào âm, 0 deadlock phát sinh.", state_after="AN TOÀN TOÀN VẸN"),
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name="Không phát sinh vòng chờ khóa (deadlock)", status="preserved", detail="Thứ tự khóa xác định min→max loại bỏ hoàn toàn circular wait."),
-                        GeneratedInvariantDTO(name="Bảo toàn tổng số dư hai ví", status="preserved", detail="Tổng trước và sau luôn bằng 400 (150 + 250)."),
-                        GeneratedInvariantDTO(name="Không ví nào có số dư âm", status="preserved", detail="Kiểm tra balance >= amount diễn ra sau khi đã giữ khóa dòng trong cùng transaction."),
+                        GeneratedInvariantDTO(category="safety", name="Không phát sinh vòng chờ khóa (deadlock)", status="preserved", detail="Thứ tự khóa xác định min→max loại bỏ hoàn toàn circular wait."),
+                        GeneratedInvariantDTO(category="safety", name="Bảo toàn tổng số dư hai ví", status="preserved", detail="Tổng trước và sau luôn bằng 400 (150 + 250)."),
+                        GeneratedInvariantDTO(category="safety", name="Không ví nào có số dư âm", status="preserved", detail="Kiểm tra balance >= amount diễn ra sau khi đã giữ khóa dòng trong cùng transaction."),
+                        GeneratedInvariantDTO(category="operational", name="Tuần tự hóa không nghẽn vòng chờ", status="preserved", detail="Giữ transaction gọn kèm SET LOCAL lock_timeout giúp phòng ngừa treo pool khi ví nóng."),
                     ],
                     comparison_note="Nhánh này bảo vệ đầy đủ cả 3 bất biến và cho thấy vì sao thứ tự khóa + kiểm tra số dư bên trong khóa phải đi cùng nhau.",
                 ),
@@ -942,15 +998,16 @@ class FixtureReplaySimulator:
                     assumptions_used=assumptions,
                     state_delta="wallet(11111): 200 → 50 → -100 (ÂM SỐ DƯ)",
                     trace_steps=[
-                        GeneratedTraceStepDTO(actor="T1 & T3", event="Cùng đọc balance(11111) = 200 bên ngoài transaction và thấy đủ 150.", state_after="Cả hai đều pass if ở app"),
-                        GeneratedTraceStepDTO(actor="T1", event="Khóa theo thứ tự và trừ 150 không kiểm tra lại → COMMIT.", state_after="wallet(11111) = 50"),
-                        GeneratedTraceStepDTO(actor="T3", event="Khóa theo thứ tự và trừ tiếp 150 mà không kiểm tra lại → COMMIT.", state_after="wallet(11111) = -100 (VỠ)"),
+                        GeneratedTraceStepDTO(time_label="t = 0ms (song song)", actor="T1 & T3", event="Cùng đọc balance(11111) = 200 bên ngoài transaction và thấy đủ 150.", state_after="Cả hai đều pass if ở app"),
+                        GeneratedTraceStepDTO(time_label="t = 5ms", actor="T1", event="Khóa theo thứ tự và trừ 150 không kiểm tra lại → COMMIT.", state_after="wallet(11111) = 50"),
+                        GeneratedTraceStepDTO(time_label="t = 7ms (song song)", actor="T3", event="Nhận khóa và trừ tiếp 150 mà không kiểm tra lại → COMMIT.", state_after="wallet(11111) = -100 (VỠ)"),
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name="Không phát sinh vòng chờ khóa (deadlock)", status="preserved", detail="Thứ tự khóa tăng dần ngăn được deadlock."),
-                        GeneratedInvariantDTO(name="Bảo toàn tổng số dư hai ví", status="preserved", detail="Tiền vẫn chuyển trọn vẹn trong transaction nhưng đã cho vay âm không phép."),
-                        GeneratedInvariantDTO(name="Không ví nào có số dư âm", status="broken", detail="Kiểm tra số dư ngoài khóa khiến ví bị trừ âm xuống -100."),
+                        GeneratedInvariantDTO(category="safety", name="Không phát sinh vòng chờ khóa (deadlock)", status="preserved", detail="Thứ tự khóa tăng dần ngăn được deadlock."),
+                        GeneratedInvariantDTO(category="safety", name="Bảo toàn tổng số dư hai ví", status="preserved", detail="Tiền vẫn chuyển trọn vẹn trong transaction nhưng đã cho vay âm không phép."),
+                        GeneratedInvariantDTO(category="safety", name="Không ví nào có số dư âm", status="broken", detail="Kiểm tra số dư ngoài khóa khiến ví bị trừ âm xuống -100."),
+                        GeneratedInvariantDTO(category="operational", name="Tính toàn vẹn kiểm tra trước khi ghi", status="warning", detail="Cần chuyển kiểm tra balance >= amount vào bên trong transaction đã khóa dòng."),
                     ],
                     comparison_note="Nhánh này giúp thấy rõ: ngăn deadlock mới là một nửa bài toán, kiểm tra điều kiện phải nằm bên trong vùng đã khóa.",
                 ),
@@ -1046,8 +1103,10 @@ class FixtureReplaySimulator:
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name=inv, status="broken", detail="Không có khóa/nguyên tử chung ở DB và không có ranh giới rollback.")
+                        GeneratedInvariantDTO(category="safety", name=inv, status="broken", detail="Không có khóa/nguyên tử chung ở DB và không có ranh giới rollback.")
                         for inv in invariants
+                    ] + [
+                        GeneratedInvariantDTO(category="operational", name="Rủi ro vận hành khi ghi đè đồng thời", status="broken", detail="Phát sinh dữ liệu sai lệch cần xử lý thủ công."),
                     ],
                     comparison_note="Nhánh này minh họa hậu quả khi bỏ qua cơ chế bảo vệ ở nguồn dữ liệu chia sẻ.",
                 ),
@@ -1071,8 +1130,10 @@ class FixtureReplaySimulator:
                     ],
                     is_terminal=True,
                     invariants=[
-                        GeneratedInvariantDTO(name=inv, status="preserved", detail="Được bảo vệ bởi giao dịch nguyên tử tại DB dùng chung.")
+                        GeneratedInvariantDTO(category="safety", name=inv, status="preserved", detail="Được bảo vệ bởi giao dịch nguyên tử tại DB dùng chung.")
                         for inv in invariants
+                    ] + [
+                        GeneratedInvariantDTO(category="operational", name="An toàn vận hành & thời lượng khóa", status="preserved", detail="Giữ transaction gọn kèm SET LOCAL lock_timeout giúp tránh treo pool."),
                     ],
                     comparison_note="Đây là nhánh tham chiếu bảo vệ trọn vẹn các bất biến đã kiểm duyệt trong đề bài.",
                 ),
@@ -1391,12 +1452,22 @@ class AntigravityReplaySimulator:
             assumptions_used=tuple(dto.assumptions_used),
             state_delta=dto.state_delta,
             trace_steps=tuple(
-                ReplayTraceStep(actor=s.actor, event=s.event, state_after=s.state_after)
+                ReplayTraceStep(
+                    actor=s.actor,
+                    event=s.event,
+                    state_after=s.state_after,
+                    time_label=s.time_label,
+                )
                 for s in dto.trace_steps
             ),
             is_terminal=True,
             invariants=tuple(
-                ReplayInvariantCheck(name=i.name, status=i.status, detail=i.detail)
+                ReplayInvariantCheck(
+                    name=i.name,
+                    status=i.status,
+                    detail=i.detail,
+                    category=i.category,
+                )
                 for i in dto.invariants
             ),
             comparison_note=dto.comparison_note,

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Decision Replay — Phòng thí nghiệm rẽ nhánh tình huống — interviewUS{% endblock %}
+{% block title %}Decision Replay — Cây quyết định tương tác — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/features.css?v=20261127-p3">
+<link rel="stylesheet" href="/static/css/features.css?v=20261127-p4">
 {% endblock %}
 
 {% block content %}
@@ -25,6 +25,12 @@
         <p class="text-secondary reading-measure" style="margin: 0;">{{ active_run.summary }}</p>
       </div>
       <div class="action-row">
+        {% if active_run.linked_session_id and active_run.linked_answer_ref %}
+          <form method="post"
+                action="/sessions/{{ active_run.linked_session_id }}/answers/{{ active_run.linked_answer_ref.id }}/replay/start?revision={{ active_run.linked_answer_ref.revision }}&amp;reuse_existing=0">
+            <button type="submit" class="btn btn--secondary">Phân tích lại cây mới</button>
+          </form>
+        {% endif %}
         {% if active_run.linked_session_id %}
           <a class="btn btn--secondary" href="/sessions/{{ active_run.linked_session_id }}/summary">Về tổng kết phiên</a>
           {% if active_run.linked_answer_ref %}
@@ -42,8 +48,31 @@
   <p id="replay-error" class="alert alert--error" role="alert" tabindex="-1" hidden></p>
   <p id="replay-status" class="alert alert--status" role="status" aria-live="polite" hidden></p>
 
+  <!-- Stage 1: True Interactive Decision Tree Canvas + Rewind Controls -->
+  <section id="replay-tree-stage" class="card stack replay-tree-stage" aria-labelledby="tree-canvas-heading">
+    <div class="replay-stage-header">
+      <div>
+        <h2 id="tree-canvas-heading" style="margin-bottom: var(--space-1);">Cây quyết định tương tác &amp; Tua lại</h2>
+        <p class="form-hint" style="margin: 0;">
+          Nhìn toàn cảnh các nhánh xử lý, bấm trực tiếp lên bất kỳ node nào để focus, so sánh hoặc tua lại lựa chọn trước.
+        </p>
+      </div>
+      <div class="replay-rewind-controls">
+        <button id="replay-rewind-parent-top" type="button" class="btn btn--secondary btn--sm">← Tua lại bước trước</button>
+        <button id="replay-jump-root" type="button" class="btn btn--ghost btn--sm">↺ Về điểm xuất phát</button>
+      </div>
+    </div>
+
+    <nav id="replay-breadcrumbs" class="replay-breadcrumbs" aria-label="Đường đi từ gốc tới node đang focus"></nav>
+
+    <div class="replay-tree-scroll">
+      <nav id="replay-tree-nav" class="replay-tree-canvas" aria-label="Sơ đồ cây các nhánh Decision Replay"></nav>
+    </div>
+  </section>
+
+  <!-- Stage 2: Focused Node Inspector & Original Answer Context -->
   <div class="replay-studio">
-    <aside class="replay-studio__aside stack" aria-label="Bài làm gốc và cây nhánh đã khám phá">
+    <aside class="replay-studio__aside stack" aria-label="Bài làm gốc để đối chiếu">
       <section class="card stack">
         <div>
           <h2 style="margin-bottom: var(--space-1);">Bài làm gốc của bạn</h2>
@@ -73,28 +102,24 @@
           <ul id="replay-assumptions-list" style="margin: var(--space-2) 0 0 0; padding-left: 1.25rem; font-size: var(--font-size-sm);"></ul>
         </details>
       </section>
-
-      <section class="card stack" aria-labelledby="tree-nav-heading">
-        <div>
-          <h2 id="tree-nav-heading" style="margin-bottom: var(--space-1);">Cây các nhánh đã khám phá</h2>
-          <p class="form-hint" style="margin: 0;">Bấm vào bất kỳ bước nào để tua lại hoặc nhảy qua so sánh nhánh khác — không mất nhánh cũ.</p>
-        </div>
-        <nav id="replay-tree-nav" aria-label="Cây nhánh Decision Replay"></nav>
-      </section>
     </aside>
 
-    <section class="replay-studio__main card stack" aria-labelledby="replay-node-title">
-      <nav id="replay-breadcrumbs" class="replay-breadcrumbs" aria-label="Đường đi hiện tại"></nav>
-
-      <div class="stack" style="gap: var(--space-2);">
-        <div><span id="replay-node-badge" class="badge"></span></div>
-        <h2 id="replay-node-title" style="margin: 0;"></h2>
-        <p id="replay-node-situation" class="reading-measure" style="margin: 0;"></p>
-        <p id="replay-node-state-delta" class="state-delta-pill" hidden></p>
+    <section id="replay-focus-card" class="replay-studio__main card stack" aria-labelledby="replay-node-title">
+      <div class="results-header">
+        <div class="stack" style="gap: var(--space-1);">
+          <div><span id="replay-node-badge" class="badge"></span></div>
+          <h2 id="replay-node-title" style="margin: 0;"></h2>
+        </div>
       </div>
 
+      <p id="replay-node-situation" class="reading-measure" style="margin: 0;"></p>
+      <p id="replay-node-state-delta" class="state-delta-pill" hidden></p>
+
       <section class="stack" aria-labelledby="trace-heading">
-        <h3 id="trace-heading" style="margin: 0;">Diễn biến hệ thống từng bước (Trace)</h3>
+        <div>
+          <h3 id="trace-heading" style="margin: 0;">Diễn biến đồng thời theo mốc thời gian (Trace)</h3>
+          <p class="form-hint" style="margin: 0;">Theo dõi thứ tự từng request đến song song và thời điểm khóa/mở khóa.</p>
+        </div>
         <ol id="replay-trace-list" class="trace-list"></ol>
       </section>
 
@@ -111,15 +136,15 @@
 
       <section id="replay-options-section" class="stack" aria-labelledby="options-heading">
         <div>
-          <h3 id="options-heading" style="margin-bottom: var(--space-1);">Chọn hướng xử lý để quan sát kết cục</h3>
-          <p class="form-hint" style="margin: 0;">Chọn tự do để kiểm chứng tư duy — mọi nhánh đều lưu lại trên cây bên trái để so sánh.</p>
+          <h3 id="options-heading" style="margin-bottom: var(--space-1);">Rẽ nhánh tiếp từ node này</h3>
+          <p class="form-hint" style="margin: 0;">Bấm trực tiếp trên sơ đồ cây hoặc chọn một hướng xử lý bên dưới để focus vào node kế tiếp.</p>
         </div>
         <div id="replay-options-list" class="stack"></div>
       </section>
 
       <section id="replay-custom-section" class="custom-branch-box stack" aria-labelledby="custom-branch-heading">
         <div>
-          <h3 id="custom-branch-heading" style="margin-bottom: var(--space-1);">Hoặc thử phương án xử lý của riêng bạn tại đây</h3>
+          <h3 id="custom-branch-heading" style="margin-bottom: var(--space-1);">Hoặc tự nhập phương án xử lý của bạn để tạo nhánh mới</h3>
           <p id="replay-custom-quota" class="form-hint" style="margin: 0;"></p>
         </div>
         <form id="replay-custom-form" method="post" action="/replays/runs/{{ active_run.run_id }}/custom-branch" class="stack">
@@ -130,7 +155,7 @@
                     class="form-textarea"
                     rows="3"
                     maxlength="1000"
-                    placeholder="Ví dụ: Nếu tôi dùng cột version (Optimistic Lock) kèm retry tối đa 3 lần trong cùng 1 transaction thì sao?"></textarea>
+                    placeholder="Ví dụ: Dùng UPDATE WHERE + SET LOCAL lock_timeout = '500ms' chung 1 transaction..."></textarea>
           <div class="action-row">
             <button id="replay-custom-submit" type="submit" class="btn btn--secondary">Mô phỏng phương án này thành nhánh mới</button>
           </div>
@@ -139,15 +164,29 @@
 
       <section id="replay-ending-section" class="ending-panel stack" aria-labelledby="ending-heading" hidden>
         <div>
-          <h3 id="ending-heading" style="margin-bottom: var(--space-1);">Kết cục thực tế &amp; Đối chiếu bất biến (không tính điểm)</h3>
-          <p class="form-hint" style="margin: 0;">Đánh giá trạng thái các bất biến của bài toán trên nhánh vừa chạy. Điểm phiên thi gốc không thay đổi.</p>
+          <h3 id="ending-heading" style="margin-bottom: var(--space-1);">Kết cục thực tế &amp; Đối chiếu 2 nhóm tiêu chí (không tính điểm)</h3>
+          <p class="form-hint" style="margin: 0;">Tách riêng tính đúng đắn dữ liệu (Safety) và rủi ro hiệu năng/vận hành (Operational) để không che mờ cảnh báo nghẽn khóa.</p>
         </div>
-        <ul id="replay-invariants-list" class="profile-entry-list"></ul>
+
+        <div id="replay-outcome-summary" class="outcome-summary-strip"></div>
+
+        <div class="outcome-groups-grid">
+          <div class="stack" style="gap: var(--space-2);">
+            <h4 class="outcome-group-title">1. Tính đúng đắn dữ liệu (Safety / Correctness)</h4>
+            <ul id="replay-safety-list" class="profile-entry-list"></ul>
+          </div>
+          <div class="stack" style="gap: var(--space-2);">
+            <h4 class="outcome-group-title">2. Hiệu năng &amp; Vận hành (Liveness / Operational)</h4>
+            <ul id="replay-operational-list" class="profile-entry-list"></ul>
+          </div>
+        </div>
+
         <p id="replay-comparison-note" class="alert alert--status" hidden></p>
         <div class="action-row">
-          <button id="replay-rewind-parent" type="button" class="btn btn--primary">Tua lại điểm rẽ trước để thử hướng khác</button>
+          <button id="replay-rewind-parent" type="button" class="btn btn--primary">← Tua lại điểm rẽ trước để thử hướng khác</button>
+          <button id="replay-rewind-root-bottom" type="button" class="btn btn--secondary">↺ Về điểm xuất phát</button>
           {% if active_run.linked_session_id %}
-            <a class="btn btn--secondary" href="/sessions/{{ active_run.linked_session_id }}/exercises">Sang bài tập thực hành</a>
+            <a class="btn btn--ghost" href="/sessions/{{ active_run.linked_session_id }}/exercises">Sang bài tập thực hành</a>
             <a class="btn btn--ghost" href="/sessions/{{ active_run.linked_session_id }}/summary">Về tổng kết phiên</a>
           {% endif %}
         </div>
@@ -164,7 +203,7 @@
       <span class="badge badge--met" style="margin-bottom: var(--space-2);">Decision Replay · Tình huống kỹ thuật (Technical Case)</span>
       <h1 id="replays-hub-heading">Phòng thí nghiệm rẽ nhánh từ bài làm của bạn</h1>
       <p class="text-secondary reading-measure" style="margin: 0;">
-        Chọn trực tiếp một câu <strong>Tình huống kỹ thuật</strong> bạn đã hoàn tất trong phiên phỏng vấn (đủ 4/4 câu) để xem hệ thống mô phỏng từng bước, tua lại rẽ nhánh thử phương án khác và so sánh kết cục — hoàn toàn không làm thay đổi điểm đã công bố.
+        Chọn trực tiếp một câu <strong>Tình huống kỹ thuật</strong> bạn đã hoàn tất trong phiên phỏng vấn (đủ 4/4 câu) để xem cây quyết định tương tác, tua lại rẽ nhánh thử phương án khác và đối chiếu Safety vs Operational — hoàn toàn không làm thay đổi điểm đã công bố.
       </p>
     </div>
 
@@ -203,7 +242,7 @@
                     <form method="post"
                           action="/sessions/{{ item.session_id }}/answers/{{ item.answer_ref.id }}/replay/start?revision={{ item.answer_ref.revision }}">
                       <button type="submit" class="btn btn--primary">
-                        {% if item.existing_run_id %}Tiếp tục khám phá nhánh{% else %}Mở Decision Replay từ bài làm này{% endif %}
+                        {% if item.existing_run_id %}Tiếp tục khám phá cây{% else %}Mở Decision Replay từ bài làm này{% endif %}
                       </button>
                     </form>
                     <a class="btn btn--ghost" href="/sessions/{{ item.session_id }}/summary">Xem tổng kết</a>
@@ -231,7 +270,7 @@
     <div>
       <h2 id="standalone-cases-heading" style="margin-bottom: var(--space-1);">Xem thử kịch bản mẫu độc lập (chưa gắn bài làm)</h2>
       <p class="text-secondary reading-measure" style="margin: 0; font-size: var(--font-size-sm);">
-        Dành cho việc làm quen giao diện rẽ nhánh trước khi thi thật. Mọi câu <code>technical_case</code> đã kiểm duyệt trong ngân hàng câu hỏi đều tự động có mặt tại đây.
+        Dành cho việc làm quen giao diện cây quyết định trước khi thi thật. Mọi câu <code>technical_case</code> đã kiểm duyệt trong ngân hàng câu hỏi đều tự động có mặt tại đây.
       </p>
     </div>
     <ul class="replay-list">
@@ -255,6 +294,6 @@
 
 {% block extra_scripts %}
 {% if active_run %}
-<script src="/static/js/replay.js?v=20261127-p3" defer></script>
+<script src="/static/js/replay.js?v=20261127-p4" defer></script>
 {% endif %}
 {% endblock %}

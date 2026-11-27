@@ -45,8 +45,9 @@
       ],
       "reference_notes": [
         "Theo tài liệu PostgreSQL Chapter 13 (Read Committed & Row-Level Locking): lệnh SELECT thường không khóa dòng nên hai giao dịch có thể cùng đọc stock = 1 trước khi một bên commit.",
-        "UPDATE ... SET stock = stock - 1 WHERE stock >= 1 khóa dòng trong giao dịch đầu; giao dịch sau chờ khóa, đọc lại phiên bản dòng đã commit (stock = 0), điều kiện WHERE không thỏa nên affected rows = 0.",
-        "SELECT ... FOR UPDATE trong cùng một transaction với UPDATE và INSERT orders cũng ngăn ghi đè đồng thời và tự rollback tồn kho khi INSERT lỗi, nhưng giữ khóa dòng lâu hơn nếu xử lý thêm tác vụ nặng trước khi commit."
+        "Nguyên nhân chính gây nghẽn lock timeout / cạn connection pool khi giữ khóa lâu là chèn tác vụ chậm (như gọi API ngoài) vào giữa bất kỳ transaction đang mở nào chưa COMMIT — cả SELECT ... FOR UPDATE lẫn UPDATE ... WHERE đều giữ row lock tới khi COMMIT/ROLLBACK.",
+        "Khi cả hai đều giữ transaction ngắn gọn chỉ gồm thao tác DB, Atomic Conditional UPDATE (UPDATE ... SET stock = stock - 1 WHERE stock >= 1) khác SELECT ... FOR UPDATE ở 3 điểm thực tế: (1) ít hơn 1 network round-trip nên cửa sổ giữ lock hẹp hơn; (2) chỉ sửa cột không thuộc khóa (stock) sẽ lấy khóa nhẹ FOR NO KEY UPDATE thay vì FOR UPDATE (vốn chặn cả kiểm tra khóa ngoại FOR KEY SHARE từ bảng con như orders); (3) tránh bẫy lập trình viên vô tình chèn thêm logic chậm giữa bước SELECT ... FOR UPDATE và UPDATE.",
+        "Để bảo vệ hệ thống trước nghẽn khóa dây chuyền, PostgreSQL hỗ trợ van an toàn như SET LOCAL lock_timeout hoặc NOWAIT / SKIP LOCKED nhằm fail-fast thay vì treo cạn connection pool."
       ]
     },
     "adaptation": {
@@ -206,9 +207,9 @@
         "Kiểm thử chuyển chéo song song nhiều lượt và đối chiếu bất biến tổng số dư."
       ],
       "reference_notes": [
-        "Theo PostgreSQL Chapter 13 (Deadlocks): khi T1 cập nhật dòng 11111 rồi cập nhật 22222 còn T2 làm ngược lại, PostgreSQL phát hiện deadlock sau deadlock_timeout và buộc abort một giao dịch.",
-        "Cách triệt tiêu vòng chờ khóa là đảm bảo mọi giao dịch khóa tập dòng cần sửa theo cùng một thứ tự xác định (ví dụ SELECT ... WHERE wallet_id IN (:a, :b) ORDER BY wallet_id FOR UPDATE).",
-        "Tách trừ ví nguồn và cộng ví đích thành hai transaction riêng tuy rút ngắn thời gian giữ khóa nhưng làm vỡ tính nguyên tử nếu bước cộng tiền lỗi hoặc sập giữa chừng."
+        "Theo PostgreSQL Chapter 13 (Deadlocks): khi T1 cập nhật dòng 11111 rồi cập nhật 22222 còn T2 làm ngược lại, PostgreSQL phát hiện deadlock sau deadlock_timeout và buộc abort một giao dịch (ERROR 40P01).",
+        "Cách triệt tiêu vòng chờ khóa là đảm bảo mọi giao dịch khóa tập dòng cần sửa theo cùng một thứ tự xác định (ví dụ SELECT ... WHERE wallet_id IN (:a, :b) ORDER BY wallet_id FOR UPDATE) và chỉ kiểm tra số dư SAU khi đã khóa.",
+        "Tách trừ ví nguồn và cộng ví đích thành hai transaction riêng tuy giảm giữ khóa chéo nhưng làm vỡ tính nguyên tử nếu bước cộng tiền lỗi hoặc crash giữa chừng; nên giữ 1 transaction ngắn gọn kèm SET LOCAL lock_timeout để fail-fast nếu có nghẽn."
       ]
     },
     "adaptation": {
