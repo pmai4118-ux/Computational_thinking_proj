@@ -13,8 +13,8 @@ from typing import Any
 from source.Model.exercise import Exercise
 from source.Model.ids import CriterionId, ExerciseId, QuestionId, RubricId, SkillId, SourceId, VersionedRef
 from source.Model.question import (
-    Criterion, CriterionLevel, LicenseStatus, Question, ReviewChecks, ReviewMetadata,
-    ReviewStatus, Rubric, Skill, SourceMetadata,
+    CodingConfig, Criterion, CriterionLevel, LicenseStatus, Question, ReplayGrounding,
+    ReviewChecks, ReviewMetadata, ReviewStatus, Rubric, Skill, SourceMetadata,
 )
 from source.Model.repositories.interfaces import ContentRepository, RepositoryError
 from source.service.interview_service import SessionBlueprint, load_session_blueprints
@@ -252,6 +252,79 @@ def _question(item: Any, *, category: str, skills: set[SkillId],
     adaptation = item.get("adaptation")
     if not isinstance(adaptation, dict):
         raise ValueError("question.adaptation must be an object")
+
+    raw_coding = item.get("coding_config")
+    if not isinstance(raw_coding, dict):
+        raise ValueError(
+            "question.coding_config is required (object with mode: required|optional|hidden)"
+        )
+    coding_mode = _nonempty(raw_coding.get("mode"), "question.coding_config.mode")
+    raw_lang = raw_coding.get("language")
+    coding_lang = _nonempty(raw_lang, "question.coding_config.language") if raw_lang is not None else None
+    raw_starter = raw_coding.get("starter_code")
+    if raw_starter is not None and not isinstance(raw_starter, str):
+        raise ValueError("question.coding_config.starter_code must be a string or null")
+    raw_placeholder = raw_coding.get("placeholder")
+    coding_placeholder = (
+        _nonempty(raw_placeholder, "question.coding_config.placeholder")
+        if raw_placeholder is not None
+        else None
+    )
+    coding_config = CodingConfig(
+        mode=coding_mode,
+        language=coding_lang,
+        starter_code=raw_starter,
+        placeholder=coding_placeholder,
+    )
+
+    replay_grounding: ReplayGrounding | None = None
+    raw_grounding = item.get("replay_grounding")
+    if category == "technical_case":
+        if not isinstance(raw_grounding, dict):
+            raise ValueError(
+                "technical_case questions require replay_grounding "
+                "(environment_assumptions, core_invariants, decision_focus, reference_notes)"
+            )
+        replay_grounding = ReplayGrounding(
+            environment_assumptions=_text_list(
+                raw_grounding.get("environment_assumptions"),
+                "question.replay_grounding.environment_assumptions",
+            ),
+            core_invariants=_text_list(
+                raw_grounding.get("core_invariants"),
+                "question.replay_grounding.core_invariants",
+            ),
+            decision_focus=_text_list(
+                raw_grounding.get("decision_focus"),
+                "question.replay_grounding.decision_focus",
+            ),
+            reference_notes=_text_list(
+                raw_grounding.get("reference_notes"),
+                "question.replay_grounding.reference_notes",
+            ),
+        )
+    elif raw_grounding is not None:
+        if not isinstance(raw_grounding, dict):
+            raise ValueError("question.replay_grounding must be an object or null")
+        replay_grounding = ReplayGrounding(
+            environment_assumptions=_text_list(
+                raw_grounding.get("environment_assumptions"),
+                "question.replay_grounding.environment_assumptions",
+            ),
+            core_invariants=_text_list(
+                raw_grounding.get("core_invariants"),
+                "question.replay_grounding.core_invariants",
+            ),
+            decision_focus=_text_list(
+                raw_grounding.get("decision_focus"),
+                "question.replay_grounding.decision_focus",
+            ),
+            reference_notes=_optional_text_list(
+                raw_grounding.get("reference_notes", []),
+                "question.replay_grounding.reference_notes",
+            ),
+        )
+
     question = Question(
         id=QuestionId(_nonempty(item["id"], "question.id")), version=_version(item["version"]),
         category=category, language=item["language"], prompt=item["prompt"], skill_ids=skill_ids,
@@ -261,6 +334,8 @@ def _question(item: Any, *, category: str, skills: set[SkillId],
         code=item.get("code"), code_language=item.get("code_language"),
         constraints=_optional_text_list(item.get("constraints", []), "question.constraints"),
         role=item["role"], level=item["level"], difficulty=item["difficulty"],
+        coding_config=coding_config,
+        replay_grounding=replay_grounding,
     )
     return rubric, question
 

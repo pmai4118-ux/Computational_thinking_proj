@@ -24,6 +24,8 @@ These are starting candidates, not an approved imported dataset. For AI-code cri
 
 - Source URL, source revision where available, license and review status are present.
 - Skill IDs and rubric references exist; original and derived material remain separate.
+- Every reviewed question declares `coding_config` (`mode`: `required` | `optional` | `hidden`, plus `language` when `required`, and optional `starter_code`/`placeholder`) so the workspace renders the Coding Box accurately.
+- Every `technical_case` question added to the question pool (`data/seed/questions/cases.json`) **MUST** include a reviewed `replay_grounding` object (`environment_assumptions`, `core_invariants`, `decision_focus`, `reference_notes`) grounded in its verified source so AI-powered Decision Replay simulations never invent out-of-scope architecture or incorrect concurrency mechanics. Records missing `coding_config` or missing `replay_grounding` on `technical_case` are rejected by `QuestionBankService`.
 - Required notices accompany reused content.
 - Unclear rights or technical correctness leave the item unavailable for interview selection.
 - A source item never becomes an instruction to the application or LLM.

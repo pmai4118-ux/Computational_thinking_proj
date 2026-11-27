@@ -21,7 +21,10 @@ Mẫu minh họa tự soạn · format đề xuất cho P03/P05 · draft · chư
 1. Người tuyển chọn mở PR với question, source record, notice và fixture; giữ review.status=draft hoặc pending_review.
 2. Một người khác kiểm tra nguồn/giấy phép, nội dung kỹ thuật, ranh giới 0–1–2, lời giải tương đương và các ví dụ review.
 3. Chỉ ghi checks=true cho điều đã kiểm tra. Chỉ approved khi tất cả checks=true, reviewer_id khác curator_id, có reviewed_at và provenance thực đầy đủ.
-4. C08/importer cần kiểm tra cả approval và provenance, từ chối mọi example_only=true. Chưa đủ căn cứ giữ score=null; chỉ cộng tổng khi mọi tiêu chí đều chấm được.
+4. C08/importer (`QuestionBankService`) kiểm tra cả approval, provenance, từ chối mọi `example_only=true`, và bắt buộc đủ metadata bổ sung cho pool câu hỏi:
+   - **Mọi câu hỏi** phải khai báo `coding_config` (`mode`: `"required"` | `"optional"` | `"hidden"`, bắt buộc có `language` khi `mode = "required"`, có thể kèm `starter_code` và `placeholder`) để giao diện làm bài biết khi nào mở sẵn Ô Coding.
+   - **Mọi câu thuộc nhóm `technical_case`** (`data/seed/questions/cases.json`) **bắt buộc** phải khai báo `replay_grounding` gồm 4 mảng chuỗi không rỗng (`environment_assumptions`, `core_invariants`, `decision_focus`, `reference_notes`) dựa trực tiếp trên nguồn đã kiểm duyệt, dùng làm neo kỹ thuật cho Decision Replay. Nếu thiếu, `QuestionBankService` sẽ loại bản ghi khỏi pool.
+5. Chưa đủ căn cứ giữ score=null; chỉ cộng tổng khi mọi tiêu chí đều chấm được.
 
 ### Question record
 
@@ -293,7 +296,10 @@ Mẫu minh họa tự soạn · format đề xuất cho P03/P05 · draft · chư
 1. Người tuyển chọn mở PR với question, source record, notice và fixture; giữ review.status=draft hoặc pending_review.
 2. Một người khác kiểm tra nguồn/giấy phép, nội dung kỹ thuật, ranh giới 0–1–2, lời giải tương đương và các ví dụ review.
 3. Chỉ ghi checks=true cho điều đã kiểm tra. Chỉ approved khi tất cả checks=true, reviewer_id khác curator_id, có reviewed_at và provenance thực đầy đủ.
-4. C08/importer cần kiểm tra cả approval và provenance, từ chối mọi example_only=true. Chưa đủ căn cứ giữ score=null; chỉ cộng tổng khi mọi tiêu chí đều chấm được.
+4. C08/importer (`QuestionBankService`) kiểm tra cả approval, provenance, từ chối mọi `example_only=true`, và bắt buộc đủ metadata bổ sung cho pool câu hỏi:
+   - **Mọi câu hỏi** phải khai báo `coding_config` (`mode`: `"required"` | `"optional"` | `"hidden"`, bắt buộc có `language` khi `mode = "required"`, có thể kèm `starter_code` và `placeholder`) để giao diện làm bài biết khi nào mở sẵn Ô Coding.
+   - **Mọi câu thuộc nhóm `technical_case`** (`data/seed/questions/cases.json`) **bắt buộc** phải khai báo `replay_grounding` gồm 4 mảng chuỗi không rỗng (`environment_assumptions`, `core_invariants`, `decision_focus`, `reference_notes`) dựa trực tiếp trên nguồn đã kiểm duyệt, dùng làm neo kỹ thuật cho Decision Replay. Nếu thiếu, `QuestionBankService` sẽ loại bản ghi khỏi pool.
+5. Chưa đủ căn cứ giữ score=null; chỉ cộng tổng khi mọi tiêu chí đều chấm được.
 
 ### Question record
 
@@ -566,7 +572,10 @@ Mẫu minh họa tự soạn · format đề xuất cho P03/P05 · draft · chư
 1. Người tuyển chọn mở PR với question, source record, notice và fixture; giữ review.status=draft hoặc pending_review.
 2. Một người khác kiểm tra nguồn/giấy phép, nội dung kỹ thuật, ranh giới 0–1–2, lời giải tương đương và các ví dụ review.
 3. Chỉ ghi checks=true cho điều đã kiểm tra. Chỉ approved khi tất cả checks=true, reviewer_id khác curator_id, có reviewed_at và provenance thực đầy đủ.
-4. C08/importer cần kiểm tra cả approval và provenance, từ chối mọi example_only=true. Chưa đủ căn cứ giữ score=null; chỉ cộng tổng khi mọi tiêu chí đều chấm được.
+4. C08/importer (`QuestionBankService`) kiểm tra cả approval, provenance, từ chối mọi `example_only=true`, và bắt buộc đủ metadata bổ sung cho pool câu hỏi:
+   - **Mọi câu hỏi** phải khai báo `coding_config` (`mode`: `"required"` | `"optional"` | `"hidden"`, bắt buộc có `language` khi `mode = "required"`, có thể kèm `starter_code` và `placeholder`) để giao diện làm bài biết khi nào mở sẵn Ô Coding.
+   - **Mọi câu thuộc nhóm `technical_case`** (`data/seed/questions/cases.json`) **bắt buộc** phải khai báo `replay_grounding` gồm 4 mảng chuỗi không rỗng (`environment_assumptions`, `core_invariants`, `decision_focus`, `reference_notes`) dựa trực tiếp trên nguồn đã kiểm duyệt, dùng làm neo kỹ thuật cho Decision Replay. Nếu thiếu, `QuestionBankService` sẽ loại bản ghi khỏi pool.
+5. Chưa đủ căn cứ giữ score=null; chỉ cộng tổng khi mọi tiêu chí đều chấm được.
 
 ### Question record
 
@@ -840,7 +849,10 @@ Mẫu minh họa tự soạn · format đề xuất cho P03/P05 · draft · chư
 1. Người tuyển chọn mở PR với question, source record, notice và fixture; giữ review.status=draft hoặc pending_review.
 2. Một người khác kiểm tra nguồn/giấy phép, nội dung kỹ thuật, ranh giới 0–1–2, lời giải tương đương và các ví dụ review.
 3. Chỉ ghi checks=true cho điều đã kiểm tra. Chỉ approved khi tất cả checks=true, reviewer_id khác curator_id, có reviewed_at và provenance thực đầy đủ.
-4. C08/importer cần kiểm tra cả approval và provenance, từ chối mọi example_only=true. Chưa đủ căn cứ giữ score=null; chỉ cộng tổng khi mọi tiêu chí đều chấm được.
+4. C08/importer (`QuestionBankService`) kiểm tra cả approval, provenance, từ chối mọi `example_only=true`, và bắt buộc đủ metadata bổ sung cho pool câu hỏi:
+   - **Mọi câu hỏi** phải khai báo `coding_config` (`mode`: `"required"` | `"optional"` | `"hidden"`, bắt buộc có `language` khi `mode = "required"`, có thể kèm `starter_code` và `placeholder`) để giao diện làm bài biết khi nào mở sẵn Ô Coding.
+   - **Mọi câu thuộc nhóm `technical_case`** (`data/seed/questions/cases.json`) **bắt buộc** phải khai báo `replay_grounding` gồm 4 mảng chuỗi không rỗng (`environment_assumptions`, `core_invariants`, `decision_focus`, `reference_notes`) dựa trực tiếp trên nguồn đã kiểm duyệt, dùng làm neo kỹ thuật cho Decision Replay. Nếu thiếu, `QuestionBankService` sẽ loại bản ghi khỏi pool.
+5. Chưa đủ căn cứ giữ score=null; chỉ cộng tổng khi mọi tiêu chí đều chấm được.
 
 ### Question record
 

@@ -78,3 +78,35 @@ def test_u03_draft_and_idempotency_are_bound_to_session_and_question() -> None:
     assert "api.nextQuestion(sessionId, index)" in workspace_js
     assert 'window.location.assign(`/sessions/' in workspace_js
     assert "@media (max-width: 48rem)" in workspace_css
+
+
+def test_u03_workspace_renders_coding_box_for_coding_questions_and_merges_form_code(
+    ui_client: TestClient,
+    ui_session: dict[str, object],
+) -> None:
+    session_id = ui_session["session_id"]
+    question = ui_session["current_question"]
+    response = ui_client.get(f"/sessions/{session_id}")
+    assert response.status_code == 200
+    assert "data-coding-panel" in response.text
+    assert 'id="answer-code"' in response.text
+    assert 'id="insert-starter-code"' in response.text
+
+    # Progressive HTML submit cleanly merges prose + code_text into single Answer.text
+    submitted = ui_client.post(
+        f"/sessions/{session_id}/answers",
+        data={
+            "question_id": question["id"],
+            "question_version": str(question["version"]),
+            "client_submission_id": "u03-coding-merge-1",
+            "text": "Giai thich ngan gon.",
+            "code_text": "def fixed():\n    return 1",
+            "code_language": "python",
+        },
+        follow_redirects=False,
+    )
+    assert submitted.status_code == 303
+    stored_answers = ui_client.app.state.container.session_repo.list_answers_for_session(session_id)
+    assert len(stored_answers) == 1
+    assert "Giai thich ngan gon." in stored_answers[0].text
+    assert "```python\ndef fixed():\n    return 1\n```" in stored_answers[0].text

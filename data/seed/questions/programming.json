@@ -20,6 +20,12 @@
       "Chạy trên Python 3.11; hai lệnh print thực thi sau khi cả hai lần gọi hàm đã hoàn tất.",
       "Bản sửa phải giữ nguyên danh tính (identity) của list khi người gọi truyền tường minh, kể cả list rỗng []."
     ],
+    "coding_config": {
+      "mode": "required",
+      "language": "python",
+      "starter_code": "def append_audit_event(action: str, events: list[str] | None = None) -> list[str]:\n    # Viết bản sửa và kiểm thử assert tại đây\n    pass\n",
+      "placeholder": "Viết đoạn mã Python sửa hàm append_audit_event và các kiểm thử assert..."
+    },
     "adaptation": {
       "kind": "adapted_open_source_documentation",
       "summary": "Chuyển ngữ và thích nghi từ mục 'Why are default values shared between objects?' trong tài liệu chính thức CPython (Doc/faq/programming.rst @ 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2); đặt vào bối cảnh ghi nhận sự kiện backend và bổ sung ràng buộc bảo toàn tham chiếu khi truyền list rỗng.",
@@ -153,6 +159,12 @@
       "Chạy trên Python 3.11.",
       "Bản sửa vẫn phải tạo danh sách gồm 5 hàm không nhận đối số bắt buộc khi gọi `validators[i]()`."
     ],
+    "coding_config": {
+      "mode": "required",
+      "language": "python",
+      "starter_code": "def build_validators():\n    validators = []\n    for step in range(5):\n        # Bắt giữ giá trị step đúng từng vòng lặp\n        pass\n    return validators\n",
+      "placeholder": "Viết bản sửa hàm build_validators và các assert kiểm tra..."
+    },
     "adaptation": {
       "kind": "adapted_open_source_documentation",
       "summary": "Chuyển ngữ từ mục 'Why do lambdas defined in a loop with different values all return the same result?' trong tài liệu chính thức CPython (Doc/faq/programming.rst @ 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2); thêm ràng buộc giữ nguyên chữ ký gọi không đối số `validators[i]()`.",

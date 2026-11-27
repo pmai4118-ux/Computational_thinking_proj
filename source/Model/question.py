@@ -186,6 +186,42 @@ class Rubric:
 
 
 @dataclass(frozen=True, slots=True)
+class CodingConfig:
+    """Presentation metadata describing whether a question expects code input."""
+
+    mode: str = "optional"  # "required" | "optional" | "hidden"
+    language: str | None = None
+    starter_code: str | None = None
+    placeholder: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.mode not in {"required", "optional", "hidden"}:
+            raise ValueError("CodingConfig.mode must be 'required', 'optional', or 'hidden'.")
+        if self.mode == "required" and (not self.language or not self.language.strip()):
+            raise ValueError("CodingConfig.language is required when mode is 'required'.")
+
+
+@dataclass(frozen=True, slots=True)
+class ReplayGrounding:
+    """Verified technical grounding used by Decision Replay for technical_case questions."""
+
+    environment_assumptions: tuple[str, ...]
+    core_invariants: tuple[str, ...]
+    decision_focus: tuple[str, ...]
+    reference_notes: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        for field_name in ("environment_assumptions", "core_invariants", "decision_focus"):
+            values = getattr(self, field_name)
+            if not values or any(not isinstance(item, str) or not item.strip() for item in values):
+                raise ValueError(
+                    f"ReplayGrounding.{field_name} must contain non-empty strings."
+                )
+        if any(not isinstance(item, str) or not item.strip() for item in self.reference_notes):
+            raise ValueError("ReplayGrounding.reference_notes must contain non-empty strings.")
+
+
+@dataclass(frozen=True, slots=True)
 class Question:
     """One immutable, localized question revision and exact rubric reference."""
 
@@ -206,6 +242,8 @@ class Question:
     role: str = "backend_developer"
     level: str = "intern_fresher"
     difficulty: str = "applied"
+    coding_config: CodingConfig | None = None
+    replay_grounding: ReplayGrounding | None = None
 
     def __post_init__(self) -> None:
         require_non_empty_id(self.id, "Question.id")
@@ -227,10 +265,12 @@ class Question:
 
 
 __all__ = [
+    "CodingConfig",
     "Criterion",
     "CriterionLevel",
     "LicenseStatus",
     "Question",
+    "ReplayGrounding",
     "ReviewChecks",
     "ReviewMetadata",
     "ReviewStatus",

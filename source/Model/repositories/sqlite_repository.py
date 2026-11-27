@@ -13,7 +13,13 @@ from uuid import uuid4
 
 from source.Model.adaptive_probe import FollowUpProbe, ProbeStatus, ProbeTriggerKind
 from source.Model.competency_profile import CompetencyProfileEntry, RecentCriterionScore
-from source.Model.decision_replay import ReplayRun, ReplayStepRecord
+from source.Model.decision_replay import (
+    ReplayInvariantCheck,
+    ReplayOptionBranch,
+    ReplayRun,
+    ReplayTraceStep,
+    ReplayTreeNode,
+)
 from source.Model.job_posting import (
     JobAnalysisRecord,
     JobPosting,
@@ -43,10 +49,12 @@ from source.Model.ids import (
 )
 from source.Model.interview import Answer, EvaluationTiming, Session, SessionState
 from source.Model.question import (
+    CodingConfig,
     Criterion,
     CriterionLevel,
     LicenseStatus,
     Question,
+    ReplayGrounding,
     ReviewChecks,
     ReviewMetadata,
     ReviewStatus,
@@ -82,6 +90,58 @@ def _iso_to_dt(value: str | None) -> datetime | None:
     if value is None:
         return None
     return datetime.fromisoformat(value)
+
+
+def _serialize_coding_config(config: CodingConfig | None) -> str | None:
+    if config is None:
+        return None
+    return json.dumps(
+        {
+            "mode": config.mode,
+            "language": config.language,
+            "starter_code": config.starter_code,
+            "placeholder": config.placeholder,
+        },
+        ensure_ascii=False,
+    )
+
+
+def _deserialize_coding_config(raw: str | None) -> CodingConfig | None:
+    if not raw:
+        return None
+    data = json.loads(raw)
+    return CodingConfig(
+        mode=str(data.get("mode", "optional")),
+        language=data.get("language"),
+        starter_code=data.get("starter_code"),
+        placeholder=data.get("placeholder"),
+    )
+
+
+def _serialize_replay_grounding(grounding: ReplayGrounding | None) -> str | None:
+    if grounding is None:
+        return None
+    return json.dumps(
+        {
+            "environment_assumptions": list(grounding.environment_assumptions),
+            "core_invariants": list(grounding.core_invariants),
+            "decision_focus": list(grounding.decision_focus),
+            "reference_notes": list(grounding.reference_notes),
+        },
+        ensure_ascii=False,
+    )
+
+
+def _deserialize_replay_grounding(raw: str | None) -> ReplayGrounding | None:
+    if not raw:
+        return None
+    data = json.loads(raw)
+    return ReplayGrounding(
+        environment_assumptions=tuple(str(x) for x in data.get("environment_assumptions", ())),
+        core_invariants=tuple(str(x) for x in data.get("core_invariants", ())),
+        decision_focus=tuple(str(x) for x in data.get("decision_focus", ())),
+        reference_notes=tuple(str(x) for x in data.get("reference_notes", ())),
+    )
 
 
 def _serialize_review(review: ReviewMetadata) -> str:
@@ -152,6 +212,11 @@ class SQLiteRepositoryStore:
                     conn.execute(
                         "ALTER TABLE sessions ADD COLUMN evaluation_timing TEXT NOT NULL DEFAULT 'per_question';"
                     )
+                question_cols = {row[1] for row in conn.execute("PRAGMA table_info(questions);")}
+                if "coding_config_json" not in question_cols:
+                    conn.execute("ALTER TABLE questions ADD COLUMN coding_config_json TEXT;")
+                if "replay_grounding_json" not in question_cols:
+                    conn.execute("ALTER TABLE questions ADD COLUMN replay_grounding_json TEXT;")
                 replay_cols = {
                     row[1] for row in conn.execute("PRAGMA table_info(decision_replay_runs);")
                 }
@@ -161,6 +226,8 @@ class SQLiteRepositoryStore:
                     conn.execute(
                         "ALTER TABLE decision_replay_runs ADD COLUMN linked_answer_revision INTEGER;"
                     )
+                if "tree_json" not in replay_cols:
+                    conn.execute("ALTER TABLE decision_replay_runs ADD COLUMN tree_json TEXT;")
                 conn.execute(
                     "INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, ?);",
                     (SCHEMA_VERSION, _dt_to_iso(datetime.now(UTC))),
@@ -233,13 +300,16 @@ class SQLiteRepositoryStore:
                             f"Rubric ({rubric.id}, {rubric.version}) conflicts with existing content."
                         )
                 for question in questions:
+                    coding_json = _serialize_coding_config(question.coding_config)
+                    grounding_json = _serialize_replay_grounding(question.replay_grounding)
                     cursor = conn.execute(
                         """INSERT INTO questions (
                              id, version, category, language, role, level, difficulty,
                              prompt, skill_ids_json, rubric_id, rubric_version, source_id,
                              review_status, review_json, original_content, adaptation_note,
-                             code, code_language, constraints_json
-                           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             code, code_language, constraints_json,
+                             coding_config_json, replay_grounding_json
+                           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                            ON CONFLICT(id, version) DO NOTHING;""",
                         (question.id, question.version, question.category, question.language,
                          question.role, question.level, question.difficulty, question.prompt,
@@ -248,17 +318,54 @@ class SQLiteRepositoryStore:
                          question.source_id, question.review.status.value,
                          _serialize_review(question.review), question.original_content,
                          question.adaptation_note, question.code, question.code_language,
-                         json.dumps(list(question.constraints), ensure_ascii=False)),
+                         json.dumps(list(question.constraints), ensure_ascii=False),
+                         coding_json, grounding_json),
                     )
                     inserted["questions"] += cursor.rowcount
                     row = conn.execute(
                         "SELECT * FROM questions WHERE id=? AND version=?;",
                         (question.id, question.version),
                     ).fetchone()
-                    if self._row_to_question(row) != question:
-                        raise DuplicateRecordError(
-                            f"Question ({question.id}, {question.version}) conflicts with existing content."
+                    existing_question = self._row_to_question(row)
+                    if existing_question != question:
+                        # Safely backfill newly added nullable metadata columns on pre-existing DBs.
+                        can_backfill_coding = (
+                            existing_question.coding_config is None
+                            and question.coding_config is not None
                         )
+                        can_backfill_grounding = (
+                            existing_question.replay_grounding is None
+                            and question.replay_grounding is not None
+                        )
+                        backfilled = replace(
+                            existing_question,
+                            coding_config=(
+                                question.coding_config
+                                if can_backfill_coding
+                                else existing_question.coding_config
+                            ),
+                            replay_grounding=(
+                                question.replay_grounding
+                                if can_backfill_grounding
+                                else existing_question.replay_grounding
+                            ),
+                        )
+                        if (can_backfill_coding or can_backfill_grounding) and backfilled == question:
+                            conn.execute(
+                                """UPDATE questions
+                                   SET coding_config_json = ?, replay_grounding_json = ?
+                                   WHERE id = ? AND version = ?;""",
+                                (
+                                    _serialize_coding_config(backfilled.coding_config),
+                                    _serialize_replay_grounding(backfilled.replay_grounding),
+                                    question.id,
+                                    question.version,
+                                ),
+                            )
+                        else:
+                            raise DuplicateRecordError(
+                                f"Question ({question.id}, {question.version}) conflicts with existing content."
+                            )
                 for exercise in exercises:
                     cursor = conn.execute(
                         """INSERT INTO exercises (
@@ -426,8 +533,8 @@ class SQLiteRepositoryStore:
                         id, version, category, language, role, level, difficulty, prompt,
                         skill_ids_json, rubric_id, rubric_version, source_id, review_status,
                         review_json, original_content, adaptation_note, code, code_language,
-                        constraints_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        constraints_json, coding_config_json, replay_grounding_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     (
                         question.id,
@@ -449,6 +556,8 @@ class SQLiteRepositoryStore:
                         question.code,
                         question.code_language,
                         json.dumps(list(question.constraints), ensure_ascii=False),
+                        _serialize_coding_config(question.coding_config),
+                        _serialize_replay_grounding(question.replay_grounding),
                     ),
                 )
         except sqlite3.IntegrityError as error:
@@ -456,6 +565,7 @@ class SQLiteRepositoryStore:
 
     @staticmethod
     def _row_to_question(row: sqlite3.Row) -> Question:
+        keys = set(row.keys())
         return Question(
             id=QuestionId(row["id"]),
             version=int(row["version"]),
@@ -474,6 +584,16 @@ class SQLiteRepositoryStore:
             code=row["code"],
             code_language=row["code_language"],
             constraints=tuple(json.loads(row["constraints_json"])),
+            coding_config=(
+                _deserialize_coding_config(row["coding_config_json"])
+                if "coding_config_json" in keys
+                else None
+            ),
+            replay_grounding=(
+                _deserialize_replay_grounding(row["replay_grounding_json"])
+                if "replay_grounding_json" in keys
+                else None
+            ),
         )
 
     def get_question(self, ref: VersionedRef[QuestionId]) -> Question | None:
@@ -1581,43 +1701,93 @@ class SQLiteRepositoryStore:
         return tuple(self._row_to_probe(row) for row in rows)
 
     def save_replay_run(self, run: ReplayRun) -> ReplayRun:
-        steps_json = json.dumps(
-            [
+        tree_payload = {
+            "schema_version": 2,
+            "question_id": str(run.question_id),
+            "question_version": run.question_version,
+            "title": run.title,
+            "summary": run.summary,
+            "root_node_id": run.root_node_id,
+            "active_node_id": run.active_node_id,
+            "visited_node_ids": list(run.visited_node_ids),
+            "custom_branches_used": run.custom_branches_used,
+            "custom_branch_limit": run.custom_branch_limit,
+            "prompt_version": run.prompt_version,
+            "model_id": run.model_id,
+            "demo_mode_label": run.demo_mode_label,
+            "nodes": [
                 {
-                    "step_number": step.step_number,
-                    "checkpoint_id": step.checkpoint_id,
-                    "checkpoint_title": step.checkpoint_title,
-                    "option_id": step.option_id,
-                    "option_label": step.option_label,
-                    "consequence_summary": step.consequence_summary,
-                    "system_impact": step.system_impact,
-                    "tradeoff_note": step.tradeoff_note,
-                    "outcome_tag": step.outcome_tag,
-                    "decided_at": _dt_to_iso(step.decided_at),
+                    "id": node.id,
+                    "parent_id": node.parent_id,
+                    "branch_label": node.branch_label,
+                    "depth": node.depth,
+                    "origin": node.origin,
+                    "answer_alignment": node.answer_alignment,
+                    "title": node.title,
+                    "situation": node.situation,
+                    "consequence_summary": node.consequence_summary,
+                    "system_impact": node.system_impact,
+                    "tradeoff_note": node.tradeoff_note,
+                    "answer_quote": node.answer_quote,
+                    "answer_quote_start": node.answer_quote_start,
+                    "answer_quote_end": node.answer_quote_end,
+                    "assumptions_used": list(node.assumptions_used),
+                    "state_delta": node.state_delta,
+                    "trace_steps": [
+                        {
+                            "actor": step.actor,
+                            "event": step.event,
+                            "state_after": step.state_after,
+                        }
+                        for step in node.trace_steps
+                    ],
+                    "is_terminal": node.is_terminal,
+                    "invariants": [
+                        {
+                            "name": inv.name,
+                            "status": inv.status,
+                            "detail": inv.detail,
+                        }
+                        for inv in node.invariants
+                    ],
+                    "comparison_note": node.comparison_note,
+                    "options": [
+                        {
+                            "option_id": opt.option_id,
+                            "label": opt.label,
+                            "action_summary": opt.action_summary,
+                            "target_node_id": opt.target_node_id,
+                        }
+                        for opt in node.options
+                    ],
+                    "user_proposal": node.user_proposal,
+                    "created_at": _dt_to_iso(node.created_at),
                 }
-                for step in run.steps
+                for node in run.nodes
             ],
-            ensure_ascii=False,
-        )
+        }
+        tree_json = json.dumps(tree_payload, ensure_ascii=False)
+        active = run.active_node
         try:
             with self._connect() as conn, conn:
                 conn.execute(
                     """
                     INSERT OR REPLACE INTO decision_replay_runs (
                         id, scenario_id, scenario_version, owner_token_hash,
-                        current_checkpoint_id, completed, steps_json,
+                        current_checkpoint_id, completed, steps_json, tree_json,
                         linked_session_id, linked_answer_id, linked_answer_revision,
                         created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
                     """,
                     (
                         run.id,
-                        run.scenario_id,
-                        run.scenario_version,
+                        str(run.question_id),
+                        run.question_version,
                         run.owner_token_hash,
-                        run.current_checkpoint_id,
-                        1 if run.completed else 0,
-                        steps_json,
+                        run.active_node_id,
+                        1 if active.is_terminal else 0,
+                        "[]",
+                        tree_json,
                         str(run.linked_session_id) if run.linked_session_id else None,
                         str(run.linked_answer_ref.id) if run.linked_answer_ref else None,
                         run.linked_answer_ref.revision if run.linked_answer_ref else None,
@@ -1630,24 +1800,66 @@ class SQLiteRepositoryStore:
         return run
 
     @staticmethod
-    def _row_to_replay_run(row: sqlite3.Row) -> ReplayRun:
+    def _row_to_replay_run(row: sqlite3.Row) -> ReplayRun | None:
+        keys = set(row.keys())
+        raw_tree = row["tree_json"] if "tree_json" in keys else None
+        if not raw_tree:
+            return None
+        payload = json.loads(raw_tree)
+        if not isinstance(payload, dict) or not payload.get("nodes"):
+            return None
         created_at = _iso_to_dt(row["created_at"])
         updated_at = _iso_to_dt(row["updated_at"])
         assert created_at is not None and updated_at is not None
-        steps = tuple(
-            ReplayStepRecord(
-                step_number=int(item["step_number"]),
-                checkpoint_id=item["checkpoint_id"],
-                checkpoint_title=item["checkpoint_title"],
-                option_id=item["option_id"],
-                option_label=item["option_label"],
-                consequence_summary=item["consequence_summary"],
-                system_impact=item["system_impact"],
-                tradeoff_note=item["tradeoff_note"],
-                outcome_tag=item["outcome_tag"],
-                decided_at=_iso_to_dt(item["decided_at"]) or updated_at,
+        nodes = tuple(
+            ReplayTreeNode(
+                id=str(n["id"]),
+                parent_id=n.get("parent_id"),
+                branch_label=str(n.get("branch_label", "")),
+                depth=int(n.get("depth", 0)),
+                origin=str(n.get("origin", "prebuilt_branch")),
+                answer_alignment=str(n.get("answer_alignment", "what_if_branch")),
+                title=str(n.get("title", "")),
+                situation=str(n.get("situation", "")),
+                consequence_summary=str(n.get("consequence_summary", "")),
+                system_impact=str(n.get("system_impact", "")),
+                tradeoff_note=str(n.get("tradeoff_note", "")),
+                answer_quote=n.get("answer_quote"),
+                answer_quote_start=n.get("answer_quote_start"),
+                answer_quote_end=n.get("answer_quote_end"),
+                assumptions_used=tuple(str(x) for x in n.get("assumptions_used", ())),
+                state_delta=str(n.get("state_delta", "")),
+                trace_steps=tuple(
+                    ReplayTraceStep(
+                        actor=str(s["actor"]),
+                        event=str(s["event"]),
+                        state_after=s.get("state_after"),
+                    )
+                    for s in n.get("trace_steps", ())
+                ),
+                is_terminal=bool(n.get("is_terminal", False)),
+                invariants=tuple(
+                    ReplayInvariantCheck(
+                        name=str(inv["name"]),
+                        status=str(inv["status"]),
+                        detail=str(inv["detail"]),
+                    )
+                    for inv in n.get("invariants", ())
+                ),
+                comparison_note=n.get("comparison_note"),
+                options=tuple(
+                    ReplayOptionBranch(
+                        option_id=str(o["option_id"]),
+                        label=str(o["label"]),
+                        action_summary=str(o["action_summary"]),
+                        target_node_id=str(o["target_node_id"]),
+                    )
+                    for o in n.get("options", ())
+                ),
+                user_proposal=n.get("user_proposal"),
+                created_at=_iso_to_dt(n.get("created_at")),
             )
-            for item in json.loads(row["steps_json"])
+            for n in payload["nodes"]
         )
         linked_answer_ref = (
             AnswerRevisionRef(
@@ -1659,14 +1871,22 @@ class SQLiteRepositoryStore:
         )
         return ReplayRun(
             id=row["id"],
-            scenario_id=row["scenario_id"],
-            scenario_version=int(row["scenario_version"]),
+            question_id=QuestionId(str(payload.get("question_id") or row["scenario_id"])),
+            question_version=int(payload.get("question_version") or row["scenario_version"]),
             owner_token_hash=row["owner_token_hash"],
-            current_checkpoint_id=row["current_checkpoint_id"],
-            completed=bool(row["completed"]),
-            steps=steps,
+            root_node_id=str(payload["root_node_id"]),
+            active_node_id=str(payload["active_node_id"]),
+            visited_node_ids=tuple(str(x) for x in payload.get("visited_node_ids", ())),
+            nodes=nodes,
+            title=str(payload.get("title", "")),
+            summary=str(payload.get("summary", "")),
             linked_session_id=SessionId(row["linked_session_id"]) if row["linked_session_id"] else None,
             linked_answer_ref=linked_answer_ref,
+            custom_branches_used=int(payload.get("custom_branches_used", 0)),
+            custom_branch_limit=int(payload.get("custom_branch_limit", 2)),
+            prompt_version=str(payload.get("prompt_version", "decision_replay/v1")),
+            model_id=payload.get("model_id"),
+            demo_mode_label=payload.get("demo_mode_label"),
             created_at=created_at,
             updated_at=updated_at,
         )
@@ -1684,7 +1904,8 @@ class SQLiteRepositoryStore:
                 "SELECT * FROM decision_replay_runs WHERE owner_token_hash = ? ORDER BY updated_at DESC, id DESC;",
                 (owner_token_hash,),
             ).fetchall()
-        return tuple(self._row_to_replay_run(row) for row in rows)
+        runs = [self._row_to_replay_run(row) for row in rows]
+        return tuple(run for run in runs if run is not None)
 
 
 __all__ = ["SCHEMA_VERSION", "SQLiteRepositoryStore"]

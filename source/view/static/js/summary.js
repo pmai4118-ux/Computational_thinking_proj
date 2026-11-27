@@ -173,6 +173,48 @@
     return item;
   }
 
+  function renderReplayBanner(data) {
+    const banner = document.querySelector("#summary-replay-banner");
+    const textEl = document.querySelector("#summary-replay-text");
+    const actionsEl = document.querySelector("#summary-replay-actions");
+    if (!banner || !textEl || !actionsEl) return;
+    const caseOutcome = (data.outcomes || []).find((item) => item.category === "technical_case");
+    if (!caseOutcome) {
+      banner.hidden = true;
+      return;
+    }
+    banner.hidden = false;
+    actionsEl.replaceChildren();
+    const totalQ = Number(data.total_question_count || 0);
+    const answeredQ = (data.outcomes || []).filter((item) => item.answer_ref && item.answer_ref.id).length;
+    const sessionFullyAnswered = totalQ > 0 && answeredQ >= totalQ;
+
+    if (!sessionFullyAnswered) {
+      textEl.textContent = `Cần hoàn tất đủ ${totalQ}/${totalQ} câu của phiên (hiện mới nộp ${answeredQ}/${totalQ}) để mở Decision Replay cho câu Tình huống kỹ thuật.`;
+      return;
+    }
+    if (!caseOutcome.answer_ref || !caseOutcome.answer_ref.id) {
+      textEl.textContent = "Chưa có bài trả lời đã lưu cho câu Tình huống kỹ thuật.";
+      return;
+    }
+    if (caseOutcome.evaluation_status === "pending" || caseOutcome.evaluation_status === "processing") {
+      textEl.textContent = "Câu Tình huống kỹ thuật đang được AI đối chiếu rubric. Nút mở Decision Replay sẽ kích hoạt ngay sau khi chấm xong.";
+      return;
+    }
+    if (caseOutcome.evaluation_status === "failed") {
+      textEl.textContent = "Câu Tình huống kỹ thuật chưa chấm xong do lỗi tạm thời. Hãy bấm 'Thử đánh giá lại' ở thẻ câu bên dưới trước khi mở Decision Replay.";
+      return;
+    }
+    textEl.textContent = "Xem mô phỏng từng bước từ chính bài làm gốc, tua lại rẽ nhánh thử giải pháp khác và đối chiếu bất biến (không làm thay đổi điểm phiên thi).";
+    const form = node("form", "");
+    form.method = "post";
+    form.action = `/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(caseOutcome.answer_ref.id)}/replay/start?revision=${encodeURIComponent(String(caseOutcome.answer_ref.revision))}`;
+    const btn = node("button", "btn btn--primary", "Mở Decision Replay từ bài làm");
+    btn.type = "submit";
+    form.append(btn);
+    actionsEl.append(form);
+  }
+
   function renderSummary(data) {
     const report = data.report;
     const headings = [
@@ -222,6 +264,7 @@
     walkOpenDetails(outcomesList);
 
     const criterionLabels = buildCriterionLabelMap(data.observed_gaps);
+    renderReplayBanner(data);
     outcomesList.replaceChildren();
     for (const outcome of data.outcomes || []) {
       const detail = (report && report.details || []).find((item) =>

@@ -51,6 +51,8 @@ CREATE TABLE IF NOT EXISTS questions (
     code TEXT,
     code_language TEXT,
     constraints_json TEXT NOT NULL,
+    coding_config_json TEXT,
+    replay_grounding_json TEXT,
     PRIMARY KEY (id, version),
     FOREIGN KEY (rubric_id, rubric_version) REFERENCES rubrics (id, version),
     FOREIGN KEY (source_id) REFERENCES sources (id)
@@ -239,6 +241,7 @@ CREATE TABLE IF NOT EXISTS decision_replay_runs (
     current_checkpoint_id TEXT,
     completed INTEGER NOT NULL CHECK (completed IN (0, 1)),
     steps_json TEXT NOT NULL,
+    tree_json TEXT,
     linked_session_id TEXT,
     linked_answer_id TEXT,
     linked_answer_revision INTEGER,

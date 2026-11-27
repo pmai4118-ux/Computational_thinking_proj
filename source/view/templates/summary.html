@@ -2,8 +2,9 @@
 
 {% block title %}Tổng kết phiên — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/results.css?v=20261127-p2">
-<link rel="stylesheet" href="/static/css/summary.css?v=20261127-p2">
+<link rel="stylesheet" href="/static/css/results.css?v=20261127-p3">
+<link rel="stylesheet" href="/static/css/summary.css?v=20261127-p3">
+<link rel="stylesheet" href="/static/css/features.css?v=20261127-p3">
 {% endblock %}
 
 {% block content %}
@@ -38,6 +39,14 @@
         <div><h3>Câu chưa đủ căn cứ</h3><ul id="unresolved-categories"></ul></div>
       </div>
     </section>
+    <section id="summary-replay-banner" class="replay-callout" aria-labelledby="summary-replay-heading" hidden>
+      <div class="replay-callout__body">
+        <span class="badge badge--met" style="align-self: flex-start;">Decision Replay · Tình huống kỹ thuật</span>
+        <h2 id="summary-replay-heading">Phòng thí nghiệm rẽ nhánh từ bài Tình huống của bạn</h2>
+        <p id="summary-replay-text" class="text-secondary"></p>
+      </div>
+      <div id="summary-replay-actions" class="action-row"></div>
+    </section>
     <section aria-labelledby="outcomes-heading">
       <h2 id="outcomes-heading">Kết quả từng câu</h2>
       <ol id="outcomes-list" class="outcome-list"></ol>
@@ -58,4 +67,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/summary.js?v=20261127-p2" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/summary.js?v=20261127-p3" defer></script>{% endblock %}

@@ -181,6 +181,36 @@
       const query = answerRevision == null ? "" : `?revision=${encode(answerRevision)}`;
       return request(`/sessions/${encode(sessionId)}/answers/${encode(answerId)}/replay${query}`);
     },
+    getReplayHub() {
+      return request("/replays");
+    },
+    getReplayRun(runId) {
+      return request(`/replays/runs/${encode(runId)}`);
+    },
+    selectReplayNode(runId, nodeId) {
+      return request(`/replays/runs/${encode(runId)}/select`, {
+        method: "POST",
+        body: { node_id: nodeId },
+      });
+    },
+    chooseReplayOption(runId, nodeId, optionId) {
+      return request(`/replays/runs/${encode(runId)}/choose`, {
+        method: "POST",
+        body: { node_id: nodeId, option_id: optionId },
+      });
+    },
+    rewindReplayNode(runId, nodeId) {
+      return request(`/replays/runs/${encode(runId)}/rewind`, {
+        method: "POST",
+        body: { node_id: nodeId },
+      });
+    },
+    addCustomReplayBranch(runId, parentNodeId, proposalText) {
+      return request(`/replays/runs/${encode(runId)}/custom-branch`, {
+        method: "POST",
+        body: { parent_node_id: parentNodeId, proposal_text: proposalText },
+      });
+    },
   };
 
   window.InterviewApi = Object.freeze(api);

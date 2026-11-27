@@ -214,20 +214,21 @@
     if (!replaySection || typeof api.getAnswerReplay !== "function") return;
     try {
       const info = await api.getAnswerReplay(sessionId, answerId, answerRevision);
-      if (!info.available || !info.scenario) {
+      if (!info.available || !info.eligible_now) {
         replaySection.hidden = true;
         return;
       }
       replaySection.hidden = false;
       if (replaySummary) {
-        replaySummary.textContent = `${info.scenario.title}: ${info.scenario.summary} (Bài trả lời gốc và điểm vẫn giữ nguyên).`;
+        const title = info.question_title || "Tình huống kỹ thuật";
+        replaySummary.textContent = `${title}: mở phòng thí nghiệm rẽ nhánh What-If từ bài làm gốc để thử phương án khác và so sánh kết cục (không thay đổi điểm đã công bố).`;
       }
       if (replayForm) {
         replayForm.action = `/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answerId)}/replay/start?revision=${encodeURIComponent(String(answerRevision))}`;
       }
       if (replayButton) {
         replayButton.textContent = info.existing_run_id
-          ? "Tiếp tục / tua lại Decision Replay từ bài làm"
+          ? "Tiếp tục khám phá cây Decision Replay"
           : "Mở Decision Replay từ bài làm này";
       }
     } catch (_error) {

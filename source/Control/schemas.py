@@ -123,6 +123,17 @@ class SourceAttributionDTO(BaseModel):
     required_notice: str | None = None
 
 
+class CodingConfigDTO(BaseModel):
+    """Workspace presentation hints for the optional/required coding box."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    mode: str = "optional"
+    language: str | None = None
+    starter_code: str | None = None
+    placeholder: str | None = None
+
+
 class QuestionPromptDTO(BaseModel):
     """Question view exposed to the student before and during answering.
 
@@ -139,6 +150,7 @@ class QuestionPromptDTO(BaseModel):
     code: str | None = None
     code_language: str | None = None
     constraints: tuple[str, ...] = ()
+    coding_config: CodingConfigDTO | None = None
     skill_ids: tuple[SkillId, ...] = Field(min_length=1)
     rubric_ref: VersionedRefDTO
     source: SourceAttributionDTO

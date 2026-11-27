@@ -16,6 +16,7 @@ from pydantic import ValidationError
 from source.Control.schemas import (
     AnswerRevisionRefDTO,
     ApiErrorResponse,
+    CodingConfigDTO,
     CreateSessionRequest,
     ErrorCode,
     NextQuestionRequest,
@@ -110,6 +111,16 @@ def _to_question_prompt_dto(
         code=question.code,
         code_language=question.code_language,
         constraints=question.constraints,
+        coding_config=(
+            CodingConfigDTO(
+                mode=question.coding_config.mode,
+                language=question.coding_config.language,
+                starter_code=question.coding_config.starter_code,
+                placeholder=question.coding_config.placeholder,
+            )
+            if question.coding_config is not None
+            else None
+        ),
         skill_ids=question.skill_ids,
         rubric_ref=VersionedRefDTO(
             id=question.rubric_ref.id,

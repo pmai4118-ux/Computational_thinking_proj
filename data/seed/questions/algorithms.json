@@ -20,6 +20,12 @@
       "Giả sử `sorted_collection` đã được sắp không giảm và `0 <= lo`.",
       "Mảng có thể rỗng, có phần tử trùng lặp hoặc mọi phần tử đều nhỏ hơn/lớn hơn `item`."
     ],
+    "coding_config": {
+      "mode": "optional",
+      "language": "python",
+      "starter_code": "# Ví dụ kiểm thử biên cho bisect_left\nassert bisect_left([1, 2, 2, 2, 4], 2) == 1\nassert bisect_left([], 5) == 0\n",
+      "placeholder": "Tùy chọn: viết các ca assert / ví dụ minh họa Python nếu cần..."
+    },
     "adaptation": {
       "kind": "adapted_open_source_algorithm",
       "summary": "Tuyển chọn trực tiếp hàm `bisect_left` từ TheAlgorithms/Python (`searches/binary_search.py` @ 30507bbe41397065728167fb09aa820f9fce8dc7, giấy phép MIT); chuyển thành đề bài yêu cầu giải thích bất biến nửa khoảng `[lo, hi)`, sự hội tụ của vòng lặp, độ phức tạp và kiểm thử biên.",
@@ -153,6 +159,12 @@
       "Chuỗi đầu vào có thể chứa cả ký tự không phải dấu ngoặc (như chữ số, toán tử) và có thể rỗng.",
       "Mỗi thao tác `append`, `pop` ở cuối `list` Python có chi phí trung bình `O(1)`."
     ],
+    "coding_config": {
+      "mode": "optional",
+      "language": "python",
+      "starter_code": "# Ví dụ kiểm thử biên cho balanced_parentheses\nassert balanced_parentheses(\"([{}])\") is True\nassert balanced_parentheses(\"[(])\") is False\n",
+      "placeholder": "Tùy chọn: viết các ca kiểm thử biên bằng Python nếu cần..."
+    },
     "adaptation": {
       "kind": "adapted_open_source_algorithm",
       "summary": "Thích nghi từ `data_structures/stacks/balanced_parentheses.py` của TheAlgorithms/Python (@ 30507bbe41397065728167fb09aa820f9fce8dc7, giấy phép MIT); thay wrapper `Stack` nội bộ bằng `list[str]` chuẩn của Python để đề bài độc lập hoàn toàn khi hiển thị.",

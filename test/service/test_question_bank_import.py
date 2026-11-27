@@ -271,3 +271,43 @@ def test_non_object_seed_records_are_rejected_without_aborting_validation(tmp_pa
         ("INVALID_QUESTION", "questions/programming.json", 3, "prog.c02.null_criterion.v1"),
     }
 
+
+def test_pool_import_enforces_coding_config_and_technical_case_replay_grounding(
+    tmp_path: Path,
+) -> None:
+    seed = _seed_copy(tmp_path)
+
+    def add_missing_coding(records):
+        bad = json.loads(json.dumps(records[0]))
+        bad["id"] = "prog.c02.missing_coding.v1"
+        bad["rubric"]["id"] = "rubric.c02.missing_coding.v1"
+        bad.pop("coding_config", None)
+        records.append(bad)
+
+    def add_missing_grounding(records):
+        bad = json.loads(json.dumps(records[0]))
+        bad["id"] = "case.c03.missing_grounding.v1"
+        bad["rubric"]["id"] = "rubric.c03.missing_grounding.v1"
+        bad.pop("replay_grounding", None)
+        records.append(bad)
+
+    _edit(seed / "questions" / "programming.json", add_missing_coding)
+    _edit(seed / "questions" / "cases.json", add_missing_grounding)
+
+    store = SQLiteRepositoryStore(tmp_path / "metadata_rules.sqlite3")
+    report = QuestionBankService().import_seed(store, seed)
+    assert report.blocked is False
+    assert report.imported["questions"] == 8
+    assert any(
+        issue.code == "INVALID_QUESTION"
+        and issue.record_id == "prog.c02.missing_coding.v1"
+        and "coding_config" in issue.message
+        for issue in report.issues
+    )
+    assert any(
+        issue.code == "INVALID_QUESTION"
+        and issue.record_id == "case.c03.missing_grounding.v1"
+        and "replay_grounding" in issue.message
+        for issue in report.issues
+    )
+

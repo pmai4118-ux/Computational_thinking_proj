@@ -20,6 +20,12 @@
       "Hợp đồng của tầng gọi đã cam kết `sorted_collection` được sắp không giảm một lần khi nạp dữ liệu; hàm này được gọi lặp lại trên đường nóng (hot path) cần `O(log n)` mỗi lượt.",
       "Đoạn mã trên được trích nguyên bản từ hàm `binary_search` của dự án nguồn mở TheAlgorithms/Python (không phải đoạn mã giả định tự gán là do AI sinh); bối cảnh review kiểm tra khả năng đối chiếu mã gợi ý với ràng buộc hệ thống."
     ],
+    "coding_config": {
+      "mode": "required",
+      "language": "python",
+      "starter_code": "def binary_search(sorted_collection: list[int], item: int) -> int:\n    # Sửa hàm giữ đúng O(log n) và trả về vị trí biên trái hoặc -1\n    pass\n",
+      "placeholder": "Viết đoạn mã Python đã sửa cho binary_search và ca kiểm thử..."
+    },
     "adaptation": {
       "kind": "adapted_open_source_code_for_review",
       "summary": "Sử dụng nguyên bản hàm `binary_search` có bước kiểm tra `pairwise` từ TheAlgorithms/Python (`searches/binary_search.py` @ 30507bbe41397065728167fb09aa820f9fce8dc7, giấy phép MIT) và đặt vào bài toán review theo hợp đồng hot-path `O(log n)` trên dữ liệu đã sắp sẵn; ghi rõ nguồn gốc mã thực tế thay vì tuyên bố do AI sinh.",
@@ -153,6 +159,12 @@
       "Bảng `user_data(user_name TEXT PRIMARY KEY, account_balance INTEGER NOT NULL)` đã tồn tại trong kết nối SQLite `conn`.",
       "Ghi chú minh bạch nguồn gốc: mẫu truy vấn chuẩn an toàn lấy từ OWASP Query Parameterization Cheat Sheet (CC-BY-SA-4.0); hai lỗi nối chuỗi f-string và truy cập `fetchone()[0]` không kiểm tra `None` trong đoạn mã đề bài là do nhóm biên soạn chủ động cài vào để phục vụ bài tập review, không phải lỗi của tài liệu OWASP và không tuyên bố là kết quả thật từ một mô hình AI."
     ],
+    "coding_config": {
+      "mode": "required",
+      "language": "python",
+      "starter_code": "import sqlite3\n\ndef get_account_balance(conn: sqlite3.Connection, username: str) -> int | None:\n    # Tham số hóa câu lệnh SQL và xử lý trường hợp không có dòng\n    pass\n",
+      "placeholder": "Viết bản sửa hàm get_account_balance an toàn và kiểm thử SQLite..."
+    },
     "adaptation": {
       "kind": "seeded_defect_review_from_open_source_guideline",
       "summary": "Dựa trên truy vấn mẫu `SELECT account_balance FROM user_data WHERE user_name = ?` của OWASP Query Parameterization Cheat Sheet (`cheatsheets/Query_Parameterization_Cheat_Sheet.md` @ 7af0ef1b745f1a38ce905c00c5a592d5b3a515a9, giấy phép CC-BY-SA-4.0); chuyển sang Python `sqlite3` và chủ động cài hai lỗi (nội suy f-string gây SQL Injection và `cursor.fetchone()[0]` gây `TypeError` khi không có bản ghi) để kiểm tra kỹ năng review độc lập.",

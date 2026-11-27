@@ -16,8 +16,10 @@ from pydantic import ValidationError
 from source.Control.competency_profile_controller import CompetencyProfileController
 from source.Control.decision_replay_controller import (
     ChooseReplayOptionRequest,
+    CustomReplayBranchRequest,
     DecisionReplayController,
     RewindReplayRequest,
+    SelectReplayNodeRequest,
 )
 from source.Control.interview_controller import (
     ApiControllerError,
@@ -403,7 +405,15 @@ def build_pages_router(
         question_id = _first_form_value(parsed, "question_id", "")
         question_version = _first_form_value(parsed, "question_version", "")
         submission_id = _first_form_value(parsed, "client_submission_id", "")
-        answer_text = parsed.get("text", [""])[0]
+        raw_text = parsed.get("text", [""])[0]
+        raw_code = parsed.get("code_text", [""])[0]
+        raw_code_lang = _first_form_value(parsed, "code_language", "").strip()
+        if raw_code.strip():
+            fence_lang = raw_code_lang or ""
+            code_block = f"```{fence_lang}\n{raw_code.rstrip()}\n```"
+            answer_text = f"{raw_text.rstrip()}\n\n{code_block}" if raw_text.strip() else code_block
+        else:
+            answer_text = raw_text
         action = _first_form_value(parsed, "action", "")
         if action in ("save_exit", "continue_saved"):
             session_dto, error_response = await run_in_threadpool(_get_owned_session_page_data, session_id, request)
@@ -731,42 +741,52 @@ def build_pages_router(
         )
         return HTMLResponse(content=html)
 
+    def _safe_inline_json(raw_json: str) -> str:
+        return (
+            raw_json.replace("&", "\\u0026")
+            .replace("<", "\\u003c")
+            .replace(">", "\\u003e")
+            .replace("\u2028", "\\u2028")
+            .replace("\u2029", "\\u2029")
+        )
+
     @router.get("/replays", response_class=HTMLResponse)
     def replays_index_page(request: Request) -> HTMLResponse:
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
-        scenarios = (
-            decision_replay_controller.list_scenarios().scenarios
+        hub = (
+            decision_replay_controller.get_hub(owner_token=owner_token)
             if decision_replay_controller is not None
-            else ()
-        )
-        recent_runs = (
-            decision_replay_controller.list_runs_for_owner(owner_token=owner_token)
-            if decision_replay_controller is not None
-            else ()
+            else None
         )
         html = replay_template.render(
             demo_mode_label=controller.demo_mode_label,
-            scenarios=scenarios,
-            recent_runs=recent_runs,
+            eligible_answers=hub.eligible_answers if hub else (),
+            cases=hub.cases if hub else (),
+            recent_runs=hub.recent_runs if hub else (),
             active_run=None,
+            initial_run_json="",
         )
         return HTMLResponse(content=html)
 
-    @router.post("/replays/{scenario_id}/start", response_model=None)
-    async def start_replay_page(scenario_id: str, request: Request) -> Response:
+    @router.post("/replays/cases/{question_id}/start", response_model=None)
+    @router.post("/replays/{question_id}/start", response_model=None)
+    async def start_replay_page(question_id: str, request: Request) -> Response:
         if decision_replay_controller is None:
             return HTMLResponse("Decision Replay chưa được cấu hình.", status_code=503)
         token, created_new = ensure_owner_cookie_token(request.cookies.get(OWNER_COOKIE_NAME))
         try:
             run = await run_in_threadpool(
-                decision_replay_controller.start_run, scenario_id, owner_token=token
+                decision_replay_controller.start_standalone_run, question_id, owner_token=token
             )
         except ApiControllerError as error:
+            hub = decision_replay_controller.get_hub(owner_token=token)
             html = replay_template.render(
                 demo_mode_label=controller.demo_mode_label,
-                scenarios=decision_replay_controller.list_scenarios().scenarios,
-                recent_runs=decision_replay_controller.list_runs_for_owner(owner_token=token),
+                eligible_answers=hub.eligible_answers,
+                cases=hub.cases,
+                recent_runs=hub.recent_runs,
                 active_run=None,
+                initial_run_json="",
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
             )
@@ -786,20 +806,25 @@ def build_pages_router(
         try:
             active_run = decision_replay_controller.get_run(run_id, owner_token=owner_token)
         except ApiControllerError as error:
+            hub = decision_replay_controller.get_hub(owner_token=owner_token)
             html = replay_template.render(
                 demo_mode_label=controller.demo_mode_label,
-                scenarios=decision_replay_controller.list_scenarios().scenarios,
-                recent_runs=decision_replay_controller.list_runs_for_owner(owner_token=owner_token),
+                eligible_answers=hub.eligible_answers,
+                cases=hub.cases,
+                recent_runs=hub.recent_runs,
                 active_run=None,
+                initial_run_json="",
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
             )
             return HTMLResponse(content=html, status_code=error.status_code)
         html = replay_template.render(
             demo_mode_label=controller.demo_mode_label,
-            scenarios=(),
+            eligible_answers=(),
+            cases=(),
             recent_runs=(),
             active_run=active_run,
+            initial_run_json=_safe_inline_json(active_run.model_dump_json()),
         )
         return HTMLResponse(content=html)
 
@@ -823,11 +848,14 @@ def build_pages_router(
                 reuse_existing=bool(reuse_existing),
             )
         except ApiControllerError as error:
+            hub = decision_replay_controller.get_hub(owner_token=owner_token)
             html = replay_template.render(
                 demo_mode_label=controller.demo_mode_label,
-                scenarios=decision_replay_controller.list_scenarios().scenarios,
-                recent_runs=decision_replay_controller.list_runs_for_owner(owner_token=owner_token),
+                eligible_answers=hub.eligible_answers,
+                cases=hub.cases,
+                recent_runs=hub.recent_runs,
                 active_run=None,
+                initial_run_json="",
                 error_message=error.payload.message,
                 recovery_action=error.payload.recovery_action,
             )
@@ -850,9 +878,8 @@ def build_pages_router(
         )
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
         try:
-            payload = RewindReplayRequest(
-                checkpoint_id=_first_form_value(parsed, "checkpoint_id", ""),
-            )
+            node_id = _first_form_value(parsed, "node_id", "") or _first_form_value(parsed, "checkpoint_id", "")
+            payload = RewindReplayRequest(node_id=node_id)
             await run_in_threadpool(
                 decision_replay_controller.rewind, run_id, payload, owner_token=owner_token
             )
@@ -860,18 +887,21 @@ def build_pages_router(
             msg = (
                 error.payload.message
                 if isinstance(error, ApiControllerError)
-                else "Điểm chốt tua lại không hợp lệ."
+                else "Điểm rẽ tua lại không hợp lệ."
             )
             code = error.status_code if isinstance(error, ApiControllerError) else 422
             try:
                 active_run = decision_replay_controller.get_run(run_id, owner_token=owner_token)
             except ApiControllerError:
                 active_run = None
+            hub = decision_replay_controller.get_hub(owner_token=owner_token) if active_run is None else None
             html = replay_template.render(
                 demo_mode_label=controller.demo_mode_label,
-                scenarios=decision_replay_controller.list_scenarios().scenarios if active_run is None else (),
-                recent_runs=(),
+                eligible_answers=hub.eligible_answers if hub else (),
+                cases=hub.cases if hub else (),
+                recent_runs=hub.recent_runs if hub else (),
                 active_run=active_run,
+                initial_run_json=_safe_inline_json(active_run.model_dump_json()) if active_run else "",
                 error_message=msg,
             )
             return HTMLResponse(content=html, status_code=code)
@@ -893,8 +923,9 @@ def build_pages_router(
         )
         owner_token = request.cookies.get(OWNER_COOKIE_NAME)
         try:
+            node_id = _first_form_value(parsed, "node_id", "") or _first_form_value(parsed, "checkpoint_id", "")
             payload = ChooseReplayOptionRequest(
-                checkpoint_id=_first_form_value(parsed, "checkpoint_id", ""),
+                node_id=node_id,
                 option_id=_first_form_value(parsed, "option_id", ""),
             )
             await run_in_threadpool(
@@ -911,17 +942,79 @@ def build_pages_router(
                 active_run = decision_replay_controller.get_run(run_id, owner_token=owner_token)
             except ApiControllerError:
                 active_run = None
+            hub = decision_replay_controller.get_hub(owner_token=owner_token) if active_run is None else None
             html = replay_template.render(
                 demo_mode_label=controller.demo_mode_label,
-                scenarios=decision_replay_controller.list_scenarios().scenarios if active_run is None else (),
-                recent_runs=(),
+                eligible_answers=hub.eligible_answers if hub else (),
+                cases=hub.cases if hub else (),
+                recent_runs=hub.recent_runs if hub else (),
                 active_run=active_run,
+                initial_run_json=_safe_inline_json(active_run.model_dump_json()) if active_run else "",
                 error_message=msg,
             )
             return HTMLResponse(content=html, status_code=code)
         return RedirectResponse(
             url=f"/replays/runs/{run_id}", status_code=status.HTTP_303_SEE_OTHER
         )
+
+    @router.post("/replays/runs/{run_id}/select", response_model=None)
+    async def select_replay_node_page(run_id: str, request: Request) -> Response:
+        if decision_replay_controller is None:
+            return HTMLResponse("Decision Replay chưa được cấu hình.", status_code=503)
+        body = await _read_body_with_limit(request, max_bytes=MAX_SETUP_FORM_BODY_BYTES)
+        if body is None:
+            return HTMLResponse("Yêu cầu quá lớn.", status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+        parsed = parse_qs(body.decode("utf-8", errors="replace"), keep_blank_values=True, max_num_fields=8)
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        try:
+            payload = SelectReplayNodeRequest(node_id=_first_form_value(parsed, "node_id", ""))
+            await run_in_threadpool(
+                decision_replay_controller.select_node, run_id, payload, owner_token=owner_token
+            )
+        except (ValidationError, ApiControllerError):
+            pass
+        return RedirectResponse(url=f"/replays/runs/{run_id}", status_code=status.HTTP_303_SEE_OTHER)
+
+    @router.post("/replays/runs/{run_id}/custom-branch", response_model=None)
+    async def custom_replay_branch_page(run_id: str, request: Request) -> Response:
+        if decision_replay_controller is None:
+            return HTMLResponse("Decision Replay chưa được cấu hình.", status_code=503)
+        body = await _read_body_with_limit(request, max_bytes=MAX_SETUP_FORM_BODY_BYTES)
+        if body is None:
+            return HTMLResponse("Yêu cầu quá lớn.", status_code=status.HTTP_413_CONTENT_TOO_LARGE)
+        parsed = parse_qs(body.decode("utf-8", errors="replace"), keep_blank_values=True, max_num_fields=8)
+        owner_token = request.cookies.get(OWNER_COOKIE_NAME)
+        try:
+            payload = CustomReplayBranchRequest(
+                parent_node_id=_first_form_value(parsed, "parent_node_id", ""),
+                proposal_text=_first_form_value(parsed, "proposal_text", ""),
+            )
+            await run_in_threadpool(
+                decision_replay_controller.add_custom_branch, run_id, payload, owner_token=owner_token
+            )
+        except (ValidationError, ApiControllerError) as error:
+            msg = (
+                error.payload.message
+                if isinstance(error, ApiControllerError)
+                else "Phương án tự đề xuất không hợp lệ."
+            )
+            code = error.status_code if isinstance(error, ApiControllerError) else 422
+            try:
+                active_run = decision_replay_controller.get_run(run_id, owner_token=owner_token)
+            except ApiControllerError:
+                active_run = None
+            hub = decision_replay_controller.get_hub(owner_token=owner_token) if active_run is None else None
+            html = replay_template.render(
+                demo_mode_label=controller.demo_mode_label,
+                eligible_answers=hub.eligible_answers if hub else (),
+                cases=hub.cases if hub else (),
+                recent_runs=hub.recent_runs if hub else (),
+                active_run=active_run,
+                initial_run_json=_safe_inline_json(active_run.model_dump_json()) if active_run else "",
+                error_message=msg,
+            )
+            return HTMLResponse(content=html, status_code=code)
+        return RedirectResponse(url=f"/replays/runs/{run_id}", status_code=status.HTTP_303_SEE_OTHER)
 
     return router
 

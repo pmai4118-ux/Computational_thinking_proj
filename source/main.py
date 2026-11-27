@@ -64,8 +64,9 @@ from source.service.interview_service import InterviewService
 from source.service.job_analysis_service import JobAnalysisService
 from source.service.recommendation_service import RecommendationService
 from source.service.session_report_service import SessionReportService
-from source.service.providers.factory import create_evidence_interpreter
+from source.service.providers.factory import create_evidence_interpreter, create_replay_simulator
 from source.service.providers.interfaces import EvidenceInterpreter
+from source.service.providers.replay_provider import ReplaySimulator
 from source.service.seed_loader import load_seed_catalog_into_repository
 from source.view.pages import build_pages_router
 from source.Control.evaluation_controller import build_evaluation_router
@@ -130,6 +131,7 @@ def create_app(
     evaluation_repo: EvaluationRepository | None = None,
     profile_repo: CompetencyProfileRepository | None = None,
     interpreter: EvidenceInterpreter | None = None,
+    replay_simulator: ReplaySimulator | None = None,
     auto_seed: bool = True,
 ) -> FastAPI:
     """Configure and connect MVC-S layers at the composition boundary."""
@@ -154,8 +156,20 @@ def create_app(
             else MemoryCompetencyProfileRepository()
         )
 
-    if auto_seed and not resolved_content_repo.list_skills():
-        load_seed_catalog_into_repository(resolved_content_repo)
+    if auto_seed:
+        existing_skills = resolved_content_repo.list_skills()
+        needs_metadata_backfill = False
+        if existing_skills:
+            approved_qs = resolved_content_repo.list_approved_questions(
+                role="backend_developer", level="intern_fresher", language="vi"
+            )
+            needs_metadata_backfill = any(
+                q.coding_config is None
+                or (q.category == "technical_case" and q.replay_grounding is None)
+                for q in approved_qs
+            )
+        if not existing_skills or needs_metadata_backfill:
+            load_seed_catalog_into_repository(resolved_content_repo)
 
     resolved_interpreter = (
         interpreter if interpreter is not None else create_evidence_interpreter(resolved_settings)
@@ -245,11 +259,18 @@ def create_app(
         interview_controller=interview_controller,
         probe_service=adaptive_probe_service,
     )
+    resolved_replay_simulator = (
+        replay_simulator
+        if replay_simulator is not None
+        else create_replay_simulator(resolved_settings)
+    )
     decision_replay_service = DecisionReplayService(
         replay_repo=resolved_replay_repo,
+        content_repo=resolved_content_repo,
         interview_service=interview_service,
         session_repo=resolved_session_repo,
         evaluation_repo=resolved_eval_repo,
+        simulator=resolved_replay_simulator,
     )
     decision_replay_controller = DecisionReplayController(
         decision_replay_service,

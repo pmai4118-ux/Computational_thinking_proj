@@ -48,6 +48,12 @@ test("api_client exposes draft, submit, follow-up, and replay methods", async ()
     "getFollowUpPlan",
     "submitFollowUp",
     "getAnswerReplay",
+    "getReplayHub",
+    "getReplayRun",
+    "selectReplayNode",
+    "chooseReplayOption",
+    "rewindReplayNode",
+    "addCustomReplayBranch",
   ]) {
     assert.equal(typeof api[method], "function", `missing InterviewApi.${method}`);
   }

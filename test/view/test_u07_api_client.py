@@ -65,7 +65,7 @@ def test_u07_api_client_is_loaded_before_each_screen_script(
 
 def test_u07_page_scripts_use_the_shared_same_origin_client() -> None:
     api_client = (JS_DIR / "api_client.js").read_text(encoding="utf-8")
-    page_scripts = ("workspace.js", "evidence.js", "summary.js", "exercise.js")
+    page_scripts = ("workspace.js", "evidence.js", "summary.js", "exercise.js", "replay.js")
 
     assert 'credentials: "same-origin"' in api_client
     assert 'window.InterviewApi = Object.freeze(api)' in api_client

@@ -6,6 +6,11 @@ from source.config import ProviderMode, Settings
 from source.service.providers.antigravity_provider import AntigravityProvider
 from source.service.providers.fixture_provider import FixtureProvider
 from source.service.providers.interfaces import EvidenceInterpreter
+from source.service.providers.replay_provider import (
+    AntigravityReplaySimulator,
+    FixtureReplaySimulator,
+    ReplaySimulator,
+)
 
 
 def create_evidence_interpreter(settings: Settings) -> EvidenceInterpreter:
@@ -21,4 +26,13 @@ def create_evidence_interpreter(settings: Settings) -> EvidenceInterpreter:
     raise ValueError(f"Unsupported evidence provider: {settings.provider}")
 
 
-__all__ = ["create_evidence_interpreter"]
+def create_replay_simulator(settings: Settings) -> ReplaySimulator:
+    """Create the configured Decision Replay simulator matching the active provider mode."""
+    if settings.provider is ProviderMode.ANTIGRAVITY:
+        return AntigravityReplaySimulator.from_settings(settings)
+    if settings.provider is ProviderMode.FIXTURE:
+        return FixtureReplaySimulator()
+    raise ValueError(f"Unsupported replay provider: {settings.provider}")
+
+
+__all__ = ["create_evidence_interpreter", "create_replay_simulator"]

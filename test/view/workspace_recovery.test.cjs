@@ -190,3 +190,34 @@ test("stale api client without saveDraft shows clear reload guidance instead of 
   assert.match(page.element("#workspace-error").textContent, /Ctrl\+F5/);
   assert.match(page.element("#draft-label").textContent, /Ctrl\+F5/);
 });
+
+test("coding box merges explanation and code into markdown fence and supports Tab/Enter indentation", async () => {
+  const submittedPayloads = [];
+  const page = browser({
+    api: {
+      saveDraft: async () => {},
+      submitAnswer: async (_id, payload) => { submittedPayloads.push(payload); },
+      nextQuestion: async () => ({ progress: { answered_count: 1, total_questions: 4 } }),
+    },
+  });
+  const codeField = page.element("#answer-code");
+  codeField.value = "def f():";
+  codeField.selectionStart = 8;
+  codeField.selectionEnd = 8;
+  page.handlers.get("#answer-code:keydown")({ key: "Enter", shiftKey: false, preventDefault() {} });
+  assert.equal(codeField.value, "def f():\n    ");
+
+  codeField.value = "def f():\nreturn 1";
+  codeField.selectionStart = 9;
+  codeField.selectionEnd = 9;
+  page.handlers.get("#answer-code:keydown")({ key: "Tab", shiftKey: false, preventDefault() {} });
+  assert.equal(codeField.value, "def f():\n    return 1");
+
+  input(page, "Giải thích ngắn gọn.");
+  await page.handlers.get("#answer-form:submit")({ preventDefault() {} });
+  assert.equal(submittedPayloads.length, 1);
+  assert.equal(
+    submittedPayloads[0].text,
+    "Giải thích ngắn gọn.\n\n```python\ndef f():\n    return 1\n```"
+  );
+});
