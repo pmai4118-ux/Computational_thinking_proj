@@ -190,6 +190,7 @@ class InterviewController:
         level: str,
         language: str,
         owner_token: str,
+        evaluation_timing: str = EvaluationTiming.AFTER_SESSION.value,
     ) -> SessionViewDTO:
         """Validate setup form values, then coordinate session creation."""
         try:
@@ -197,7 +198,7 @@ class InterviewController:
                 role=role,
                 level=level,
                 language=language,
-                evaluation_timing=EvaluationTiming.AFTER_SESSION,
+                evaluation_timing=evaluation_timing,
             )
         except ValidationError as error:
             field_errors = {

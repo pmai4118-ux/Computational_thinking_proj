@@ -19,13 +19,12 @@
       </div>
       <div class="hub-status-pill" role="status">
         <span class="hub-status-pill__dot" aria-hidden="true"></span>
-        <span>Phản hồi được tạo sau khi gửi bài</span>
+        <span>Phiên phỏng vấn gồm 4 câu hỏi</span>
       </div>
     </section>
 
     <section id="setup-activity" aria-label="Trạng thái chuẩn bị phiên" hidden></section>
     <form method="post" action="/setup" class="hub-form" novalidate id="setup-form">
-      <input type="hidden" name="evaluation_timing" id="evaluation-timing-input" value="after_session">
 
       <!-- Bước 01: Chọn Chế Độ -->
       <section class="hub-step-section" aria-labelledby="step-mode-heading">
@@ -91,7 +90,7 @@
             </div>
             <div>
               <h3 class="hub-mode-card__title">Luyện có hướng dẫn</h3>
-              <p class="hub-mode-card__desc">Nhận phản hồi ngay sau từng câu • Chưa có gợi ý trước khi nộp</p>
+              <p class="hub-mode-card__desc">Xem hướng dẫn trình bày, sau đó nhận phản hồi theo tiêu chí ngay sau mỗi câu.</p>
             </div>
             <div class="hub-mode-card__meter">
               <span class="hub-mode-card__meter-label">Thời điểm chấm</span>
@@ -107,8 +106,13 @@
             </div>
           </button>
         </div>
+        <label id="native-timing-label" for="evaluation-timing-input">Thời điểm nhận phản hồi</label>
+        <select id="evaluation-timing-input" name="evaluation_timing">
+          <option value="after_session">Mô phỏng thực tế — cuối phiên</option>
+          <option value="per_question">Luyện có hướng dẫn — sau từng câu</option>
+        </select>
         <noscript>
-          <p class="form-hint">Khi tắt JavaScript, biểu mẫu mặc định tạo phiên với chế độ đánh giá cuối phiên (4 câu).</p>
+          <style>#mode-selector-group, #selected-mode-hint { display: none; }</style>
         </noscript>
       </section>
 

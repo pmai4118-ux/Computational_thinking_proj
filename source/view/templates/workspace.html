@@ -54,27 +54,12 @@
 
   {% if session.current_question %}
     <div class="workspace-layout">
-      <!-- 2. Hints Shell (Honest, closed by default, no fabricated hints or rubric leaks) -->
-      <section class="workspace-hints-card" aria-labelledby="hints-heading">
-        <div class="workspace-hints-card__header">
-          <h2 id="hints-heading" class="workspace-hints-card__title">
-            <span aria-hidden="true">💡</span>
-            <span>Gợi ý giải pháp &amp; Định hướng logic</span>
-          </h2>
-          <span class="badge">Chưa hỗ trợ gợi ý trước khi nộp</span>
-        </div>
+      {% if session.evaluation_timing == "per_question" %}
         <details class="workspace-hints-details">
-          <summary>
-            <span>Thông tin về gợi ý trong phiên hiện tại</span>
-            <span class="form-hint" style="font-weight: 700; color: var(--theme-accent, var(--brand-700));">Nhấn để xem ▾</span>
-          </summary>
-          <div class="workspace-hints-details__body">
-            <p style="margin: 0.75rem 0 0;">
-              Phiên hiện tại chưa hỗ trợ gợi ý trước khi nộp. Hãy trình bày rõ giả định, phương án giải quyết, đánh đổi và cách kiểm tra để hệ thống đối chiếu minh bạch theo rubric sau khi nộp bài.
-            </p>
-          </div>
+          <summary>Hướng dẫn trình bày câu trả lời</summary>
+          <p>Nêu cách bạn hiểu vấn đề, giải thích vì sao bạn chọn cách xử lý đó và đưa ra một ví dụ để kiểm tra. Bạn có thể trả lời ngắn nếu đã đủ ý.</p>
         </details>
-      </section>
+      {% endif %}
 
       <!-- 3. Question Specification Card -->
       <article class="workspace-question reading-measure" aria-labelledby="question-heading">
@@ -237,7 +222,7 @@
         </div>
 
         <div class="action-row workspace-primary-actions">
-          <button class="btn btn--primary" id="submit-answer" type="submit" {% if session.current_answer %}hidden{% endif %}>Gửi câu trả lời →</button>
+          <button class="btn btn--primary" id="submit-answer" type="submit" {% if session.current_answer %}hidden{% endif %}>{% if session.evaluation_timing == "per_question" %}Gửi và xem phản hồi{% else %}Lưu câu trả lời{% endif %}</button>
           <button class="btn btn--secondary" id="retry-evaluation" type="button" hidden>Thử đánh giá lại</button>
           {% if session.current_answer %}
             <a class="btn btn--primary" id="open-review" href="/sessions/{{ session.session_id }}/review?answer_id={{ session.current_answer.answer_id }}&amp;revision={{ session.current_answer.revision }}">Xem kết quả câu này</a>
