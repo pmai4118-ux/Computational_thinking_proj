@@ -216,14 +216,14 @@ def test_p06_tokens_and_p08_workflow_documents_exist_and_cover_required_contract
         encoding="utf-8"
     )
     for required_token in (
-        "--color-canvas: #F6F8F8",
+        "--color-canvas: #F7F5EF",
         "--color-surface: #FFFFFF",
-        "--color-primary: #0F766E",
+        "--color-primary: #0D7A6F",
         "--color-status-met-bg",
         "--color-status-unmet-bg",
         "--color-status-unresolved-bg",
         "--color-evidence-highlight-active-bg",
-        "--font-sans: \"Inter\"",
+        "--font-sans: \"Google Sans\"",
         "prefers-reduced-motion: reduce",
     ):
         assert required_token in tokens_css

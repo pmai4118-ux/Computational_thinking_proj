@@ -43,7 +43,7 @@ def test_q05_workspace_compacts_header_separates_secondary_actions_and_styles_co
 
     components_css = (STATIC_CSS_DIR / "components.css").read_text(encoding="utf-8")
     workspace_css = (STATIC_CSS_DIR / "workspace.css").read_text(encoding="utf-8")
-    assert "background-color: #1a1626;" in components_css
+    assert "background-color: #0f3d3e;" in components_css
     assert "white-space: pre-wrap;" in components_css
     assert "overflow-wrap: anywhere;" in components_css
     assert ".btn--ghost" in components_css

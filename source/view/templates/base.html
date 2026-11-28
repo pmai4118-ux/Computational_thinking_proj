@@ -9,17 +9,17 @@
   <title>{% block title %}Luyện phỏng vấn kỹ thuật Backend — interviewUS{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/tokens.css?v=20261127-stitch-v2">
-  <link rel="stylesheet" href="/static/css/components.css?v=20261127-stitch-v2">
+  <link rel="stylesheet" href="/static/css/tokens.css?v=20261128-wide">
+  <link rel="stylesheet" href="/static/css/components.css?v=20261128-wide">
   {% if current_nav == 'learning_path' %}
-    <link rel="stylesheet" href="/static/css/stitch.css?v=20261127-stitch-v2">
+    <link rel="stylesheet" href="/static/css/stitch.css?v=20261128-wide">
   {% endif %}
-  <link rel="stylesheet" href="/static/css/activity.css?v=20261127-1">
-  <link rel="stylesheet" href="/static/css/session_history.css?v=20261127">
+  <link rel="stylesheet" href="/static/css/activity.css?v=20261128-wide">
+  <link rel="stylesheet" href="/static/css/session_history.css?v=20261128-wide">
   {% block extra_head %}{% endblock %}
-  <link rel="stylesheet" href="/static/css/theme.css?v=20261127-global">
+  <link rel="stylesheet" href="/static/css/theme.css?v=20261128-wide">
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <a class="skip-link" href="#main-content">Chuyển tới nội dung chính</a>
@@ -27,6 +27,9 @@
   <header class="site-header">
     <div class="site-header__inner">
       <div class="site-header__left">
+        <button type="button" class="app-sidebar-toggle" id="app-sidebar-toggle" aria-label="Mở thanh điều hướng" aria-controls="app-sidebar" aria-expanded="false">
+          <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+        </button>
         <div class="site-brand">
           <a class="site-brand__link" href="/">
             <span class="site-brand__mark" aria-hidden="true">iU</span>
@@ -36,14 +39,14 @@
             </span>
           </a>
         </div>
-
-        <nav class="site-nav" aria-label="Điều hướng chính">
-          <a class="site-nav__link {% if current_nav == 'home' %}site-nav__link--active{% endif %}" href="/" {% if current_nav == 'home' %}aria-current="page"{% endif %}>Trang chủ</a>
-          <a class="site-nav__link {% if current_nav == 'interview' %}site-nav__link--active{% endif %}" href="/interview" {% if current_nav == 'interview' %}aria-current="page"{% endif %}>Phỏng vấn ảo</a>
-          <a class="site-nav__link {% if current_nav == 'learning_path' %}site-nav__link--active{% endif %}" href="/learning-path" {% if current_nav == 'learning_path' %}aria-current="page"{% endif %}>Lộ trình Java</a>
-          <a class="site-nav__link {% if current_nav == 'history' %}site-nav__link--active{% endif %}" href="/history" {% if current_nav == 'history' %}aria-current="page"{% endif %}>Lịch sử phiên</a>
-        </nav>
       </div>
+
+      <nav class="site-nav" aria-label="Điều hướng chính">
+        <a class="site-nav__link {% if current_nav == 'home' %}site-nav__link--active{% endif %}" href="/" {% if current_nav == 'home' %}aria-current="page"{% endif %}>Trang chủ</a>
+        <a class="site-nav__link {% if current_nav == 'interview' %}site-nav__link--active{% endif %}" href="/interview" {% if current_nav == 'interview' %}aria-current="page"{% endif %}>Phỏng vấn ảo</a>
+        <a class="site-nav__link {% if current_nav == 'learning_path' %}site-nav__link--active{% endif %}" href="/learning-path" {% if current_nav == 'learning_path' %}aria-current="page"{% endif %}>Lộ trình Java</a>
+        <a class="site-nav__link {% if current_nav == 'history' %}site-nav__link--active{% endif %}" href="/history" {% if current_nav == 'history' %}aria-current="page"{% endif %}>Lịch sử phiên</a>
+      </nav>
 
       <div class="site-header__right">
         <div class="theme-switch" role="group" aria-label="Giao diện sáng tối">
@@ -61,57 +64,234 @@
         {% endif %}
         <div class="session-owner-pill" title="Phiên được gắn ẩn danh với trình duyệt hiện tại">
           <span class="session-owner-pill__avatar" aria-hidden="true">
-            <span class="material-symbols-outlined" style="font-size: 16px;">shield_person</span>
+            <span class="material-symbols-outlined" style="font-size: 15px;">shield_person</span>
           </span>
           <span class="session-owner-pill__meta">
             <span class="session-owner-pill__title">Phiên ẩn danh</span>
-            <span class="session-owner-pill__sub">Intern / Fresher</span>
           </span>
         </div>
       </div>
     </div>
   </header>
 
-  <main id="main-content" class="page-shell" tabindex="-1">
-    {% if error_message %}
-      <section class="alert alert--error" role="alert" aria-live="assertive">
-        <p class="alert__title">{{ error_message }}</p>
-        {% if recovery_action %}
-          <p class="alert__hint">{{ recovery_action }}</p>
+  <div class="app-shell" id="app-shell">
+    <aside class="app-sidebar" id="app-sidebar" aria-label="Thanh bên điều hướng">
+      <div class="app-sidebar__head">
+        <button type="button" class="app-sidebar__icon-btn" id="app-sidebar-collapse" aria-label="Thu gọn thanh bên" aria-expanded="true" title="Thu gọn thanh bên">
+          <span class="material-symbols-outlined" aria-hidden="true">dock_to_left</span>
+        </button>
+        <button type="button" class="icon-button app-sidebar__close" id="app-sidebar-close" aria-label="Đóng thanh điều hướng">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
+
+      <div class="app-sidebar__scroll">
+        <details class="sidebar-group" open>
+          <summary class="sidebar-group__summary">
+            <span class="sidebar-group__title">
+              <span class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>
+              <span>Không gian chính</span>
+            </span>
+            <span class="material-symbols-outlined sidebar-group__chevron" aria-hidden="true">expand_more</span>
+          </summary>
+          <div class="sidebar-group__list">
+            <a class="app-sidebar__link {% if current_nav == 'home' %}is-active{% endif %}" href="/" title="Trang chủ" {% if current_nav == 'home' %}aria-current="page"{% endif %}>
+              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">home</span>
+              <span>Trang chủ</span>
+            </a>
+            <a class="app-sidebar__link {% if current_nav == 'interview' %}is-active{% endif %}" href="/interview" title="Phỏng vấn ảo" {% if current_nav == 'interview' %}aria-current="page"{% endif %}>
+              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">forum</span>
+              <span>Phỏng vấn ảo</span>
+            </a>
+            <a class="app-sidebar__link" href="/setup" title="Thiết lập phiên mới">
+              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">add_circle</span>
+              <span>Thiết lập phiên mới</span>
+            </a>
+            <a class="app-sidebar__link {% if current_nav == 'learning_path' %}is-active{% endif %}" href="/learning-path" title="Lộ trình Java" {% if current_nav == 'learning_path' %}aria-current="page"{% endif %}>
+              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">route</span>
+              <span>Lộ trình Java</span>
+            </a>
+            <a class="app-sidebar__link {% if current_nav == 'history' %}is-active{% endif %}" href="/history" title="Lịch sử phiên" {% if current_nav == 'history' %}aria-current="page"{% endif %}>
+              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">history</span>
+              <span>Lịch sử phiên</span>
+            </a>
+          </div>
+        </details>
+
+        <details class="sidebar-group" open>
+          <summary class="sidebar-group__summary">
+            <span class="sidebar-group__title">
+              <span class="material-symbols-outlined" aria-hidden="true">school</span>
+              <span>Chặng Java Backend</span>
+            </span>
+            <span class="material-symbols-outlined sidebar-group__chevron" aria-hidden="true">expand_more</span>
+          </summary>
+          <div class="sidebar-group__list">
+            <a class="app-sidebar__sublink" href="/learning-path">
+              <span class="material-symbols-outlined" aria-hidden="true">terminal</span>
+              <span>01 · Java nền tảng</span>
+            </a>
+            <a class="app-sidebar__sublink" href="/learning-path">
+              <span class="material-symbols-outlined" aria-hidden="true">database</span>
+              <span>02 · Web &amp; dữ liệu</span>
+            </a>
+            <a class="app-sidebar__sublink" href="/learning-path">
+              <span class="material-symbols-outlined" aria-hidden="true">layers</span>
+              <span>03 · Spring Backend</span>
+            </a>
+            <a class="app-sidebar__sublink" href="/learning-path">
+              <span class="material-symbols-outlined" aria-hidden="true">cloud_sync</span>
+              <span>04 · Vận hành &amp; mở rộng</span>
+            </a>
+            <a class="app-sidebar__sublink" href="/learning-path">
+              <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
+              <span>05 · Nâng cao tùy chọn</span>
+            </a>
+          </div>
+        </details>
+
+        <details class="sidebar-group">
+          <summary class="sidebar-group__summary">
+            <span class="sidebar-group__title">
+              <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
+              <span>Đánh giá &amp; Rubric</span>
+            </span>
+            <span class="material-symbols-outlined sidebar-group__chevron" aria-hidden="true">expand_more</span>
+          </summary>
+          <div class="sidebar-group__list">
+            <a class="app-sidebar__sublink" href="/setup">
+              <span class="material-symbols-outlined" aria-hidden="true">quiz</span>
+              <span>Kiểm tra đầu vào (4 câu)</span>
+            </a>
+            <a class="app-sidebar__sublink" href="/interview">
+              <span class="material-symbols-outlined" aria-hidden="true">rule</span>
+              <span>Đối chiếu tiêu chí Rubric</span>
+            </a>
+            <a class="app-sidebar__sublink" href="/history">
+              <span class="material-symbols-outlined" aria-hidden="true">format_quote</span>
+              <span>Trích dẫn &amp; phản hồi</span>
+            </a>
+          </div>
+        </details>
+
+        <details class="sidebar-group">
+          <summary class="sidebar-group__summary">
+            <span class="sidebar-group__title">
+              <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+              <span>Tài liệu &amp; Lịch học</span>
+            </span>
+            <span class="material-symbols-outlined sidebar-group__chevron" aria-hidden="true">expand_more</span>
+          </summary>
+          <div class="sidebar-group__list">
+            <a class="app-sidebar__sublink" href="/learning-path#course-heading">
+              <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
+              <span>Khóa học tham khảo</span>
+            </a>
+            <a class="app-sidebar__sublink" href="/learning-path">
+              <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
+              <span>Lịch trình hôm nay</span>
+            </a>
+          </div>
+        </details>
+      </div>
+
+      <div class="app-sidebar__foot">
+        <button type="button" class="app-sidebar__foot-btn" id="app-sidebar-settings" title="Settings">
+          <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+          <span>Settings</span>
+        </button>
+        <button type="button" class="app-sidebar__foot-btn app-sidebar__foot-btn--danger" id="app-sidebar-logout" title="Logout">
+          <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+    <div class="app-sidebar-backdrop" id="app-sidebar-backdrop" hidden></div>
+
+    <dialog class="stitch-modal app-settings-dialog" id="app-settings-dialog" aria-labelledby="app-settings-title">
+      <div class="modal-accent-bar" aria-hidden="true"></div>
+      <header class="modal-header">
+        <div>
+          <span class="stitch-eyebrow">Cài đặt ứng dụng</span>
+          <h2 id="app-settings-title">Settings</h2>
+          <p>Tùy chỉnh giao diện hiển thị và phiên ẩn danh hiện tại.</p>
+        </div>
+        <button type="button" class="icon-button" id="close-app-settings" aria-label="Đóng cài đặt">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+      <div class="modal-content app-settings-body">
+        <div class="app-settings-row">
+          <div>
+            <strong>Chế độ giao diện</strong>
+            <p class="muted">Chuyển nhanh giữa Sáng (#F7F5EF) và Tối (#131E1D).</p>
+          </div>
+          <div class="theme-switch" role="group" aria-label="Giao diện sáng tối">
+            <button type="button" class="theme-switch__button" data-theme-mode="light" aria-pressed="true">
+              <span class="material-symbols-outlined" aria-hidden="true">light_mode</span><span>Sáng</span>
+            </button>
+            <button type="button" class="theme-switch__button" data-theme-mode="dark" aria-pressed="false">
+              <span class="material-symbols-outlined" aria-hidden="true">dark_mode</span><span>Tối</span>
+            </button>
+          </div>
+        </div>
+        <div class="app-settings-row">
+          <div>
+            <strong>Phiên ẩn danh trình duyệt</strong>
+            <p class="muted">Dữ liệu tiến độ và bản nháp được lưu cục bộ trên trình duyệt này.</p>
+          </div>
+          <a class="btn btn--secondary" href="/history">Xem lịch sử</a>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <span class="muted">interviewUS</span>
+        <button type="button" class="btn btn--primary" id="done-app-settings">Xong</button>
+      </footer>
+    </dialog>
+
+    <div class="app-workspace">
+      <main id="main-content" class="page-shell" tabindex="-1">
+        {% if error_message %}
+          <section class="alert alert--error" role="alert" aria-live="assertive">
+            <p class="alert__title">{{ error_message }}</p>
+            {% if recovery_action %}
+              <p class="alert__hint">{{ recovery_action }}</p>
+            {% endif %}
+          </section>
         {% endif %}
-      </section>
-    {% endif %}
 
-    {% if status_message %}
-      <section class="alert alert--status" role="status" aria-live="polite">
-        <p class="alert__title">{{ status_message }}</p>
-      </section>
-    {% endif %}
+        {% if status_message %}
+          <section class="alert alert--status" role="status" aria-live="polite">
+            <p class="alert__title">{{ status_message }}</p>
+          </section>
+        {% endif %}
 
-    {% block content %}{% endblock %}
-  </main>
+        {% block content %}{% endblock %}
+      </main>
 
-  {% block site_footer %}
-  <footer class="site-footer">
-    <div class="site-footer__inner">
-      <div class="site-footer__brand">
-        <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px; color: var(--stitch-primary);">terminal</span>
-        <span>interviewUS</span>
-        <span aria-hidden="true">•</span>
-        <span>© 2026 Nền tảng tự luận kỹ thuật IT.</span>
-      </div>
-      <p class="site-footer__note">
-        Ngân hàng câu hỏi và bài tập từ nguồn mở có giấy phép đã xác minh. Điểm số tính bằng quy tắc Rubric trên trích dẫn nguyên văn.
-      </p>
-      <div class="site-footer__links">
-        <a class="site-footer__link" href="/">Trang chủ</a>
-        <a class="site-footer__link" href="/interview">Phỏng vấn ảo</a>
-        <a class="site-footer__link" href="/learning-path">Lộ trình Java</a>
-        <a class="site-footer__link" href="/history">Lịch sử phiên</a>
-      </div>
+      {% block site_footer %}
+      <footer class="site-footer">
+        <div class="site-footer__inner">
+          <div class="site-footer__brand">
+            <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px; color: var(--stitch-primary);">terminal</span>
+            <span>interviewUS</span>
+            <span aria-hidden="true">•</span>
+            <span>© 2026 Nền tảng tự luận kỹ thuật IT.</span>
+          </div>
+          <p class="site-footer__note">
+            Ngân hàng câu hỏi và bài tập từ nguồn mở có giấy phép đã xác minh. Điểm số tính bằng quy tắc Rubric trên trích dẫn nguyên văn.
+          </p>
+          <div class="site-footer__links">
+            <a class="site-footer__link" href="/">Trang chủ</a>
+            <a class="site-footer__link" href="/interview">Phỏng vấn ảo</a>
+            <a class="site-footer__link" href="/learning-path">Lộ trình Java</a>
+            <a class="site-footer__link" href="/history">Lịch sử phiên</a>
+          </div>
+        </div>
+      </footer>
+      {% endblock %}
     </div>
-  </footer>
-  {% endblock %}
+  </div>
 
   <script src="/static/js/api_client.js" defer></script>
   <script src="/static/js/activity.js?v=20261127-1" defer></script>

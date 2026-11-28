@@ -1,62 +1,82 @@
-/* Shared Design Tokens — interviewUS (Deep Teal & Cool Stone)
+/* Shared Design Tokens — interviewUS (Warm Off-White & Forest Teal)
  * Vietnamese-ready typography, high-contrast surfaces for reading prompts/answers,
  * evidence quote highlighting, and accessible keyboard focus states.
  */
 
 :root {
-  /* Core Palette (backward-compatible + Stitch tokens) */
-  --color-canvas: #F6F8F8;
+  /* Core Palette (Warm Cream #F7F5EF + Crisp White Cards) */
+  --color-canvas: #F7F5EF;
   --color-surface: #FFFFFF;
-  --color-surface-elevated: #F9FBFB;
-  --color-surface-low: #EFF3F4;
-  --color-surface-container: #E6ECEE;
-  --color-surface-high: #DCE4E6;
-  --color-surface-highest: #D2DCE0;
-  --color-subtle: #E6F4F3;
-  --color-border: #DCE3E5;
-  --color-border-strong: #B8C7CA;
+  --color-surface-elevated: #FAFAF8;
+  --color-surface-low: #EEEFE9;
+  --color-surface-container: #E7E9E2;
+  --color-surface-high: #DFE2DA;
+  --color-surface-highest: #D5D9D0;
+  --color-subtle: #E6F4F1;
+  --color-border: #E0E3DC;
+  --color-border-strong: #C3C9C0;
 
-  /* Stitch Palette Architecture */
-  --stitch-primary: #0F766E;
-  --stitch-primary-container: #0D9488;
-  --stitch-secondary: #115E59;
-  --stitch-secondary-container: #14B8A6;
-  --stitch-primary-fixed: #CCFBF1;
-  --stitch-primary-fixed-dim: #99F6E4;
-  --stitch-on-primary-fixed: #042F2E;
-  --stitch-secondary-fixed: #D1FAF5;
-  --stitch-on-secondary-fixed: #042F2E;
-  --stitch-tertiary-fixed: #E2E8F0;
-  --stitch-outline: #64748B;
-  --stitch-outline-variant: #CBD5E1;
-  --stitch-on-surface: #11181C;
-  --stitch-on-surface-variant: #475569;
+  /* Stitch Palette Architecture (Emerald Teal + Deep Forest Teal #0B4E4A) */
+  --stitch-primary: #0D7A6F;
+  --stitch-primary-container: #2BB5A0;
+  --stitch-secondary: #0B4E4A;
+  --stitch-secondary-container: #149A8A;
+  --stitch-primary-fixed: #DDF3F0;
+  --stitch-primary-fixed-dim: #BCE6E0;
+  --stitch-on-primary-fixed: #0B4E4A;
+  --stitch-secondary-fixed: #E5F5F2;
+  --stitch-on-secondary-fixed: #0B4E4A;
+  --stitch-tertiary-fixed: #ECEEE9;
+  --stitch-outline: #6E7B7A;
+  --stitch-outline-variant: #D5DAD3;
+  --stitch-on-surface: #1A2B2A;
+  --stitch-on-surface-variant: #5E6B69;
 
-  /* Workspace Brand Ramp (Teal) */
-  --brand-50: #F0FDFA;
-  --brand-100: #CCFBF1;
-  --brand-200: #99F6E4;
-  --brand-300: #5EEAD4;
-  --brand-400: #2DD4BF;
-  --brand-500: #14B8A6;
-  --brand-600: #0D9488;
-  --brand-700: #0F766E;
-  --brand-800: #115E59;
-  --brand-900: #134E4A;
+  /* Workspace Brand Ramp (Emerald Teal) */
+  --brand-50: #F0FAF8;
+  --brand-100: #DDF3F0;
+  --brand-200: #BCE6E0;
+  --brand-300: #7AD0C5;
+  --brand-400: #3AB5A6;
+  --brand-500: #149A8A;
+  --brand-600: #0F8B7D;
+  --brand-700: #0D7A6F;
+  --brand-800: #0F5954;
+  --brand-900: #0F3D3E;
 
   /* Brand & Interactive */
-  --color-primary: #0F766E;
-  --color-primary-hover: #115E59;
-  --color-primary-active: #134E4A;
+  --color-primary: #0D7A6F;
+  --color-primary-hover: #0F8B7D;
+  --color-primary-active: #0F5954;
   --color-on-primary: #ffffff;
-  --color-accent-violet-subtle: #E6F4F3;
-  --color-hero-start: #EAF5F4;
-  --color-hero-end: #F6F8F8;
+  --color-accent-violet-subtle: #E8F4F2;
+  --color-hero-start: #F7F5EF;
+  --color-hero-end: #F7F5EF;
 
-  /* Text Hierarchy (WCAG AA contrast against #F6F8F8 and #FFFFFF) */
-  --color-text: #11181C;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748B;
+  /* Light-mode semantic theme variables */
+  --theme-surface-rgb: 255 255 255;
+  --theme-tint-rgb: 247 245 239;
+  --theme-border-rgb: 224 227 220;
+  --theme-tint: #F1F4F2;
+  --theme-border: #E0E3DC;
+  --theme-ink: #1A2B2A;
+  --theme-muted: #5E6B69;
+  --theme-accent: #0D7A6F;
+  --theme-green-bg: #E5F5F2;
+  --theme-green-text: #0D7A6F;
+  --theme-yellow-bg: #FFFBEB;
+  --theme-yellow-text: #92400E;
+  --theme-red-bg: #FEF2F2;
+  --theme-red-text: #B91C1C;
+  --theme-blue-bg: #E0F2FE;
+  --theme-blue-text: #0369A1;
+  --theme-pink-bg: #FCE7F3;
+  --theme-pink-text: #BE185D;
+
+  /* Text Hierarchy (WCAG AA contrast against #F7F7F4 and #FFFFFF) */
+  --color-text: #1A2E2E;
+  --color-text-secondary: #556363;
+  --color-text-muted: #6E7B7A;
 
   /* Criterion & Evaluation Status Semantics (always paired with text/icon labels) */
   --color-status-met-bg: #ecfdf5;
@@ -76,22 +96,22 @@
   --color-status-error-text: #881337;
 
   /* Exact Evidence Quote Highlight */
-  --color-evidence-highlight-bg: #CCFBF1;
-  --color-evidence-highlight-active-bg: #99F6E4;
-  --color-evidence-highlight-border: #0F766E;
+  --color-evidence-highlight-bg: #D1FAE5;
+  --color-evidence-highlight-active-bg: #A7F3D0;
+  --color-evidence-highlight-border: #059669;
 
-  /* Surface Chrome & Elevation Tiers (Crisp neutral slate shadows) */
-  --surface-glass-bg: rgba(246, 248, 248, 0.88);
-  --surface-glass-card: rgba(255, 255, 255, 0.94);
-  --surface-glass-border: rgba(15, 118, 110, 0.14);
+  /* Surface Chrome & Elevation Tiers (Clean subtle shadows on #F7F7F4) */
+  --surface-glass-bg: rgba(255, 255, 255, 0.90);
+  --surface-glass-card: rgba(255, 255, 255, 0.96);
+  --surface-glass-border: rgba(226, 229, 223, 0.9);
   --surface-glass-blur: 12px;
-  --shadow-card: 0 1px 3px 0 rgba(17, 24, 28, 0.06), 0 1px 2px -1px rgba(17, 24, 28, 0.04);
-  --shadow-glass-tier1: 0 4px 16px -2px rgba(17, 24, 28, 0.06), 0 1px 4px -1px rgba(17, 24, 28, 0.04);
-  --shadow-glass-tier2: 0 12px 28px -4px rgba(17, 24, 28, 0.10), 0 4px 10px -2px rgba(17, 24, 28, 0.05);
-  --shadow-violet-glow: 0 4px 14px -2px rgba(15, 118, 110, 0.22);
+  --shadow-card: 0 1px 3px 0 rgba(15, 61, 62, 0.05), 0 1px 2px -1px rgba(15, 61, 62, 0.03);
+  --shadow-glass-tier1: 0 4px 16px -2px rgba(15, 61, 62, 0.06), 0 1px 4px -1px rgba(15, 61, 62, 0.03);
+  --shadow-glass-tier2: 0 12px 28px -4px rgba(15, 61, 62, 0.09), 0 4px 10px -2px rgba(15, 61, 62, 0.04);
+  --shadow-violet-glow: 0 4px 14px -2px rgba(13, 122, 111, 0.18);
 
-  /* Vietnamese-ready typography (Inter by Rasmus Andersson) shared by headings, labels and body text. */
-  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Vietnamese-ready typography (Google Sans) shared by headings, labels and body text. */
+  --font-sans: "Google Sans", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-stitch: var(--font-sans);
   --font-label: var(--font-sans);
   --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, "Courier New", monospace;
@@ -116,7 +136,7 @@
   --space-6: 2rem;     /* 32px */
   --space-8: 2.5rem;   /* 40px */
 
-  --layout-max-width: 80rem;   /* Base desktop container; widened to 82vw on large screens */
+  --layout-max-width: 80rem;   /* Default desktop container; widens to min(85vw, 120rem) at >=64rem */
   --layout-narrow-breakpoint: 48rem; /* 768px */
 
   /* Radii */
@@ -126,12 +146,18 @@
   --radius-xl: 1.5rem;   /* 24px */
 
   /* Keyboard Focus Ring */
-  --focus-ring-color: #0F766E;
+  --focus-ring-color: #059669;
   --focus-ring-offset: 2px;
   --focus-ring: 2px solid var(--focus-ring-color);
 
   /* Motion */
   --transition-fast: 160ms ease-out;
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --layout-max-width: min(97vw, 140rem);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

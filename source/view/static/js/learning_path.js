@@ -149,17 +149,39 @@
       }
     }
   }
+  const PHASE_ICONS = ['terminal', 'database', 'layers', 'cloud_sync', 'workspace_premium'];
   function renderPhases() {
     const phases = [...new Set(catalog.lessons.map(x => x.phase))];
     $('phase-list').replaceChildren();
     phases.forEach((phase,index) => {
       const group = catalog.lessons.filter(x => x.phase === phase);
       const done = group.filter(x=>completed.has(x.id)).length;
-      const button = node('button', null, `phase-button${activePhase === phase ? ' is-active' : ''}`);
+      const pct = group.length ? Math.round((done / group.length) * 100) : 0;
+      const button = node('button', null, `phase-button${activePhase === phase ? ' is-active' : ''}${done === group.length ? ' is-complete' : ''}`);
       button.type = 'button'; button.setAttribute('aria-pressed', String(activePhase === phase));
-      const text = node('span'); text.append(node('strong',phase), node('small',`${done}/${group.length} lesson tự đánh dấu${index === 4 ? ' · tùy chọn' : ''}`));
-      button.append(node('span',String(index+1).padStart(2,'0'),'phase-index'),text);
-      if (done === group.length) button.append(node('span','✓','phase-check'));
+
+      const iconWrap = node('span', null, 'phase-icon-badge');
+      iconWrap.append(glyph(PHASE_ICONS[index] || 'folder_open'));
+
+      const body = node('span', null, 'phase-body');
+      const meter = node('span', null, 'phase-meter');
+      const fill = node('span', null, 'phase-meter__fill');
+      fill.style.width = `${pct}%`;
+      meter.append(fill);
+      body.append(
+        node('strong', phase),
+        node('small', `${done}/${group.length} bài · ${pct}%${index === 4 ? ' · tùy chọn' : ''}`),
+        meter
+      );
+
+      const badge = node('span', null, 'phase-num-pill');
+      if (done === group.length) {
+        badge.append(glyph('check'));
+      } else {
+        badge.textContent = String(index + 1).padStart(2, '0');
+      }
+
+      button.append(iconWrap, body, badge);
       button.addEventListener('click', () => { activePhase=phase; $('lesson-search').value=''; renderPhases(); filterLessons(); });
       $('phase-list').append(button);
     });
@@ -475,8 +497,99 @@
     $('plan-status').textContent=plan.feasible?'Đã tạo kế hoạch phù hợp quỹ thời gian đã xác nhận.':'Đã tạo kế hoạch một phần; hãy điều chỉnh quỹ thời gian hoặc mục tiêu.';$('download-plan').hidden=false;
     $('budget-chip').textContent=`${$('learning-hours').value} giờ/tuần · ${$('learning-weeks').value} tuần`;
     if($('plan-config-tag')){$('plan-config-tag').textContent='Đã thiết lập';$('plan-config-tag').className='plan-status-tag is-configured';}
-    renderNodes();renderPhases();
+    renderNodes();renderPhases();renderTodaySchedule();
   }
+  const todayDialog = $('today-schedule-dialog');
+  function renderTodaySchedule() {
+    const summaryEl = $('today-schedule-summary');
+    const tasksPanel = $('today-panel-tasks');
+    const weekPanel = $('today-panel-week');
+    if (!catalog || !lessons || !summaryEl || !tasksPanel || !weekPanel) return;
+
+    const candidateLessons = lastPlan
+      ? lastPlan.ordered_lessons.map((item) => ({ lesson: lessons.get(item.lesson_id), item })).filter((x) => x.lesson)
+      : catalog.lessons.filter((l) => l.phase === activePhase).map((l) => ({ lesson: l, item: null }));
+
+    const pending = candidateLessons.filter((x) => !completed.has(x.lesson.id));
+    const todayItems = (pending.length ? pending : candidateLessons).slice(0, 3);
+    const totalMinutes = todayItems.reduce((sum, x) => sum + (x.item?.allocated_minutes || x.lesson.estimated_minutes || 0), 0);
+    const doneToday = todayItems.filter((x) => completed.has(x.lesson.id)).length;
+
+    summaryEl.textContent = pending.length
+      ? `${todayItems.length} việc cần làm hôm nay · ~${totalMinutes} phút (${doneToday}/${todayItems.length} đã xong)`
+      : 'Bạn đã hoàn thành hết các bài trong chặng này!';
+
+    tasksPanel.replaceChildren();
+    const stats = node('div', null, 'today-stats-row');
+    stats.append(
+      node('span', `${todayItems.length} mục ưu tiên`, 'pill'),
+      node('span', `~${totalMinutes} phút ước tính`, 'pill'),
+      node('span', lastPlan ? 'Theo lộ trình cá nhân hóa' : `Theo chặng ${activePhase}`, 'violet-pill')
+    );
+    tasksPanel.append(stats);
+
+    const list = node('div', null, 'today-task-list');
+    for (const { lesson, item } of todayItems) {
+      const done = completed.has(lesson.id);
+      const row = node('div', null, `today-task-item${done ? ' is-done' : ''}`);
+      const info = node('div', null, 'today-task-item__info');
+      info.append(
+        node('span', `${lesson.id} · ${lesson.phase}`, 'stitch-eyebrow'),
+        node('strong', lesson.title),
+        node('small', `${lesson.units.length} bài học nhỏ · ${item?.allocated_minutes || lesson.estimated_minutes} phút`)
+      );
+      const action = node('button', done ? 'Xem lại' : 'Học ngay →', done ? 'btn btn--secondary' : 'btn btn--primary');
+      action.type = 'button';
+      action.addEventListener('click', () => {
+        todayDialog?.close();
+        openLesson(lesson.id);
+      });
+      row.append(info, action);
+      list.append(row);
+    }
+    tasksPanel.append(list);
+
+    weekPanel.replaceChildren();
+    if (lastPlan && Array.isArray(lastPlan.schedule) && lastPlan.schedule.length) {
+      const weekList = node('div', null, 'today-week-list');
+      for (const slot of lastPlan.schedule.slice(0, 8)) {
+        const l = lessons.get(slot.lesson_id);
+        const row = node('div', null, 'today-week-row');
+        row.append(
+          node('span', `Tuần ${slot.week}`, 'violet-pill'),
+          node('strong', l ? `${slot.lesson_id} — ${l.title}` : slot.lesson_id),
+          node('small', `${slot.minutes} phút`)
+        );
+        weekList.append(row);
+      }
+      weekPanel.append(weekList);
+    } else {
+      weekPanel.append(node('p', 'Chưa thiết lập lộ trình cá nhân hóa. Bấm "Thiết lập lộ trình" để phân bổ bài học theo tuần.', 'learning-note'));
+    }
+  }
+  function switchTodayTab(tabName) {
+    document.querySelectorAll('[data-today-tab]').forEach((btn) => {
+      const active = btn.dataset.todayTab === tabName;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-selected', String(active));
+    });
+    if ($('today-panel-tasks')) $('today-panel-tasks').hidden = tabName !== 'tasks';
+    if ($('today-panel-week')) $('today-panel-week').hidden = tabName !== 'week';
+  }
+  $('open-today-schedule')?.addEventListener('click', () => {
+    renderTodaySchedule();
+    switchTodayTab('tasks');
+    todayDialog?.showModal();
+  });
+  $('close-today-dialog')?.addEventListener('click', () => todayDialog?.close());
+  $('today-close-btn')?.addEventListener('click', () => todayDialog?.close());
+  $('today-open-settings')?.addEventListener('click', () => {
+    todayDialog?.close();
+    openSettings();
+  });
+  document.querySelectorAll('[data-today-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => switchTodayTab(btn.dataset.todayTab));
+  });
   function formState(){return {track:$('learning-track').value,mode:$('learning-mode').value,hours:$('learning-hours').value,weeks:$('learning-weeks').value,profile:$('learning-profile').checked,targets:[...$('target-lessons').querySelectorAll('input:checked')].map(x=>x.value)};}
   function restoreForm(state){if(!state)return;for(const field of ['track','mode','hours','weeks'])$('learning-'+field).value=state[field];$('learning-profile').checked=state.profile;for(const input of $('target-lessons').querySelectorAll('input'))input.checked=state.targets?.includes(input.value)||false;syncSettingsUI();}
   function openSettings(){snapshot=formState();renderChecks();restoreForm(snapshot);syncSettingsUI();settings.showModal();$('settings-error').hidden=true;}
@@ -490,7 +603,7 @@
   reader.addEventListener('cancel',event=>{event.preventDefault();closeReader();});
   reader.addEventListener('close',()=>{history.replaceState(null,'',location.pathname+location.search);const trigger=$(`lesson-${selectedLesson}`)?.querySelector('.lesson-trigger');if(trigger&&!trigger.closest('[hidden]'))trigger.focus();});
   $('next-lesson').addEventListener('click',()=>{const index=catalog.lessons.findIndex(x=>x.id===selectedLesson);if(index>=0&&index<catalog.lessons.length-1)openLesson(catalog.lessons[index+1].id);});
-  $('lesson-complete').addEventListener('change',()=>{if($('lesson-complete').checked)completed.add(selectedLesson);else completed.delete(selectedLesson);writeStorage(key(),[...completed]);invalidate();renderNodes();renderPhases();});
+  $('lesson-complete').addEventListener('change',()=>{if($('lesson-complete').checked)completed.add(selectedLesson);else completed.delete(selectedLesson);writeStorage(key(),[...completed]);invalidate();renderNodes();renderPhases();renderTodaySchedule();});
   $('learning-form').addEventListener('change',event=>{if(event.target.id!=='learning-confirm')$('learning-confirm').checked=false;syncSettingsUI();});
   $('learning-form').addEventListener('input',()=>syncSettingsUI());
   document.querySelectorAll('[data-track-chip]').forEach(button=>button.addEventListener('click',()=>{$('learning-track').value=button.dataset.trackChip;$('learning-confirm').checked=false;syncSettingsUI();}));
@@ -524,7 +637,7 @@
       activePhase=catalog.lessons[0].phase;
       $('catalog-count').textContent=`${catalog.lessons.length} lessons · ${catalog.lessons.reduce((n,l)=>n+l.units.length,0)} bài học nhỏ · ${catalog.lessons.reduce((n,l)=>n+l.practices.length,0)} thực hành`;
       renderChecks();const stored=readStorage(planKey(),null);
-      if(stored?.plan?.catalog_version===catalog.version&&Array.isArray(stored.plan.ordered_lessons)&&stored.plan.ordered_lessons.every(x=>lessons.has(x.lesson_id))){restoreForm(stored.form);renderPlan(stored.plan);if(JSON.stringify([...completed].sort())!==JSON.stringify([...stored.plan.completed_lesson_ids].sort()))invalidate();}else{renderPhases();renderNodes();syncSettingsUI();}
+      if(stored?.plan?.catalog_version===catalog.version&&Array.isArray(stored.plan.ordered_lessons)&&stored.plan.ordered_lessons.every(x=>lessons.has(x.lesson_id))){restoreForm(stored.form);renderPlan(stored.plan);if(JSON.stringify([...completed].sort())!==JSON.stringify([...stored.plan.completed_lesson_ids].sort()))invalidate();}else{renderPhases();renderNodes();renderTodaySchedule();syncSettingsUI();}
       $('course-list').replaceChildren();for(const course of catalog.courses){const block=node('details',null,'learning-course');const title=node('summary',course.title);block.append(title,node('span',access[course.access]||course.access,'learning-state'),node('p',`${course.provider} · ${course.edition}`),node('p',course.notes),sourceLink(course));$('course-list').append(block);}
       $('catalog-provenance').textContent=`Kiểm tra nguồn ${catalog.researched_at}. MIT 2024 dùng TypeScript cho tư duy chuyển giao. Chưa có đánh giá Java chuyên biệt; tiến độ tự khai không xác nhận thành thạo.`;
       $('learning-content').hidden=false;

@@ -12,7 +12,7 @@
 <div id="learning-content" hidden>
   <!-- Baseline Skill Assessment Banner (Kiểm tra đầu vào) -->
   <section class="baseline-banner card" aria-labelledby="baseline-heading">
-    <span class="feature-icon" aria-hidden="true">{{ icon('chart') }}</span>
+    <span class="feature-icon baseline-banner__icon" aria-hidden="true">{{ icon('chart') }}</span>
     <div class="baseline-copy">
       <div class="baseline-eyebrow-row">
         <span class="stitch-eyebrow">Kiểm tra đầu vào</span>
@@ -25,30 +25,12 @@
     </div>
     <div class="baseline-right">
       <div class="baseline-actions">
-        <a class="btn btn--primary" id="baseline-start-btn" href="/setup">
-          <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px;">quiz</span>
+        <a class="btn baseline-cta-btn" id="baseline-start-btn" href="/setup">
           <span id="baseline-start-label">Kiểm tra đầu vào</span>
+          <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px;">arrow_forward</span>
         </a>
       </div>
     </div>
-  </section>
-
-  <!-- Roadmap Personalization Banner -->
-  <section class="roadmap-banner card">
-    <span class="feature-icon" aria-hidden="true">{{ icon('settings') }}</span>
-    <div>
-      <div class="roadmap-title">
-        <h1>Lộ trình cá nhân hóa</h1>
-        <span class="violet-pill">Theo mục tiêu của bạn</span>
-        <span class="plan-status-tag is-unconfigured" id="plan-config-tag">Chưa thiết lập</span>
-      </div>
-      <div class="roadmap-chips">
-        <span class="pill">{{ icon('book') }} Java Backend Developer</span>
-        <span class="pill" id="budget-chip">{{ icon('clock') }} 8 giờ/tuần · 12 tuần</span>
-        <span class="learning-note" id="catalog-count"></span>
-      </div>
-    </div>
-    <button class="btn btn--primary" id="open-learning-settings" type="button">{{ icon('settings') }} Thiết lập lộ trình</button>
   </section>
 
   <div class="roadmap-layout">
@@ -56,24 +38,43 @@
       <div class="phase-intro">
         <span class="stitch-eyebrow">Lộ trình Backend Java</span>
         <h2 id="phase-heading">Chọn chặng học</h2>
-        <p>Nền tảng vững, từng bước tiến xa.</p>
+        <p>5 chặng · Nền tảng vững, từng bước tiến xa.</p>
       </div>
-      <nav id="phase-list" aria-label="Các chặng Java Backend"></nav>
-      <div class="phase-tip">
-        {{ icon('bulb') }}
-        <p>Chọn một bài để mở tài liệu và bài thực hành. Bạn luôn có thể xem trước các bài tiên quyết.</p>
+      <div class="phase-sidebar__body">
+        <nav id="phase-list" aria-label="Các chặng Java Backend"></nav>
+        <div class="phase-tip">
+          <span class="material-symbols-outlined phase-tip__icon" aria-hidden="true">lightbulb</span>
+          <p>Chọn một bài để mở tài liệu và bài thực hành. Bạn luôn có thể xem trước các bài tiên quyết.</p>
+        </div>
+        <a class="phase-source-link" href="#course-heading">
+          <span class="phase-source-link__label">
+            <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">menu_book</span>
+            <span>Xem khóa học tham khảo</span>
+          </span>
+          <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">arrow_forward</span>
+        </a>
       </div>
-      <a class="phase-source-link" href="#course-heading">Xem khóa học tham khảo {{ icon('arrow') }}</a>
     </aside>
 
     <div class="roadmap-main">
-      <header class="phase-heading card">
-        <span class="phase-heading-icon">{{ icon('route') }}</span>
-        <div>
-          <span class="stitch-eyebrow">Đang khám phá</span>
-          <h2 id="active-phase-title">Java nền tảng</h2>
+      <header class="phase-heading card today-schedule-card" id="today-schedule-card">
+        <span class="phase-heading-icon" aria-hidden="true">
+          <span class="material-symbols-outlined">calendar_today</span>
+        </span>
+        <div class="today-schedule-card__copy">
+          <div class="today-schedule-card__eyebrow-row">
+            <span class="stitch-eyebrow">Lịch trình hôm nay</span>
+            <span class="today-schedule-card__phase" id="active-phase-title">Java nền tảng</span>
+          </div>
+          <h2 id="today-schedule-summary">Chưa có lịch trình — mở để xem việc cần làm hôm nay</h2>
         </div>
-        <span id="phase-progress-label" class="violet-pill"></span>
+        <div class="today-schedule-card__actions">
+          <span id="phase-progress-label" class="violet-pill"></span>
+          <button class="btn btn--primary today-schedule-card__btn" id="open-today-schedule" type="button">
+            <span>Việc làm hôm nay</span>
+            <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px;">arrow_forward</span>
+          </button>
+        </div>
       </header>
       <div class="lesson-toolbar">
         <label class="search-field" for="lesson-search">
@@ -82,7 +83,26 @@
         </label>
         <p id="lesson-filter-status" role="status" aria-live="polite"></p>
       </div>
-      <div class="roadmap-canvas" id="lesson-list"></div>
+      <div class="roadmap-canvas">
+        <!-- Lộ trình cá nhân hóa: bước thiết lập đầu tiên ngay trên LESSON 01 -->
+        <section class="roadmap-plan-entry" aria-label="Thiết lập lộ trình cá nhân hóa">
+          <span class="feature-icon roadmap-plan-entry__icon" aria-hidden="true">{{ icon('settings') }}</span>
+          <div class="roadmap-plan-entry__body">
+            <div class="roadmap-plan-entry__head">
+              <h1 class="roadmap-plan-entry__title">Lộ trình cá nhân hóa</h1>
+              <span class="violet-pill">Theo mục tiêu của bạn</span>
+              <span class="plan-status-tag is-unconfigured" id="plan-config-tag">Chưa thiết lập</span>
+            </div>
+            <div class="roadmap-chips">
+              <span class="pill">{{ icon('book') }} Java Backend Developer</span>
+              <span class="pill" id="budget-chip">{{ icon('clock') }} 8 giờ/tuần · 12 tuần</span>
+              <span class="learning-note" id="catalog-count"></span>
+            </div>
+          </div>
+          <button class="btn btn--primary roadmap-plan-entry__btn" id="open-learning-settings" type="button">{{ icon('settings') }} Thiết lập lộ trình</button>
+        </section>
+        <div id="lesson-list"></div>
+      </div>
       <section class="plan-strip card">
         <span class="phase-heading-icon">{{ icon('shield') }}</span>
         <div>
@@ -343,6 +363,36 @@
       <span>Tôi đã học xong lesson này <small>(tự đánh dấu)</small></span>
     </label>
     <button id="next-lesson" class="btn btn--primary lesson-next-btn" type="button">Bài tiếp theo {{ icon('arrow') }}</button>
+  </footer>
+</dialog>
+
+<dialog class="stitch-modal today-dialog" id="today-schedule-dialog" aria-labelledby="today-dialog-title">
+  <div class="modal-accent-bar" aria-hidden="true"></div>
+  <header class="modal-header today-dialog__header">
+    <div>
+      <span class="violet-pill">
+        <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 14px;">today</span>
+        Lịch trình hôm nay
+      </span>
+      <h2 id="today-dialog-title">Việc cần làm hôm nay</h2>
+      <p id="today-dialog-subtitle">Tổng hợp các bài học và bước thực hành ưu tiên cho hôm nay.</p>
+    </div>
+    <button class="icon-button" id="close-today-dialog" type="button" aria-label="Đóng lịch trình hôm nay">{{ icon('close') }}</button>
+  </header>
+  <div class="modal-content today-dialog__body">
+    <div class="today-dialog__tabs" role="tablist" aria-label="Chế độ xem lịch trình hôm nay">
+      <button type="button" class="today-tab is-active" role="tab" aria-selected="true" data-today-tab="tasks">Việc làm hôm nay</button>
+      <button type="button" class="today-tab" role="tab" aria-selected="false" data-today-tab="week">Phân bổ theo tuần</button>
+    </div>
+    <section id="today-panel-tasks" role="tabpanel" class="today-panel"></section>
+    <section id="today-panel-week" role="tabpanel" class="today-panel" hidden></section>
+  </div>
+  <footer class="modal-footer today-dialog__footer">
+    <span class="learning-note" id="today-dialog-foot-note">Cập nhật tự động theo tiến độ tự đánh dấu của bạn.</span>
+    <div class="modal-actions">
+      <button type="button" class="btn btn--secondary" id="today-open-settings">Thiết lập lộ trình</button>
+      <button type="button" class="btn btn--primary" id="today-close-btn">Đóng</button>
+    </div>
   </footer>
 </dialog>
 {% endblock %}

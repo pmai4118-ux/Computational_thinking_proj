@@ -22,34 +22,38 @@
 .homepage-content .material-symbols-outlined { flex-shrink: 0; }
 .homepage-content :is(.w-12, .w-8, .w-14, .w-16) { flex-shrink: 0; }
 .homepage-content :is(.flex, .grid) > * { min-width: 0; }
+.homepage-shell .homepage-content section.max-w-7xl,
+.homepage-shell > footer > div.max-w-7xl {
+  max-width: none;
+  padding-inline: 0;
+}
 .homepage-shell .site-footer { position: relative; z-index: 10; margin-top: 2.5rem; }
-.homepage-shell .site-footer__inner { max-width: 80rem; padding-inline: 3rem; }
 html[data-theme="dark"] .homepage-shell {
   color-scheme: dark;
-  --home-background: 22 17 33;
-  --home-on-surface: 244 237 255;
-  --home-on-surface-variant: 204 193 224;
-  --home-primary: 190 158 255;
-  --home-primary-fixed: 56 36 81;
-  --home-primary-fixed-dim: 82 56 116;
-  --home-secondary-fixed: 58 38 86;
-  --home-on-secondary-fixed: 225 207 255;
-  --home-surface-container-low: 34 27 48;
-  --home-surface-container: 42 33 59;
-  --home-surface-container-high: 53 45 69;
-  --home-surface-container-lowest: 43 33 61;
+  --home-background: 19 30 29;
+  --home-on-surface: 241 245 244;
+  --home-on-surface-variant: 180 196 194;
+  --home-primary: 43 181 160;
+  --home-primary-fixed: 12 66 62;
+  --home-primary-fixed-dim: 20 94 88;
+  --home-secondary-fixed: 15 78 73;
+  --home-on-secondary-fixed: 204 251 241;
+  --home-surface-container-low: 23 36 35;
+  --home-surface-container: 33 48 47;
+  --home-surface-container-high: 40 58 56;
+  --home-surface-container-lowest: 27 40 39;
 }
 
-html[data-theme="dark"] .homepage-shell > footer { background: rgb(34 27 48 / .88); }
-html[data-theme="dark"] .homepage-shell .homepage-content [class*="bg-white"] { background-color: rgb(40 31 56 / .85); }
-html[data-theme="dark"] .homepage-shell > footer [class*="bg-white"] { background-color: rgb(40 31 56 / .85); }
-html[data-theme="dark"] .homepage-shell .homepage-content [class*="from-white"] { --tw-gradient-from: rgb(40 31 56 / .95); }
-html[data-theme="dark"] .homepage-shell .homepage-content [class*="to-white"] { --tw-gradient-to: rgb(40 31 56 / .9); }
+html[data-theme="dark"] .homepage-shell > footer { background: rgb(22 34 33 / .92); }
+html[data-theme="dark"] .homepage-shell .homepage-content [class*="bg-white"] { background-color: rgb(27 40 39 / .92); }
+html[data-theme="dark"] .homepage-shell > footer [class*="bg-white"] { background-color: rgb(33 48 47 / .90); }
+html[data-theme="dark"] .homepage-shell .homepage-content [class*="from-white"] { --tw-gradient-from: rgb(27 40 39 / .96); }
+html[data-theme="dark"] .homepage-shell .homepage-content [class*="to-white"] { --tw-gradient-to: rgb(27 40 39 / .92); }
 html[data-theme="dark"] .homepage-shell .homepage-content section:last-child > div {
-  --tw-gradient-from: #501aa1;
-  --tw-gradient-to: #5925b2;
+  --tw-gradient-from: #0C423E;
+  --tw-gradient-to: #0F4E49;
 }
-html[data-theme="dark"] .homepage-shell .homepage-content section:last-child a { color: #e5d3ff; }
+html[data-theme="dark"] .homepage-shell .homepage-content section:last-child a { color: #DDF3F0; }
 @media (max-width: 767px) {
   /* Avoid stacking costly backdrop layers on narrow, tall pages. The source
    * translucent fills retain the glass treatment without mobile paint artifacts. */
