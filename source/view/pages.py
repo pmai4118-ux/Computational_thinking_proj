@@ -787,7 +787,10 @@ def build_pages_router(
         token, created_new = ensure_owner_cookie_token(request.cookies.get(OWNER_COOKIE_NAME))
         try:
             run = await run_in_threadpool(
-                decision_replay_controller.start_standalone_run, question_id, owner_token=token
+                decision_replay_controller.start_standalone_run,
+                question_id,
+                owner_token=token,
+                async_generate=True,
             )
         except ApiControllerError as error:
             hub = decision_replay_controller.get_hub(owner_token=token)
@@ -857,6 +860,7 @@ def build_pages_router(
                 AnswerRevisionRef(AnswerId(answer_id), revision),
                 owner_token=owner_token,
                 reuse_existing=bool(reuse_existing),
+                async_generate=True,
             )
         except ApiControllerError as error:
             hub = decision_replay_controller.get_hub(owner_token=owner_token)

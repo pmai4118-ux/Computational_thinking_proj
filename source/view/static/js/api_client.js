@@ -211,6 +211,11 @@
         body: { parent_node_id: parentNodeId, proposal_text: proposalText },
       });
     },
+    retryReplayGeneration(runId) {
+      return request(`/replays/runs/${encode(runId)}/retry-generation`, {
+        method: "POST",
+      });
+    },
   };
 
   window.InterviewApi = Object.freeze(api);

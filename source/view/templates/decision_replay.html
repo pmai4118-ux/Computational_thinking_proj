@@ -1,278 +1,391 @@
 {% extends "base.html" %}
 
+{% block page_id %}replays{% endblock %}
 {% block title %}Decision Replay — Cây quyết định tương tác — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/features.css?v=20261127-p6">
+<link rel="stylesheet" href="/static/css/features.css?v=20261128-sbx1">
 {% endblock %}
 
 {% block content %}
 {% if active_run %}
-<section class="stack"
+{% set display_title = active_run.title[17:] if active_run.title.startswith('Decision Replay: ') else active_run.title %}
+{% set has_linked_answer = active_run.linked_answer_text or (active_run.linked_session_id and active_run.linked_answer_ref) %}
+
+<section class="replay-workspace"
          data-replay-studio
          data-run-id="{{ active_run.run_id }}"
+         data-view-mode="overview"
          aria-labelledby="replay-run-heading">
-  <header class="card stack replay-header-card">
-    <div class="results-header">
-      <div>
-        <div class="profile-entry__meta" style="margin-bottom: var(--space-2);">
-          <span class="badge badge--met">Kịch bản mô phỏng · Tình huống kỹ thuật</span>
-          <span class="badge">Bài làm &amp; điểm gốc được giữ nguyên</span>
-          <span class="badge badge--neutral">Kết quả kỳ vọng (mô phỏng) — không chạy test thật</span>
-          {% if active_run.demo_mode_label %}
-            <span class="badge badge--demo">{{ active_run.demo_mode_label }}</span>
-          {% endif %}
-        </div>
-        <h1 id="replay-run-heading" style="margin-bottom: var(--space-1);">{{ active_run.title }}</h1>
-        <p class="text-secondary reading-measure" style="margin: 0;">{{ active_run.summary }}</p>
+  <header class="replay-prompt-band">
+    <div class="replay-topbar">
+      <div class="replay-topbar__title-group">
+        <span class="replay-topbar__kicker">Decision Replay</span>
+        <h1 id="replay-run-heading" class="replay-prompt-title">{{ display_title }}</h1>
       </div>
-      <div class="action-row">
-        {% if active_run.linked_session_id and active_run.linked_answer_ref %}
-          <form method="post"
-                action="/sessions/{{ active_run.linked_session_id }}/answers/{{ active_run.linked_answer_ref.id }}/replay/start?revision={{ active_run.linked_answer_ref.revision }}&amp;reuse_existing=0">
-            <button type="submit"
-                    class="btn btn--secondary"
-                    title="Tạo một lượt mô phỏng tách biệt mới theo bộ tiêu chí hiện hành; lượt đang xem vẫn được giữ nguyên."
-                    aria-label="Tạo lượt mô phỏng mới tách biệt (không xóa lượt đang xem)">
-              Tạo lượt mô phỏng mới
-            </button>
-          </form>
+
+      <div class="replay-topbar__actions">
+        {% if has_linked_answer %}
+          <button id="replay-open-answer-btn"
+                  type="button"
+                  class="btn btn--highlight btn--sm replay-answer-trigger"
+                  aria-haspopup="dialog"
+                  aria-controls="replay-answer-dialog">
+            Xem bài trả lời của bạn
+          </button>
         {% endif %}
-        {% if active_run.linked_session_id %}
-          <a class="btn btn--secondary" href="/sessions/{{ active_run.linked_session_id }}/summary">Về tổng kết phiên</a>
-          {% if active_run.linked_answer_ref %}
-            <a class="btn btn--ghost"
-               href="/sessions/{{ active_run.linked_session_id }}/review?answer_id={{ active_run.linked_answer_ref.id }}&amp;revision={{ active_run.linked_answer_ref.revision }}">
-              Xem căn cứ chấm
-            </a>
+
+        <nav class="replay-leave-nav" aria-label="Điều hướng rời trang Replay">
+          {% if active_run.linked_session_id %}
+            <a class="replay-leave-link" href="/sessions/{{ active_run.linked_session_id }}/summary">Về tổng kết phiên</a>
           {% endif %}
-        {% endif %}
-        <a class="btn btn--ghost" href="/replays">Trung tâm Replay</a>
+          <a class="replay-leave-link" href="/replays">Trung tâm Replay</a>
+        </nav>
       </div>
     </div>
 
-    <div class="replay-guide-grid" aria-label="Hướng dẫn nhanh cách dùng Decision Replay">
-      <div class="replay-guide-item">
-        <strong>1. Tình huống ban đầu</strong>
-        <span>Mốc xuất phát đối chiếu với bài làm gốc; phần chưa nêu rõ sẽ không bị tự suy đoán.</span>
+    <details id="replay-prompt-drawer" class="replay-prompt-drawer">
+      <summary id="replay-toggle-full-prompt"
+               class="replay-disclosure-trigger"
+               aria-controls="replay-full-prompt-panel"
+               aria-expanded="false">
+        <span class="replay-disclosure-trigger__caret" aria-hidden="true">▸</span>
+        <span class="replay-disclosure-trigger__label">Xem đầy đủ đề bài</span>
+        <span class="replay-prompt-preview">{{ active_run.question_prompt or active_run.summary }}</span>
+      </summary>
+
+      <div id="replay-full-prompt-panel" class="replay-full-prompt">
+        <p class="replay-prompt-text reading-measure">
+          {{ active_run.question_prompt or active_run.summary }}
+        </p>
+
+        {% if active_run.question_constraints %}
+          <div class="replay-full-prompt__block">
+            <p class="replay-full-prompt__label">Ràng buộc quan trọng</p>
+            <ul class="replay-constraints" aria-label="Ràng buộc quan trọng">
+              {% for item in active_run.question_constraints %}
+                <li>{{ item }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        {% if active_run.question_code %}
+          <div class="replay-full-prompt__block">
+            <p class="replay-full-prompt__label">
+              Đoạn mã tham chiếu{% if active_run.question_code_language %} ({{ active_run.question_code_language }}){% endif %}
+            </p>
+            <pre class="code-block replay-prompt-code"><code>{{ active_run.question_code }}</code></pre>
+          </div>
+        {% endif %}
+
+        {% if active_run.question_assumptions %}
+          <div class="replay-full-prompt__block">
+            <p class="replay-full-prompt__label">Bối cảnh và giả định môi trường</p>
+            <ul class="replay-plain-list">
+              {% for assumption in active_run.question_assumptions %}
+                <li>{{ assumption }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+
+        <div class="replay-full-prompt__meta">
+          <span>Mã kịch bản: <code>{{ active_run.question_id }}</code> (v{{ active_run.question_version }})</span>
+          {% if active_run.question_source_id %}
+            <span>Nguồn: <code>{{ active_run.question_source_id }}</code></span>
+          {% endif %}
+          {% if active_run.demo_mode_label %}
+            <span>{{ active_run.demo_mode_label }}</span>
+          {% endif %}
+        </div>
       </div>
-      <div class="replay-guide-item">
-        <strong>2. Các hướng có thể thử</strong>
-        <span>Bấm trực tiếp node trên cây để rẽ nhánh, so sánh hoặc tua lại bất kỳ lúc nào (nút “Tạo lượt mô phỏng mới” mở một lượt riêng, không ghi đè lượt hiện tại).</span>
-      </div>
-      <div class="replay-guide-item">
-        <strong>3. Cách đọc kết quả kỳ vọng</strong>
-        <span>Mỗi kết cục mô phỏng tách riêng <strong>Tính đúng đắn dữ liệu</strong> và <strong>Hiệu năng &amp; Vận hành</strong> — chỉ là mô phỏng cơ chế, không thay cho bằng chứng chạy test thực tế.</span>
-      </div>
-    </div>
+    </details>
   </header>
 
   <p id="replay-live-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
   <p id="replay-error" class="alert alert--error" role="alert" tabindex="-1" hidden></p>
-  <p id="replay-status" class="alert alert--status" role="status" aria-live="polite" aria-atomic="true" hidden></p>
 
-  <!-- Stage 1: True Interactive Decision Tree Canvas + Rewind Controls -->
-  <section id="replay-tree-stage" class="card stack replay-tree-stage" aria-labelledby="tree-canvas-heading">
-    <div class="replay-stage-header">
-      <div>
-        <h2 id="tree-canvas-heading" style="margin-bottom: var(--space-1);">Cây quyết định tương tác &amp; Tua lại</h2>
-        <p class="form-hint" style="margin: 0;">
-          Nhìn toàn cảnh các nhánh xử lý, bấm trực tiếp lên bất kỳ node nào để focus, so sánh hoặc tua lại lựa chọn trước.
-        </p>
+  <section id="replay-tree-stage" class="replay-stage" aria-label="Cây quyết định tương tác">
+    <div class="replay-stage-bar">
+      <div class="replay-stage-bar__info">
+        <p class="replay-sim-notice">Kết quả mô phỏng · Không tính vào điểm phỏng vấn</p>
+        <p id="replay-overview-hint" class="replay-overview-hint">Chọn một nhánh để xem kết quả</p>
       </div>
-      <div class="replay-rewind-controls">
-        <button id="replay-rewind-parent-top" type="button" class="btn btn--secondary btn--sm">← Tua lại bước trước</button>
-        <button id="replay-jump-root" type="button" class="btn btn--ghost btn--sm">↺ Về điểm xuất phát</button>
+      <div class="replay-stage-controls">
+        <div class="replay-segmented" role="group" aria-label="Mức mở rộng sơ đồ cây">
+          <button id="replay-mode-compact" type="button" class="replay-segmented__btn" aria-pressed="true">
+            Thu gọn
+          </button>
+          <button id="replay-overview-btn" type="button" class="replay-segmented__btn" aria-pressed="false">
+            Toàn cây
+          </button>
+        </div>
+        <button id="replay-parent-btn" type="button" class="btn btn--secondary btn--sm" hidden>
+          Về nhánh trước
+        </button>
       </div>
     </div>
 
-    <nav id="replay-breadcrumbs" class="replay-breadcrumbs" aria-label="Đường đi từ gốc tới node đang focus"></nav>
+    <div id="replay-stage-viewport" class="replay-stage-viewport">
+      <div id="replay-overview-layer" class="replay-overview-layer">
+        <div id="replay-gen-status" class="replay-gen-status" role="status" aria-live="polite" hidden>
+          <span class="replay-spinner" aria-hidden="true"></span>
+          <span>Đang khởi tạo các nhánh quyết định… Bạn có thể đọc đề bài hoặc xem bài làm trong lúc chờ.</span>
+        </div>
 
-    <div class="replay-tree-scroll">
-      <nav id="replay-tree-nav" class="replay-tree-canvas" aria-label="Sơ đồ cây các nhánh Decision Replay"></nav>
+        <div id="replay-gen-error" class="replay-gen-error" role="alert" tabindex="-1" hidden>
+          <p id="replay-gen-error-msg" class="replay-detail-error__msg"></p>
+          <button id="replay-gen-retry-btn" type="button" class="btn btn--primary btn--sm">Thử tạo lại</button>
+        </div>
+
+        <div class="replay-canvas-frame">
+          <div id="replay-tree-viewport" class="replay-tree-viewport" tabindex="0" aria-label="Khung sơ đồ cây quyết định — kéo nền để di chuyển, dùng nút cộng trừ hoặc Vừa khung để thu phóng">
+            <div id="replay-tree-surface" class="replay-tree-surface">
+              <nav id="replay-tree-nav" class="replay-tree-canvas" aria-label="Sơ đồ cây các nhánh Decision Replay"></nav>
+            </div>
+          </div>
+
+          <span class="replay-canvas-hint" aria-hidden="true">Kéo nền để di chuyển · Ctrl + cuộn để thu phóng</span>
+
+          <div class="replay-zoom-controls" role="toolbar" aria-label="Thu phóng sơ đồ cây">
+            <button id="replay-zoom-out" type="button" class="replay-zoom-btn" aria-label="Thu nhỏ cây" title="Thu nhỏ (−)">−</button>
+            <span id="replay-zoom-level" class="replay-zoom-level" aria-live="polite">100%</span>
+            <button id="replay-zoom-in" type="button" class="replay-zoom-btn" aria-label="Phóng to cây" title="Phóng to (+)">+</button>
+            <button id="replay-zoom-fit" type="button" class="replay-zoom-btn replay-zoom-btn--fit" aria-label="Tự căn cây vừa khung" title="Căn vừa khung (0)">Vừa khung</button>
+          </div>
+        </div>
+      </div>
+
+      <article id="replay-detail-layer" class="replay-detail-layer" aria-labelledby="replay-node-title" hidden>
+        <div class="replay-detail-topbar">
+          <nav id="replay-breadcrumbs" class="replay-breadcrumbs" aria-label="Đường đi từ điểm xuất phát"></nav>
+          <button id="replay-detail-close-btn"
+                  type="button"
+                  class="replay-detail-close"
+                  aria-label="Đóng khung chi tiết và quay về toàn khung cây"
+                  title="Đóng khung chi tiết">
+            <span aria-hidden="true">×</span>
+            <span>Đóng</span>
+          </button>
+        </div>
+
+        <div id="replay-detail-card" class="replay-detail-card">
+          <div class="replay-detail-head">
+            <div class="replay-detail-kicker-row">
+              <span id="replay-node-kicker" class="replay-node-kicker" hidden></span>
+              <p id="replay-node-ai-tag" class="replay-ai-tag" hidden>Phương án bạn tự đề xuất · Mô phỏng AI</p>
+            </div>
+            <h2 id="replay-node-title" class="replay-detail-title" tabindex="-1"></h2>
+          </div>
+
+          <div id="replay-detail-loading" class="replay-detail-loading" role="status" aria-live="polite" hidden>
+            <span class="replay-spinner" aria-hidden="true"></span>
+            <span>Đang mở nhánh…</span>
+          </div>
+
+          <div id="replay-detail-error" class="replay-detail-error" role="alert" tabindex="-1" hidden>
+            <p id="replay-detail-error-msg" class="replay-detail-error__msg"></p>
+            <div class="replay-detail-error__actions">
+              <button id="replay-detail-retry-btn" type="button" class="btn btn--primary btn--sm">Thử lại</button>
+              <button id="replay-detail-error-parent-btn" type="button" class="btn btn--secondary btn--sm" hidden>Về nhánh trước</button>
+              <button id="replay-detail-error-overview-btn" type="button" class="btn btn--ghost btn--sm">Toàn cây</button>
+            </div>
+          </div>
+
+          <div id="replay-detail-content" class="replay-detail-content" hidden>
+            <div id="replay-summary-block" class="replay-summary-block">
+              <p id="replay-node-lead" class="replay-detail-lead reading-measure"></p>
+              <p id="replay-node-secondary" class="replay-detail-secondary reading-measure" hidden></p>
+
+              <div id="replay-terminal-verdict" class="replay-verdict" hidden>
+                <div id="replay-verdict-badges" class="replay-verdict-badges" aria-label="Đánh giá tính đúng đắn và vận hành"></div>
+                <dl class="replay-verdict-lines">
+                  <div class="replay-verdict-line">
+                    <dt>Dữ liệu:</dt>
+                    <dd id="replay-verdict-safety"></dd>
+                  </div>
+                  <div class="replay-verdict-line">
+                    <dt>Vận hành:</dt>
+                    <dd id="replay-verdict-operational"></dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+
+            <details id="replay-sim-details" class="replay-sim-details">
+              <summary id="replay-sim-details-summary" class="replay-sim-details__summary">
+                <span class="replay-sim-details__caret" aria-hidden="true">▸</span>
+                <span>Xem chi tiết mô phỏng</span>
+              </summary>
+              <div id="replay-sim-details-body" class="replay-sim-details__body"></div>
+            </details>
+
+            <section id="replay-children-section" class="replay-children-section" aria-labelledby="replay-children-heading" hidden>
+              <h3 id="replay-children-heading" class="replay-children-heading">Chọn bước tiếp theo</h3>
+              <div id="replay-children-list" class="replay-children-list"></div>
+
+              <div id="replay-custom-pending" class="replay-custom-pending" role="status" aria-live="polite" hidden>
+                <span class="replay-spinner" aria-hidden="true"></span>
+                <span>Đang mô phỏng phương án…</span>
+              </div>
+
+              <p id="replay-custom-exhausted-note" class="replay-custom-exhausted" hidden></p>
+
+              <div id="replay-custom-panel" class="replay-custom-panel" hidden>
+                <form id="replay-custom-form"
+                      method="post"
+                      action="/replays/runs/{{ active_run.run_id }}/custom-branch"
+                      class="replay-custom-form"
+                      novalidate>
+                  <input id="replay-custom-parent-id" type="hidden" name="parent_node_id" value="{{ active_run.active_node_id }}">
+                  <div class="replay-custom-panel__head">
+                    <label class="form-label" for="replay-custom-input">Đề xuất phương án xử lý của bạn</label>
+                    <span id="replay-custom-quota" class="replay-custom-quota"></span>
+                  </div>
+                  <p id="replay-custom-guidance" class="form-hint">
+                    Tối đa 1.000 ký tự — nêu rõ cơ chế khóa, ranh giới transaction hoặc cách xử lý lỗi muốn thử. Nếu lỗi hoặc hết thời gian sẽ không trừ lượt.
+                  </p>
+                  <textarea id="replay-custom-input"
+                            name="proposal_text"
+                            class="form-textarea replay-custom-textarea"
+                            rows="3"
+                            maxlength="1000"
+                            aria-describedby="replay-custom-quota replay-custom-guidance replay-custom-count"
+                            placeholder="Ví dụ: Dùng SELECT ... ORDER BY wallet_id FOR UPDATE kèm SET LOCAL lock_timeout = '500ms' trong 1 transaction..."></textarea>
+
+                  <div id="replay-custom-error" class="replay-custom-error" role="alert" tabindex="-1" hidden>
+                    <p id="replay-custom-error-msg" class="replay-custom-error__msg"></p>
+                    <button id="replay-custom-retry-btn" type="button" class="btn btn--secondary btn--sm" hidden>Thử lại</button>
+                  </div>
+
+                  <div class="replay-custom-footer">
+                    <span id="replay-custom-count" class="form-hint">0 / 1.000 ký tự</span>
+                    <div class="replay-custom-actions">
+                      <button id="replay-custom-cancel" type="button" class="btn btn--ghost btn--sm">Đóng</button>
+                      <button id="replay-custom-submit" type="submit" class="btn btn--primary btn--sm">Mô phỏng phương án</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </section>
+
+            <div id="replay-terminal-actions" class="replay-terminal-actions" hidden>
+              <button id="replay-terminal-parent-btn" type="button" class="btn btn--primary btn--sm">Về nhánh trước</button>
+              <button id="replay-terminal-overview-btn" type="button" class="btn btn--secondary btn--sm replay-terminal-overview-btn">Toàn cây</button>
+            </div>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 
-  <!-- Stage 2: Focused Node Inspector & Original Answer Context -->
-  <div class="replay-studio">
-    <aside class="replay-studio__aside stack" aria-label="Bài làm gốc để đối chiếu">
-      <section class="card stack">
-        <div>
-          <h2 style="margin-bottom: var(--space-1);">Bài làm gốc của bạn</h2>
-          {% if active_run.linked_session_id %}
-            <p class="form-hint" style="margin: 0;">
-              Phiên <code>{{ active_run.linked_session_id }}</code>
+  {% if has_linked_answer %}
+    <div id="replay-answer-dialog" class="replay-dialog-backdrop" hidden>
+      <div class="replay-dialog"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="replay-answer-dialog-title"
+           tabindex="-1">
+        <div class="replay-dialog__header">
+          <div class="replay-dialog__heading-group">
+            <h2 id="replay-answer-dialog-title" class="replay-dialog__title">Bài trả lời của bạn</h2>
+            <div class="replay-dialog__meta">
               {% if active_run.linked_total_score is not none and active_run.linked_maximum_score is not none %}
-                · Điểm đã công bố: <strong>{{ active_run.linked_total_score }}/{{ active_run.linked_maximum_score }}</strong>
+                <span class="replay-dialog__score">
+                  Điểm gốc: <strong>{{ active_run.linked_total_score }}/{{ active_run.linked_maximum_score }}</strong>
+                </span>
+              {% elif active_run.linked_evaluation_status == "completed" %}
+                <span class="replay-dialog__score">Điểm gốc: Chưa tính tổng điểm</span>
               {% endif %}
-            </p>
-          {% else %}
-            <p class="form-hint" style="margin: 0;">Đang xem kịch bản mẫu độc lập (chưa gắn bài làm trong phiên).</p>
-          {% endif %}
+              {% if active_run.linked_session_id and active_run.linked_answer_ref %}
+                <a class="replay-dialog__review-link"
+                   href="/sessions/{{ active_run.linked_session_id }}/review?answer_id={{ active_run.linked_answer_ref.id }}&amp;revision={{ active_run.linked_answer_ref.revision }}">
+                  Xem căn cứ chấm
+                </a>
+              {% endif %}
+            </div>
+          </div>
+          <button id="replay-close-answer-btn"
+                  type="button"
+                  class="btn btn--secondary btn--sm replay-dialog__close"
+                  aria-label="Đóng hộp thoại bài trả lời">
+            Đóng
+          </button>
         </div>
 
-        <div id="replay-alignment-banner" class="alert alert--status" hidden></div>
-        <div id="replay-answer-source">
+        <p id="replay-answer-quote-note" class="replay-dialog__note" hidden></p>
+
+        <div id="replay-answer-source" class="replay-dialog__body">
           {% if active_run.linked_answer_text %}
             <pre class="answer-source replay-answer-pre">{{ active_run.linked_answer_text }}</pre>
-          {% else %}
-            <p class="text-secondary" style="margin: 0;">Chưa gắn bài trả lời gốc.</p>
           {% endif %}
         </div>
-
-        <details class="disclosure-block">
-          <summary>Giả định môi trường đã kiểm duyệt</summary>
-          <ul id="replay-assumptions-list" style="margin: var(--space-2) 0 0 0; padding-left: 1.25rem; font-size: var(--font-size-sm);"></ul>
-        </details>
-      </section>
-    </aside>
-
-    <section id="replay-focus-card" class="replay-studio__main card stack" aria-labelledby="replay-node-title">
-      <div class="results-header">
-        <div class="stack" style="gap: var(--space-1);">
-          <div><span id="replay-node-badge" class="badge"></span></div>
-          <h2 id="replay-node-title" tabindex="-1" style="margin: 0;"></h2>
-        </div>
       </div>
-
-      <p id="replay-node-situation" class="reading-measure" style="margin: 0;"></p>
-      <p id="replay-node-state-delta" class="state-delta-pill" hidden></p>
-
-      <section class="stack" aria-labelledby="trace-heading">
-        <div>
-          <h3 id="trace-heading" style="margin: 0;">Diễn biến mô phỏng theo mốc khóa &amp; thời gian (Trace)</h3>
-          <p class="form-hint" style="margin: 0;">Theo dõi thứ tự các mốc vòng đời khóa và trạng thái tồn kho/đơn hàng kỳ vọng sau từng bước.</p>
-        </div>
-        <div class="trace-legend" aria-label="Chú thích các mốc vòng đời khóa">
-          <span class="trace-phase trace-phase--acquire">Lấy khóa / Ghi</span>
-          <span class="trace-legend__arrow" aria-hidden="true">→</span>
-          <span class="trace-phase trace-phase--wait">Chờ khóa</span>
-          <span class="trace-legend__arrow" aria-hidden="true">→</span>
-          <span class="trace-phase trace-phase--commit">Commit · Nhả khóa</span>
-          <span class="trace-legend__arrow" aria-hidden="true">/</span>
-          <span class="trace-phase trace-phase--rollback">Rollback / Lỗi</span>
-          <span class="trace-legend__arrow" aria-hidden="true">/</span>
-          <span class="trace-phase trace-phase--finish">Kết thúc (0 dòng)</span>
-        </div>
-        <ol id="replay-trace-list" class="trace-list"></ol>
-      </section>
-
-      <div class="impact-grid">
-        <div class="impact-card">
-          <h3>Tác động hệ thống</h3>
-          <p id="replay-node-impact" style="margin: 0;"></p>
-        </div>
-        <div class="impact-card">
-          <h3>Đánh đổi kỹ thuật</h3>
-          <p id="replay-node-tradeoff" style="margin: 0;"></p>
-        </div>
-      </div>
-
-      <section id="replay-options-section" class="stack" aria-labelledby="options-heading">
-        <div>
-          <h3 id="options-heading" style="margin-bottom: var(--space-1);">Rẽ nhánh tiếp từ node này</h3>
-          <p class="form-hint" style="margin: 0;">Bấm trực tiếp trên sơ đồ cây hoặc chọn một hướng xử lý bên dưới để focus vào node kế tiếp.</p>
-        </div>
-        <div id="replay-options-list" class="stack"></div>
-      </section>
-
-      <section id="replay-custom-section" class="custom-branch-box stack" aria-labelledby="custom-branch-heading">
-        <div>
-          <h3 id="custom-branch-heading" style="margin-bottom: var(--space-1);">Hoặc tự nhập phương án xử lý của bạn để tạo nhánh mới</h3>
-          <p id="replay-custom-quota" class="form-hint" style="margin: 0;"></p>
-        </div>
-        <ul id="replay-custom-rules" class="custom-branch-rules">
-          <li><strong>Cách tính lượt:</strong> chỉ trừ 1 lượt khi nhánh mới được mô phỏng và lưu thành công (tối đa theo giới hạn hiển thị ở trên cho lượt Replay hiện tại).</li>
-          <li><strong>Xử lý khi lỗi:</strong> nếu nhập trống, quá giới hạn hoặc hệ thống mô phỏng gặp lỗi/timeout, <strong>không bị trừ lượt</strong> và nội dung bạn đã viết vẫn được giữ nguyên.</li>
-          <li><strong>Gợi ý nội dung (tối đa 1.000 ký tự):</strong> nêu rõ cơ chế khóa, ranh giới transaction hoặc van an toàn muốn thử (ví dụ: <code>UPDATE ... WHERE</code>, <code>SELECT ... FOR UPDATE</code>, <code>SET LOCAL lock_timeout</code>, hoặc cột <code>version</code>).</li>
-        </ul>
-        <form id="replay-custom-form" method="post" action="/replays/runs/{{ active_run.run_id }}/custom-branch" class="stack">
-          <input type="hidden" name="parent_node_id" value="{{ active_run.active_node_id }}">
-          <label class="form-label" for="replay-custom-input">Mô tả ngắn phương án kỹ thuật muốn thử nghiệm</label>
-          <textarea id="replay-custom-input"
-                    name="proposal_text"
-                    class="form-textarea"
-                    rows="3"
-                    maxlength="1000"
-                    aria-describedby="replay-custom-quota replay-custom-rules replay-custom-count"
-                    placeholder="Ví dụ: Dùng UPDATE WHERE + SET LOCAL lock_timeout = '500ms' chung 1 transaction..."></textarea>
-          <div class="action-row" style="justify-content: space-between;">
-            <span id="replay-custom-count" class="form-hint" style="margin: 0;">0 / 1.000 ký tự</span>
-            <button id="replay-custom-submit" type="submit" class="btn btn--secondary">Mô phỏng phương án này thành nhánh mới</button>
-          </div>
-        </form>
-      </section>
-
-      <section id="replay-ending-section" class="ending-panel stack" aria-labelledby="ending-heading" hidden>
-        <div>
-          <h3 id="ending-heading" style="margin-bottom: var(--space-1);">Kết cục kỳ vọng (mô phỏng) &amp; Đối chiếu 2 nhóm tiêu chí (không tính điểm)</h3>
-          <p class="form-hint" style="margin: 0;">Tách riêng tính đúng đắn dữ liệu (Safety) và hiệu năng/vận hành (Operational) theo cơ chế hệ thống — không thay cho bằng chứng chạy test thực tế.</p>
-        </div>
-
-        <div id="replay-outcome-summary" class="outcome-summary-strip"></div>
-
-        <div class="outcome-groups-grid">
-          <div class="stack" style="gap: var(--space-2);">
-            <h4 class="outcome-group-title">1. Tính đúng đắn dữ liệu (Safety / Correctness)</h4>
-            <ul id="replay-safety-list" class="profile-entry-list"></ul>
-          </div>
-          <div class="stack" style="gap: var(--space-2);">
-            <h4 class="outcome-group-title">2. Hiệu năng &amp; Vận hành (Liveness / Operational)</h4>
-            <ul id="replay-operational-list" class="profile-entry-list"></ul>
-          </div>
-        </div>
-
-        <p id="replay-comparison-note" class="alert alert--status" hidden></p>
-        <div class="action-row">
-          <button id="replay-rewind-parent" type="button" class="btn btn--primary">← Tua lại điểm rẽ trước để thử hướng khác</button>
-          <button id="replay-rewind-root-bottom" type="button" class="btn btn--secondary">↺ Về điểm xuất phát</button>
-          {% if active_run.linked_session_id %}
-            <a class="btn btn--ghost" href="/sessions/{{ active_run.linked_session_id }}/exercises">Sang bài tập thực hành</a>
-            <a class="btn btn--ghost" href="/sessions/{{ active_run.linked_session_id }}/summary">Về tổng kết phiên</a>
-          {% endif %}
-        </div>
-      </section>
-    </section>
-  </div>
+    </div>
+  {% endif %}
 
   <script id="replay-initial-data" type="application/json">{{ initial_run_json | safe }}</script>
 </section>
 {% else %}
-<section class="stack" aria-labelledby="replays-hub-heading">
-  <section class="card stack">
-    <div>
-      <span class="badge badge--met" style="margin-bottom: var(--space-2);">Decision Replay · Tình huống kỹ thuật (Technical Case)</span>
-      <h1 id="replays-hub-heading">Phòng thí nghiệm rẽ nhánh từ bài làm của bạn</h1>
-      <p class="text-secondary reading-measure" style="margin: 0;">
-        Chọn trực tiếp một câu <strong>Tình huống kỹ thuật</strong> bạn đã hoàn tất trong phiên phỏng vấn (đủ 4/4 câu) để xem cây quyết định tương tác, tua lại rẽ nhánh thử phương án khác và đối chiếu Safety vs Operational — hoàn toàn không làm thay đổi điểm đã công bố.
-      </p>
+<section class="stack replay-hub" aria-labelledby="replays-hub-heading">
+  <section class="card stack replay-hub__hero">
+    <div class="sbx-card__head">
+      <div>
+        <p class="eyebrow">Decision Replay · Tình huống kỹ thuật (Technical Case)</p>
+        <h1 id="replays-hub-heading">Phòng thí nghiệm rẽ nhánh từ bài làm của bạn</h1>
+      </div>
+      <span class="sbx-card__index" aria-hidden="true">01</span>
     </div>
+    <p class="text-secondary reading-measure" style="margin: 0;">
+      Chọn trực tiếp một câu <strong>Tình huống kỹ thuật</strong> bạn đã hoàn tất trong phiên phỏng vấn (đủ 4/4 câu) để xem cây quyết định tương tác, tua lại rẽ nhánh thử phương án khác và đối chiếu Safety vs Operational — hoàn toàn không làm thay đổi điểm đã công bố.
+    </p>
 
     <section class="stack" aria-labelledby="your-answers-replay-heading">
-      <h2 id="your-answers-replay-heading" style="margin: 0;">Bài Tình huống từ các phiên luyện tập của bạn</h2>
+      <div class="skill-group__head">
+        <div class="skill-group__title-wrap">
+          <span class="skill-group__index" aria-hidden="true">01</span>
+          <h2 id="your-answers-replay-heading" class="skill-group__title">Bài Tình huống từ các phiên luyện tập của bạn</h2>
+        </div>
+        {% if eligible_answers %}
+          <span class="skill-group__count">{{ eligible_answers|length }} bài làm</span>
+        {% endif %}
+      </div>
+
       {% if eligible_answers %}
         <ul class="replay-list">
           {% for item in eligible_answers %}
-            <li class="skill-group">
+            <li class="skill-group replay-hub-card{% if item.eligible %} replay-hub-card--ready{% else %} replay-hub-card--locked{% endif %}">
               <div class="results-header">
-                <div class="stack" style="gap: var(--space-1);">
+                <div class="stack" style="gap: var(--space-2);">
                   <div class="profile-entry__meta">
-                    <strong>{{ item.question_title }}</strong>
-                    <span class="badge">Phiên {{ item.session_id }}</span>
+                    <h3 class="profile-entry__title">{{ item.question_title }}</h3>
                     {% if item.eligible %}
                       <span class="badge badge--met">Sẵn sàng mở Replay</span>
                     {% else %}
                       <span class="badge badge--unresolved">Chưa đủ {{ item.total_questions }}/{{ item.total_questions }} câu</span>
                     {% endif %}
+                  </div>
+                  <div class="profile-meta-bar">
                     {% if item.total_score is not none and item.maximum_score is not none %}
-                      <span class="badge">Điểm gốc: {{ item.total_score }}/{{ item.maximum_score }}</span>
+                      <span class="profile-meta-item">
+                        <span class="profile-meta-item__key">Điểm gốc</span>
+                        <span class="profile-meta-item__val">Điểm gốc: {{ item.total_score }}/{{ item.maximum_score }}</span>
+                      </span>
                     {% endif %}
                     {% if item.existing_run_id %}
-                      <span class="badge">Đã khám phá {{ item.explored_nodes_count }} bước</span>
+                      <span class="profile-meta-item">
+                        <span class="profile-meta-item__key">Tiến độ</span>
+                        <span class="profile-meta-item__val">Đã khám phá {{ item.explored_nodes_count }} bước</span>
+                      </span>
                     {% endif %}
                   </div>
                   <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);">
-                    Trích bài làm: "{{ item.answer_excerpt }}"
+                    Trích bài làm: “{{ item.answer_excerpt }}”
                   </p>
+                  <details class="tech-meta">
+                    <summary>Thông tin kỹ thuật</summary>
+                    <p class="form-hint">Mã phiên: <code>{{ item.session_id }}</code></p>
+                  </details>
                   {% if item.lock_reason %}
                     <p class="form-hint" style="margin: 0;">{{ item.lock_reason }}</p>
                   {% endif %}
@@ -285,7 +398,7 @@
                         {% if item.existing_run_id %}Tiếp tục khám phá cây{% else %}Mở Decision Replay từ bài làm này{% endif %}
                       </button>
                     </form>
-                    <a class="btn btn--ghost" href="/sessions/{{ item.session_id }}/summary">Xem tổng kết</a>
+                    <a class="btn btn--secondary" href="/sessions/{{ item.session_id }}/summary">Xem tổng kết</a>
                   {% else %}
                     <a class="btn btn--secondary" href="/sessions/{{ item.session_id }}">Tiếp tục hoàn tất phiên</a>
                   {% endif %}
@@ -307,19 +420,26 @@
   </section>
 
   <section class="card stack" aria-labelledby="standalone-cases-heading">
-    <div>
-      <h2 id="standalone-cases-heading" style="margin-bottom: var(--space-1);">Xem thử kịch bản mẫu độc lập (chưa gắn bài làm)</h2>
-      <p class="text-secondary reading-measure" style="margin: 0; font-size: var(--font-size-sm);">
-        Dành cho việc làm quen giao diện cây quyết định trước khi thi thật. Mọi câu <code>technical_case</code> đã kiểm duyệt trong ngân hàng câu hỏi đều tự động có mặt tại đây.
-      </p>
+    <div class="sbx-card__head">
+      <div>
+        <p class="eyebrow">02 · Kịch bản mẫu độc lập</p>
+        <h2 id="standalone-cases-heading">Xem thử kịch bản mẫu độc lập (chưa gắn bài làm)</h2>
+      </div>
+      <span class="sbx-card__index" aria-hidden="true">02</span>
     </div>
+    <p class="text-secondary reading-measure" style="margin: 0; font-size: var(--font-size-sm);">
+      Dành cho việc làm quen giao diện cây quyết định trước khi thi thật. Mọi câu Tình huống kỹ thuật đã kiểm duyệt trong ngân hàng câu hỏi đều tự động có mặt tại đây.
+    </p>
     <ul class="replay-list">
       {% for item in cases %}
-        <li class="profile-entry">
+        <li class="profile-entry replay-case-item">
           <div class="stack" style="gap: var(--space-1); max-width: 46rem;">
-            <strong>{{ item.title }}</strong>
+            <strong class="profile-entry__title">{{ item.title }}</strong>
             <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);">{{ item.summary }}</p>
-            <p class="form-hint" style="margin: 0;">Mã câu hỏi: <code>{{ item.question_id }}</code> · Nguồn: <code>{{ item.source_id }}</code></p>
+            <details class="tech-meta">
+              <summary>Mã câu hỏi &amp; nguồn tham chiếu</summary>
+              <p class="form-hint">Mã câu hỏi: <code>{{ item.question_id }}</code> · Nguồn: <code>{{ item.source_id }}</code></p>
+            </details>
           </div>
           <form method="post" action="/replays/cases/{{ item.question_id }}/start">
             <button type="submit" class="btn btn--secondary">Xem thử độc lập</button>
@@ -334,6 +454,6 @@
 
 {% block extra_scripts %}
 {% if active_run %}
-<script src="/static/js/replay.js?v=20261127-p6" defer></script>
+<script src="/static/js/replay.js?v=20261128-sbx1" defer></script>
 {% endif %}
 {% endblock %}

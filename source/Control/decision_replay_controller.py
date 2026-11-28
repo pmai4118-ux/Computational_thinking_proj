@@ -127,6 +127,12 @@ class ReplayRunDetailDTO(BaseModel):
     question_version: int
     title: str
     summary: str
+    question_prompt: str | None = None
+    question_code: str | None = None
+    question_code_language: str | None = None
+    question_constraints: tuple[str, ...] = ()
+    question_source_id: str | None = None
+    question_assumptions: tuple[str, ...] = ()
     root_node_id: str
     active_node_id: str
     active_path_ids: tuple[str, ...] = ()
@@ -143,6 +149,8 @@ class ReplayRunDetailDTO(BaseModel):
     prompt_version: str = "decision_replay/v1"
     model_id: str | None = None
     demo_mode_label: str | None = None
+    generation_status: str = "ready"
+    generation_error: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -309,12 +317,23 @@ class DecisionReplayController:
     @classmethod
     def _context_to_dto(cls, ctx: ReplayRunContext) -> ReplayRunDetailDTO:
         run = ctx.run
+        question = ctx.question
         return ReplayRunDetailDTO(
             run_id=run.id,
             question_id=str(run.question_id),
             question_version=run.question_version,
             title=run.title,
             summary=run.summary,
+            question_prompt=question.prompt if question is not None else None,
+            question_code=question.code if question is not None else None,
+            question_code_language=question.code_language if question is not None else None,
+            question_constraints=question.constraints if question is not None else (),
+            question_source_id=str(question.source_id) if question is not None else None,
+            question_assumptions=(
+                question.replay_grounding.environment_assumptions
+                if question is not None and question.replay_grounding is not None
+                else ()
+            ),
             root_node_id=run.root_node_id,
             active_node_id=run.active_node_id,
             active_path_ids=ctx.active_path_ids,
@@ -338,6 +357,8 @@ class DecisionReplayController:
             prompt_version=run.prompt_version,
             model_id=run.model_id,
             demo_mode_label=run.demo_mode_label,
+            generation_status=run.generation_status,
+            generation_error=run.generation_error,
             created_at=run.created_at,
             updated_at=run.updated_at,
         )
@@ -448,6 +469,7 @@ class DecisionReplayController:
         *,
         owner_token: str | None,
         reuse_existing: bool = True,
+        async_generate: bool = False,
     ) -> ReplayRunDetailDTO:
         token_hash = hash_owner_token(owner_token) if owner_token else ""
         try:
@@ -456,6 +478,7 @@ class DecisionReplayController:
                 answer_ref=answer_ref,
                 owner_token_hash=token_hash,
                 reuse_existing=reuse_existing,
+                async_generate=async_generate,
             )
         except SessionNotFoundError as error:
             raise ApiControllerError(
@@ -495,11 +518,13 @@ class DecisionReplayController:
         question_id: str,
         *,
         owner_token: str,
+        async_generate: bool = False,
     ) -> ReplayRunDetailDTO:
         try:
             ctx = self._service.start_standalone_run(
                 question_id=question_id,
                 owner_token_hash=hash_owner_token(owner_token),
+                async_generate=async_generate,
             )
         except ScenarioNotFoundError as error:
             raise ApiControllerError(
@@ -515,6 +540,32 @@ class DecisionReplayController:
         except DecisionReplayError as error:
             raise ApiControllerError(
                 status.HTTP_400_BAD_REQUEST,
+                ApiErrorResponse(error_code=ErrorCode.INVALID_INPUT, message=str(error)),
+            ) from error
+        return self._context_to_dto(ctx)
+
+    def retry_generation(
+        self,
+        run_id: str,
+        *,
+        owner_token: str | None,
+    ) -> ReplayRunDetailDTO:
+        token_hash = hash_owner_token(owner_token) if owner_token else ""
+        try:
+            ctx = self._service.retry_generation(run_id=run_id, owner_token_hash=token_hash)
+        except ReplayRunNotFoundError as error:
+            raise ApiControllerError(
+                status.HTTP_404_NOT_FOUND,
+                ApiErrorResponse(error_code=ErrorCode.SESSION_NOT_FOUND, message=str(error)),
+            ) from error
+        except ReplayRunForbiddenError as error:
+            raise ApiControllerError(
+                status.HTTP_403_FORBIDDEN,
+                ApiErrorResponse(error_code=ErrorCode.SESSION_FORBIDDEN, message=str(error)),
+            ) from error
+        except ScenarioNotFoundError as error:
+            raise ApiControllerError(
+                status.HTTP_404_NOT_FOUND,
                 ApiErrorResponse(error_code=ErrorCode.INVALID_INPUT, message=str(error)),
             ) from error
         return self._context_to_dto(ctx)
@@ -688,15 +739,24 @@ def build_decision_replay_router(controller: DecisionReplayController) -> APIRou
         question_id: str,
         request: Request,
         response: Response,
+        async_generate: bool = Query(default=False),
     ) -> ReplayRunDetailDTO:
         token, created = ensure_owner_cookie_token(request.cookies.get(OWNER_COOKIE_NAME))
         if created:
             apply_owner_cookie(response, token)
-        return controller.start_standalone_run(question_id, owner_token=token)
+        return controller.start_standalone_run(
+            question_id, owner_token=token, async_generate=async_generate
+        )
 
     @router.get("/api/replays/runs/{run_id}", response_model=ReplayRunDetailDTO)
     def get_run(run_id: str, request: Request) -> ReplayRunDetailDTO:
         return controller.get_run(run_id, owner_token=request.cookies.get(OWNER_COOKIE_NAME))
+
+    @router.post("/api/replays/runs/{run_id}/retry-generation", response_model=ReplayRunDetailDTO)
+    def retry_generation(run_id: str, request: Request) -> ReplayRunDetailDTO:
+        return controller.retry_generation(
+            run_id, owner_token=request.cookies.get(OWNER_COOKIE_NAME)
+        )
 
     @router.post("/api/replays/runs/{run_id}/select", response_model=ReplayRunDetailDTO)
     def select_node(
@@ -765,12 +825,14 @@ def build_decision_replay_router(controller: DecisionReplayController) -> APIRou
         request: Request,
         revision: int = Query(default=1, ge=1),
         reuse_existing: bool = Query(default=True),
+        async_generate: bool = Query(default=False),
     ) -> ReplayRunDetailDTO:
         return controller.start_run_for_answer(
             SessionId(session_id),
             AnswerRevisionRef(AnswerId(answer_id), revision),
             owner_token=request.cookies.get(OWNER_COOKIE_NAME),
             reuse_existing=reuse_existing,
+            async_generate=async_generate,
         )
 
     return router

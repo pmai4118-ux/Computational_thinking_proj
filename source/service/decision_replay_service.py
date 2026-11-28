@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
+import logging
+import re
+from threading import Lock
 from uuid import uuid4
 
 from source.Model.decision_replay import (
@@ -26,6 +30,7 @@ from source.service.providers.replay_provider import (
     ReplaySimulator,
 )
 
+logger = logging.getLogger(__name__)
 MAX_CUSTOM_BRANCHES_PER_RUN = 2
 MAX_CUSTOM_PROPOSAL_LENGTH = 1000
 
@@ -100,6 +105,18 @@ class ReplayRunContext:
     active_path_ids: tuple[str, ...] = ()
 
 
+def _clean_markdown_preview(text: str, *, limit: int = 160) -> str:
+    """Strip raw Markdown formatting for human-readable preview snippets without mutating stored answers."""
+    cleaned = re.sub(r"```[a-zA-Z0-9_+-]*", " ", text)
+    cleaned = re.sub(r"(?m)^\s*#{1,6}\s+", "", cleaned)
+    cleaned = re.sub(r"(?m)^\s*[-*+]\s+", "", cleaned)
+    cleaned = cleaned.replace("**", "").replace("__", "").replace("~~", "").replace("`", "")
+    cleaned = " ".join(cleaned.split())
+    if len(cleaned) > limit:
+        return f"{cleaned[: limit - 3].rstrip()}..."
+    return cleaned
+
+
 def _short_question_title(question: Question) -> str:
     qid = str(question.id)
     if qid.startswith("case.c03.inventory_race"):
@@ -131,6 +148,146 @@ class DecisionReplayService:
         self._evaluation_repo = evaluation_repo
         self._simulator = simulator or FixtureReplaySimulator()
         self._custom_branch_limit = custom_branch_limit
+        self._executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="replay-gen")
+        self._gen_lock = Lock()
+        self._scheduled_runs: set[str] = set()
+
+    def shutdown(self) -> None:
+        self._executor.shutdown(wait=False)
+
+    def _build_pending_run(
+        self,
+        *,
+        question: Question,
+        owner_token_hash: str,
+        linked_session_id: SessionId | None,
+        linked_answer_ref: AnswerRevisionRef | None,
+    ) -> ReplayRun:
+        now = datetime.now(UTC)
+        assumptions = (
+            question.replay_grounding.environment_assumptions
+            if question.replay_grounding is not None
+            else ()
+        )
+        root_label = "Xuất phát từ bài làm" if linked_answer_ref is not None else "Điểm xuất phát"
+        placeholder_root = ReplayTreeNode(
+            id="root",
+            parent_id=None,
+            branch_label=root_label,
+            depth=0,
+            origin="answer_start",
+            answer_alignment="unspecified",
+            title=root_label,
+            situation="Đang phân tích tình huống và khởi tạo các nhánh quyết định ban đầu…",
+            consequence_summary="",
+            system_impact="",
+            tradeoff_note="",
+            assumptions_used=assumptions,
+            state_delta="",
+            trace_steps=(),
+            is_terminal=False,
+            invariants=(),
+            comparison_note=None,
+            options=(),
+            created_at=now,
+        )
+        return ReplayRun(
+            id=f"replayrun.{uuid4().hex[:12]}",
+            question_id=question.id,
+            question_version=question.version,
+            owner_token_hash=owner_token_hash,
+            root_node_id="root",
+            active_node_id="root",
+            visited_node_ids=("root",),
+            nodes=(placeholder_root,),
+            title=f"Decision Replay: {_short_question_title(question)}",
+            summary=question.prompt,
+            linked_session_id=linked_session_id,
+            linked_answer_ref=linked_answer_ref,
+            custom_branches_used=0,
+            custom_branch_limit=self._custom_branch_limit,
+            prompt_version="decision_replay/v1",
+            model_id=None,
+            demo_mode_label=None,
+            generation_status="generating",
+            generation_error=None,
+            created_at=now,
+            updated_at=now,
+        )
+
+    def _enqueue_generation(
+        self,
+        *,
+        run_id: str,
+        question: Question,
+        answer_text: str | None,
+        evaluation_notes: tuple[str, ...],
+    ) -> None:
+        with self._gen_lock:
+            if run_id in self._scheduled_runs:
+                return
+            self._scheduled_runs.add(run_id)
+            try:
+                self._executor.submit(
+                    self._generate_run_worker,
+                    run_id,
+                    question,
+                    answer_text,
+                    evaluation_notes,
+                )
+            except RuntimeError:
+                self._scheduled_runs.discard(run_id)
+                raise
+
+    def _generate_run_worker(
+        self,
+        run_id: str,
+        question: Question,
+        answer_text: str | None,
+        evaluation_notes: tuple[str, ...],
+    ) -> None:
+        try:
+            generated = self._simulator.generate_initial_tree(
+                question=question,
+                answer_text=answer_text,
+                evaluation_notes=evaluation_notes,
+            )
+            current = self._replay_repo.get_replay_run(run_id)
+            if current is None:
+                return
+            updated = replace(
+                current,
+                root_node_id=generated.root_node_id,
+                active_node_id=generated.root_node_id,
+                visited_node_ids=(generated.root_node_id,),
+                nodes=generated.nodes,
+                title=generated.title,
+                summary=generated.summary,
+                prompt_version=generated.prompt_version,
+                model_id=generated.model_id,
+                demo_mode_label=generated.demo_mode_label,
+                generation_status="ready",
+                generation_error=None,
+                updated_at=datetime.now(UTC),
+            )
+            self._replay_repo.save_replay_run(updated)
+        except Exception as err:
+            logger.warning("Background Decision Replay generation failed for %s: %s", run_id, err)
+            current = self._replay_repo.get_replay_run(run_id)
+            if current is not None:
+                failed = replace(
+                    current,
+                    generation_status="failed",
+                    generation_error=str(err) or "Chưa khởi tạo được cây quyết định.",
+                    updated_at=datetime.now(UTC),
+                )
+                try:
+                    self._replay_repo.save_replay_run(failed)
+                except Exception:
+                    logger.warning("Could not persist failed generation status for %s.", run_id)
+        finally:
+            with self._gen_lock:
+                self._scheduled_runs.discard(run_id)
 
     def list_catalog_cases(self) -> tuple[ReplayCaseCatalogItem, ...]:
         """List all approved technical_case questions from ContentRepository."""
@@ -226,9 +383,7 @@ class DecisionReplayService:
                     eligible = True
                     lock_reason = None
 
-                excerpt = " ".join(answer.text.split())
-                if len(excerpt) > 160:
-                    excerpt = f"{excerpt[:157]}..."
+                excerpt = _clean_markdown_preview(answer.text, limit=160)
                 entries.append(
                     EligibleAnswerReplay(
                         session_id=session.id,
@@ -312,6 +467,7 @@ class DecisionReplayService:
         answer_ref: AnswerRevisionRef,
         owner_token_hash: str,
         reuse_existing: bool = True,
+        async_generate: bool = False,
     ) -> ReplayRunContext:
         """Open (or reuse cached) multi-branch Replay tree for a completed 4/4 technical_case answer."""
         if self._interview_service is not None:
@@ -337,9 +493,38 @@ class DecisionReplayService:
         if reuse_existing:
             existing = self._find_latest_run_for_answer(owner_token_hash, session_id, answer_ref)
             if existing is not None:
+                if existing.generation_status == "failed":
+                    return self.retry_generation(
+                        run_id=existing.id,
+                        owner_token_hash=owner_token_hash,
+                    )
+                if existing.generation_status == "generating":
+                    eval_notes = self._collect_readonly_eval_notes(answer_ref)
+                    self._enqueue_generation(
+                        run_id=existing.id,
+                        question=question,
+                        answer_text=answer.text,
+                        evaluation_notes=eval_notes,
+                    )
                 return self.build_run_context(existing, question=question)
 
         eval_notes = self._collect_readonly_eval_notes(answer_ref)
+        if async_generate:
+            pending = self._build_pending_run(
+                question=question,
+                owner_token_hash=owner_token_hash,
+                linked_session_id=session_id,
+                linked_answer_ref=answer_ref,
+            )
+            saved = self._replay_repo.save_replay_run(pending)
+            self._enqueue_generation(
+                run_id=saved.id,
+                question=question,
+                answer_text=answer.text,
+                evaluation_notes=eval_notes,
+            )
+            return self.build_run_context(saved, question=question)
+
         generated = self._simulator.generate_initial_tree(
             question=question,
             answer_text=answer.text,
@@ -364,6 +549,8 @@ class DecisionReplayService:
             prompt_version=generated.prompt_version,
             model_id=generated.model_id,
             demo_mode_label=generated.demo_mode_label,
+            generation_status="ready",
+            generation_error=None,
             created_at=now,
             updated_at=now,
         )
@@ -375,11 +562,28 @@ class DecisionReplayService:
         *,
         question_id: str,
         owner_token_hash: str,
+        async_generate: bool = False,
     ) -> ReplayRunContext:
         """Start an independent sample Replay run for any approved technical_case question."""
         if not owner_token_hash or not owner_token_hash.strip():
             raise DecisionReplayError("Thiếu định danh trình duyệt để bắt đầu Decision Replay.")
         question = self._find_case_question(question_id)
+        if async_generate:
+            pending = self._build_pending_run(
+                question=question,
+                owner_token_hash=owner_token_hash,
+                linked_session_id=None,
+                linked_answer_ref=None,
+            )
+            saved = self._replay_repo.save_replay_run(pending)
+            self._enqueue_generation(
+                run_id=saved.id,
+                question=question,
+                answer_text=None,
+                evaluation_notes=(),
+            )
+            return self.build_run_context(saved, question=question)
+
         generated = self._simulator.generate_initial_tree(
             question=question,
             answer_text=None,
@@ -404,10 +608,46 @@ class DecisionReplayService:
             prompt_version=generated.prompt_version,
             model_id=generated.model_id,
             demo_mode_label=generated.demo_mode_label,
+            generation_status="ready",
+            generation_error=None,
             created_at=now,
             updated_at=now,
         )
         saved = self._replay_repo.save_replay_run(run)
+        return self.build_run_context(saved, question=question)
+
+    def retry_generation(
+        self,
+        *,
+        run_id: str,
+        owner_token_hash: str,
+    ) -> ReplayRunContext:
+        """Re-enqueue background generation for a failed or interrupted Replay run."""
+        ctx = self.get_owned_run(run_id=run_id, owner_token_hash=owner_token_hash)
+        run = ctx.run
+        if run.generation_status == "ready":
+            return ctx
+        question = ctx.question or self._find_case_question(
+            str(run.question_id), run.question_version
+        )
+        eval_notes = (
+            self._collect_readonly_eval_notes(run.linked_answer_ref)
+            if run.linked_answer_ref is not None
+            else ()
+        )
+        reset_run = replace(
+            run,
+            generation_status="generating",
+            generation_error=None,
+            updated_at=datetime.now(UTC),
+        )
+        saved = self._replay_repo.save_replay_run(reset_run)
+        self._enqueue_generation(
+            run_id=saved.id,
+            question=question,
+            answer_text=ctx.linked_answer_text,
+            evaluation_notes=eval_notes,
+        )
         return self.build_run_context(saved, question=question)
 
     def get_owned_run(self, *, run_id: str, owner_token_hash: str) -> ReplayRunContext:
@@ -416,7 +656,24 @@ class DecisionReplayService:
             raise ReplayRunNotFoundError(f"Không tìm thấy lượt Decision Replay '{run_id}'.")
         if run.owner_token_hash != owner_token_hash:
             raise ReplayRunForbiddenError("Lượt Decision Replay này thuộc trình duyệt khác.")
-        return self.build_run_context(run)
+        ctx = self.build_run_context(run)
+        # Resume orphaned "generating" run cleanly if server restarted before worker finished.
+        if run.generation_status == "generating":
+            with self._gen_lock:
+                in_flight = run.id in self._scheduled_runs
+            if not in_flight and ctx.question is not None:
+                eval_notes = (
+                    self._collect_readonly_eval_notes(run.linked_answer_ref)
+                    if run.linked_answer_ref is not None
+                    else ()
+                )
+                self._enqueue_generation(
+                    run_id=run.id,
+                    question=ctx.question,
+                    answer_text=ctx.linked_answer_text,
+                    evaluation_notes=eval_notes,
+                )
+        return ctx
 
     def select_node(
         self,
@@ -428,6 +685,10 @@ class DecisionReplayService:
         """Jump to any node in the cached tree (0ms) without deleting explored branches."""
         ctx = self.get_owned_run(run_id=run_id, owner_token_hash=owner_token_hash)
         run = ctx.run
+        if run.generation_status != "ready":
+            raise InvalidReplayChoiceError(
+                "Cây quyết định đang được khởi tạo; hãy đợi trong giây lát rồi chọn nhánh."
+            )
         by_id = run.node_map()
         if node_id not in by_id:
             raise InvalidReplayChoiceError(f"Không tìm thấy nhánh '{node_id}' trong cây Decision Replay.")
@@ -456,6 +717,10 @@ class DecisionReplayService:
         """Advance from a node along one of its cached branch options without deleting siblings."""
         ctx = self.get_owned_run(run_id=run_id, owner_token_hash=owner_token_hash)
         run = ctx.run
+        if run.generation_status != "ready":
+            raise InvalidReplayChoiceError(
+                "Cây quyết định đang được khởi tạo; hãy đợi trong giây lát rồi chọn nhánh."
+            )
         by_id = run.node_map()
         node = by_id.get(node_id)
         if node is None:
@@ -481,6 +746,10 @@ class DecisionReplayService:
         """Non-destructive rewind to any previously visited node, preserving all explored branches."""
         ctx = self.get_owned_run(run_id=run_id, owner_token_hash=owner_token_hash)
         run = ctx.run
+        if run.generation_status != "ready":
+            raise InvalidReplayChoiceError(
+                "Cây quyết định đang được khởi tạo; chưa thể tua lại nhánh."
+            )
         if node_id not in run.visited_node_ids:
             raise InvalidReplayChoiceError(
                 f"Chỉ có thể tua lại tới điểm rẽ đã đi qua ('{node_id}' chưa xuất hiện)."
@@ -504,6 +773,10 @@ class DecisionReplayService:
         """Simulate a learner's own technical hypothesis as one direct terminal branch on the tree."""
         ctx = self.get_owned_run(run_id=run_id, owner_token_hash=owner_token_hash)
         run = ctx.run
+        if run.generation_status != "ready":
+            raise InvalidReplayChoiceError(
+                "Cây quyết định đang được khởi tạo; hãy đợi hoàn tất rồi đề xuất nhánh."
+            )
         proposal = proposal_text.strip()
         if not proposal:
             raise InvalidReplayChoiceError("Vui lòng nhập phương án kỹ thuật muốn thử nghiệm.")

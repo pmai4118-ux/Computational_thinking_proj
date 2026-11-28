@@ -316,8 +316,46 @@ def test_standalone_replay_and_html_studio_page_render_cleanly(tmp_path: Path) -
         page = client.get(f"/replays/runs/{run_id}")
         assert page.status_code == 200
         assert "data-replay-studio" in page.text
+        assert 'data-view-mode="overview"' in page.text
         assert "/static/js/replay.js?v=" in page.text
         assert "replay-initial-data" in page.text
+        assert "Kết quả mô phỏng · Không tính vào điểm phỏng vấn" in page.text
+        assert "Chọn một nhánh để xem kết quả" in page.text
+        assert "Toàn cây" in page.text
+        assert "Xem đầy đủ đề bài" in page.text
+        # Standalone sample case MUST hide the submitted answer button & modal, and drop old guide cards.
+        assert "Xem bài trả lời của bạn" not in page.text
+        assert "replay-guide-grid" not in page.text
+        assert run["question_prompt"]
+
+
+def test_linked_replay_page_renders_prompt_constraints_and_answer_modal_with_score_and_review_link(
+    tmp_path: Path,
+) -> None:
+    app = _app(tmp_path, "replay-linked-redesign.sqlite3")
+    with TestClient(app) as client:
+        case_text = "Em khóa theo thứ tự ID.\n\n```sql\nBEGIN;\nCOMMIT;\n```"
+        session_id, answers = _submit_case_text(client, case_text, "replay-redesign")
+        wait_for_evaluation_queue(app)
+        case_answer = answers[1]
+
+        started = client.post(
+            f"/api/sessions/{session_id}/answers/{case_answer['answer_id']}/replay?revision=1"
+        )
+        assert started.status_code == 201
+        run = started.json()
+        assert run["question_prompt"]
+        assert len(run["question_constraints"]) >= 1
+
+        page = client.get(f"/replays/runs/{run['run_id']}")
+        assert page.status_code == 200
+        assert "Xem bài trả lời của bạn" in page.text
+        assert 'id="replay-answer-dialog"' in page.text
+        assert "Xem căn cứ chấm" in page.text
+        assert "Điểm gốc:" in page.text
+        assert f"/sessions/{session_id}/summary" in page.text
+        assert "/replays" in page.text
+        assert "replay-guide-grid" not in page.text
 
 
 def test_antigravity_replay_simulator_default_runner_and_structured_retry(
@@ -547,3 +585,124 @@ def test_repair_tree_links_heals_missing_parent_ids_on_cached_runs(tmp_path: Pat
         )
         assert rewound.status_code == 200
         assert rewound.json()["active_node_id"] == "node_mid"
+
+
+def test_replay_hub_strips_raw_markdown_from_answer_excerpt_while_preserving_original_answer(
+    tmp_path: Path,
+) -> None:
+    app = _app(tmp_path, "replay-markdown-preview.sqlite3")
+    with TestClient(app) as client:
+        markdown_answer = (
+            "### Phân tích nguyên nhân\n"
+            "- Dùng **khóa theo thứ tự ID** với `SELECT ... FOR UPDATE`.\n"
+            "```sql\nBEGIN;\nSELECT * FROM wallets WHERE id IN (1, 2) ORDER BY id FOR UPDATE;\nCOMMIT;\n```"
+        )
+        session_id, answers = _submit_case_text(client, markdown_answer, "replay-md")
+        wait_for_evaluation_queue(app)
+        case_answer = answers[1]
+
+        hub = client.get("/api/replays").json()
+        assert len(hub["eligible_answers"]) == 1
+        excerpt = hub["eligible_answers"][0]["answer_excerpt"]
+        assert "###" not in excerpt
+        assert "**" not in excerpt
+        assert "`" not in excerpt
+        assert "Phân tích nguyên nhân" in excerpt
+        assert "khóa theo thứ tự ID" in excerpt
+
+        # Original stored answer text in Replay studio remains completely untouched.
+        started = client.post(
+            f"/api/sessions/{session_id}/answers/{case_answer['answer_id']}/replay?revision=1"
+        )
+        assert started.status_code == 201
+        assert started.json()["linked_answer_text"] == markdown_answer
+
+
+def test_async_replay_generation_enters_page_immediately_and_supports_retry_after_failure(
+    tmp_path: Path,
+) -> None:
+    import threading
+    import time
+    from source.service.providers.replay_provider import FixtureReplaySimulator
+
+    gate = threading.Event()
+    should_fail = {"flag": True}
+    inner = FixtureReplaySimulator()
+
+    class GatedReplaySimulator:
+        def generate_initial_tree(self, *, question, answer_text, evaluation_notes=()):
+            gate.wait(timeout=5.0)
+            if should_fail["flag"]:
+                raise RuntimeError("Mô phỏng AI bị gián đoạn tạm thời.")
+            return inner.generate_initial_tree(
+                question=question,
+                answer_text=answer_text,
+                evaluation_notes=evaluation_notes,
+            )
+
+        def simulate_custom_branch(self, **kwargs):
+            return inner.simulate_custom_branch(**kwargs)
+
+    app = create_app(
+        settings=load_settings({
+            "EVALUATION_PROVIDER": "fixture",
+            "DATABASE_PATH": str(tmp_path / "replay-async.sqlite3"),
+        }),
+        interpreter=FixtureProvider(),
+        replay_simulator=GatedReplaySimulator(),
+    )
+    with TestClient(app) as client:
+        hub = client.get("/api/replays").json()
+        qid = hub["cases"][0]["question_id"]
+
+        # HTML start route redirects IMMEDIATELY without blocking on slow AI generation!
+        started = client.post(f"/replays/cases/{qid}/start", follow_redirects=False)
+        assert started.status_code == 303
+        run_url = started.headers["location"]
+        run_id = run_url.rsplit("/", maxsplit=1)[-1]
+
+        page = client.get(run_url)
+        assert page.status_code == 200
+        assert "replay-tree-viewport" in page.text
+        assert "replay-zoom-fit" in page.text
+        assert "replay-mode-compact" in page.text
+        assert "replay-segmented" in page.text
+        assert "replay-detail-close-btn" in page.text
+        assert "replay-node-kicker" in page.text
+        assert "replay-canvas-hint" in page.text
+
+        state_generating = client.get(f"/api/replays/runs/{run_id}").json()
+        assert state_generating["generation_status"] == "generating"
+        assert len(state_generating["nodes"]) == 1
+
+        # Selecting a node while generating returns 409 cleanly.
+        blocked = client.post(
+            f"/api/replays/runs/{run_id}/select", json={"node_id": "root"}
+        )
+        assert blocked.status_code == 409
+
+        # Release gate with failure -> background worker persists failed status cleanly.
+        gate.set()
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline:
+            polled = client.get(f"/api/replays/runs/{run_id}").json()
+            if polled["generation_status"] == "failed":
+                break
+            time.sleep(0.02)
+        assert polled["generation_status"] == "failed"
+        assert "gián đoạn" in (polled["generation_error"] or "")
+
+        # Retry generation succeeds and populates full tree!
+        should_fail["flag"] = False
+        retried = client.post(f"/api/replays/runs/{run_id}/retry-generation")
+        assert retried.status_code == 200
+        assert retried.json()["generation_status"] in {"generating", "ready"}
+
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline:
+            polled = client.get(f"/api/replays/runs/{run_id}").json()
+            if polled["generation_status"] == "ready":
+                break
+            time.sleep(0.02)
+        assert polled["generation_status"] == "ready"
+        assert len(polled["nodes"]) >= 3

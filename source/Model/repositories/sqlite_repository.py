@@ -1699,6 +1699,8 @@ class SQLiteRepositoryStore:
             "prompt_version": run.prompt_version,
             "model_id": run.model_id,
             "demo_mode_label": run.demo_mode_label,
+            "generation_status": run.generation_status,
+            "generation_error": run.generation_error,
             "nodes": [
                 {
                     "id": node.id,
@@ -1875,6 +1877,8 @@ class SQLiteRepositoryStore:
             prompt_version=str(payload.get("prompt_version", "decision_replay/v1")),
             model_id=payload.get("model_id"),
             demo_mode_label=payload.get("demo_mode_label"),
+            generation_status=str(payload.get("generation_status", "ready")),
+            generation_error=payload.get("generation_error"),
             created_at=created_at,
             updated_at=updated_at,
         )

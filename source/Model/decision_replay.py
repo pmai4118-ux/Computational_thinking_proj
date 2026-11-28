@@ -109,6 +109,8 @@ class ReplayRun:
     prompt_version: str = "decision_replay/v1"
     model_id: str | None = None
     demo_mode_label: str | None = None
+    generation_status: str = "ready"  # "generating" | "ready" | "failed"
+    generation_error: str | None = None
 
     @property
     def active_node(self) -> ReplayTreeNode:

@@ -283,6 +283,7 @@ def create_app(
             yield
         finally:
             evaluation_queue.shutdown()
+            decision_replay_service.shutdown()
 
     app = FastAPI(
         title="interviewUS — Luyện phỏng vấn kỹ thuật Backend",
