@@ -40,6 +40,9 @@
     });
   }
 
+  if (timingInput) timingInput.hidden = true;
+  const timingLabel = document.querySelector("#native-timing-label");
+  if (timingLabel) timingLabel.hidden = true;
   setSelectedMode(timingInput ? timingInput.value : "after_session");
 
   let submitting = false;

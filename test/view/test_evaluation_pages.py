@@ -33,7 +33,10 @@ def test_web_form_saves_verbatim_answer_and_displays_cached_result(tmp_path: Pat
     )
 
     with TestClient(app) as owner, TestClient(app) as stranger:
-        created = owner.post("/api/sessions", json={}).json()
+        setup = owner.post("/setup", data={"evaluation_timing": "per_question"}, follow_redirects=False)
+        assert setup.status_code == 303
+        created = owner.get("/api" + setup.headers["location"]).json()
+        assert created["evaluation_timing"] == "per_question"
         session_id = created["session_id"]
         question = created["current_question"]
         form = owner.get(f"/sessions/{session_id}")

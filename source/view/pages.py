@@ -218,6 +218,7 @@ def build_pages_router(
         try:
             created = await run_in_threadpool(
                 controller.create_session_from_form,
+                    evaluation_timing=_first_form_value(parsed, "evaluation_timing", "after_session"),
                 role=role,
                 level=level,
                 language=language,
