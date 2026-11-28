@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
-from uuid import uuid4
 
 from source.Model.evaluation import AnswerRevisionRef, CriterionStatus, EvaluationStatus
 from source.Model.exercise import Exercise
@@ -18,7 +16,7 @@ from source.Model.ids import (
     VersionedRef,
 )
 from source.Model.interview import Session, SessionState
-from source.Model.question import LicenseStatus, Question, ReviewStatus, SourceMetadata
+from source.Model.question import LicenseStatus, ReviewStatus, SourceMetadata
 from source.Model.repositories.interfaces import (
     ContentRepository,
     EvaluationRepository,
@@ -26,14 +24,6 @@ from source.Model.repositories.interfaces import (
     RETRYABLE_EVALUATION_FAILURES,
 )
 from source.service.interview_service import InterviewService, SessionExpiredError
-
-
-class RecommendationNotFoundError(ValueError):
-    """The chosen exercise is not justified by this saved answer's confirmed gap."""
-
-
-class AlternativeQuestionUnavailableError(ValueError):
-    """No different reviewed question can exercise the selected gap."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,7 +44,6 @@ class ExerciseSuggestion:
     exercise: Exercise
     gap: ConfirmedGap
     reason: str
-    alternate_question: Question | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,42 +192,6 @@ class RecommendationService:
                 )
         return tuple(gaps)
 
-    def _alternate_question(self, session: Session, gap: ConfirmedGap) -> Question | None:
-        original = self._content_repo.get_question(gap.question_ref)
-        if original is None:
-            return None
-        blueprint = self._interview_service.find_blueprint(
-            role=session.role, level=session.level, language=session.language
-        )
-        used_ids = {ref.id for ref in session.question_refs}
-        for previous_session in self._session_repo.list_sessions_by_owner(session.owner_token_hash):
-            used_ids.update(ref.id for ref in previous_session.question_refs)
-        candidates = []
-        for question in self._content_repo.list_approved_questions(
-            role=session.role, level=session.level, language=session.language
-        ):
-            if (
-                question.id == original.id
-                or question.category != original.category
-                or gap.skill_id not in question.skill_ids
-                or question.difficulty not in blueprint.allowed_difficulties
-                or question.review.status is not ReviewStatus.APPROVED
-            ):
-                continue
-            source = self._content_repo.get_source(question.source_id)
-            if source is None or source.license_status is not LicenseStatus.VERIFIED:
-                continue
-            rubric = self._content_repo.get_rubric(question.rubric_ref)
-            if rubric is None or rubric.review.status is not ReviewStatus.APPROVED:
-                continue
-            if not any(
-                criterion.criterion_type == gap.criterion_type for criterion in rubric.criteria
-            ):
-                continue
-            candidates.append(question)
-        candidates.sort(key=lambda question: (question.id in used_ids, question.id))
-        return candidates[0] if candidates else None
-
     @staticmethod
     def _ordered_chain(
         exercise: Exercise, catalog: dict[ExerciseId, Exercise]
@@ -292,7 +245,6 @@ class RecommendationService:
                 key=lambda item: item.id,
             )
             has_valid_match = False
-            alternate = self._alternate_question(session, gap)
             direct_match_ids = {item.id for item in matches}
             for match in matches:
                 chain = self._ordered_chain(match, catalog)
@@ -312,7 +264,6 @@ class RecommendationService:
                                 if item.id in direct_match_ids
                                 else f"Bài nền tảng cần làm trước cho: {match.title}."
                             ),
-                            alternate_question=alternate,
                         )
                     )
                     suggested_keys.add(key)
@@ -411,58 +362,12 @@ class RecommendationService:
             observed_gaps=gaps,
         )
 
-    def start_practice(
-        self,
-        *,
-        session_id: SessionId,
-        owner_token_hash: str,
-        answer_ref: AnswerRevisionRef,
-        criterion_id: CriterionId,
-        exercise_id: ExerciseId,
-    ) -> Session:
-        recommendation_set = self.recommend_for_session(
-            session_id=session_id, owner_token_hash=owner_token_hash
-        )
-        selected = next(
-            (
-                item for item in recommendation_set.suggestions
-                if item.exercise.id == exercise_id
-                and item.gap.answer_ref == answer_ref
-                and item.gap.criterion_id == criterion_id
-            ),
-            None,
-        )
-        if selected is None:
-            raise RecommendationNotFoundError(
-                "Bài tập đã chọn không gắn với điểm thiếu đã xác nhận của câu trả lời này."
-            )
-        if selected.alternate_question is None:
-            raise AlternativeQuestionUnavailableError(
-                "Hiện chưa có câu hỏi đã duyệt khác câu gốc cho điểm thiếu này."
-            )
-        original = self._session_repo.get_session(session_id)
-        assert original is not None
-        now = datetime.now(UTC)
-        practice = Session(
-            id=SessionId(f"session.practice.{uuid4().hex[:12]}"),
-            owner_token_hash=owner_token_hash,
-            role=original.role,
-            level=original.level,
-            language=original.language,
-            state=SessionState.IN_PROGRESS,
-            question_refs=(selected.alternate_question.ref,),
-            created_at=now,
-            updated_at=now,
-        )
-        return self._session_repo.create_session(practice)
 
 
 __all__ = [
-    "AlternativeQuestionUnavailableError",
     "ConfirmedGap",
     "ExerciseSuggestion",
     "QuestionOutcomeRecord",
-    "RecommendationNotFoundError",
     "RecommendationService",
     "RecommendationSet",
     "SessionSummaryRecord",

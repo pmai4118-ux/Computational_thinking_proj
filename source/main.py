@@ -29,6 +29,7 @@ from source.Control.saved_evaluation_controller import (
 from source.Control.competency_profile_controller import (
     CompetencyProfileController, build_competency_profile_router,
 )
+from source.Control.learning_path_controller import build_learning_path_router
 from source.Control.exercise_controller import ExerciseController, build_exercise_router
 from source.Control.session_summary_controller import (
     SessionSummaryController,
@@ -64,11 +65,13 @@ from source.service.interview_service import InterviewService
 from source.service.job_analysis_service import JobAnalysisService
 from source.service.recommendation_service import RecommendationService
 from source.service.session_report_service import SessionReportService
+from source.service.learning_path_service import LearningPathService
 from source.service.providers.factory import create_evidence_interpreter, create_replay_simulator
 from source.service.providers.interfaces import EvidenceInterpreter
 from source.service.providers.replay_provider import ReplaySimulator
 from source.service.seed_loader import load_seed_catalog_into_repository
 from source.view.pages import build_pages_router
+from source.view.learning_pages import build_learning_pages_router
 from source.Control.evaluation_controller import build_evaluation_router
 
 STATIC_DIR = Path(__file__).resolve().parent / "view" / "static"
@@ -121,6 +124,7 @@ class AppContainer:
     adaptive_probe_controller: AdaptiveProbeController
     decision_replay_service: DecisionReplayService
     decision_replay_controller: DecisionReplayController
+    learning_path_service: LearningPathService
 
 
 def create_app(
@@ -224,6 +228,7 @@ def create_app(
         recommendation_service=recommendation_service,
         report_service=report_service,
     )
+    learning_path_service = LearningPathService()
 
     resolved_job_repo: JobPostingRepository = (
         resolved_session_repo if isinstance(resolved_session_repo, JobPostingRepository)
@@ -314,6 +319,7 @@ def create_app(
         adaptive_probe_controller=adaptive_probe_controller,
         decision_replay_service=decision_replay_service,
         decision_replay_controller=decision_replay_controller,
+        learning_path_service=learning_path_service,
     )
 
     register_api_exception_handlers(app)
@@ -326,6 +332,8 @@ def create_app(
     app.include_router(build_job_analysis_router(job_analysis_controller))
     app.include_router(build_adaptive_probe_router(adaptive_probe_controller))
     app.include_router(build_decision_replay_router(decision_replay_controller))
+    app.include_router(build_learning_path_router(learning_path_service, profile_service))
+    app.include_router(build_learning_pages_router(demo_mode_label=resolved_settings.demo_label))
     app.include_router(
         build_pages_router(
             interview_controller,

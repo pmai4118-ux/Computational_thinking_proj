@@ -34,17 +34,24 @@ def test_u02_welcome_and_setup_flow_creates_session_lists_history_and_collects_n
     app = _make_app(tmp_path, auto_seed=True)
 
     with TestClient(app) as client:
-        # 1. Empty history state on Welcome page
-        welcome_empty = client.get("/")
+        # 0. Home page (/) introduces main workspaces without session history clutter
+        home = client.get("/")
+        assert home.status_code == 200
+        assert 'href="/interview"' in home.text
+        assert 'href="/learning-path"' in home.text
+
+        # 1. Empty history state on Interview intro page (/interview)
+        welcome_empty = client.get("/interview")
         assert welcome_empty.status_code == 200
         assert "Chưa có phiên luyện tập nào trên trình duyệt này" in welcome_empty.text
         assert "Bắt đầu luyện tập" in welcome_empty.text
         assert "khoảng 25–35 phút" in welcome_empty.text
 
-        # 2. Setup page asks only role/level/language, no CV or PII fields
+        # 2. Setup page asks only role/level/language, no CV, PII, or session history
         setup_resp = client.get("/setup")
         assert setup_resp.status_code == 200
         assert "Xác nhận bắt đầu" in setup_resp.text
+        assert "session-history" not in setup_resp.text
         for forbidden_input in ('type="file"', 'name="email"', 'name="full_name"', 'name="cv"'):
             assert forbidden_input not in setup_resp.text
 
@@ -70,8 +77,8 @@ def test_u02_welcome_and_setup_flow_creates_session_lists_history_and_collects_n
         assert "Câu 1 / 4" in session_page.text
         assert "expected_evidence" not in session_page.text
 
-        # 4. Returning to Welcome page shows populated session history with "Tiếp tục phiên"
-        welcome_with_history = client.get("/")
+        # 4. Returning to Interview page shows populated session history with "Tiếp tục phiên"
+        welcome_with_history = client.get("/interview")
         assert welcome_with_history.status_code == 200
         assert "Tiếp tục phiên" in welcome_with_history.text
         assert location in welcome_with_history.text

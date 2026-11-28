@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Bài luyện tiếp theo — interviewUS{% endblock %}
+{% block title %}Hướng dẫn ôn tập — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/results.css?v=20261127-p2">
-<link rel="stylesheet" href="/static/css/exercise.css?v=20261127-p2">
+<link rel="stylesheet" href="/static/css/results.css?v=20261128-merged">
+<link rel="stylesheet" href="/static/css/exercise.css?v=20261128-merged">
 {% endblock %}
 
 {% block content %}
-<section class="card results-page" data-exercise-page
+<section class="results-page" data-exercise-page
          data-session-id="{{ session.session_id }}"
          data-exercise-id="{{ exercise_id or '' }}"
          data-skill-id="{{ skill_id or '' }}"
@@ -15,14 +15,15 @@
   <div class="results-header">
     <div>
       <p class="eyebrow">Bài luyện theo điểm thiếu đã xác nhận</p>
-      <h1 id="exercise-heading">Bài tập và câu hỏi luyện lại</h1>
+      <h1 id="exercise-heading">Hướng dẫn ôn tập theo điểm thiếu</h1>
     </div>
     <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Về tổng kết</a>
   </div>
   <p class="text-secondary reading-measure">Bài tập chỉ xuất hiện khi dữ liệu đề xuất khớp với kỹ năng còn thiếu. Thời lượng hiển thị là ước tính.</p>
   <div id="exercise-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
   <p id="exercise-status" class="alert alert--status" role="status" aria-live="polite">Đang tải đề xuất từ phiên…</p>
-  <div id="exercise-content" hidden>
+  <section id="exercise-activity" aria-label="Trạng thái tải học liệu" hidden></section>
+  <div id="exercise-content" class="stack" hidden>
     <p id="exercise-message" class="text-secondary"></p>
     <div id="exercise-list" class="exercise-list"></div>
     <div id="exercise-empty" class="empty-state" hidden>
@@ -33,4 +34,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/exercise.js?v=20261127-p2" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/exercise.js?v=20261128-merged" defer></script>{% endblock %}

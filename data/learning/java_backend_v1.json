@@ -1,0 +1,3247 @@
+{
+  "schema_version": "java-roadmap/1.0",
+  "version": "2026.11.27-v1",
+  "title": "Lộ trình Java Backend dựa trên nguồn mở và bài đọc chính thức",
+  "researched_at": "2026-11-27",
+  "date_policy": "Prioritize explicit 2024–2026 editions/blogs and maintained pages inspected in 2026. Unknown publication dates remain null; access date is not publication date.",
+  "scope_note": "Link catalog for self-study. External local exercises are allowed by the user's 2026-11-27 request; the interview app does not accept/run/grade code or award provider certificates.",
+  "review_note": "Curated by one research pass; not independently reviewed assessment content. Never imported into the approved interview question bank.",
+  "compatibility_note": "Pick one supported JDK/Spring Boot BOM for a lab and follow that version's documentation. Rolling references and 2024 blogs can describe different versions; do not mix dependency versions mechanically.",
+  "resources": [
+    {
+      "id": "java-start",
+      "title": "Getting Started with Java",
+      "url": "https://dev.java/learn/first-steps/first-java-code/getting-started/",
+      "provider": "Oracle / Dev.java",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-shell",
+      "title": "JShell — The Java Shell Tool",
+      "url": "https://dev.java/learn/first-steps/first-java-code/jshell-tool/",
+      "provider": "Oracle / Dev.java",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-basics",
+      "title": "Java Language Basics",
+      "url": "https://dev.java/learn/language/constructs/basics/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-strings",
+      "title": "Numbers and Strings",
+      "url": "https://dev.java/learn/language/constructs/numbers-strings/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-classes",
+      "title": "Classes and Objects",
+      "url": "https://dev.java/learn/language/oop/classes-objects/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-records",
+      "title": "Using Records to Model Immutable Data",
+      "url": "https://dev.java/learn/language/oop/records/",
+      "provider": "Oracle / Dev.java",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-inheritance",
+      "title": "Inheritance",
+      "url": "https://dev.java/learn/language/oop/inheritance/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-interfaces",
+      "title": "Interfaces",
+      "url": "https://dev.java/learn/language/oop/interfaces/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-generics",
+      "title": "Generics",
+      "url": "https://dev.java/learn/language/fp/generics/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-lambda",
+      "title": "Lambda Expressions",
+      "url": "https://dev.java/learn/language/fp/lambdas/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-exceptions",
+      "title": "Exceptions",
+      "url": "https://dev.java/learn/language/annotations-exceptions/exceptions/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-collections",
+      "title": "The Collections Framework",
+      "url": "https://dev.java/learn/api/collections-and-streams/collections-framework/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-streams",
+      "title": "The Stream API",
+      "url": "https://dev.java/learn/api/collections-and-streams/streams/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-time",
+      "title": "The Date Time API",
+      "url": "https://dev.java/learn/api/date-time-regex/date-time/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-virtual",
+      "title": "Virtual Threads",
+      "url": "https://dev.java/learn/api/virtual-threads/",
+      "provider": "Oracle / Dev.java",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": "2026-05-10",
+      "verified_at": "2026-11-27",
+      "verification_note": "Page explicitly reports last update May 10, 2026; examples include version-specific pinning differences.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-tools",
+      "title": "The Core JDK Tools",
+      "url": "https://dev.java/learn/jvm/core-tools/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-jfr",
+      "title": "JFR, Monitoring and Troubleshooting",
+      "url": "https://dev.java/learn/jvm/monitoring-troubleshooting/",
+      "provider": "Oracle / Dev.java",
+      "kind": "tutorial_path",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-object",
+      "title": "Object: equals and hashCode API",
+      "url": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Object.html",
+      "provider": "Oracle",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "Java SE 21 reference; not claimed published in 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-money",
+      "title": "BigDecimal API",
+      "url": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/math/BigDecimal.html",
+      "provider": "Oracle",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "Java SE 21 reference; not claimed published in 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "java-concurrency",
+      "title": "java.util.concurrent API",
+      "url": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/package-summary.html",
+      "provider": "Oracle",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "Java SE 21 reference; not claimed published in 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "maven",
+      "title": "Maven in 5 Minutes",
+      "url": "https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html",
+      "provider": "Apache Maven",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "vscode",
+      "title": "Getting Started with Java in VS Code",
+      "url": "https://code.visualstudio.com/docs/java/java-tutorial",
+      "provider": "Microsoft",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "http",
+      "title": "Overview of HTTP",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+      "provider": "MDN",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "http-methods",
+      "title": "HTTP request methods",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods",
+      "provider": "MDN",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "http-status",
+      "title": "HTTP response status codes",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status",
+      "provider": "MDN",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "mit-testing",
+      "title": "MIT 6.102: Testing",
+      "url": "https://web.mit.edu/6.102/www/sp24/classes/02-testing/",
+      "provider": "MIT",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en; TypeScript examples",
+      "edition": "Spring 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "2024 course archive inspected. General software-construction material, NOT a Java or Spring course. Embedded tutor may require access; public reading remains usable.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "mit-spec",
+      "title": "MIT 6.102: Specifications",
+      "url": "https://web.mit.edu/6.102/www/sp24/classes/04-specifications/",
+      "provider": "MIT",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en; TypeScript examples",
+      "edition": "Spring 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "2024 course archive inspected. General software-construction material, NOT a Java or Spring course. Embedded tutor may require access; public reading remains usable.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "mit-adt",
+      "title": "MIT 6.102: Abstract Data Types",
+      "url": "https://web.mit.edu/6.102/www/sp24/classes/06-abstract-data-types/",
+      "provider": "MIT",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en; TypeScript examples",
+      "edition": "Spring 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "2024 course archive inspected. General software-construction material, NOT a Java or Spring course. Embedded tutor may require access; public reading remains usable.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "mit-invariant",
+      "title": "MIT 6.102: Abstraction Functions & Rep Invariants",
+      "url": "https://web.mit.edu/6.102/www/sp24/classes/07-abstraction-functions-rep-invariants/",
+      "provider": "MIT",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en; TypeScript examples",
+      "edition": "Spring 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "2024 course archive inspected. General software-construction material, NOT a Java or Spring course. Embedded tutor may require access; public reading remains usable.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "mit-concurrency",
+      "title": "MIT 6.102: Concurrency",
+      "url": "https://web.mit.edu/6.102/www/sp24/classes/14-concurrency/",
+      "provider": "MIT",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en; TypeScript examples",
+      "edition": "Spring 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "2024 course archive inspected. General software-construction material, NOT a Java or Spring course. Embedded tutor may require access; public reading remains usable.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "mit-locks",
+      "title": "MIT 6.102: Mutual Exclusion",
+      "url": "https://web.mit.edu/6.102/www/sp24/classes/16-mutual-exclusion/",
+      "provider": "MIT",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en; TypeScript examples",
+      "edition": "Spring 2024",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "2024 course archive inspected. General software-construction material, NOT a Java or Spring course. Embedded tutor may require access; public reading remains usable.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-query",
+      "title": "CS50 SQL: Querying",
+      "url": "https://cs50.harvard.edu/sql/notes/0/",
+      "provider": "Harvard CS50",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Opened /sql/2024/notes/0/; redirects to this maintained public page. Original publication date is not inferred from redirect.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-query-pset",
+      "title": "CS50 SQL Problem Set 0",
+      "url": "https://cs50.harvard.edu/sql/psets/0/",
+      "provider": "Harvard CS50",
+      "kind": "official_exercise",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public assignment statement inspected; submission/gradebook may require an account.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-relations",
+      "title": "CS50 SQL: Relating",
+      "url": "https://cs50.harvard.edu/sql/notes/1/",
+      "provider": "Harvard CS50",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Opened /sql/2024/notes/1/; redirects to this maintained public page. Original publication date is not inferred from redirect.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-relations-pset",
+      "title": "CS50 SQL Problem Set 1",
+      "url": "https://cs50.harvard.edu/sql/psets/1/",
+      "provider": "Harvard CS50",
+      "kind": "official_exercise",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public assignment statement inspected; submission/gradebook may require an account.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-design",
+      "title": "CS50 SQL: Designing",
+      "url": "https://cs50.harvard.edu/sql/notes/2/",
+      "provider": "Harvard CS50",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Opened /sql/2024/notes/2/; redirects to this maintained public page. Original publication date is not inferred from redirect.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-design-pset",
+      "title": "CS50 SQL Problem Set 2",
+      "url": "https://cs50.harvard.edu/sql/psets/2/",
+      "provider": "Harvard CS50",
+      "kind": "official_exercise",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public assignment statement inspected; submission/gradebook may require an account.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-index",
+      "title": "CS50 SQL: Optimizing",
+      "url": "https://cs50.harvard.edu/sql/notes/5/",
+      "provider": "Harvard CS50",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Opened /sql/2024/notes/5/; redirects to this maintained public page. Original publication date is not inferred from redirect.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-index-pset",
+      "title": "CS50 SQL Problem Set 5",
+      "url": "https://cs50.harvard.edu/sql/psets/5/",
+      "provider": "Harvard CS50",
+      "kind": "official_exercise",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public assignment statement inspected; submission/gradebook may require an account.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "sql-final",
+      "title": "CS50 SQL Final Project",
+      "url": "https://cs50.harvard.edu/sql/project/",
+      "provider": "Harvard CS50",
+      "kind": "official_exercise",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "2024 entry redirects to maintained public OCW",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "postgres",
+      "title": "PostgreSQL Tutorial",
+      "url": "https://www.postgresql.org/docs/16/tutorial.html",
+      "provider": "PostgreSQL",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "PostgreSQL 16 maintained reference",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "isolation",
+      "title": "Transaction Isolation",
+      "url": "https://www.postgresql.org/docs/16/transaction-iso.html",
+      "provider": "PostgreSQL",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "PostgreSQL 16 maintained reference",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "db-locks",
+      "title": "Explicit Locking and Deadlocks",
+      "url": "https://www.postgresql.org/docs/16/explicit-locking.html",
+      "provider": "PostgreSQL",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "PostgreSQL 16 maintained reference",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "boot-lab",
+      "title": "Building an Application with Spring Boot",
+      "url": "https://spring.io/guides/gs/spring-boot/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "rest-lab",
+      "title": "Building a RESTful Web Service",
+      "url": "https://spring.io/guides/gs/rest-service/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "validation-lab",
+      "title": "Validating Form Input",
+      "url": "https://spring.io/guides/gs/validating-form-input/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "jpa-lab",
+      "title": "Accessing Data with JPA",
+      "url": "https://spring.io/guides/gs/accessing-data-jpa/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "mysql-lab",
+      "title": "Accessing data with MySQL",
+      "url": "https://spring.io/guides/gs/accessing-data-mysql/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "tx-lab",
+      "title": "Managing Transactions",
+      "url": "https://spring.io/guides/gs/managing-transactions/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "security-lab",
+      "title": "Securing a Web Application",
+      "url": "https://spring.io/guides/gs/securing-web/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "testing-lab",
+      "title": "Testing the Web Layer",
+      "url": "https://spring.io/guides/gs/testing-web/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "client-lab",
+      "title": "Consuming a RESTful Web Service",
+      "url": "https://spring.io/guides/gs/consuming-rest/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "breaker-lab",
+      "title": "Spring Cloud Circuit Breaker Guide",
+      "url": "https://spring.io/guides/gs/cloud-circuit-breaker/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "mq-lab",
+      "title": "Messaging with RabbitMQ",
+      "url": "https://spring.io/guides/gs/messaging-rabbitmq/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "batch-lab",
+      "title": "Creating a Batch Service",
+      "url": "https://spring.io/guides/gs/batch-processing/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "schedule-lab",
+      "title": "Scheduling Tasks",
+      "url": "https://spring.io/guides/gs/scheduling-tasks/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "docker-lab",
+      "title": "Spring Boot with Docker",
+      "url": "https://spring.io/guides/gs/spring-boot-docker/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "actuator-lab",
+      "title": "Building a RESTful Web Service with Spring Boot Actuator",
+      "url": "https://spring.io/guides/gs/actuator-service/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "discovery-lab",
+      "title": "Service Registration and Discovery",
+      "url": "https://spring.io/guides/gs/service-registration-and-discovery/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "rest-tutorial",
+      "title": "Building REST services with Spring",
+      "url": "https://spring.io/guides/tutorials/rest/",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "ioc",
+      "title": "The IoC Container",
+      "url": "https://docs.spring.io/spring-framework/reference/core/beans.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "config",
+      "title": "Externalized Configuration",
+      "url": "https://docs.spring.io/spring-boot/reference/features/external-config.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "jdbc",
+      "title": "Data Access with JDBC",
+      "url": "https://docs.spring.io/spring-framework/reference/data-access/jdbc.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "jpa-query",
+      "title": "JPA Query Methods",
+      "url": "https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "transaction",
+      "title": "Using @Transactional",
+      "url": "https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "security",
+      "title": "Spring Security Architecture",
+      "url": "https://docs.spring.io/spring-security/reference/servlet/architecture.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "jwt",
+      "title": "OAuth 2.0 Resource Server JWT",
+      "url": "https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "owasp",
+      "title": "REST Security Cheat Sheet",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html",
+      "provider": "OWASP",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "boot-test",
+      "title": "Spring Boot Testing",
+      "url": "https://docs.spring.io/spring-boot/reference/testing/index.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "junit",
+      "title": "JUnit User Guide",
+      "url": "https://docs.junit.org/6.1.3/overview.html",
+      "provider": "JUnit",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "JUnit 6.1.3; use the version managed by the chosen Spring Boot BOM",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content.",
+      "alternative_url": "https://github.com/junit-team/junit-framework"
+    },
+    {
+      "id": "testcontainers",
+      "title": "JUnit 5 Quickstart",
+      "url": "https://java.testcontainers.org/quickstart/junit_5_quickstart/",
+      "provider": "Testcontainers",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "rest-client",
+      "title": "REST Clients",
+      "url": "https://docs.spring.io/spring-framework/reference/integration/rest-clients.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "cache",
+      "title": "Cache Abstraction",
+      "url": "https://docs.spring.io/spring-framework/reference/integration/cache.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "cache-lab",
+      "title": "Caching Data with Spring",
+      "url": "https://github.com/spring-guides/gs-caching",
+      "provider": "Spring",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Official guide repository/README inspected; spring.io guide URL returned 404, so this working source is used.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "redis",
+      "title": "Redis data types",
+      "url": "https://redis.io/docs/latest/develop/data-types/",
+      "provider": "Redis",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "docker",
+      "title": "What is a container?",
+      "url": "https://docs.docker.com/learn/content/what-is-a-container/",
+      "provider": "Docker",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": "2026-10-21",
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "ci",
+      "title": "Building and testing Java with Maven",
+      "url": "https://docs.github.com/en/actions/tutorials/build-and-test-code/java-with-maven",
+      "provider": "GitHub / Microsoft",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Reading is public; Actions execution can be metered depending on repository/account. Local Maven is the free default practice.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "observability",
+      "title": "Spring Boot Observability",
+      "url": "https://docs.spring.io/spring-boot/reference/actuator/observability.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "otel",
+      "title": "Java OpenTelemetry: Getting Started by Example",
+      "url": "https://opentelemetry.io/docs/languages/java/getting-started/",
+      "provider": "OpenTelemetry",
+      "kind": "guided_tutorial",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content.",
+      "alternative_url": "https://github.com/open-telemetry/opentelemetry.io/blob/main/content/en/docs/languages/java/getting-started.md"
+    },
+    {
+      "id": "petclinic",
+      "title": "Spring Petclinic sample application",
+      "url": "https://github.com/spring-projects/spring-petclinic",
+      "provider": "Spring",
+      "kind": "reference_project",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Official sample repository inspected; read the checked-out LICENSE and pin a commit before redistributing code. This catalog only links to it.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "reactive",
+      "title": "Spring WebFlux",
+      "url": "https://docs.spring.io/spring-framework/reference/web/webflux.html",
+      "provider": "Spring",
+      "kind": "documentation",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "azure",
+      "title": "Deploy a Spring Boot app to Azure Container Apps",
+      "url": "https://learn.microsoft.com/en-us/training/modules/java-spring-on-azure-container-apps/",
+      "provider": "Microsoft Learn",
+      "kind": "course_reading",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": null,
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Seven-unit learning module is public; Azure resources are NOT guaranteed free. Cloud deployment is optional, never part of the free-only plan.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "blog-boot24",
+      "title": "Bootiful Spring Boot in 2024, part 1",
+      "url": "https://spring.io/blog/2024/03/11/bootiful-spring-boot-in-2024-part-1/",
+      "provider": "Spring / Josh Long",
+      "kind": "blog",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": "2024-03-11",
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "blog-boot34",
+      "title": "Bootiful Spring Boot 3.4: Spring Boot",
+      "url": "https://spring.io/blog/2024/11/24/bootiful-34-boot/",
+      "provider": "Spring / Josh Long",
+      "kind": "blog",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": "2024-11-24",
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "blog-mvc26",
+      "title": "Optimizations in Spring MVC",
+      "url": "https://spring.io/blog/2026/02/25/optimizing-spring-mvc/",
+      "provider": "Spring / Dave Syer",
+      "kind": "blog",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": "2026-02-25",
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "blog-boot4-25",
+      "title": "Modularizing Spring Boot",
+      "url": "https://spring.io/blog/2025/10/28/modularizing-spring-boot/",
+      "provider": "Spring Boot Team",
+      "kind": "blog",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": "2025-10-28",
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    },
+    {
+      "id": "academy-announcement",
+      "title": "Spring Academy Pro Content Now Free To Access",
+      "url": "https://spring.io/blog/2024/04/10/spring-academy-pro-content-now-free-to-access/",
+      "provider": "Spring / Michael Minella",
+      "kind": "blog",
+      "access": "free_reading",
+      "language": "en",
+      "edition": "rolling_checked_2026",
+      "publication_date": "2024-04-10",
+      "updated_date": null,
+      "verified_at": "2026-11-27",
+      "verification_note": "Public page content inspected; enrollment and execution were not tested.",
+      "rights_note": "Link and original catalog metadata only; publisher retains rights to source content."
+    }
+  ],
+  "courses": [
+    {
+      "id": "course-devjava",
+      "title": "Dev.java learning paths",
+      "provider": "Oracle / Dev.java",
+      "url": "https://dev.java/learn/",
+      "access": "free_public",
+      "edition": "Maintained; checked 2026",
+      "notes": "Free public Java reading paths; not a certificate program. Original publication dates vary.",
+      "java_specific": true,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-spring-guides",
+      "title": "Spring Getting Started Guides",
+      "provider": "Spring",
+      "url": "https://spring.io/guides/",
+      "access": "free_public",
+      "edition": "Maintained; checked 2026",
+      "notes": "Public step-by-step Java/Spring guides. This is a guide collection, not a single accredited course.",
+      "java_specific": true,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-microsoft",
+      "title": "Get started with Java on Azure",
+      "provider": "Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/training/paths/get-started-java-azure/",
+      "access": "free_reading_cloud_may_cost",
+      "edition": "Maintained; checked 2026",
+      "notes": "Seven modules. Reading is free; Azure subscription/resources may incur costs. Do not default to retired Azure Spring Apps examples.",
+      "java_specific": true,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-mit24",
+      "title": "6.102 Software Construction",
+      "provider": "MIT",
+      "url": "https://web.mit.edu/6.102/www/sp24/",
+      "access": "free_public",
+      "edition": "Spring 2024",
+      "notes": "Public readings and problem statements. Uses TypeScript, NOT Java; included only for transferable testing/specification/concurrency concepts. Tutors and grading may require MIT access.",
+      "java_specific": false,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-harvard",
+      "title": "CS50 Introduction to Databases with SQL",
+      "provider": "Harvard",
+      "url": "https://cs50.harvard.edu/sql/",
+      "access": "free_public",
+      "edition": "2024 entry redirects to maintained OCW",
+      "notes": "Public notes and problem sets; optional verified certificate has separate terms. SQL foundation, not a Java course.",
+      "java_specific": false,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-academy",
+      "title": "Spring Academy",
+      "provider": "Spring",
+      "url": "https://spring.academy/",
+      "access": "free_registration_announced_2024",
+      "edition": "Official announcement 2024-04-10",
+      "notes": "Official 2024 announcement removed Pro subscription for eligible registered email addresses. Current authenticated lab access was not tested; all required lessons have public guide alternatives.",
+      "java_specific": true,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-ibm",
+      "title": "IBM Java Developer Professional Certificate",
+      "provider": "IBM / Coursera",
+      "url": "https://www.coursera.org/professional-certificates/java-developer",
+      "access": "paid_or_limited_preview",
+      "edition": "Current catalog checked 2026; publication date not established",
+      "notes": "Curriculum reference only. Enroll for free is not evidence that full course, graded labs or certificate are free. No subscription/trial is required by this roadmap.",
+      "java_specific": true,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-amazon",
+      "title": "Amazon Junior Software Developer Professional Certificate",
+      "provider": "Amazon / Coursera",
+      "url": "https://www.coursera.org/professional-certificates/amazon-junior-software-developer",
+      "access": "paid_or_limited_preview",
+      "edition": "Current catalog checked 2026; publication date not established",
+      "notes": "Seven-course program, used to compare Java/OOP/data/engineering coverage. Full access and certificate pricing depend on Coursera enrollment terms.",
+      "java_specific": true,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-duke",
+      "title": "Java Programming and Software Engineering Fundamentals",
+      "provider": "Duke / Coursera",
+      "url": "https://www.coursera.org/specializations/java-programming",
+      "access": "paid_or_limited_preview",
+      "edition": "Current catalog checked 2026; original course is older",
+      "notes": "Curriculum reference, not represented as a 2024 launch or fully free program. Public documentation replaces paid lessons in the default plan.",
+      "java_specific": true,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    },
+    {
+      "id": "course-mit-java-legacy",
+      "title": "Software Construction in Java, 6.005.1x",
+      "provider": "MIT Open Learning Library",
+      "url": "https://openlearninglibrary.mit.edu/courses/course-v1%3AMITx%2B6.005.1x%2B3T2016/about",
+      "access": "legacy_optional",
+      "edition": "Site reports created 2021; older course identifier",
+      "notes": "Java-specific historical supplement outside 2024–2026. Not a required resource or a newly released course; enrollment availability was not tested.",
+      "java_specific": true,
+      "verified_at": "2026-11-27",
+      "rights_note": "Course title, link and original access notes only; no course content imported."
+    }
+  ],
+  "lessons": [
+    {
+      "id": "JB01",
+      "title": "Môi trường Java, IDE và Maven",
+      "phase": "Java nền tảng",
+      "prerequisite_ids": [],
+      "skill_ids": [
+        "java.tooling"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-devjava"
+      ],
+      "units": [
+        {
+          "id": "JB01.U1",
+          "title": "Cài JDK và chạy ứng dụng đầu tiên",
+          "reading_ids": [
+            "java-start"
+          ]
+        },
+        {
+          "id": "JB01.U2",
+          "title": "Debug ứng dụng Java bằng VS Code",
+          "reading_ids": [
+            "vscode"
+          ]
+        },
+        {
+          "id": "JB01.U3",
+          "title": "Build, test và đóng gói bằng Maven",
+          "reading_ids": [
+            "maven"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB01.P1",
+          "title": "Làm Maven in 5 Minutes",
+          "kind": "guided_source",
+          "resource_ids": [
+            "maven"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB01.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "java-start",
+            "vscode",
+            "maven"
+          ],
+          "instructions": "Tạo một ứng dụng CLI ghi nhận chi tiêu, build bằng Maven và lưu hướng dẫn chạy cùng các lệnh kiểm tra phiên bản.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB02",
+      "title": "Cú pháp, kiểu dữ liệu và xử lý giá trị",
+      "phase": "Java nền tảng",
+      "prerequisite_ids": [
+        "JB01"
+      ],
+      "skill_ids": [
+        "java.language.values"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-devjava"
+      ],
+      "units": [
+        {
+          "id": "JB02.U1",
+          "title": "Biến, điều kiện, vòng lặp và method",
+          "reading_ids": [
+            "java-basics"
+          ]
+        },
+        {
+          "id": "JB02.U2",
+          "title": "Chuỗi và giá trị số",
+          "reading_ids": [
+            "java-strings"
+          ]
+        },
+        {
+          "id": "JB02.U3",
+          "title": "Số tiền và quy tắc làm tròn",
+          "reading_ids": [
+            "java-money"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB02.P1",
+          "title": "Thử biểu thức với JShell",
+          "kind": "guided_source",
+          "resource_ids": [
+            "java-shell"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB02.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "java-basics",
+            "java-strings",
+            "java-money"
+          ],
+          "instructions": "Xử lý danh sách đơn hàng có dữ liệu rỗng, số lượng âm và số tiền thập phân; liệt kê kết quả mong đợi và giải thích quyết định validation.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB03",
+      "title": "OOP, interface và dữ liệu bất biến",
+      "phase": "Java nền tảng",
+      "prerequisite_ids": [
+        "JB02"
+      ],
+      "skill_ids": [
+        "java.oop",
+        "java.immutability"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-devjava"
+      ],
+      "units": [
+        {
+          "id": "JB03.U1",
+          "title": "Đối tượng và đóng gói",
+          "reading_ids": [
+            "java-classes"
+          ]
+        },
+        {
+          "id": "JB03.U2",
+          "title": "Interface và hợp đồng",
+          "reading_ids": [
+            "java-interfaces"
+          ]
+        },
+        {
+          "id": "JB03.U3",
+          "title": "Record và dữ liệu bất biến",
+          "reading_ids": [
+            "java-records"
+          ]
+        },
+        {
+          "id": "JB03.U4",
+          "title": "Kế thừa và lựa chọn composition",
+          "reading_ids": [
+            "java-inheritance"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB03.P1",
+          "title": "Thực hiện các ví dụ record",
+          "kind": "guided_source",
+          "resource_ids": [
+            "java-records"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB03.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "java-classes",
+            "java-interfaces",
+            "java-records",
+            "java-inheritance"
+          ],
+          "instructions": "Mô hình hóa giỏ hàng, tiền và phương thức vận chuyển; giải thích phần nào dùng interface, composition hoặc record và cách tránh lộ trạng thái có thể thay đổi.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB04",
+      "title": "Exception, thời gian và ranh giới dữ liệu",
+      "phase": "Java nền tảng",
+      "prerequisite_ids": [
+        "JB03"
+      ],
+      "skill_ids": [
+        "java.exceptions",
+        "java.datetime"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-devjava",
+        "course-mit24"
+      ],
+      "units": [
+        {
+          "id": "JB04.U1",
+          "title": "Xử lý và phân loại exception",
+          "reading_ids": [
+            "java-exceptions"
+          ]
+        },
+        {
+          "id": "JB04.U2",
+          "title": "Thời điểm, múi giờ và khoảng thời gian",
+          "reading_ids": [
+            "java-time"
+          ]
+        },
+        {
+          "id": "JB04.U3",
+          "title": "Hợp đồng, đầu vào không hợp lệ và kết quả đặc biệt",
+          "reading_ids": [
+            "mit-spec"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB04.P1",
+          "title": "Thực hiện ví dụ exception trong nguồn",
+          "kind": "guided_source",
+          "resource_ids": [
+            "java-exceptions"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB04.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "java-exceptions",
+            "java-time",
+            "mit-spec"
+          ],
+          "instructions": "Thiết kế nhập lịch hẹn có timezone: chỉ ra lỗi dữ liệu, lỗi hệ thống, xử lý thời điểm không hợp lệ và tài nguyên cần đóng khi thất bại.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB05",
+      "title": "Generics, Collections và equals/hashCode",
+      "phase": "Java nền tảng",
+      "prerequisite_ids": [
+        "JB03"
+      ],
+      "skill_ids": [
+        "java.generics",
+        "java.collections"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-devjava"
+      ],
+      "units": [
+        {
+          "id": "JB05.U1",
+          "title": "Kiểu tổng quát và wildcard",
+          "reading_ids": [
+            "java-generics"
+          ]
+        },
+        {
+          "id": "JB05.U2",
+          "title": "List, Set, Map và lựa chọn cấu trúc",
+          "reading_ids": [
+            "java-collections"
+          ]
+        },
+        {
+          "id": "JB05.U3",
+          "title": "Hợp đồng equals/hashCode",
+          "reading_ids": [
+            "java-object"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB05.P1",
+          "title": "Thử các ví dụ Collections",
+          "kind": "guided_source",
+          "resource_ids": [
+            "java-collections"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB05.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "java-generics",
+            "java-collections",
+            "java-object"
+          ],
+          "instructions": "Thiết kế danh mục sản phẩm không trùng ID và hàng đợi xử lý đơn; so sánh cấu trúc dữ liệu và kiểm tra trường hợp hai đối tượng bằng nhau nhưng khác identity.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB06",
+      "title": "Lambda, Stream và phân tích chi phí",
+      "phase": "Java nền tảng",
+      "prerequisite_ids": [
+        "JB05"
+      ],
+      "skill_ids": [
+        "java.streams",
+        "java.algorithms.complexity"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-devjava"
+      ],
+      "units": [
+        {
+          "id": "JB06.U1",
+          "title": "Functional interface và lambda",
+          "reading_ids": [
+            "java-lambda"
+          ]
+        },
+        {
+          "id": "JB06.U2",
+          "title": "Pipeline Stream và Collector",
+          "reading_ids": [
+            "java-streams"
+          ]
+        },
+        {
+          "id": "JB06.U3",
+          "title": "Chi phí thao tác trên Collections",
+          "reading_ids": [
+            "java-collections"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB06.P1",
+          "title": "Thực hiện ví dụ Stream và Collector",
+          "kind": "guided_source",
+          "resource_ids": [
+            "java-streams"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB06.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "java-lambda",
+            "java-streams",
+            "java-collections"
+          ],
+          "instructions": "Tổng hợp doanh thu theo khách hàng, xử lý đơn trùng và danh sách rỗng; giải thích chi phí thời gian/bộ nhớ và tác hại của side effect.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB07",
+      "title": "Đặc tả, bất biến và kiểm thử nền tảng",
+      "phase": "Java nền tảng",
+      "prerequisite_ids": [
+        "JB03"
+      ],
+      "skill_ids": [
+        "java.testing.design",
+        "java.design.contracts"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-mit24",
+        "course-devjava"
+      ],
+      "units": [
+        {
+          "id": "JB07.U1",
+          "title": "MIT 2024: partition và ranh giới kiểm thử",
+          "reading_ids": [
+            "mit-testing"
+          ]
+        },
+        {
+          "id": "JB07.U2",
+          "title": "MIT 2024: đặc tả hành vi",
+          "reading_ids": [
+            "mit-spec"
+          ]
+        },
+        {
+          "id": "JB07.U3",
+          "title": "JUnit: tổ chức kiểm thử Java",
+          "reading_ids": [
+            "junit"
+          ]
+        },
+        {
+          "id": "JB07.U4",
+          "title": "MIT 2024: bất biến biểu diễn",
+          "reading_ids": [
+            "mit-invariant"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB07.P1",
+          "title": "Đọc và tự trả lời câu hỏi công khai trong MIT Testing",
+          "kind": "public_reading_exercises",
+          "resource_ids": [
+            "mit-testing"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB07.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "mit-testing",
+            "mit-spec",
+            "junit",
+            "mit-invariant"
+          ],
+          "instructions": "Viết kế hoạch test cho hàm chuyển tiền hoặc tính phí, phân vùng đầu vào và nêu kết quả mong đợi; thực hiện test Java tại máy cá nhân nếu muốn.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB08",
+      "title": "Concurrency, virtual thread và JVM tools",
+      "phase": "Java nền tảng",
+      "prerequisite_ids": [
+        "JB04",
+        "JB07"
+      ],
+      "skill_ids": [
+        "java.concurrency",
+        "java.jvm"
+      ],
+      "optional": false,
+      "estimated_minutes": 300,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-devjava",
+        "course-mit24"
+      ],
+      "units": [
+        {
+          "id": "JB08.U1",
+          "title": "Executor, Future và đồng bộ",
+          "reading_ids": [
+            "java-concurrency"
+          ]
+        },
+        {
+          "id": "JB08.U2",
+          "title": "Virtual thread và giới hạn tài nguyên",
+          "reading_ids": [
+            "java-virtual"
+          ]
+        },
+        {
+          "id": "JB08.U3",
+          "title": "Công cụ JVM và thread dump",
+          "reading_ids": [
+            "java-tools"
+          ]
+        },
+        {
+          "id": "JB08.U4",
+          "title": "MIT 2024: race condition và mutual exclusion",
+          "reading_ids": [
+            "mit-locks"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB08.P1",
+          "title": "Thử các ví dụ virtual thread",
+          "kind": "guided_source",
+          "resource_ids": [
+            "java-virtual"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB08.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "java-concurrency",
+            "java-virtual",
+            "java-tools",
+            "mit-locks"
+          ],
+          "instructions": "Mô phỏng nhiều yêu cầu cập nhật một bộ đếm, so sánh sai lệch trước/sau đồng bộ; phân biệt giới hạn CPU với giới hạn kết nối database.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB09",
+      "title": "HTTP và hợp đồng REST API",
+      "phase": "Web và dữ liệu",
+      "prerequisite_ids": [
+        "JB02"
+      ],
+      "skill_ids": [
+        "backend.http",
+        "backend.api.design"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB09.U1",
+          "title": "Luồng request/response",
+          "reading_ids": [
+            "http"
+          ]
+        },
+        {
+          "id": "JB09.U2",
+          "title": "Method, tính an toàn và idempotency",
+          "reading_ids": [
+            "http-methods"
+          ]
+        },
+        {
+          "id": "JB09.U3",
+          "title": "Status code và hợp đồng lỗi",
+          "reading_ids": [
+            "http-status"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB09.P1",
+          "title": "Thử request bằng curl theo các ví dụ HTTP của MDN",
+          "kind": "guided_source",
+          "resource_ids": [
+            "http"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB09.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "http",
+            "http-methods",
+            "http-status"
+          ],
+          "instructions": "Soạn hợp đồng API quản lý đơn hàng: URL, method, status, pagination và lỗi; phân tích gửi lặp một yêu cầu tạo đơn.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB10",
+      "title": "SQL, truy vấn và quan hệ dữ liệu",
+      "phase": "Web và dữ liệu",
+      "prerequisite_ids": [
+        "JB02"
+      ],
+      "skill_ids": [
+        "backend.sql.query"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-harvard"
+      ],
+      "units": [
+        {
+          "id": "JB10.U1",
+          "title": "CS50: truy vấn và điều kiện",
+          "reading_ids": [
+            "sql-query"
+          ]
+        },
+        {
+          "id": "JB10.U2",
+          "title": "CS50: liên kết bảng và khóa",
+          "reading_ids": [
+            "sql-relations"
+          ]
+        },
+        {
+          "id": "JB10.U3",
+          "title": "PostgreSQL: thực hành SQL",
+          "reading_ids": [
+            "postgres"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB10.P1",
+          "title": "Làm CS50 SQL Problem Sets 0 và phần mở rộng ở bài đọc",
+          "kind": "official_assignment",
+          "resource_ids": [
+            "sql-query-pset"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB10.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "sql-query",
+            "sql-relations",
+            "postgres"
+          ],
+          "instructions": "Thiết kế truy vấn danh sách đơn theo khách hàng, bao gồm khách chưa có đơn và dữ liệu NULL; ghi kết quả mong đợi cho dữ liệu mẫu.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB11",
+      "title": "Thiết kế schema, index và tối ưu truy vấn",
+      "phase": "Web và dữ liệu",
+      "prerequisite_ids": [
+        "JB10"
+      ],
+      "skill_ids": [
+        "backend.sql.design",
+        "backend.sql.performance"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-harvard"
+      ],
+      "units": [
+        {
+          "id": "JB11.U1",
+          "title": "CS50: thiết kế schema và ràng buộc",
+          "reading_ids": [
+            "sql-design"
+          ]
+        },
+        {
+          "id": "JB11.U2",
+          "title": "CS50: index và tối ưu",
+          "reading_ids": [
+            "sql-index"
+          ]
+        },
+        {
+          "id": "JB11.U3",
+          "title": "CS50: bài tập quan hệ dữ liệu",
+          "reading_ids": [
+            "sql-relations-pset"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB11.P1",
+          "title": "Làm CS50 SQL Problem Set 5",
+          "kind": "official_assignment",
+          "resource_ids": [
+            "sql-index-pset"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB11.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "sql-design",
+            "sql-index",
+            "sql-relations-pset"
+          ],
+          "instructions": "Thiết kế schema đơn hàng có khóa và ràng buộc; đề xuất index cho hai truy vấn khác nhau, ghi execution plan và đánh đổi chi phí ghi.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB12",
+      "title": "Spring Core, Boot và cấu hình",
+      "phase": "Spring Backend",
+      "prerequisite_ids": [
+        "JB01",
+        "JB03",
+        "JB04"
+      ],
+      "skill_ids": [
+        "spring.core",
+        "spring.boot.configuration"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides",
+        "course-academy"
+      ],
+      "units": [
+        {
+          "id": "JB12.U1",
+          "title": "IoC, bean và dependency injection",
+          "reading_ids": [
+            "ioc"
+          ]
+        },
+        {
+          "id": "JB12.U2",
+          "title": "Spring Boot: cấu hình theo môi trường",
+          "reading_ids": [
+            "config"
+          ]
+        },
+        {
+          "id": "JB12.U3",
+          "title": "Blog Spring Boot 2024: cấu trúc và khả năng nền tảng",
+          "reading_ids": [
+            "blog-boot24"
+          ]
+        },
+        {
+          "id": "JB12.U4",
+          "title": "Blog 2025: module và starter khi chuyển Boot 4",
+          "reading_ids": [
+            "blog-boot4-25"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB12.P1",
+          "title": "Hoàn thành Building an Application with Spring Boot",
+          "kind": "guided_source",
+          "resource_ids": [
+            "boot-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB12.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "ioc",
+            "config",
+            "blog-boot24",
+            "blog-boot4-25"
+          ],
+          "instructions": "Tách Controller/Service/Repository cho ứng dụng quản lý sách; giải thích constructor injection và cách cấu hình local/test mà không ghi secret vào mã.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB13",
+      "title": "REST Controller, validation và xử lý lỗi",
+      "phase": "Spring Backend",
+      "prerequisite_ids": [
+        "JB09",
+        "JB12"
+      ],
+      "skill_ids": [
+        "spring.mvc",
+        "backend.api.validation"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB13.U1",
+          "title": "Tạo REST endpoint",
+          "reading_ids": [
+            "rest-lab"
+          ]
+        },
+        {
+          "id": "JB13.U2",
+          "title": "Validation đầu vào",
+          "reading_ids": [
+            "validation-lab"
+          ]
+        },
+        {
+          "id": "JB13.U3",
+          "title": "Thiết kế tài nguyên và lỗi REST",
+          "reading_ids": [
+            "rest-tutorial"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB13.P1",
+          "title": "Hoàn thành Building REST services with Spring",
+          "kind": "guided_source",
+          "resource_ids": [
+            "rest-tutorial"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB13.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "rest-lab",
+            "validation-lab",
+            "rest-tutorial"
+          ],
+          "instructions": "Bổ sung hợp đồng lỗi cho tạo/sửa sách, phân biệt không tìm thấy, dữ liệu sai và xung đột; đề xuất kiểm tra quyền sở hữu và phân trang.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB14",
+      "title": "JDBC, JPA và truy vấn repository",
+      "phase": "Spring Backend",
+      "prerequisite_ids": [
+        "JB05",
+        "JB10",
+        "JB12"
+      ],
+      "skill_ids": [
+        "spring.persistence.jpa",
+        "backend.jdbc"
+      ],
+      "optional": false,
+      "estimated_minutes": 300,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB14.U1",
+          "title": "JDBC và tài nguyên kết nối",
+          "reading_ids": [
+            "jdbc"
+          ]
+        },
+        {
+          "id": "JB14.U2",
+          "title": "Entity, repository và lưu trữ JPA",
+          "reading_ids": [
+            "jpa-lab"
+          ]
+        },
+        {
+          "id": "JB14.U3",
+          "title": "Query methods và projection",
+          "reading_ids": [
+            "jpa-query"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB14.P1",
+          "title": "Hoàn thành Accessing Data with JPA",
+          "kind": "guided_source",
+          "resource_ids": [
+            "jpa-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB14.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "jdbc",
+            "jpa-lab",
+            "jpa-query"
+          ],
+          "instructions": "Mô hình hóa khách hàng/đơn hàng, phân biệt DTO và entity; ghi những truy vấn cần chạy và cách nhận diện tải dữ liệu thừa trước khi tối ưu.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB15",
+      "title": "Transaction, isolation và tranh chấp dữ liệu",
+      "phase": "Spring Backend",
+      "prerequisite_ids": [
+        "JB11",
+        "JB14"
+      ],
+      "skill_ids": [
+        "backend.sql.transactions",
+        "spring.transactions"
+      ],
+      "optional": false,
+      "estimated_minutes": 300,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB15.U1",
+          "title": "Transaction và rollback trong Spring",
+          "reading_ids": [
+            "tx-lab"
+          ]
+        },
+        {
+          "id": "JB15.U2",
+          "title": "Isolation và hành vi đọc/ghi",
+          "reading_ids": [
+            "isolation"
+          ]
+        },
+        {
+          "id": "JB15.U3",
+          "title": "Khóa, deadlock và thứ tự truy cập",
+          "reading_ids": [
+            "db-locks"
+          ]
+        },
+        {
+          "id": "JB15.U4",
+          "title": "Proxy và @Transactional",
+          "reading_ids": [
+            "transaction"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB15.P1",
+          "title": "Hoàn thành Managing Transactions",
+          "kind": "guided_source",
+          "resource_ids": [
+            "tx-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB15.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "tx-lab",
+            "isolation",
+            "db-locks",
+            "transaction"
+          ],
+          "instructions": "Phân tích hai yêu cầu mua sản phẩm cuối cùng: giữ bất biến tồn kho, rollback khi tạo đơn lỗi và xác minh bằng hai session database.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB16",
+      "title": "Spring Security, session và JWT",
+      "phase": "Spring Backend",
+      "prerequisite_ids": [
+        "JB13"
+      ],
+      "skill_ids": [
+        "spring.security",
+        "backend.security.authorization"
+      ],
+      "optional": false,
+      "estimated_minutes": 300,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB16.U1",
+          "title": "Filter chain và kiến trúc bảo mật",
+          "reading_ids": [
+            "security"
+          ]
+        },
+        {
+          "id": "JB16.U2",
+          "title": "Resource server kiểm tra JWT",
+          "reading_ids": [
+            "jwt"
+          ]
+        },
+        {
+          "id": "JB16.U3",
+          "title": "Checklist bảo mật REST",
+          "reading_ids": [
+            "owasp"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB16.P1",
+          "title": "Hoàn thành Securing a Web Application",
+          "kind": "guided_source",
+          "resource_ids": [
+            "security-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB16.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "security",
+            "jwt",
+            "owasp"
+          ],
+          "instructions": "Thiết kế quyền xem/sửa đơn hàng: chủ sở hữu, quản trị viên, token hết hạn, ID đoán được; liệt kê ca kiểm tra quyền ở tầng tài nguyên.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB17",
+      "title": "Kiểm thử web, database và tích hợp",
+      "phase": "Spring Backend",
+      "prerequisite_ids": [
+        "JB07",
+        "JB13",
+        "JB14"
+      ],
+      "skill_ids": [
+        "spring.testing.integration"
+      ],
+      "optional": false,
+      "estimated_minutes": 300,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB17.U1",
+          "title": "Spring Boot test support",
+          "reading_ids": [
+            "boot-test"
+          ]
+        },
+        {
+          "id": "JB17.U2",
+          "title": "MockMvc và kiểm thử web layer",
+          "reading_ids": [
+            "testing-lab"
+          ]
+        },
+        {
+          "id": "JB17.U3",
+          "title": "Testcontainers: database tạm cho test",
+          "reading_ids": [
+            "testcontainers"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB17.P1",
+          "title": "Hoàn thành Testing the Web Layer",
+          "kind": "guided_source",
+          "resource_ids": [
+            "testing-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB17.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "boot-test",
+            "testing-lab",
+            "testcontainers"
+          ],
+          "instructions": "Xây ma trận test cho API đơn hàng: thành công, dữ liệu sai, truy cập chéo chủ sở hữu và rollback; nêu chỗ nào dùng mock, chỗ nào cần database thật.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB18",
+      "title": "Gọi dịch vụ ngoài và phục hồi lỗi",
+      "phase": "Vận hành và mở rộng",
+      "prerequisite_ids": [
+        "JB13",
+        "JB17"
+      ],
+      "skill_ids": [
+        "backend.integration.resilience"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB18.U1",
+          "title": "RestClient và WebClient",
+          "reading_ids": [
+            "rest-client"
+          ]
+        },
+        {
+          "id": "JB18.U2",
+          "title": "Circuit breaker và giới hạn lỗi lan truyền",
+          "reading_ids": [
+            "breaker-lab"
+          ]
+        },
+        {
+          "id": "JB18.U3",
+          "title": "Blog Boot 3.4: HTTP client và cấu hình",
+          "reading_ids": [
+            "blog-boot34"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB18.P1",
+          "title": "Hoàn thành Spring Cloud Circuit Breaker Guide",
+          "kind": "guided_source",
+          "resource_ids": [
+            "breaker-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB18.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "rest-client",
+            "breaker-lab",
+            "blog-boot34"
+          ],
+          "instructions": "Mô tả gọi dịch vụ vận chuyển bị timeout: giới hạn thời gian, retry có điều kiện, idempotency và cách giữ kết quả chưa rõ; không gọi API trả phí.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB19",
+      "title": "Cache, Redis và tính nhất quán",
+      "phase": "Vận hành và mở rộng",
+      "prerequisite_ids": [
+        "JB14",
+        "JB15"
+      ],
+      "skill_ids": [
+        "backend.caching"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB19.U1",
+          "title": "Spring cache abstraction",
+          "reading_ids": [
+            "cache"
+          ]
+        },
+        {
+          "id": "JB19.U2",
+          "title": "Ví dụ cache chính thức của Spring",
+          "reading_ids": [
+            "cache-lab"
+          ]
+        },
+        {
+          "id": "JB19.U3",
+          "title": "Redis data types",
+          "reading_ids": [
+            "redis"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB19.P1",
+          "title": "Hoàn thành ví dụ gs-caching trong repo chính thức",
+          "kind": "guided_source",
+          "resource_ids": [
+            "cache-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB19.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "cache",
+            "cache-lab",
+            "redis"
+          ],
+          "instructions": "Đề xuất cache danh mục sách: key, TTL, invalidation sau cập nhật và xử lý dữ liệu cũ; phân biệt cache cục bộ với cache chia sẻ.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB20",
+      "title": "Messaging, scheduler và batch",
+      "phase": "Vận hành và mở rộng",
+      "prerequisite_ids": [
+        "JB15",
+        "JB18"
+      ],
+      "skill_ids": [
+        "backend.messaging",
+        "backend.batch"
+      ],
+      "optional": false,
+      "estimated_minutes": 360,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB20.U1",
+          "title": "Publisher/consumer với RabbitMQ",
+          "reading_ids": [
+            "mq-lab"
+          ]
+        },
+        {
+          "id": "JB20.U2",
+          "title": "Lập lịch tác vụ",
+          "reading_ids": [
+            "schedule-lab"
+          ]
+        },
+        {
+          "id": "JB20.U3",
+          "title": "Batch import CSV vào database",
+          "reading_ids": [
+            "batch-lab"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB20.P1",
+          "title": "Hoàn thành Messaging with RabbitMQ",
+          "kind": "guided_source",
+          "resource_ids": [
+            "mq-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB20.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "mq-lab",
+            "schedule-lab",
+            "batch-lab"
+          ],
+          "instructions": "Thiết kế gửi thông báo sau tạo đơn: message trùng, consumer lỗi, retry và dead-letter; giải thích cách tránh ghi nhận cùng sự kiện hai lần.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB21",
+      "title": "Docker, build và CI cho Java",
+      "phase": "Vận hành và mở rộng",
+      "prerequisite_ids": [
+        "JB17"
+      ],
+      "skill_ids": [
+        "backend.delivery.containers",
+        "backend.delivery.ci"
+      ],
+      "optional": false,
+      "estimated_minutes": 240,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB21.U1",
+          "title": "Container: tài liệu Docker 2026",
+          "reading_ids": [
+            "docker"
+          ]
+        },
+        {
+          "id": "JB21.U2",
+          "title": "Đóng gói Spring Boot bằng Docker",
+          "reading_ids": [
+            "docker-lab"
+          ]
+        },
+        {
+          "id": "JB21.U3",
+          "title": "Build/test Java bằng Maven trong CI",
+          "reading_ids": [
+            "ci"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB21.P1",
+          "title": "Hoàn thành Spring Boot with Docker trên máy local",
+          "kind": "guided_source",
+          "resource_ids": [
+            "docker-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB21.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "docker",
+            "docker-lab",
+            "ci"
+          ],
+          "instructions": "Chuẩn bị hướng dẫn build/test và restart ứng dụng cùng database có volume; phân biệt image, container, secret và dữ liệu cần giữ. CI cloud là tùy chọn, không bắt buộc.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB22",
+      "title": "Quan sát hệ thống và kiểm tra hiệu năng",
+      "phase": "Vận hành và mở rộng",
+      "prerequisite_ids": [
+        "JB18",
+        "JB21"
+      ],
+      "skill_ids": [
+        "backend.observability",
+        "java.jvm.performance"
+      ],
+      "optional": false,
+      "estimated_minutes": 300,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB22.U1",
+          "title": "Actuator và health endpoint",
+          "reading_ids": [
+            "actuator-lab"
+          ]
+        },
+        {
+          "id": "JB22.U2",
+          "title": "Logging, metrics và traces",
+          "reading_ids": [
+            "observability"
+          ]
+        },
+        {
+          "id": "JB22.U3",
+          "title": "Java OpenTelemetry example",
+          "reading_ids": [
+            "otel"
+          ]
+        },
+        {
+          "id": "JB22.U4",
+          "title": "Blog 2026: Optimizations in Spring MVC",
+          "reading_ids": [
+            "blog-mvc26"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB22.P1",
+          "title": "Hoàn thành Actuator service guide",
+          "kind": "guided_source",
+          "resource_ids": [
+            "actuator-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB22.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "actuator-lab",
+            "observability",
+            "otel",
+            "blog-mvc26"
+          ],
+          "instructions": "Theo dõi một API chậm: ghi request ID, latency, số truy vấn và lỗi; dùng JFR hoặc công cụ local, không kết luận tối ưu chỉ từ một lần đo.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB23",
+      "title": "Capstone Java Backend và ôn phỏng vấn",
+      "phase": "Vận hành và mở rộng",
+      "prerequisite_ids": [
+        "JB15",
+        "JB16",
+        "JB17",
+        "JB21"
+      ],
+      "skill_ids": [
+        "java.backend.capstone",
+        "java.design.contracts"
+      ],
+      "optional": false,
+      "estimated_minutes": 600,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-spring-guides",
+        "course-mit24",
+        "course-harvard"
+      ],
+      "units": [
+        {
+          "id": "JB23.U1",
+          "title": "Ứng dụng tham chiếu Spring Petclinic",
+          "reading_ids": [
+            "petclinic"
+          ]
+        },
+        {
+          "id": "JB23.U2",
+          "title": "MIT 2024: abstract data types và ranh giới module",
+          "reading_ids": [
+            "mit-adt"
+          ]
+        },
+        {
+          "id": "JB23.U3",
+          "title": "CS50: yêu cầu dự án dữ liệu",
+          "reading_ids": [
+            "sql-final"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB23.P1",
+          "title": "Chạy Spring Petclinic local theo README",
+          "kind": "guided_source",
+          "resource_ids": [
+            "petclinic"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB23.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "petclinic",
+            "mit-adt",
+            "sql-final"
+          ],
+          "instructions": "Xây hoặc mô tả dịch vụ đặt lịch riêng: API, schema, transaction, quyền truy cập, test và deployment. Trả lời bằng lời các đánh đổi; dự án cá nhân không được chấm tự động trong app.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    },
+    {
+      "id": "JB24",
+      "title": "Tùy chọn: cloud, microservices và reactive",
+      "phase": "Nâng cao tùy chọn",
+      "prerequisite_ids": [
+        "JB20",
+        "JB22",
+        "JB23"
+      ],
+      "skill_ids": [
+        "backend.cloud",
+        "backend.distributed",
+        "spring.reactive"
+      ],
+      "optional": true,
+      "estimated_minutes": 360,
+      "duration_basis": "project_estimate_including_reading_and_practice",
+      "review_status": "curated_single_researcher",
+      "course_ids": [
+        "course-microsoft",
+        "course-spring-guides"
+      ],
+      "units": [
+        {
+          "id": "JB24.U1",
+          "title": "Microsoft Learn: Java trên Azure Container Apps",
+          "reading_ids": [
+            "azure"
+          ]
+        },
+        {
+          "id": "JB24.U2",
+          "title": "Service discovery: ví dụ hai dịch vụ",
+          "reading_ids": [
+            "discovery-lab"
+          ]
+        },
+        {
+          "id": "JB24.U3",
+          "title": "Spring WebFlux và mô hình reactive",
+          "reading_ids": [
+            "reactive"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "id": "JB24.P1",
+          "title": "Thực hiện service discovery local, không cần cloud",
+          "kind": "guided_source",
+          "resource_ids": [
+            "discovery-lab"
+          ],
+          "instructions": "Mở nguồn và thực hiện ví dụ/lab được liên kết trên máy cá nhân; ghi lại kết quả và những điểm chưa rõ.",
+          "environment": "local",
+          "cost_note": "Không cần đăng ký dịch vụ cloud trả phí; phần mềm cần tuân theo điều khoản của nhà cung cấp."
+        },
+        {
+          "id": "JB24.P2",
+          "title": "Vận dụng vào tình huống backend",
+          "kind": "project_original",
+          "resource_ids": [
+            "azure",
+            "discovery-lab",
+            "reactive"
+          ],
+          "instructions": "So sánh modular monolith với tách dịch vụ cho bài capstone; nêu chi phí mạng, dữ liệu và vận hành. Chỉ đọc phần Azure; nếu tự triển khai cloud phải kiểm tra chi phí trước.",
+          "environment": "local",
+          "cost_note": "Bài vận dụng do nhóm biên soạn dựa trên các nguồn đã dẫn, không phải đề gốc của trường/nhà cung cấp."
+        }
+      ],
+      "completion_note": "Tự đánh dấu đã học; không phải chứng nhận thành thạo hoặc điểm đánh giá AI."
+    }
+  ],
+  "tracks": {
+    "foundation": [
+      "JB01",
+      "JB02",
+      "JB03",
+      "JB04",
+      "JB05",
+      "JB06",
+      "JB07",
+      "JB08",
+      "JB09",
+      "JB10",
+      "JB11"
+    ],
+    "backend": [
+      "JB01",
+      "JB02",
+      "JB03",
+      "JB04",
+      "JB05",
+      "JB06",
+      "JB07",
+      "JB08",
+      "JB09",
+      "JB10",
+      "JB11",
+      "JB12",
+      "JB13",
+      "JB14",
+      "JB15",
+      "JB16",
+      "JB17",
+      "JB18",
+      "JB19",
+      "JB20",
+      "JB21",
+      "JB22",
+      "JB23"
+    ],
+    "advanced": [
+      "JB01",
+      "JB02",
+      "JB03",
+      "JB04",
+      "JB05",
+      "JB06",
+      "JB07",
+      "JB08",
+      "JB09",
+      "JB10",
+      "JB11",
+      "JB12",
+      "JB13",
+      "JB14",
+      "JB15",
+      "JB16",
+      "JB17",
+      "JB18",
+      "JB19",
+      "JB20",
+      "JB21",
+      "JB22",
+      "JB23",
+      "JB24"
+    ]
+  },
+  "profile_bridges": [
+    {
+      "source_skill_id": "skill.backend.data_consistency",
+      "target_lesson_ids": [
+        "JB15"
+      ],
+      "note": "Transferable database gap only; does not prove Java/Spring mastery."
+    },
+    {
+      "source_skill_id": "skill.algorithms.correctness_and_complexity",
+      "target_lesson_ids": [
+        "JB06"
+      ],
+      "note": "Transferable complexity reasoning only; no inferred knowledge of Java syntax."
+    }
+  ]
+}

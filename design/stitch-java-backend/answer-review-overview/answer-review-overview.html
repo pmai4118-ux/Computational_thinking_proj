@@ -1,0 +1,708 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "on-error": "#ffffff",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-high": "#e8e7ec",
+        "secondary-fixed": "#e9ddff",
+        "on-surface-variant": "#4a4455",
+        "on-secondary-fixed": "#23005c",
+        "on-tertiary-fixed": "#1b1735",
+        "on-primary": "#ffffff",
+        "surface": "#faf9fe",
+        "on-secondary-container": "#fffbff",
+        "tertiary-container": "#686385",
+        "surface-container": "#eeedf2",
+        "on-primary-container": "#ede0ff",
+        "primary-container": "#7c3aed",
+        "inverse-primary": "#d2bbff",
+        "secondary": "#6b38d4",
+        "surface-dim": "#dad9de",
+        "on-tertiary": "#ffffff",
+        "tertiary-fixed-dim": "#c8c2e9",
+        "tertiary-fixed": "#e5deff",
+        "error-container": "#ffdad6",
+        "tertiary": "#4f4b6c",
+        "background": "#faf9fe",
+        "outline-variant": "#ccc3d8",
+        "primary-fixed-dim": "#d2bbff",
+        "inverse-surface": "#2f3034",
+        "outline": "#7b7487",
+        "surface-variant": "#e3e2e7",
+        "surface-container-highest": "#e3e2e7",
+        "on-background": "#1a1c1f",
+        "on-secondary": "#ffffff",
+        "surface-tint": "#732ee4",
+        "inverse-on-surface": "#f1f0f5",
+        "surface-container-low": "#f4f3f8",
+        "on-primary-fixed-variant": "#5a00c6",
+        "on-tertiary-container": "#e9e2ff",
+        "on-tertiary-fixed-variant": "#474363",
+        "on-secondary-fixed-variant": "#5516be",
+        "secondary-container": "#8455ef",
+        "on-primary-fixed": "#25005a",
+        "secondary-fixed-dim": "#d0bcff",
+        "primary": "#630ed4",
+        "on-surface": "#1a1c1f",
+        "on-error-container": "#93000a",
+        "error": "#ba1a1a",
+        "primary-fixed": "#eaddff",
+        "surface-bright": "#faf9fe"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "spacing": {
+        "space-xl": "2.5rem",
+        "gutter-mobile": "1rem",
+        "space-md": "1rem",
+        "margin-tablet": "2rem",
+        "margin-mobile": "1.25rem",
+        "space-sm": "0.5rem",
+        "space-lg": "1.5rem",
+        "space-xs": "0.25rem",
+        "gutter": "1.5rem",
+        "margin": "3rem"
+      },
+      "fontFamily": {
+        "headline-md": ["Plus Jakarta Sans"],
+        "headline-lg": ["Plus Jakarta Sans"],
+        "headline-sm": ["Plus Jakarta Sans"],
+        "display-hero": ["Plus Jakarta Sans"],
+        "headline-lg-mobile": ["Plus Jakarta Sans"],
+        "title-md": ["Plus Jakarta Sans"],
+        "body-md": ["Plus Jakarta Sans"],
+        "label-md": ["Space Grotesk"],
+        "body-sm": ["Plus Jakarta Sans"],
+        "display-hero-mobile": ["Plus Jakarta Sans"],
+        "label-sm": ["Space Grotesk"],
+        "body-lg": ["Plus Jakarta Sans"]
+      },
+      "fontSize": {
+        "headline-md": ["26px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+        "headline-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.025em", "fontWeight": "700"}],
+        "headline-sm": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+        "display-hero": ["56px", {"lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "800"}],
+        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+        "title-md": ["17px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+        "body-md": ["15px", {"lineHeight": "22px", "fontWeight": "400"}],
+        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600"}],
+        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+        "display-hero-mobile": ["38px", {"lineHeight": "46px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+        "label-sm": ["10px", {"lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "700"}],
+        "body-lg": ["17px", {"lineHeight": "26px", "fontWeight": "400"}]
+      }
+    },
+  }
+}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(124,58,237,0.04)]"><div class="h-20 max-w-7xl mx-auto px-margin-mobile md:px-margin-tablet lg:px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg"><a class="flex flex-col group" data-path="trang-chu" href="#"><div class="flex items-center tracking-tight font-headline-sm text-headline-sm text-on-surface"><span class="group-hover:text-primary transition-colors">interview</span><span class="text-primary-container font-extrabold">US</span></div><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Luyện phỏng vấn kỹ thuật</span></a></div><nav class="hidden lg:flex items-center p-space-xs rounded-full bg-surface-container-low/70 backdrop-blur-md"><a class="px-space-md py-space-xs rounded-full font-title-md text-title-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="trang-chu" href="#">Trang chủ</a><a class="px-space-md py-space-xs rounded-full font-title-md text-title-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="luyen-cau-hoi" href="#">Luyện câu hỏi</a><a class="px-space-md py-space-xs rounded-full font-title-md text-title-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="phong-van-ao" href="#">Phỏng vấn ảo</a><a class="px-space-md py-space-xs rounded-full font-title-md text-title-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="lo-trinh" href="#">Lộ trình</a><a class="px-space-md py-space-xs rounded-full font-title-md text-title-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="tong-quan" href="#">Tổng quan</a></nav><div class="flex items-center gap-space-sm"><div class="flex items-center p-space-xs rounded-full bg-surface-container-low"><button aria-label="Chế độ sáng" class="px-space-sm py-space-xs rounded-full bg-surface-container-lowest text-primary shadow-[0_2px_8px_rgba(124,58,237,0.08)] flex items-center gap-space-xs font-label-md text-label-md" type="button"><span class="material-symbols-outlined text-[16px]">light_mode</span><span class="hidden sm:inline">Sáng</span></button><button aria-label="Chế độ tối" class="px-space-sm py-space-xs rounded-full text-on-surface-variant hover:text-on-surface flex items-center gap-space-xs font-label-md text-label-md transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">dark_mode</span><span class="hidden sm:inline">Tối</span></button></div><button aria-label="Thông báo" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all relative" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary-container ring-2 ring-surface"></span></button><div class="flex items-center gap-space-sm pl-space-xs"><div class="hidden sm:flex flex-col text-right"><span class="font-title-md text-title-md text-on-surface leading-tight">An Nguyễn</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Intern Fresher</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-140px)]" style="background-image: radial-gradient(circle at 10% 15%, rgba(124, 58, 237, 0.08) 0%, transparent 45%), radial-gradient(circle at 85% 35%, rgba(168, 85, 247, 0.09) 0%, transparent 50%), radial-gradient(circle at 50% 85%, rgba(99, 102, 241, 0.06) 0%, transparent 45%);"><div class="flex flex-col w-full">
+<!-- Dynamic Atmospheric Glow Orbs -->
+<div class="relative w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pb-20 pt-6">
+<div class="pointer-events-none absolute top-10 left-1/4 -z-10 h-96 w-96 rounded-full bg-primary-container/10 blur-[130px]" style="background: radial-gradient(circle, rgba(139, 92, 246, 0.22) 0%, rgba(192, 132, 252, 0.12) 50%, transparent 75%); filter: blur(90px);"></div>
+<div class="pointer-events-none absolute top-64 right-10 -z-10 h-80 w-80 rounded-full bg-secondary-fixed/50 blur-[110px]" style="background: radial-gradient(circle, rgba(236, 72, 153, 0.14) 0%, rgba(147, 51, 234, 0.15) 50%, transparent 75%); filter: blur(85px);"></div>
+<!-- CONTAINER CHÍNH THEO KHUNG MẪU RỘNG RÃI -->
+<div class="rounded-2xl border border-outline-variant/50 bg-surface-container-lowest/90 backdrop-blur-2xl shadow-[0_16px_48px_-8px_rgba(124,58,237,0.08)] p-6 md:p-8 lg:p-10 space-y-8" style="background: rgba(255, 255, 255, 0.82); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: rgba(124, 58, 237, 0.1) 0px 20px 50px -10px, rgba(0, 0, 0, 0.04) 0px 8px 24px -4px, rgba(255, 255, 255, 0.9) 0px 1px 1px inset;">
+<!-- 1. HEADER TRANG / TIÊU ĐỀ & ACTIONS -->
+<div class="rounded-xl border border-outline-variant/40 bg-surface-container-lowest/70 p-6 md:p-8 shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+<div class="space-y-1">
+<span class="text-sm font-semibold text-primary tracking-wide block uppercase font-label-md">Kết quả một câu</span>
+<h1 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-on-surface tracking-tight">Đối chiếu câu trả lời theo tiêu chí</h1>
+</div>
+<div class="flex items-center gap-3 shrink-0 self-start">
+<button class="px-5 py-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container text-on-surface font-semibold text-sm transition-all shadow-sm flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">draw</span>
+  Vẽ câu hỏi
+</button>
+<button class="px-5 py-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest hover:bg-surface-container text-on-surface font-semibold text-sm transition-all shadow-sm flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">analytics</span>
+  Xem tổng kết phiên
+</button>
+</div>
+</div>
+<p class="mt-4 text-sm md:text-base text-on-surface-variant leading-relaxed max-w-4xl">
+  Chọn một tiêu chí để xem đúng đoạn trích trong bài đã gửi. "Chưa đủ bằng chứng" không được tính thành 0 điểm.
+</p>
+</div>
+<!-- 2. THANH CHUYỂN TAB CHÍNH (NAVIGATION TABS) -->
+<div class="p-1.5 rounded-2xl bg-surface-container-low/80 border border-outline-variant/40 backdrop-blur-xl flex flex-col sm:flex-row items-center gap-2 shadow-inner">
+<button class="w-full sm:w-1/2 py-3 px-5 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all duration-200 bg-primary-container text-on-primary shadow-[0_4px_16px_rgba(124,58,237,0.35)]" id="nav-tab-1" onclick="switchMainTab(1)" type="button">
+<span class="material-symbols-outlined text-[20px]">assessment</span>
+<span>Tổng quan kết quả &amp; Rubric</span>
+<span class="ml-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-white/20 text-white">3 tiêu chí</span>
+</button>
+<button class="w-full sm:w-1/2 py-3 px-5 rounded-xl font-semibold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/60" id="nav-tab-2" onclick="switchMainTab(2)" type="button">
+<span class="material-symbols-outlined text-[20px]">rate_review</span>
+<span>Bài trả lời đã lưu &amp; Nhận xét chi tiết</span>
+<span class="ml-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant">4 đoạn trích</span>
+</button>
+</div>
+<!-- TAB 1 CONTENT: TỔNG QUAN KẾT QUẢ & RUBRIC -->
+<div class="space-y-8" id="tab-content-1">
+<!-- PHÍA TRÊN: 2 KHUNG SONG SONG (Grid 2 cột cân bằng 50/50) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+<!-- CỘT TRÁI: KHUNG ĐIỂM & ĐÁNH GIÁ CHUNG (Scorecard 6 cột) -->
+<div class="lg:col-span-6 rounded-2xl border border-outline-variant/50 bg-surface-container-lowest p-6 md:p-8 shadow-sm flex flex-col justify-between" style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: rgba(124, 58, 237, 0.08) 0px 12px 32px -8px;">
+<div>
+<div class="flex items-center justify-between pb-4 border-b border-outline-variant/30">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary text-[24px]">grade</span>
+<h2 class="text-lg md:text-xl font-bold text-on-surface tracking-tight">Điểm &amp; Đánh giá chung</h2>
+</div>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-red-300 bg-red-50 text-xs font-bold text-red-600 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-red-600"></span> Chưa đạt
+          </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center my-6">
+<!-- Radial / Điểm tròn -->
+<div class="sm:col-span-5 flex flex-col items-center justify-center p-4 rounded-2xl bg-surface-container-low/60 border border-outline-variant/40">
+<div class="relative w-28 h-28 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+<!-- Background Circle -->
+<path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<!-- Value Circle (0 / 6 -> 0%) -->
+<path class="text-red-500" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="16.7, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<div class="absolute flex flex-col items-center">
+<span class="text-3xl font-extrabold text-on-surface tracking-tight">1<span class="text-base text-on-surface-variant font-medium">/6</span></span>
+<span class="text-[10px] uppercase font-bold tracking-wider text-red-600 font-label-sm">Điểm câu</span>
+</div>
+</div>
+<span class="mt-3 text-xs font-bold text-on-surface-variant">Tỷ lệ đạt: 17%</span>
+</div>
+<!-- Các thanh tiến độ kỹ năng -->
+<div class="sm:col-span-7 space-y-3.5">
+<div>
+<div class="flex justify-between text-xs font-semibold mb-1">
+<span class="text-on-surface">Độ chính xác logic phạm vi</span>
+<span class="text-red-600 font-bold">50%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-red-500 rounded-full" style="width: 50%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs font-semibold mb-1">
+<span class="text-on-surface">Cố định giá trị biến (Freeze)</span>
+<span class="text-red-600 font-bold">0%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-red-500 rounded-full" style="width: 0%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs font-semibold mb-1">
+<span class="text-on-surface">Tính độc lập kiểm thử biến ngoài</span>
+<span class="text-red-600 font-bold">0%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-high overflow-hidden">
+<div class="h-full bg-red-500 rounded-full" style="width: 0%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Us-Bot Assessor Callout -->
+<div class="rounded-xl border border-primary/20 bg-primary-fixed/20 p-4 flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">smart_toy</span>
+</div>
+<div class="text-xs md:text-sm text-on-surface leading-relaxed">
+<span class="font-bold text-primary">Us-Bot Assessor:</span> Câu trả lời thể hiện việc chưa nắm vững khái niệm Python Late Binding trong Closure. Thí sinh cần phân biệt rõ giữa việc lưu tham chiếu tên biến và việc đóng băng giá trị tại thời điểm tạo lambda.
+        </div>
+</div>
+</div>
+<!-- CỘT PHẢI: KHUNG TIÊU CHÍ RUBRIC ĐÁNH GIÁ (6 cột) -->
+<div class="lg:col-span-6 rounded-2xl border border-outline-variant/50 bg-surface-container-lowest p-6 md:p-8 shadow-sm space-y-4" style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: rgba(124, 58, 237, 0.08) 0px 12px 32px -8px;">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary text-[24px]">checklist</span>
+<h2 class="text-lg md:text-xl font-bold text-on-surface tracking-tight">Tiêu chí Rubric đánh giá</h2>
+</div>
+<span class="text-xs font-bold px-3 py-1 rounded-full bg-primary-fixed/30 text-primary border border-primary/20">3 tiêu chí</span>
+</div>
+<div class="space-y-3" id="rubric-cards-container">
+<!-- Rubric Card 1 (Active) -->
+<div class="rubric-card rounded-xl border-2 border-primary bg-primary-fixed/25 p-4 md:p-4.5 cursor-pointer transition-all shadow-sm" id="rubric-item-1" onclick="selectRubric(1)" style="background: linear-gradient(135deg, rgba(243, 232, 255, 0.85) 0%, rgba(255, 255, 255, 0.95) 100%);">
+<div class="flex items-start justify-between gap-3">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-xs font-bold text-primary uppercase font-mono">Tiêu chí 1</span>
+<span class="text-[11px] px-2 py-0.5 rounded bg-primary/10 text-primary font-semibold">Đang xem</span>
+</div>
+<h3 class="text-sm md:text-base font-bold text-on-surface leading-snug">Dự đoán kết quả và giải thích cơ chế late binding của biến tự do</h3>
+</div>
+<span class="shrink-0 px-2.5 py-1 rounded-full border border-red-400 bg-red-50 text-red-600 text-xs font-bold">1/2 Đạt</span>
+</div>
+<div class="mt-2.5 flex items-center justify-between text-xs text-on-surface-variant font-medium">
+<span>Điểm tiêu chí: <strong class="text-red-600">1 / 2</strong></span>
+<span class="text-primary font-semibold flex items-center gap-1 text-[11px]">Click xem căn cứ bên dưới <span class="material-symbols-outlined text-[14px]">arrow_downward</span></span>
+</div>
+</div>
+<!-- Rubric Card 2 -->
+<div class="rubric-card rounded-xl border border-outline-variant/60 bg-surface-container-lowest hover:border-primary/40 p-4 md:p-4.5 cursor-pointer transition-all shadow-sm" id="rubric-item-2" onclick="selectRubric(2)" style="background: rgba(255, 255, 255, 0.7);">
+<div class="flex items-start justify-between gap-3">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-xs font-bold text-on-surface-variant uppercase font-mono">Tiêu chí 2</span>
+</div>
+<h3 class="text-sm md:text-base font-semibold text-on-surface leading-snug">Cố định giá trị theo từng vòng lặp mà vẫn gọi được không đối số</h3>
+</div>
+<span class="shrink-0 px-2.5 py-1 rounded-full border border-red-400 bg-red-50 text-red-600 text-xs font-bold">Chưa đạt</span>
+</div>
+<div class="mt-2.5 flex items-center justify-between text-xs text-on-surface-variant font-medium">
+<span>Điểm tiêu chí: <strong class="text-red-600">0 / 2</strong></span>
+<span class="text-on-surface-variant flex items-center gap-1 text-[11px]">Click để xem căn cứ <span class="material-symbols-outlined text-[14px]">chevron_right</span></span>
+</div>
+</div>
+<!-- Rubric Card 3 -->
+<div class="rubric-card rounded-xl border border-outline-variant/60 bg-surface-container-lowest hover:border-primary/40 p-4 md:p-4.5 cursor-pointer transition-all shadow-sm" id="rubric-item-3" onclick="selectRubric(3)" style="background: rgba(255, 255, 255, 0.7);">
+<div class="flex items-start justify-between gap-3">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-xs font-bold text-on-surface-variant uppercase font-mono">Tiêu chí 3</span>
+</div>
+<h3 class="text-sm md:text-base font-semibold text-on-surface leading-snug">Kiểm thử toàn bộ danh sách hàm và tính độc lập với biến ngoài</h3>
+</div>
+<span class="shrink-0 px-2.5 py-1 rounded-full border border-red-400 bg-red-50 text-red-600 text-xs font-bold">Chưa đạt</span>
+</div>
+<div class="mt-2.5 flex items-center justify-between text-xs text-on-surface-variant font-medium">
+<span>Điểm tiêu chí: <strong class="text-red-600">0 / 2</strong></span>
+<span class="text-on-surface-variant flex items-center gap-1 text-[11px]">Click để xem căn cứ <span class="material-symbols-outlined text-[14px]">chevron_right</span></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- PHÍA DƯỚI 2 KHUNG SONG SONG: KHUNG CĂN CỨ TRONG BÀI LÀM (TRẢI RỘNG TOÀN BỘ CHIỀU RỘNG) -->
+<div class="w-full rounded-2xl border border-outline-variant/50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_12px_36px_-6px_rgba(124,58,237,0.08)] p-6 md:p-8 space-y-6" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.95);">
+<!-- Header Khung Căn Cứ Ngang -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[24px]">fact_check</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-lg md:text-xl font-bold text-on-surface tracking-tight" id="rubric-evidence-title">Căn cứ đánh giá trong bài làm: Tiêu chí 1</h3>
+</div>
+<p class="text-xs md:text-sm text-on-surface-variant" id="rubric-evidence-subtitle">Dự đoán kết quả và giải thích cơ chế late binding của biến tự do</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold px-3.5 py-1.5 rounded-full bg-primary-fixed/30 text-primary border border-primary/20 shadow-sm" id="rubric-evidence-badge">Tiêu chí 1 / 3</span>
+<span class="text-xs font-bold px-3 py-1.5 rounded-full border border-red-300 bg-red-50 text-red-600" id="rubric-evidence-score-badge">1 / 2 điểm • Đạt 1 phần</span>
+</div>
+</div>
+<!-- Nội dung Căn cứ Động đổi theo Rubric click -->
+<div class="space-y-5 transition-opacity duration-200 opacity-100" id="rubric-evidence-content" style="opacity: 1;">
+<!-- 1. Trích xuất nhận định đối chiếu -->
+<div class="rounded-xl border-l-4 border-primary bg-primary-fixed/25 p-5 text-sm md:text-base text-on-surface leading-relaxed shadow-sm">
+<div class="font-bold text-primary mb-1 flex items-center gap-1.5 text-xs md:text-sm uppercase tracking-wide">
+<span class="material-symbols-outlined text-[18px]">assignment_turned_in</span>
+<span>Đánh giá tiêu chí &amp; Nhận định đối chiếu:</span>
+</div>
+<p class="mt-1" id="rubric-evidence-desc">Học viên chưa đưa ra kết quả in ra là 16 cho cả hai hàm và chưa giải thích cơ chế late binding (biến <code class="font-mono text-xs bg-surface-container px-2 py-0.5 rounded text-primary font-semibold">step</code> được tra cứu tại thời điểm gọi hàm khi vòng lặp đã kết thúc). Trả lời kết quả là 1 và 9 hoặc giải thích sai cơ chế phạm vi biến.</p>
+</div>
+<!-- 2. Khung minh chứng lỗi sai / Vi phạm -->
+<div class="rounded-xl border border-red-300/80 bg-red-50/60 p-5 space-y-3">
+<div class="flex items-center gap-2 text-red-600 font-bold text-xs uppercase tracking-wide">
+<span class="material-symbols-outlined text-[20px]">error</span>
+<span id="rubric-evidence-error-title">Minh chứng lỗi sai / Vi phạm phát hiện trong bài</span>
+</div>
+<div class="text-xs md:text-sm text-on-surface leading-relaxed bg-surface-container-lowest/90 border border-red-200 rounded-xl p-4 shadow-sm" id="rubric-evidence-error-text"><p class="text-red-700 font-medium mb-1.5">"Em dự đoán kết quả in ra màn hình lần lượt là 1 và 9, vì ở mỗi vòng lặp i tương ứng biến step được gán giá trị tại thời điểm tạo lambda."</p><p class="text-[12px] text-on-surface-variant leading-relaxed">Hệ thống ghi nhận thí sinh ngộ nhận giá trị của biến tự do trong biểu thức lambda được cố định (captured by value) ngay khi duyệt vòng for, dẫn đến tính toán sai lệch hoàn toàn kết quả thực thi.</p></div>
+</div>
+<!-- 3. Khung gợi ý khắc phục -->
+<div class="rounded-xl border-l-4 border-outline-variant bg-surface-container-low/70 p-5 text-xs md:text-sm text-on-surface leading-relaxed shadow-sm">
+<div class="font-bold text-on-surface mb-1 flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">tips_and_updates</span>
+<span>Gợi ý khắc phục chuẩn xác:</span>
+</div>
+<p class="text-on-surface-variant" id="rubric-evidence-fix">Khi sửa phần này trong câu, hãy đối chiếu với yêu cầu sau: Nêu đúng kết quả 16 cho cả hai lần gọi và giải thích rõ biến <code class="font-mono text-xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface font-semibold">step</code> ở scope ngoài được tra cứu lúc thực thi lambda sau khi vòng lặp dừng ở 4.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- TAB 2 CONTENT: BÀI TRẢ LỜI ĐÃ LƯU & NHẬN XÉT CHI TIẾT (SCREEN_3 GIỮ NGUYÊN VẸN TOÀN BỘ) -->
+<div class="hidden space-y-8" id="tab-content-2">
+<div class="w-full rounded-2xl border border-outline-variant/50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_4px_20px_-4px_rgba(124,58,237,0.06)] p-6 md:p-8 space-y-7" style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.95); box-shadow: rgba(124, 58, 237, 0.08) 0px 12px 36px -6px, rgba(255, 255, 255, 0.95) 0px 1px 1px inset;">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-outline-variant/30">
+<div class="space-y-1">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary text-[24px]">find_in_page</span>
+<h3 class="text-lg md:text-xl font-bold text-on-surface tracking-tight">Bài trả lời đã lưu (Trích xuất &amp; Đối chiếu theo tiêu chí)</h3>
+</div>
+<span class="text-xs md:text-sm text-on-surface-variant block">Nhấp vào từng đoạn trích có tô sáng màu để cập nhật khung nhận xét chuyên sâu bên dưới.</span>
+</div>
+<div class="flex flex-wrap items-center gap-2.5 text-xs">
+<span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-50 text-emerald-700 font-bold shadow-sm">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Đạt chuẩn (2 đoạn)
+        </span>
+<span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-red-400 bg-red-50 text-red-600 font-bold shadow-sm">
+<span class="material-symbols-outlined text-[16px]">error</span> Vi phạm / Lỗi sai (2 đoạn)
+        </span>
+</div>
+</div>
+<!-- 1. VĂN BẢN BÀI LÀM LIỀN MẠCH, THOÁNG ĐÃNG -->
+<div class="rounded-xl border border-outline-variant/50 bg-surface-container-low/50 p-5 md:p-6 relative space-y-4">
+<div class="flex items-center justify-between text-xs md:text-sm text-on-surface-variant pb-3 border-b border-outline-variant/30">
+<div class="flex items-center gap-2 font-medium">
+<span class="material-symbols-outlined text-[18px] text-primary">code_blocks</span>
+<span class="font-bold text-on-surface">Toàn văn bài trả lời của thí sinh (Python Closures &amp; Late Binding)</span>
+</div>
+<span class="font-mono text-xs bg-surface-container px-2.5 py-1 rounded text-on-surface-variant font-medium">428 từ • Thời gian nộp: 14:32</span>
+</div>
+<div class="bg-surface-container-lowest/90 p-6 md:p-7 rounded-xl border border-outline-variant/40 space-y-4 shadow-inner text-sm md:text-base leading-relaxed text-on-surface">
+<p class="font-mono text-xs text-on-surface-variant/80 italic mb-2"># Bài làm nộp lúc hoàn thành bài tập:</p>
+<!-- Đoạn trích 1: Đạt chuẩn -->
+<p class="font-sans leading-relaxed">
+<span class="snippet-highlight inline-block bg-emerald-50 hover:bg-emerald-100/90 border-b-2 border-emerald-500 px-3 py-2 rounded-lg text-emerald-800 font-medium cursor-pointer transition-all duration-200 select-none hover:shadow-sm" id="highlight-snippet-1" onclick="selectSnippet(1)" title="Nhấp để xem nhận xét Đoạn 1">
+            "Trong đoạn code trên, danh sách các hàm được khởi tạo qua vòng lặp <code class="font-mono text-xs bg-emerald-100/80 px-2 py-0.5 rounded text-emerald-900 font-semibold">for step in range(4)</code> với cú pháp lambda tạo closure."
+          </span>
+          Sau đó em gọi thực thi hàm đầu tiên và hàm cuối cùng trong danh sách.
+        </p>
+<!-- Đoạn trích 2: Lỗi sai (Mặc định chọn) -->
+<p class="font-sans leading-relaxed">
+<span class="snippet-highlight inline-block bg-red-50 hover:bg-red-100/90 border-b-2 border-red-500 px-3 py-2 rounded-lg text-red-700 font-semibold cursor-pointer transition-all duration-200 select-none ring-2 ring-red-500 shadow-sm" id="highlight-snippet-2" onclick="selectSnippet(2)" title="Nhấp để xem nhận xét Đoạn 2">
+            "Em dự đoán kết quả in ra màn hình lần lượt là 1 và 9, vì ở mỗi vòng lặp i tương ứng biến step được gán giá trị tại thời điểm tạo lambda."
+          </span>
+</p>
+<!-- Đoạn trích 3: Đạt chuẩn -->
+<p class="font-sans leading-relaxed">
+<span class="snippet-highlight inline-block bg-emerald-50 hover:bg-emerald-100/90 border-b-2 border-emerald-500 px-3 py-2 rounded-lg text-emerald-800 font-medium cursor-pointer transition-all duration-200 select-none hover:shadow-sm" id="highlight-snippet-3" onclick="selectSnippet(3)" title="Nhấp để xem nhận xét Đoạn 3">
+            "Để danh sách hàm có thể được gọi độc lập không đối số, ta có thể bổ sung tham số mặc định cho đối số đầu vào của lambda."
+          </span>
+</p>
+<!-- Đoạn trích 4: Vi phạm -->
+<p class="font-sans leading-relaxed">
+<span class="snippet-highlight inline-block bg-red-50 hover:bg-red-100/90 border-b-2 border-red-500 px-3 py-2 rounded-lg text-red-700 font-medium cursor-pointer transition-all duration-200 select-none hover:shadow-sm" id="highlight-snippet-4" onclick="selectSnippet(4)" title="Nhấp để xem nhận xét Đoạn 4">
+            "Các hàm này hoàn toàn độc lập với nhau và không bị tác động bởi trạng thái môi trường bên ngoài sau khi vòng lặp dừng lại."
+          </span>
+<span class="text-xs md:text-sm text-red-600 font-sans italic ml-2 inline-flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span> Lỗi logic scope
+          </span>
+</p>
+</div>
+</div>
+<!-- 2. KHUNG NHẬN XÉT ĐỘNG CHUYÊN BIỆT (DETAILED FEEDBACK PANEL) -->
+<div class="rounded-xl border border-outline-variant/60 bg-surface-container-lowest p-6 md:p-8 shadow-[0_12px_32px_-6px_rgba(124,58,237,0.09)] transition-all duration-300 relative overflow-hidden" id="feedback-panel" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+<!-- Decorative subtle border accent -->
+<div class="absolute top-0 left-0 bottom-0 w-1.5 transition-colors duration-300 bg-red-500" id="panel-accent-bar"></div>
+<div class="pl-3 md:pl-4 space-y-5">
+<!-- Header của Khung Nhận Xét -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-red-100 text-red-600" id="panel-icon-wrap">
+<span class="material-symbols-outlined text-[24px]" id="panel-icon">cancel</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h4 class="text-base md:text-lg font-bold text-on-surface tracking-tight">💡 Chi tiết nhận xét theo đoạn trích đang chọn</h4>
+</div>
+<span class="text-xs md:text-sm text-on-surface-variant font-medium" id="panel-subtitle">Đoạn 2 trong toàn văn bài nộp (Cần khắc phục)</span>
+</div>
+</div>
+<div id="panel-badge-container">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-sm border-red-300 bg-red-50 text-red-700">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+          Đoạn 2: Vi phạm Tiêu chí 1 - Chưa đạt (0/2 điểm)
+        </span>
+      </div>
+</div>
+<!-- Nội dung nhận xét động thay đổi theo đoạn trích -->
+<div class="transition-opacity duration-200 opacity-100 space-y-4" id="feedback-content" style="opacity: 1;">
+<div>
+<h5 class="text-base md:text-lg font-bold text-on-surface flex items-center gap-2" id="fb-title">Lỗi sai cơ chế: Late Binding không đóng băng giá trị biến theo từng vòng lặp!</h5>
+<p class="text-sm md:text-base text-on-surface-variant leading-relaxed mt-2" id="fb-explanation">Học viên suy đoán biến step lưu giá trị tương ứng 1 và 3 tại thời điểm tạo lambda. Thực tế trong Python, closures bind theo tên biến chứ không bind theo giá trị lúc tạo (Late Binding). Biến step được tra cứu trong scope ngoài tại thời điểm thực thi hàm, lúc đó vòng lặp đã kết thúc và biến mang giá trị cuối cùng là 4. Kết quả thực thi chính xác phải là 16 và 16.</p>
+</div>
+<!-- Hộp hướng dẫn sửa / code syntax highlight -->
+<div class="p-4 md:p-5 rounded-xl bg-primary-fixed/20 border border-primary/25 space-y-3" id="fb-code-box">
+<div class="flex items-center justify-between">
+<div class="font-bold text-xs md:text-sm text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span id="fb-code-label">Cách sửa đề xuất (Cố định giá trị đúng theo từng vòng lặp):</span>
+</div>
+<span class="text-xs font-mono text-on-surface-variant font-semibold">Python 3.x</span>
+</div>
+<div class="font-mono text-xs md:text-sm text-on-surface bg-surface-container-lowest/95 p-4 rounded-xl border border-outline-variant/40 overflow-x-auto shadow-sm leading-relaxed">
+<code id="fb-code-text"># Dùng default argument để freeze giá trị biến step ngay thời điểm khai báo
+funcs = [lambda x, s=step: (x + s) ** 2 for step in range(4)]
+print(funcs[0](0), funcs[-1](0))  # Output chuẩn: 0 và 9</code>
+</div>
+</div>
+<!-- Tiêu chí liên đới -->
+<div class="flex items-center gap-2.5 pt-2">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant">link</span>
+<span class="text-xs md:text-sm text-on-surface-variant font-medium">Tiêu chí liên đới:</span>
+<span class="text-xs md:text-sm font-semibold px-2.5 py-1 rounded-md bg-surface-container text-on-surface border border-outline-variant/50" id="fb-criterion">Tiêu chí 1: Dự đoán kết quả và giải thích cơ chế late binding của biến tự do</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Thanh thao tác tiện ích / Mẹo tương tác -->
+<div class="flex flex-wrap items-center justify-between gap-4 text-xs md:text-sm bg-surface-container-low/70 p-4 rounded-xl border border-outline-variant/40">
+<div class="flex items-center gap-2.5 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-[20px] text-primary">touch_app</span>
+<span>Mẹo tương tác: Click trực tiếp vào bất kỳ đoạn tô màu nào trên bài làm để đối chiếu nhận xét chi tiết tức thì.</span>
+</div>
+<div class="flex items-center gap-4 font-semibold">
+<button class="text-primary hover:text-primary-container transition-colors flex items-center gap-1.5" onclick="selectSnippet(2)" type="button">
+<span class="material-symbols-outlined text-[18px]">priority_high</span> Xem lỗi chính
+        </button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span> Sao chép bài làm
+        </button>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. THANH ĐIỀU HƯỚNG DƯỚI (BUTTONS CLUSTER) -->
+<div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-outline-variant/30">
+<div class="flex items-center gap-3">
+<!-- Nút chính: Câu tiếp theo -->
+<button class="px-6 py-3 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-bold text-sm shadow-[0_4px_14px_rgba(99,14,212,0.3)] transition-all hover:scale-[1.01] flex items-center gap-2" style="background: linear-gradient(135deg, rgb(124, 58, 237) 0%, rgb(99, 14, 212) 50%, rgb(147, 51, 234) 100%); box-shadow: rgba(124, 58, 237, 0.35) 0px 6px 20px, rgba(255, 255, 255, 0.25) 0px 1px 1px inset;" type="button">
+<span>Câu tiếp theo</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<!-- Nút phụ 1: Xem bài tập theo điểm thiếu -->
+<button class="px-5 py-3 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container text-on-surface font-semibold text-sm transition-colors shadow-sm flex items-center gap-2" style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(203, 213, 225, 0.8);" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">auto_stories</span>
+<span>Xem bài tập theo điểm thiếu</span>
+</button>
+</div>
+<!-- Nút phụ 2: Xem tổng kết phiên -->
+<button class="px-5 py-3 rounded-xl border border-outline-variant bg-surface-container-lowest hover:bg-surface-container text-on-surface font-semibold text-sm transition-colors shadow-sm flex items-center gap-2" style="background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); border: 1px solid rgba(203, 213, 225, 0.8);" type="button">
+<span class="material-symbols-outlined text-[18px]">analytics</span>
+<span>Xem tổng kết phiên</span>
+</button>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-surface-container-low/70 backdrop-blur-xl py-space-lg shadow-[0_-1px_8px_rgba(124,58,237,0.03)]"><div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-tablet lg:px-margin flex flex-col sm:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant"><span>© 2026</span><span class="font-semibold text-on-surface">interviewUS</span><span>• Nền tảng luyện phỏng vấn kỹ thuật toàn diện.</span></div><div class="flex items-center gap-space-lg"><a class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-[18px]">forum</span><span>Discord</span></a><a class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-[18px]">code</span><span>GitHub</span></a></div></div></footer>
+<script>
+  // ===============================
+  // 1. DỮ LIỆU CĂN CỨ THEO RUBRIC (CHO TAB 1)
+  // ===============================
+  const rubricEvidenceData = {
+    1: {
+      num: 1,
+      title: "Căn cứ đánh giá trong bài làm: Tiêu chí 1",
+      subtitle: "Dự đoán kết quả và giải thích cơ chế late binding của biến tự do",
+      badge: "Tiêu chí 1 / 3",
+      scoreBadge: "0 / 2 điểm • Chưa đạt",
+      desc: 'Học viên chưa đưa ra kết quả in ra là 16 cho cả hai hàm và chưa giải thích cơ chế late binding (biến <code class="font-mono text-xs bg-surface-container px-2 py-0.5 rounded text-primary font-semibold">step</code> được tra cứu tại thời điểm gọi hàm khi vòng lặp đã kết thúc). Trả lời kết quả là 1 và 9 hoặc giải thích sai cơ chế phạm vi biến.',
+      errorTitle: "Minh chứng lỗi sai / Vi phạm phát hiện trong bài",
+      errorHtml: '<p class="text-red-700 font-medium mb-1.5">"Em dự đoán kết quả in ra màn hình lần lượt là 1 và 9, vì ở mỗi vòng lặp i tương ứng biến step được gán giá trị tại thời điểm tạo lambda."</p><p class="text-[12px] text-on-surface-variant leading-relaxed">Hệ thống ghi nhận thí sinh ngộ nhận giá trị của biến tự do trong biểu thức lambda được cố định (captured by value) ngay khi duyệt vòng for, dẫn đến tính toán sai lệch hoàn toàn kết quả thực thi.</p>',
+      fixText: 'Khi sửa phần này trong câu, hãy đối chiếu với yêu cầu sau: Nêu đúng kết quả 16 cho cả hai lần gọi và giải thích rõ biến <code class="font-mono text-xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface font-semibold">step</code> ở scope ngoài được tra cứu lúc thực thi lambda sau khi vòng lặp dừng ở 4.'
+    },
+    2: {
+      num: 2,
+      title: "Căn cứ đánh giá trong bài làm: Tiêu chí 2",
+      subtitle: "Cố định giá trị theo từng vòng lặp mà vẫn gọi được không đối số",
+      badge: "Tiêu chí 2 / 3",
+      scoreBadge: "0 / 2 điểm • Chưa đạt",
+      desc: 'Mặc dù trong bài viết thí sinh có đề cập ý tưởng: "ta có thể bổ sung tham số mặc định cho đối số đầu vào của lambda", tuy nhiên trong phần code thực thi gửi lên, thí sinh chưa áp dụng cú pháp <code class="font-mono text-xs bg-surface-container px-2 py-0.5 rounded text-primary font-semibold">s=step</code> và hàm vẫn báo lỗi thiếu đối số hoặc tra cứu nhầm giá trị cuối của vòng lặp.',
+      errorTitle: "Minh chứng thiếu sót cú pháp thực thi",
+      errorHtml: '<p class="text-red-700 font-medium mb-1.5">Mã nguồn gửi kèm: <code>funcs = [lambda x: (x + step) ** 2 for step in range(4)]</code></p><p class="text-[12px] text-on-surface-variant leading-relaxed">Chưa khai báo default argument tại vị trí lambda: Thí sinh chỉ nêu hướng giải quyết trên lý thuyết nhưng mã thực thi chưa freeze giá trị tại runtime.</p>',
+      fixText: 'Cách khắc phục chuẩn: Khai báo lambda dạng <code class="font-mono text-xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface font-semibold">lambda x=0, s=step: (x + s) ** 2</code> để vừa gán cứng s theo từng vòng lặp vừa hỗ trợ gọi hàm f() không cần truyền tham số đối số.'
+    },
+    3: {
+      num: 3,
+      title: "Căn cứ đánh giá trong bài làm: Tiêu chí 3",
+      subtitle: "Kiểm thử toàn bộ danh sách hàm và tính độc lập với biến ngoài",
+      badge: "Tiêu chí 3 / 3",
+      scoreBadge: "0 / 2 điểm • Chưa đạt",
+      desc: 'Học viên nhận định sai bản chất cô lập: nhận định các hàm closure hoàn toàn độc lập với môi trường ngoài. Khi biến <code class="font-mono text-xs bg-surface-container px-2 py-0.5 rounded text-primary font-semibold">step</code> bị thay đổi sau khi kết thúc vòng for, kết quả của tất cả các hàm đều bị biến thiên theo giá trị mới, vi phạm yêu cầu kiểm thử tính độc lập.',
+      errorTitle: "Minh chứng nhận định sai lệch về tính độc lập",
+      errorHtml: '<p class="text-red-700 font-medium mb-1.5">"Các hàm này hoàn toàn độc lập với nhau và không bị tác động bởi trạng thái môi trường bên ngoài sau khi vòng lặp dừng lại."</p><p class="text-[12px] text-on-surface-variant leading-relaxed">Thí sinh chưa viết test case kiểm thử kịch bản biến ngoài bị mutate (ví dụ: gán step = 100), dẫn đến bỏ sót lỗi side-effect nghiêm trọng.</p>',
+      fixText: 'Khắc phục: Bổ sung đoạn test case kiểm tra bằng cách gán lại biến ngoài <code class="font-mono text-xs bg-surface-container px-1.5 py-0.5 rounded text-on-surface font-semibold">step = 99</code> rồi gọi lại các hàm để chứng minh hàm đã được bao đóng (encapsulated) độc lập.'
+    }
+  };
+
+  function selectRubric(id) {
+    const data = rubricEvidenceData[id];
+    if (!data) return;
+
+    // 1. Cập nhật giao diện Rubric Card
+    [1, 2, 3].forEach(i => {
+      const card = document.getElementById('rubric-item-' + i);
+      if (!card) return;
+      if (i === id) {
+        card.className = 'rubric-card rounded-xl border-2 border-primary bg-primary-fixed/25 p-4 md:p-4.5 cursor-pointer transition-all shadow-sm';
+        card.style.background = 'linear-gradient(135deg, rgba(243, 232, 255, 0.85) 0%, rgba(255, 255, 255, 0.95) 100%)';
+      } else {
+        card.className = 'rubric-card rounded-xl border border-outline-variant/60 bg-surface-container-lowest hover:border-primary/40 p-4 md:p-4.5 cursor-pointer transition-all shadow-sm';
+        card.style.background = 'rgba(255, 255, 255, 0.7)';
+      }
+    });
+
+    // 2. Smooth Transition cho Khung Căn cứ Ngang
+    const content = document.getElementById('rubric-evidence-content');
+    content.style.opacity = '0';
+
+    setTimeout(() => {
+      document.getElementById('rubric-evidence-title').textContent = data.title;
+      document.getElementById('rubric-evidence-subtitle').textContent = data.subtitle;
+      document.getElementById('rubric-evidence-badge').textContent = data.badge;
+      document.getElementById('rubric-evidence-score-badge').textContent = data.scoreBadge;
+      document.getElementById('rubric-evidence-desc').innerHTML = data.desc;
+      document.getElementById('rubric-evidence-error-title').textContent = data.errorTitle;
+      document.getElementById('rubric-evidence-error-text').innerHTML = data.errorHtml;
+      document.getElementById('rubric-evidence-fix').innerHTML = data.fixText;
+
+      content.style.opacity = '1';
+    }, 150);
+  }
+
+  // ===============================
+  // 2. CHUYỂN ĐỔI TAB CHÍNH (TAB 1 VS TAB 2)
+  // ===============================
+  function switchMainTab(tabNumber) {
+    const tab1Btn = document.getElementById('nav-tab-1');
+    const tab2Btn = document.getElementById('nav-tab-2');
+    const content1 = document.getElementById('tab-content-1');
+    const content2 = document.getElementById('tab-content-2');
+
+    if (tabNumber === 1) {
+      tab1Btn.className = 'w-full sm:w-1/2 py-3 px-5 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all duration-200 bg-primary-container text-on-primary shadow-[0_4px_16px_rgba(124,58,237,0.35)]';
+      tab2Btn.className = 'w-full sm:w-1/2 py-3 px-5 rounded-xl font-semibold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/60';
+      content1.classList.remove('hidden');
+      content2.classList.add('hidden');
+    } else {
+      tab2Btn.className = 'w-full sm:w-1/2 py-3 px-5 rounded-xl font-bold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all duration-200 bg-primary-container text-on-primary shadow-[0_4px_16px_rgba(124,58,237,0.35)]';
+      tab1Btn.className = 'w-full sm:w-1/2 py-3 px-5 rounded-xl font-semibold text-sm md:text-base flex items-center justify-center gap-2.5 transition-all duration-200 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high/60';
+      content2.classList.remove('hidden');
+      content1.classList.add('hidden');
+    }
+  }
+
+  // ===============================
+  // 3. DỮ LIỆU NHẬN XÉT ĐOẠN TRÍCH (CHO TAB 2)
+  // ===============================
+  const feedbackData = {
+    1: {
+      type: "success",
+      badgeText: "Đoạn 1: Đạt chuẩn cú pháp & Nhận diện Closure",
+      badgeClass: "border-emerald-300 bg-emerald-50 text-emerald-700",
+      dotClass: "bg-emerald-600",
+      accentBarClass: "bg-emerald-500",
+      iconWrapClass: "bg-emerald-100 text-emerald-700",
+      icon: "check_circle",
+      subtitle: "Đoạn 1 trong toàn văn bài nộp (Đạt yêu cầu)",
+      title: "Điểm sáng: Nhận diện chính xác cơ chế tạo closure qua biểu thức lambda",
+      explanation: "Học viên nắm vững cú pháp list comprehension kết hợp lambda function trong Python. Bạn đã phân tích đúng việc danh sách chứa các hàm closure lưu tham chiếu tới môi trường enclosing scope của vòng lặp.",
+      codeLabel: "Cú pháp tốt đã áp dụng:",
+      codeText: 'funcs = [lambda x: (x + step) ** 2 for step in range(4)]\n# Cú pháp ngắn gọn, cấu trúc đúng chuẩn closure Python',
+      criterion: "Tiêu chuẩn cơ sở: Cú pháp hàm và bao đóng (Closure Foundation)"
+    },
+    2: {
+      type: "error",
+      badgeText: "Đoạn 2: Vi phạm Tiêu chí 1 - Chưa đạt (0/2 điểm)",
+      badgeClass: "border-red-300 bg-red-50 text-red-700",
+      dotClass: "bg-red-600",
+      accentBarClass: "bg-red-500",
+      iconWrapClass: "bg-red-100 text-red-600",
+      icon: "cancel",
+      subtitle: "Đoạn 2 trong toàn văn bài nộp (Cần khắc phục)",
+      title: "Lỗi sai cơ chế: Late Binding không đóng băng giá trị biến theo từng vòng lặp!",
+      explanation: "Học viên suy đoán biến step lưu giá trị tương ứng 1 và 3 tại thời điểm tạo lambda. Thực tế trong Python, closures bind theo tên biến chứ không bind theo giá trị lúc tạo (Late Binding). Biến step được tra cứu trong scope ngoài tại thời điểm thực thi hàm, lúc đó vòng lặp đã kết thúc và biến mang giá trị cuối cùng là 4. Kết quả thực thi chính xác phải là 16 và 16.",
+      codeLabel: "Cách sửa đề xuất (Cố định giá trị đúng theo từng vòng lặp):",
+      codeText: '# Dùng default argument để freeze giá trị biến step ngay thời điểm khai báo\nfuncs = [lambda x, s=step: (x + s) ** 2 for step in range(4)]\nprint(funcs[0](0), funcs[-1](0))  # Output chuẩn: 0 và 9',
+      criterion: "Tiêu chí 1: Dự đoán kết quả và giải thích cơ chế late binding của biến tự do"
+    },
+    3: {
+      type: "success",
+      badgeText: "Đoạn 3: Đạt chuẩn - Tiếp cận giải pháp tham số mặc định",
+      badgeClass: "border-emerald-300 bg-emerald-50 text-emerald-700",
+      dotClass: "bg-emerald-600",
+      accentBarClass: "bg-emerald-500",
+      iconWrapClass: "bg-emerald-100 text-emerald-700",
+      icon: "check_circle",
+      subtitle: "Đoạn 3 trong toàn văn bài nộp (Đạt yêu cầu)",
+      title: "Đề xuất hợp lý: Sử dụng Default Arguments để gọi hàm không đối số",
+      explanation: "Ý tưởng gán giá trị mặc định cho tham số đầu vào của hàm lambda để cho phép gọi f() không cần truyền tham số là hoàn toàn khả thi và chuẩn phong cách lập trình Python (idiomatic Python).",
+      codeLabel: "Mẫu triển khai chuẩn:",
+      codeText: 'funcs = [lambda x=0, s=step: (x + s) ** 2 for step in range(4)]\n# Cho phép gọi funcs[0]() mà không văng TypeError: missing argument',
+      criterion: "Tiêu chí 2: Cố định giá trị theo từng vòng lặp mà vẫn gọi được không đối số"
+    },
+    4: {
+      type: "error",
+      badgeText: "Đoạn 4: Vi phạm Tiêu chí 3 - Sai nhận định tính độc lập (0/2 điểm)",
+      badgeClass: "border-red-300 bg-red-50 text-red-700",
+      dotClass: "bg-red-600",
+      accentBarClass: "bg-red-500",
+      iconWrapClass: "bg-red-100 text-red-600",
+      icon: "cancel",
+      subtitle: "Đoạn 4 trong toàn văn bài nộp (Cần khắc phục)",
+      title: "Lỗi nhận định: Các hàm chưa thực sự độc lập với môi trường ngoài!",
+      explanation: "Học viên nhận định 'các hàm hoàn toàn độc lập với môi trường bên ngoài'. Nhận định này sai bản chất vì nếu sau vòng lặp ta sửa giá trị biến step (ví dụ: step = 99), thì việc gọi lại các hàm lambda chưa freeze giá trị sẽ lập tức dùng giá trị 99 mới này. Do đó, bài làm chưa đáp ứng kiểm thử tính độc lập.",
+      codeLabel: "Minh chứng kịch bản kiểm thử độc lập (Test Case):",
+      codeText: 'step = 100\n# Nếu không freeze bằng default argument:\nfuncs[0](0) # Trả về (0 + 100)**2 = 10000 thay vì kết quả kỳ vọng ban đầu!\n# Khắc phục: Dùng functools.partial hoặc default argument để đóng gói triệt để.',
+      criterion: "Tiêu chí 3: Kiểm thử toàn bộ danh sách hàm và tính độc lập với biến ngoài"
+    }
+  };
+
+  function selectSnippet(id) {
+    const data = feedbackData[id];
+    if (!data) return;
+
+    // Cập nhật active ring cho các đoạn trích
+    document.querySelectorAll('.snippet-highlight').forEach(el => {
+      el.classList.remove('ring-2', 'ring-red-500', 'ring-emerald-500', 'shadow-sm');
+    });
+
+    const activeEl = document.getElementById('highlight-snippet-' + id);
+    if (activeEl) {
+      if (data.type === 'error') {
+        activeEl.classList.add('ring-2', 'ring-red-500', 'shadow-sm');
+      } else {
+        activeEl.classList.add('ring-2', 'ring-emerald-500', 'shadow-sm');
+      }
+    }
+
+    // Smooth transition effect cho Khung Nhận Xét
+    const content = document.getElementById('feedback-content');
+    content.style.opacity = '0';
+
+    setTimeout(() => {
+      const accentBar = document.getElementById('panel-accent-bar');
+      accentBar.className = 'absolute top-0 left-0 bottom-0 w-1.5 transition-colors duration-300 ' + data.accentBarClass;
+
+      const iconWrap = document.getElementById('panel-icon-wrap');
+      iconWrap.className = 'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ' + data.iconWrapClass;
+      document.getElementById('panel-icon').textContent = data.icon;
+
+      document.getElementById('panel-subtitle').textContent = data.subtitle;
+      
+      const badgeContainer = document.getElementById('panel-badge-container');
+      badgeContainer.innerHTML = `
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold shadow-sm ${data.badgeClass}">
+          <span class="w-1.5 h-1.5 rounded-full ${data.dotClass}"></span>
+          ${data.badgeText}
+        </span>
+      `;
+
+      document.getElementById('fb-title').textContent = data.title;
+      document.getElementById('fb-explanation').textContent = data.explanation;
+      document.getElementById('fb-code-label').textContent = data.codeLabel;
+      document.getElementById('fb-code-text').textContent = data.codeText;
+      document.getElementById('fb-criterion').textContent = data.criterion;
+
+      content.style.opacity = '1';
+    }, 150);
+  }
+
+  // Khởi tạo mặc định
+  document.addEventListener('DOMContentLoaded', () => {
+    selectRubric(1);
+    selectSnippet(2);
+  });
+</script>
+
+
+</body></html>

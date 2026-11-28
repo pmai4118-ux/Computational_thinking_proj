@@ -116,6 +116,15 @@
   }
 
   const api = {
+    getLearningCatalog() {
+      return request("/learning-paths/catalog");
+    },
+    getProfile() {
+      return request("/profile");
+    },
+    createLearningPlan(payload) {
+      return request("/learning-paths/plan", { method: "POST", body: payload });
+    },
     createSession(payload) {
       return request("/sessions", {
         method: "POST", body: { evaluation_timing: "after_session", ...payload },
@@ -160,12 +169,6 @@
     getExercise(exerciseId, version) {
       const query = version == null ? "" : `?version=${encode(version)}`;
       return request(`/exercises/${encode(exerciseId)}${query}`);
-    },
-    startPractice(sessionId, answerId, payload) {
-      return request(`/sessions/${encode(sessionId)}/answers/${encode(answerId)}/practice`, {
-        method: "POST",
-        body: payload,
-      });
     },
     getFollowUpPlan(sessionId, answerId, answerRevision) {
       const query = answerRevision == null ? "" : `?revision=${encode(answerRevision)}`;

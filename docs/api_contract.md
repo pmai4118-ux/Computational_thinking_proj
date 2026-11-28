@@ -90,7 +90,7 @@
 | **S05 · Tổng kết phiên** | `GET /api/sessions/{session_id}/summary` | — | `SessionSummaryDTO` (`200 OK`) | [`session_summary.json`](../test/fixtures/api/session_summary.json) |
 | **S06 · Đề xuất bài tập** | `GET /api/sessions/{session_id}/exercises` | — | `ExerciseRecommendationsResponse` (`200 OK`) | [`exercise_recommendations.json`](../test/fixtures/api/exercise_recommendations.json) |
 | **S06 · Chi tiết bài tập** | `GET /api/exercises/{exercise_id}?version={version}` | — | `ExerciseDetailDTO` (`200 OK`) | Chỉ trả nội dung đã duyệt và nguồn đã xác minh |
-| **S06 · Luyện lại từ bài đã chấm** | `POST /api/sessions/{session_id}/answers/{answer_id}/practice` | `StartPracticeRequest` (`answer_revision`, `criterion_id`, `exercise_id`) | `SessionViewDTO` (`201 Created`) | Tạo phiên một câu bằng biến thể đã duyệt khác câu gốc |
+| **S06 · Đã gỡ ngày 27/11/2026** | `POST /api/sessions/{session_id}/answers/{answer_id}/practice` | Payload cũ chỉ để nhận biết client legacy | `ApiErrorResponse` (`410 Gone`, `FEATURE_RETIRED`) | Kiểm tra quyền phiên trước, không tạo phiên luyện mới |
 
 ### Quy tắc đề xuất và luyện lại (I06)
 - Mỗi `matched_gap` trong đề xuất trả `answer_ref` (`id`, `revision`) của bài đã chấm để giao diện gọi thao tác luyện lại đúng bản trả lời; không suy đoán từ câu hiện tại của phiên.
@@ -145,3 +145,45 @@ uv run --locked python -m pytest test/test_api_contract.py
 - [x] Mọi fixture thành công (`session_created.json`, `answer_submitted.json`, `evaluation_completed.json`, `evaluation_insufficient_evidence.json`, `session_summary.json`, `exercise_recommendations.json`) đều parse hợp lệ qua DTO trong `source/Control/schemas.py` mà UI không phải đoán tên trường.
 - [x] Mọi trích dẫn (`quote`, `start_offset`, `end_offset`) trong fixture khớp chính xác với chuỗi con trong `answer_text`.
 - [x] Có đầy đủ fixture lỗi cho đầu vào sai (`INVALID_INPUT`), phiên không thuộc người dùng (`SESSION_FORBIDDEN`), xung đột mã gửi (`SUBMISSION_CONFLICT`) và lỗi timeout giữ nguyên `answer_ref` (`PROVIDER_TIMEOUT`).
+
+## Additive API — Java learning paths (27/11/2026)
+
+The existing interview DTOs remain unchanged. New endpoints:
+`GET /api/learning-paths/catalog`, `GET /api/learning-paths/markdown`, and
+`POST /api/learning-paths/plan`. The page is `/learning-path`.
+
+Plan input is `LearningPlanRequest` in `source/Model/learning_path.py`:
+confirmed goal, track/mode, integer hours/week and weeks, optional target and
+self-reported completed lesson IDs, and whether to consult the current owner's
+profile. Never accept an owner token/hash in JSON. Unknown/duplicate IDs or an
+unconfirmed goal return 422. Response includes all remaining required lessons,
+allocated/deferred minutes, feasible/shortfall and explanatory warnings.
+Details and example: [Java roadmap handoff](JAVA_BACKEND_IMPLEMENTATION.md).
+
+
+## Bổ sung 27/11/2026 — gỡ luyện với câu hỏi khác
+
+Theo yêu cầu người dùng, không còn thao tác hoặc service tạo phiên một câu khác
+sau khi chấm bài. Endpoint POST `/api/sessions/{session_id}/answers/{answer_id}/practice`
+được đánh dấu deprecated và trả 410 `FEATURE_RETIRED` cho chủ phiên, với
+`retryable=false`. Quyền sở hữu vẫn được kiểm tra trước (khác chủ trả 403).
+Các field tương thích `eligible_alternate_question_available` trong recommendations
+và `alternate_question_available` trong report luôn false.
+GET recommendations/details vẫn cung cấp hướng dẫn ôn tập có nguồn.
+
+Loading và tự cập nhật kết quả chỉ đọc/trình bày trạng thái thật; polling review
+là GET mỗi 5 giây, dừng sau 150 giây hoặc khi hoàn tất/lỗi. Polling không gọi POST
+evaluate. Summary giữ tối đa hai lượt đánh giá đồng thời, gộp các lượt tải trạng
+thái chồng nhau và giữ nguyên bài gốc khi provider lỗi.
+
+
+## Trang lịch sử phiên — 27/11/2026
+
+- `GET /` và `GET /setup` hiển thị tối đa 3 phiên gần nhất của chủ cookie hiện tại,
+  kèm nút **Xem tất cả** tới `/history`.
+- `GET /history` là tab lịch sử đầy đủ, sắp theo thời điểm tạo giảm dần; cùng thời
+  điểm thì dùng session ID để giữ thứ tự ổn định. Phiên thiếu timestamp xếp cuối.
+- Các trang dùng chung danh sách với trạng thái và link tiếp tục/xem tổng kết.
+  Danh sách trống/ít hơn 3 không thêm phiên minh họa. Không nhận owner từ query.
+- Đây là thay đổi View và chuẩn hóa thứ tự Service, không đổi DTO/DB hoặc tạo
+  lượt đánh giá AI khi liệt kê lịch sử.

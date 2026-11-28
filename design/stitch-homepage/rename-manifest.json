@@ -1,0 +1,24 @@
+{
+  "source_archive": "D:/stitch_ct_nh_m_5 (3).zip",
+  "preserved_file_bytes": true,
+  "entries": [
+    {
+      "original": "code.html",
+      "normalized": "homepage.html",
+      "bytes": 29888,
+      "sha256": "e9f19b8d41dfa1865bea20b5700dea9dde80ec29b1d23b4c597ec59939d7973c"
+    },
+    {
+      "original": "screen.png",
+      "normalized": "homepage.png",
+      "bytes": 860467,
+      "sha256": "0edcc4fb4e7842212347d513a2745a00ff3f979fa10a07a014debea5fa42c47a"
+    },
+    {
+      "original": "DESIGN.md",
+      "normalized": "design-system/DESIGN.md",
+      "bytes": 11721,
+      "sha256": "910dc774906257a0160f3d10686bac7994d2d8bd30022d67402f3031dacba28c"
+    }
+  ]
+}

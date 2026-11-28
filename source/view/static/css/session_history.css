@@ -1,0 +1,19 @@
+.session-history .welcome-history__head { align-items: center; }
+.session-history .welcome-history__head h2 { font-size: 20px; }
+.session-history .welcome-history__head p { font-size: 12px; }
+.session-history .session-item { min-width: 0; }
+.session-history .session-item > .stack { min-width: 0; }
+.session-history code { overflow-wrap: anywhere; }
+.history-preview-actions { flex-shrink: 0; }
+.history-preview-actions .btn { font-size: 12px; }
+.history-page-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 8px 0 12px; }
+.history-page-header h1 { font-size: clamp(25px, 3vw, 34px); margin: 0 0 12px; }
+.history-page-header p { margin: 0; font-size: 13px; max-width: 72ch; }
+.history-page-header > .btn { flex-shrink: 0; }
+@media (max-width: 600px) {
+  .history-page-header { flex-direction: column; align-items: stretch; gap: 16px; }
+  .history-preview-actions { width: 100%; justify-content: space-between; }
+  .session-history .session-item { align-items: stretch; }
+  .session-history .session-item > .action-row { width: 100%; }
+  .session-history .session-item > .action-row .btn { width: 100%; }
+}

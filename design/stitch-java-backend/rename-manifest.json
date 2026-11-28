@@ -1,0 +1,111 @@
+{
+  "source_archive": "stitch_ct_nh_m_5 (1).zip",
+  "supplementary_archives": [
+    "stitch_ct_nh_m_5_(2).zip"
+  ],
+  "preserved_file_bytes": true,
+  "entries": [
+    {
+      "original": "stitch_ct_nh_m_5/modal_c_u_h_nh_l_tr_nh_c_nh_n_h_a_white_violet_glass_purple_glow/code.html",
+      "normalized": "roadmap-settings/roadmap-settings.html",
+      "bytes": 24666,
+      "sha256": "0fb201fceeb4100a5ac54963e4b2bd3a0b631fed3d335a31535c833a7cd132b4"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/modal_c_u_h_nh_l_tr_nh_c_nh_n_h_a_white_violet_glass_purple_glow/screen.png",
+      "normalized": "roadmap-settings/roadmap-settings.png",
+      "bytes": 590011,
+      "sha256": "ae6f8a40b80dec72805649402d43e7e659cd04d2eac702f7e878782f1aa1f5b6"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/l_tr_nh_c_nh_n_h_a_s_h_c_t_p_roadmap_zigzag_interviewus/code.html",
+      "normalized": "personalized-roadmap/personalized-roadmap.html",
+      "bytes": 40344,
+      "sha256": "b0c8eaa0dc06b15a3086d012fd29eec8a158262a39ed32de68115226371404c8"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/l_tr_nh_c_nh_n_h_a_s_h_c_t_p_roadmap_zigzag_interviewus/screen.png",
+      "normalized": "personalized-roadmap/personalized-roadmap.png",
+      "bytes": 660655,
+      "sha256": "f6ad3db0823e0dc2e2793ef790ca7d1948fc6712565aea1481f76fe47f91ae7c"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/i_chi_u_c_u_tr_l_i_tab_2_b_i_tr_l_i_l_u_nh_n_x_t_chi_ti_t/code.html",
+      "normalized": "answer-review-detail/answer-review-detail.html",
+      "bytes": 57143,
+      "sha256": "d802743ca865c90dd3faeaac1639ee5608c839932455242b9eecb38659899e3d"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/i_chi_u_c_u_tr_l_i_tab_2_b_i_tr_l_i_l_u_nh_n_x_t_chi_ti_t/screen.png",
+      "normalized": "answer-review-detail/answer-review-detail.png",
+      "bytes": 662175,
+      "sha256": "2d7adb5fffa86888a2bd641d431a58d0fa681b587f334a52ee248a91700757ae"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/i_chi_u_c_u_tr_l_i_tab_t_ng_quan_rubric_tab_b_i_l_m_nh_n_x_t/code.html",
+      "normalized": "answer-review-overview/answer-review-overview.html",
+      "bytes": 57183,
+      "sha256": "3843cac7cf611860197b2873779e4124953812e414b634c97c895d962d77750b"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/i_chi_u_c_u_tr_l_i_tab_t_ng_quan_rubric_tab_b_i_l_m_nh_n_x_t/screen.png",
+      "normalized": "answer-review-overview/answer-review-overview.png",
+      "bytes": 650105,
+      "sha256": "56c2b3e60ee9f9c9c1772b4a363761dfa322b13fa9f2d90a02cb8d27feef8daa"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/ph_ng_ph_ng_v_n_backend_late_binding_closures_y_elements/code.html",
+      "normalized": "interview-workspace/interview-workspace.html",
+      "bytes": 29549,
+      "sha256": "f083d82a70c4bb4b9dc0f53429795292c07532b2fa23fd8267870ef75bc85736"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/ph_ng_ph_ng_v_n_backend_late_binding_closures_y_elements/screen.png",
+      "normalized": "interview-workspace/interview-workspace.png",
+      "bytes": 599554,
+      "sha256": "978df35cec84d81046f5133a1bbffb0ddda4215ae156626e1854a8b568f409cb"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/hub_ph_ng_v_n_o_3_b_c_ch_n_t_ng_t_c_l_ch_s_y_ng_y_gi/code.html",
+      "normalized": "interview-hub/interview-hub.html",
+      "bytes": 30298,
+      "sha256": "788e2e48726dc84f441959d1459288ecf92ce2763aed2b9d34afb54edbffc5c0"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/hub_ph_ng_v_n_o_3_b_c_ch_n_t_ng_t_c_l_ch_s_y_ng_y_gi/screen.png",
+      "normalized": "interview-hub/interview-hub.png",
+      "bytes": 387229,
+      "sha256": "5801a2a1605622eadc083466f3f2822fe159c03910bcb26c98d38c69cc9a358a"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/luminous_violet_glass/DESIGN.md",
+      "normalized": "design-system/DESIGN.md",
+      "bytes": 11721,
+      "sha256": "910dc774906257a0160f3d10686bac7994d2d8bd30022d67402f3031dacba28c"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/c_a_s_chi_ti_t_b_i_h_c_n_t_t_ch_b_n_ph_i_khung_glass_blur/code.html",
+      "normalized": "lesson-detail/lesson-detail.html",
+      "bytes": 47456,
+      "sha256": "014cd4596803cffac1d0865ff0aaa5aad088b231a23dcd7fd1a47cbc09238604"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/c_a_s_chi_ti_t_b_i_h_c_n_t_t_ch_b_n_ph_i_khung_glass_blur/screen.png",
+      "normalized": "lesson-detail/lesson-detail.png",
+      "bytes": 487198,
+      "sha256": "0c2dbcf215e55d4c5a55a1da6ee03c336429422e2d9a3aacb662d3977110ae67"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/t_ng_k_t_phi_n_luy_n_t_p_interviewus_giao_di_n_m_i_t_i_gi_n_a_s_c/code.html",
+      "normalized": "session-summary/session-summary.html",
+      "bytes": 39453,
+      "sha256": "2eb92ad435dce8a76586f742d2d92eac28b2ada5b76811d2f56d71f5e100376c"
+    },
+    {
+      "original": "stitch_ct_nh_m_5/t_ng_k_t_phi_n_luy_n_t_p_interviewus_giao_di_n_m_i_t_i_gi_n_a_s_c/screen.png",
+      "normalized": "session-summary/session-summary.png",
+      "bytes": 392764,
+      "sha256": "116d487c526b3ca1eeb8deb3ee82d9cef04cd296247b395e04419cf6b52592df"
+    }
+  ]
+}

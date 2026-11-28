@@ -1,0 +1,66 @@
+/* Stitch homepage integration. Layout, spacing and light palette follow the
+ * supplied HTML; overrides are scoped so interview/learning pages keep their UI. */
+.homepage-shell {
+  background: rgb(var(--home-background));
+  color: rgb(var(--home-on-surface));
+  font-family: var(--font-stitch);
+}
+.homepage-shell .page-shell {
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+.homepage-content :is(h1, h2, h3, p, ul) { margin: 0; }
+.homepage-content ul { padding: 0; list-style: none; }
+.homepage-content a { text-decoration: none; }
+.homepage-content button { border: 0; cursor: pointer; }
+.homepage-shell > footer a { text-decoration: none; }
+.homepage-content :is(button, a) { min-height: 44px; }
+.homepage-content .material-symbols-outlined { flex-shrink: 0; }
+.homepage-content :is(.w-12, .w-8, .w-14, .w-16) { flex-shrink: 0; }
+.homepage-content :is(.flex, .grid) > * { min-width: 0; }
+.homepage-shell .homepage-content section.max-w-7xl,
+.homepage-shell > footer > div.max-w-7xl {
+  max-width: none;
+  padding-inline: 0;
+}
+.homepage-shell .site-footer { position: relative; z-index: 10; margin-top: 2.5rem; }
+html[data-theme="dark"] .homepage-shell {
+  color-scheme: dark;
+  --home-background: 19 30 29;
+  --home-on-surface: 241 245 244;
+  --home-on-surface-variant: 180 196 194;
+  --home-primary: 43 181 160;
+  --home-primary-fixed: 12 66 62;
+  --home-primary-fixed-dim: 20 94 88;
+  --home-secondary-fixed: 15 78 73;
+  --home-on-secondary-fixed: 204 251 241;
+  --home-surface-container-low: 23 36 35;
+  --home-surface-container: 33 48 47;
+  --home-surface-container-high: 40 58 56;
+  --home-surface-container-lowest: 27 40 39;
+}
+
+html[data-theme="dark"] .homepage-shell > footer { background: rgb(22 34 33 / .92); }
+html[data-theme="dark"] .homepage-shell .homepage-content [class*="bg-white"] { background-color: rgb(27 40 39 / .92); }
+html[data-theme="dark"] .homepage-shell > footer [class*="bg-white"] { background-color: rgb(33 48 47 / .90); }
+html[data-theme="dark"] .homepage-shell .homepage-content [class*="from-white"] { --tw-gradient-from: rgb(27 40 39 / .96); }
+html[data-theme="dark"] .homepage-shell .homepage-content [class*="to-white"] { --tw-gradient-to: rgb(27 40 39 / .92); }
+html[data-theme="dark"] .homepage-shell .homepage-content section:last-child > div {
+  --tw-gradient-from: #0C423E;
+  --tw-gradient-to: #0F4E49;
+}
+html[data-theme="dark"] .homepage-shell .homepage-content section:last-child a { color: #DDF3F0; }
+@media (max-width: 767px) {
+  /* Avoid stacking costly backdrop layers on narrow, tall pages. The source
+   * translucent fills retain the glass treatment without mobile paint artifacts. */
+  .homepage-shell .homepage-content [class*="backdrop-blur"] { backdrop-filter: none; }
+
+  .homepage-shell .homepage-content h1 { font-size: 38px; line-height: 46px; }
+  .homepage-shell .homepage-content h2 { font-size: 28px; line-height: 36px; }
+  .homepage-content section:first-of-type a { padding-inline: 1.25rem; }
+  .homepage-content .home-console-heading { flex-wrap: wrap; gap: .5rem; }
+}

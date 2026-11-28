@@ -213,7 +213,7 @@ function runEvidencePage({ payload }) {
   return { querySelector, scrollCalls };
 }
 
-test("UI-01: groups duplicate exercise recommendations into one card with all reasons and one practice button", async () => {
+test("UI-01: groups duplicate exercise recommendations into one card with all reasons and no alternate-question action", async () => {
   const makeRec = (criterionId, criterionLabel, reason) => ({
     exercise_id: "exercise.programming.mutable_defaults_and_binding",
     version: 1,
@@ -269,7 +269,7 @@ test("UI-01: groups duplicate exercise recommendations into one card with all re
   const practiceButtons = cards[0]
     .querySelectorAll("button")
     .filter((btn) => btn.textContent.includes("Luyện lại với câu hỏi khác"));
-  assert.equal(practiceButtons.length, 1);
+  assert.equal(practiceButtons.length, 0);
 });
 
 test("UI-01: preserves prerequisite ordering across distinct exercises when grouping", async () => {

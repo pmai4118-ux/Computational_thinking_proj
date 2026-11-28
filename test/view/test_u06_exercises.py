@@ -26,18 +26,18 @@ def test_u06_exercise_page_accepts_session_skill_and_exercise_filters(
     assert "Vì sao bài này phù hợp" in exercise_js
 
 
-def test_u06_renders_api_exercises_and_starts_reviewed_practice() -> None:
+def test_u06_renders_guidance_without_alternate_question_practice() -> None:
     exercise_js = (ROOT_DIR / "source" / "view" / "static" / "js" / "exercise.js").read_text(encoding="utf-8")
 
     assert "estimated_duration_minutes" in exercise_js
     assert "prerequisite_ids" in exercise_js
     assert "matched_gap" in exercise_js
     assert "source.required_notice" in exercise_js
-    assert "eligible_alternate_question_available" in exercise_js
+    assert "eligible_alternate_question_available" not in exercise_js
     assert "Không tạo bài thay thế tự động" in exercise_js
-    assert "startPractice" in exercise_js
-    assert "gap.answer_ref" in exercise_js
-    assert "api.startPractice(sessionId, answer.id" in exercise_js
-    assert "Luyện lại với câu hỏi khác" in exercise_js
+    assert "startPractice" not in exercise_js
+    assert "gap.answer_ref" in exercise_js  # Evidence identity still deduplicates guidance.
+    assert "api.startPractice(sessionId, answer.id" not in exercise_js
+    assert "Luyện lại với câu hỏi khác" not in exercise_js
     api_client = (ROOT_DIR / "source" / "view" / "static" / "js" / "api_client.js").read_text(encoding="utf-8")
-    assert "}/practice`" in api_client
+    assert "}/practice`" not in api_client

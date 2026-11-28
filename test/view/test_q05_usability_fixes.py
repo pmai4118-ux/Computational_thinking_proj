@@ -29,7 +29,7 @@ def test_q05_welcome_history_localizes_ended_early_and_links_directly_to_summary
     assert resumed.status_code == 200
     assert resumed.json()["state"] == "in_progress"
 
-    welcome = ui_client.get("/")
+    welcome = ui_client.get("/interview")
     assert welcome.status_code == 200
     assert "Đang thực hiện" in welcome.text
     assert "ended_early" not in welcome.text
@@ -50,7 +50,7 @@ def test_q05_workspace_compacts_header_separates_secondary_actions_and_styles_co
 
     components_css = (STATIC_CSS_DIR / "components.css").read_text(encoding="utf-8")
     workspace_css = (STATIC_CSS_DIR / "workspace.css").read_text(encoding="utf-8")
-    assert "background-color: #1a1626;" in components_css
+    assert "background-color: #0f3d3e;" in components_css
     assert "white-space: pre-wrap;" in components_css
     assert "overflow-wrap: anywhere;" in components_css
     assert ".btn--ghost" in components_css
@@ -151,7 +151,7 @@ def test_q05_welcome_and_summary_use_readable_session_labels_instead_of_raw_id_h
 ) -> None:
     session_id = ui_session["session_id"]
 
-    welcome = ui_client.get("/")
+    welcome = ui_client.get("/interview")
     assert welcome.status_code == 200
     assert f"<strong>Phiên {session_id}</strong>" not in welcome.text
     assert "Phiên luyện phỏng vấn" in welcome.text

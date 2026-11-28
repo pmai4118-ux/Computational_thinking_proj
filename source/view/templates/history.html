@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% set nav_active = "history" %}
+{% block title %}Lịch sử phiên phỏng vấn — interviewUS{% endblock %}
+{% block content %}
+<header class="history-page-header">
+  <div>
+    <h1>Lịch sử phiên phỏng vấn</h1>
+    <p class="text-secondary">Các phiên của bạn trên trình duyệt này. Chọn một phiên để tiếp tục hoặc xem tổng kết.</p>
+  </div>
+  <a class="btn btn--primary" href="/setup">Bắt đầu phiên mới {{ icon('arrow') }}</a>
+</header>
+{% include "partials/session_history.html" %}
+{% endblock %}

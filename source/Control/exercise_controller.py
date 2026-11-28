@@ -23,12 +23,9 @@ from source.Control.schemas import (
     StartPracticeRequest,
     VersionedRefDTO,
 )
-from source.Model.evaluation import AnswerRevisionRef
 from source.Model.ids import AnswerId, ExerciseId, SessionId
 from source.Model.question import SourceMetadata
 from source.service.recommendation_service import (
-    AlternativeQuestionUnavailableError,
-    RecommendationNotFoundError,
     RecommendationService,
 )
 
@@ -115,7 +112,7 @@ class ExerciseController:
                     ),
                     recommendation_reason=item.reason,
                     source=_source_dto(source[1]),
-                    eligible_alternate_question_available=item.alternate_question is not None,
+                    eligible_alternate_question_available=False,
                 )
             )
         return ExerciseRecommendationsResponse(
@@ -160,37 +157,18 @@ class ExerciseController:
         *,
         owner_token: str | None,
     ) -> SessionViewDTO:
+        # Keep ownership checks for old bookmarked/API clients; never create a session.
         self._require_owned_session(session_id, owner_token)
-        owner_hash = hash_owner_token(owner_token) if owner_token else ""
-        try:
-            session = self._service.start_practice(
+        raise ApiControllerError(
+            status.HTTP_410_GONE,
+            ApiErrorResponse(
+                error_code=ErrorCode.FEATURE_RETIRED,
+                message="Chức năng luyện lại bằng câu hỏi khác đã được gỡ.",
                 session_id=session_id,
-                owner_token_hash=owner_hash,
-                answer_ref=AnswerRevisionRef(answer_id, payload.answer_revision),
-                criterion_id=payload.criterion_id,
-                exercise_id=payload.exercise_id,
-            )
-        except RecommendationNotFoundError as error:
-            raise ApiControllerError(
-                status.HTTP_422_UNPROCESSABLE_CONTENT,
-                ApiErrorResponse(
-                    error_code=ErrorCode.INVALID_INPUT,
-                    message=str(error),
-                    session_id=session_id,
-                    recovery_action="Chọn một bài tập gắn với điểm thiếu đã xác nhận trong câu trả lời này.",
-                ),
-            ) from error
-        except AlternativeQuestionUnavailableError as error:
-            raise ApiControllerError(
-                status.HTTP_409_CONFLICT,
-                ApiErrorResponse(
-                    error_code=ErrorCode.INVALID_STATE_TRANSITION,
-                    message=str(error),
-                    session_id=session_id,
-                    recovery_action="Hãy thực hành theo hướng dẫn bài tập khi chưa có câu hỏi biến thể khác.",
-                ),
-            ) from error
-        return self._interview_controller.get_session(session.id, owner_token=owner_token)
+                retryable=False,
+                recovery_action="Xem lại bài đã lưu hoặc mở hướng dẫn ôn tập theo điểm thiếu.",
+            ),
+        )
 
 
 def build_exercise_router(controller: ExerciseController) -> APIRouter:
@@ -211,8 +189,10 @@ def build_exercise_router(controller: ExerciseController) -> APIRouter:
 
     @router.post(
         "/sessions/{session_id}/answers/{answer_id}/practice",
-        response_model=SessionViewDTO,
-        status_code=status.HTTP_201_CREATED,
+        response_model=None,
+        status_code=status.HTTP_410_GONE,
+        deprecated=True,
+        responses={410: {"model": ApiErrorResponse, "description": "Alternate-question practice has been retired."}},
     )
     def start_practice(
         session_id: str, answer_id: str, payload: StartPracticeRequest, request: Request

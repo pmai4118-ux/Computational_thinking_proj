@@ -484,7 +484,7 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
         assert target_rec.matched_gap is not None
         assert target_rec.matched_gap.answer_ref.id is not None
 
-        # Step 6: Start Targeted Practice Retry with Alternate Question
+        # Step 6: The retired alternate-question endpoint cannot create a session
         practice_resp = client.post(
             f"/api/sessions/{session_id}/answers/{target_rec.matched_gap.answer_ref.id}/practice",
             json={
@@ -493,33 +493,9 @@ def test_q02_full_four_question_interview_flow_to_exercise_practice(tmp_path: Pa
                 "exercise_id": target_rec.exercise_id,
             },
         )
-        assert practice_resp.status_code == 201
-        practice_session = SessionViewDTO.model_validate(practice_resp.json())
-        assert practice_session.session_id != session_id
-        assert practice_session.progress.total_questions == 1
-        assert practice_session.progress.current_index == 0
-        assert practice_session.current_question is not None
-        assert practice_session.state.value == "in_progress"
-
-        # A one-question practice summary unlocks after its only answer is saved.
-        practice_id = str(practice_session.session_id)
-        assert client.get(f"/api/sessions/{practice_id}/summary").status_code == 409
-        practice_question = practice_session.current_question
-        practice_answer = client.post(
-            f"/api/sessions/{practice_id}/answers",
-            json={
-                "question_id": practice_question.id,
-                "question_version": practice_question.version,
-                "client_submission_id": "practice-answer",
-                "text": "A complete targeted practice answer.",
-            },
-        )
-        assert practice_answer.status_code == 201
-        practice_advanced = client.post(
-            f"/api/sessions/{practice_id}/next", json={"from_question_index": 0}
-        )
-        assert practice_advanced.status_code == 200
-        assert client.get(f"/api/sessions/{practice_id}/summary").status_code == 200
+        assert practice_resp.status_code == 410
+        assert practice_resp.json()["error_code"] == "FEATURE_RETIRED"
+        assert target_rec.eligible_alternate_question_available is False
 
 
 # =============================================================================

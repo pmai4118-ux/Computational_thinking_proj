@@ -1,106 +1,281 @@
 {% extends "base.html" %}
+{% set nav_active = "interview" %}
 
 {% block title %}Kết quả câu trả lời — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/results.css?v=20261127-p3">
-<link rel="stylesheet" href="/static/css/features.css?v=20261127-p6">
+<link rel="stylesheet" href="/static/css/results.css?v=20261128-merged">
+<link rel="stylesheet" href="/static/css/features.css?v=20261128-merged">
 {% endblock %}
 
 {% block content %}
-<section class="card results-page" data-answer-review
-         data-session-id="{{ session.session_id }}"
-         data-evaluation-timing="{{ session.evaluation_timing }}"
-         data-answer-id="{{ answer_id or '' }}"
-         data-answer-revision="{{ answer_revision or '' }}"
-         data-current-index="{{ session.progress.current_index }}"
-         data-current-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"
-         data-current-answer-revision="{{ session.current_answer.revision if session.current_answer else '' }}"
-         aria-labelledby="review-heading">
-  <div class="results-header">
-    <div>
-      <p class="eyebrow">Kết quả một câu</p>
-      <h1 id="review-heading">Đối chiếu câu trả lời theo tiêu chí</h1>
-    </div>
-    <div class="action-row">
-      {% if session.state == "in_progress" and session.current_question %}
-        <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}">Về câu hỏi</a>
-        <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
-      {% else %}
-        <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Về tổng kết</a>
-      {% endif %}
-    </div>
-  </div>
-  <p class="text-secondary reading-measure">Chọn một tiêu chí để xem đúng đoạn trích trong bài đã gửi. “Chưa đủ bằng chứng” không được tính thành 0 điểm.</p>
-  <div id="review-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
-  <p id="review-status" class="alert alert--status" role="status" aria-live="polite">{% if answer_id %}Đang tải kết quả đã lưu…{% else %}Chưa có bài đã lưu để hiển thị kết quả.{% endif %}</p>
-  <div class="action-row" id="review-recovery-actions">
-    <button id="retry-review-evaluation" class="btn btn--primary" type="button" hidden>Thử đánh giá lại</button>
-    <button id="retry-review-load" class="btn btn--secondary" type="button" hidden>Tải lại kết quả</button>
-  </div>
-  <div id="review-content" hidden>
-    <section aria-labelledby="review-question-heading">
-      <h2 id="review-question-heading">Đề bài</h2>
-      <p id="review-question-prompt"></p>
-      <pre id="review-question-code" class="code-block" hidden></pre>
-    </section>
-    <section class="score-summary" aria-label="Tổng điểm câu trả lời">
-      <div><span class="score-summary__label">Điểm câu này</span><strong id="evaluation-total"></strong></div>
-      <p id="evaluation-state" class="badge"></p>
-    </section>
-    <div class="review-layout">
-      <section aria-labelledby="criteria-heading">
-        <h2 id="criteria-heading">Tiêu chí đánh giá</h2>
-        <div id="criteria-list" class="criterion-list"></div>
-      </section>
-      <section class="evidence-panel" aria-labelledby="evidence-heading">
-        <h2 id="evidence-heading">Căn cứ trong bài làm</h2>
-        <p id="selected-criterion-explanation" class="text-secondary"></p>
-        <div id="evidence-detail" class="evidence-detail" aria-live="polite"></div>
-        <h3>Bài trả lời đã lưu</h3>
-        <pre id="answer-source" class="answer-source"></pre>
-      </section>
-    </div>
-    <section id="adaptive-probe-section" class="probe-panel" aria-labelledby="probe-heading" hidden>
-      <div>
-        <h2 id="probe-heading">Hỏi đào sâu có giới hạn (Adaptive Follow-up)</h2>
-        <p id="probe-policy" class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);"></p>
-      </div>
-      <p id="probe-reason" style="margin: 0; font-size: var(--font-size-sm);"></p>
-      <p id="probe-prompt" style="margin: 0; font-weight: 600;"></p>
-      <form id="probe-form" class="stack" hidden>
-        <div class="form-field">
-          <label class="form-label" for="probe-response">Câu trả lời làm rõ (bài gốc vẫn giữ nguyên)</label>
-          <textarea id="probe-response" class="form-textarea" rows="4" maxlength="5000"
-                    placeholder="Bổ sung giải thích trực tiếp bằng văn bản cho tiêu chí đang hỏi đào sâu..."></textarea>
+<div class="results-stage">
+  <section class="results-page" data-answer-review
+           data-session-id="{{ session.session_id }}"
+           data-evaluation-timing="{{ session.evaluation_timing }}"
+           data-answer-id="{{ answer_id or '' }}"
+           data-answer-revision="{{ answer_revision or '' }}"
+           data-current-index="{{ session.progress.current_index }}"
+           data-current-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"
+           data-current-answer-revision="{{ session.current_answer.revision if session.current_answer else '' }}"
+           aria-labelledby="review-heading">
+
+    <!-- Header Card -->
+    <div class="results-header-card">
+      <div class="results-header">
+        <div>
+          <p class="eyebrow">Kết quả một câu</p>
+          <h1 id="review-heading">Đối chiếu câu trả lời theo tiêu chí</h1>
         </div>
         <div class="action-row">
-          <button id="probe-submit" class="btn btn--primary" type="submit">Gửi câu trả lời làm rõ</button>
+          {% if session.state == "in_progress" and session.current_question %}
+            <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}">Về câu hỏi</a>
+            <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+          {% else %}
+            <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/summary">Về tổng kết</a>
+          {% endif %}
         </div>
-      </form>
-      <div id="probe-error" class="alert alert--error" role="alert" hidden></div>
-      <div id="probe-results" class="stack"></div>
-      <p id="probe-variant-note" class="form-hint" style="margin: 0;"></p>
-    </section>
-    <section id="answer-replay-section" class="probe-panel" aria-labelledby="answer-replay-heading" hidden>
-      <div>
-        <h2 id="answer-replay-heading">Decision Replay từ bài trả lời này</h2>
-        <p id="answer-replay-summary" class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);"></p>
       </div>
-      <form id="answer-replay-form" method="post" action="#">
-        <button id="answer-replay-submit" class="btn btn--secondary" type="submit">Mở &amp; tua lại Decision Replay từ bài làm</button>
-      </form>
-    </section>
-  </div>
-  <div class="action-row">
-    {% if session.state == "in_progress" and session.current_answer and answer_id == session.current_answer.answer_id and answer_revision|int == session.current_answer.revision %}
-      <button id="next-question" class="btn btn--primary" type="button" hidden>
-        {% if session.progress.current_index + 1 == session.progress.total_questions %}Hoàn tất phiên{% else %}Câu tiếp theo{% endif %}
-      </button>
-    {% endif %}
-    <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập theo điểm thiếu</a>
-    <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
-  </div>
-</section>
+      <p class="results-subtitle reading-measure">
+        Chọn một tiêu chí để xem đúng đoạn trích trong bài đã gửi. “Chưa đủ bằng chứng” không được tính thành 0 điểm.
+      </p>
+    </div>
+
+    <div id="review-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
+    <p id="review-status" class="alert alert--status" role="status" aria-live="polite">{% if answer_id %}Đang tải kết quả đã lưu…{% else %}Chưa có bài đã lưu để hiển thị kết quả.{% endif %}</p>
+  <section id="review-activity" aria-label="Trạng thái đối chiếu bài làm" hidden></section>
+
+    <div class="action-row" id="review-recovery-actions">
+      <button id="retry-review-evaluation" class="btn btn--primary" type="button" hidden>Thử đánh giá lại</button>
+      <button id="retry-review-load" class="btn btn--secondary" type="button" hidden>Tải lại kết quả</button>
+    </div>
+    <div id="review-content" hidden>
+      <!-- Question Reference -->
+      <section class="review-glass-card" aria-labelledby="review-question-heading" style="margin-bottom: var(--space-4);">
+        <h2 id="review-question-heading" class="review-card-head__title">
+          {{ icon('book') }}
+          <span>Đề bài</span>
+        </h2>
+        <p id="review-question-prompt" class="reading-measure" style="margin: 0;"></p>
+        <pre id="review-question-code" class="code-block" hidden></pre>
+      </section>
+
+      <!-- Navigation Tabs (Two Views of the Same Saved Answer Revision) -->
+      <div class="review-tablist" role="tablist" aria-label="Chế độ xem kết quả câu trả lời">
+        <button type="button"
+                class="review-tab"
+                id="review-tab-overview"
+                role="tab"
+                aria-selected="true"
+                aria-controls="tab-panel-overview">
+          {{ icon('chart') }}
+          <span>Tổng quan kết quả &amp; Rubric</span>
+          <span class="review-tab__pill" id="tab-criteria-count">0 tiêu chí</span>
+        </button>
+        <button type="button"
+                class="review-tab"
+                id="review-tab-detail"
+                role="tab"
+                aria-selected="false"
+                aria-controls="tab-panel-detail">
+          {{ icon('chat') }}
+          <span>Bài trả lời đã lưu &amp; Nhận xét chi tiết</span>
+          <span class="review-tab__pill" id="tab-quotes-count">0 đoạn trích</span>
+        </button>
+      </div>
+
+      <!-- TAB 1: TỔNG QUAN KẾT QUẢ & RUBRIC -->
+      <div id="tab-panel-overview" class="review-tabpanel" role="tabpanel" aria-labelledby="review-tab-overview" style="margin-top: 1.5rem;">
+        <div class="review-top-grid">
+          <!-- Left Column: Overall Score & Assessor Callout -->
+          <div class="review-glass-card" aria-label="Tổng điểm câu trả lời">
+            <div class="stack">
+              <div class="review-card-head">
+                <h2 class="review-card-head__title">
+                  {{ icon('book') }}
+                  <span>Điểm &amp; Đánh giá chung</span>
+                </h2>
+                <p id="evaluation-state" class="badge" style="margin: 0;"></p>
+              </div>
+
+              <div class="score-overview-grid">
+                <div class="score-donut-box">
+                  <div class="score-donut-wrap">
+                    <svg class="score-donut-svg" viewBox="0 0 36 36" aria-hidden="true">
+                      <path class="score-donut-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+                      <path id="score-donut-arc" class="score-donut-arc" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="3.5"></path>
+                    </svg>
+                    <div class="score-donut-center">
+                      <strong id="evaluation-total" class="score-donut-value"></strong>
+                      <span class="score-donut-label">Điểm câu</span>
+                    </div>
+                  </div>
+                  <span id="score-percent-label" class="score-percent-note"></span>
+                </div>
+
+                <div id="score-bars-list" class="score-bars-list" aria-label="Tỷ lệ theo từng tiêu chí"></div>
+              </div>
+            </div>
+
+            <div class="assessor-callout">
+              <div class="assessor-callout__icon" aria-hidden="true">
+                {{ icon('book') }}
+              </div>
+              <div>
+                <strong style="color: var(--stitch-primary);">Us-Bot Assessor:</strong>
+                <span id="assessor-summary-text">Nhận xét tổng hợp từ kết quả rubric đang tải.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Rubric Criterion Cards -->
+          <section class="review-glass-card" aria-labelledby="criteria-heading" style="justify-content: flex-start;">
+            <div class="review-card-head">
+              <h2 id="criteria-heading" class="review-card-head__title">
+                {{ icon('book') }}
+                <span>Tiêu chí Rubric đánh giá</span>
+              </h2>
+              <span class="badge" id="criteria-count-pill">0 tiêu chí</span>
+            </div>
+            <div id="criteria-list" class="criterion-list"></div>
+          </section>
+        </div>
+
+        <!-- Bottom Full-Width Criterion Evidence Panel -->
+        <section class="evidence-panel" aria-labelledby="evidence-heading">
+          <div class="review-card-head">
+            <div>
+              <h2 id="evidence-heading" class="review-card-head__title">
+                {{ icon('shield') }}
+                <span id="evidence-panel-title">Căn cứ trong bài làm</span>
+              </h2>
+              <p class="form-hint" id="evidence-panel-subtitle" style="margin-top: 0.25rem;"></p>
+            </div>
+            <div class="action-row" style="gap: 0.5rem;">
+              <span class="badge" id="evidence-panel-index-badge"></span>
+              <span class="badge" id="evidence-panel-score-badge"></span>
+            </div>
+          </div>
+
+          <div class="evidence-explanation-card">
+            <strong style="display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--stitch-primary); margin-bottom: 0.25rem;">
+              Đánh giá tiêu chí &amp; Nhận định đối chiếu
+            </strong>
+            <p id="selected-criterion-explanation" style="margin: 0;"></p>
+          </div>
+
+          <div id="evidence-detail" class="evidence-detail" aria-live="polite"></div>
+        </section>
+      </div>
+
+      <!-- TAB 2: BÀI TRẢ LỜI ĐÃ LƯU & NHẬN XÉT CHI TIẾT -->
+      <div id="tab-panel-detail" class="review-tabpanel" role="tabpanel" aria-labelledby="review-tab-detail" hidden style="margin-top: 1.5rem;">
+        <div class="review-glass-card" style="gap: var(--space-5);">
+          <div class="review-card-head">
+            <div>
+              <h2 class="review-card-head__title">
+                {{ icon('book') }}
+                <span>Bài trả lời đã lưu (Trích xuất &amp; Đối chiếu theo tiêu chí)</span>
+              </h2>
+              <p class="form-hint" style="margin-top: 0.25rem;">
+                Nhấp hoặc dùng bàn phím chọn từng đoạn tô màu để cập nhật khung nhận xét chi tiết bên dưới.
+              </p>
+            </div>
+            <div class="action-row" style="gap: 0.5rem;">
+              <span class="badge badge--met" id="detail-met-count-badge">Đạt chuẩn (0 đoạn)</span>
+              <span class="badge badge--unmet" id="detail-unmet-count-badge">Chưa đạt (0 đoạn)</span>
+              <span class="badge badge--unresolved" id="detail-unresolved-count-badge" hidden>Chưa rõ / Giao thoa (0 đoạn)</span>
+            </div>
+          </div>
+
+          <!-- Full Saved Answer Text -->
+          <div class="detail-answer-shell">
+            <div class="detail-answer-shell__head">
+              <strong style="color: var(--stitch-on-surface);">Toàn văn bài trả lời đã lưu</strong>
+              <span class="detail-answer-meta" id="detail-answer-meta">0 từ</span>
+            </div>
+            <pre id="answer-source" class="answer-source"></pre>
+          </div>
+
+          <!-- Dynamic Detail Feedback Panel -->
+          <div class="detail-feedback-panel" id="detail-feedback-panel">
+            <div class="detail-feedback-panel__accent" id="detail-panel-accent" aria-hidden="true"></div>
+            <div class="review-card-head">
+              <div>
+                <h3 style="margin: 0; font-size: 1.0625rem;">Chi tiết nhận xét theo đoạn trích / tiêu chí đang chọn</h3>
+                <p class="form-hint" id="detail-panel-subtitle" style="margin-top: 0.125rem;"></p>
+              </div>
+              <span class="badge" id="detail-panel-badge"></span>
+            </div>
+            <div id="detail-panel-body" class="stack" style="gap: 0.75rem;"></div>
+          </div>
+
+          <!-- Utility Action Bar -->
+          <div class="detail-utility-bar">
+            <span class="form-hint">
+              Mẹo tương tác: Chọn bất kỳ đoạn tô màu nào trong bài làm để đối chiếu đúng tiêu chí và gợi ý khắc phục.
+            </span>
+            <div class="detail-utility-actions">
+              <button type="button" class="btn btn--ghost" id="jump-primary-unmet-btn" hidden>
+                {{ icon('book') }}
+                <span>Xem lỗi chính</span>
+              </button>
+              <button type="button" class="btn btn--secondary" id="copy-answer-btn">
+                {{ icon('copy') }}
+                <span id="copy-answer-label">Sao chép bài làm</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Adaptive Follow-up Probe & Decision Replay Actions -->
+      <section id="adaptive-probe-section" class="probe-panel" aria-labelledby="probe-heading" hidden style="margin-top: var(--space-5);">
+        <div>
+          <h2 id="probe-heading">Hỏi đào sâu có giới hạn (Adaptive Follow-up)</h2>
+          <p id="probe-policy" class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);"></p>
+        </div>
+        <p id="probe-reason" style="margin: 0; font-size: var(--font-size-sm);"></p>
+        <p id="probe-prompt" style="margin: 0; font-weight: 600;"></p>
+        <form id="probe-form" class="stack" hidden>
+          <div class="form-field">
+            <label class="form-label" for="probe-response">Câu trả lời làm rõ (bài gốc vẫn giữ nguyên)</label>
+            <textarea id="probe-response" class="form-textarea" rows="4" maxlength="5000"
+                      placeholder="Bổ sung giải thích trực tiếp bằng văn bản cho tiêu chí đang hỏi đào sâu..."></textarea>
+          </div>
+          <div class="action-row">
+            <button id="probe-submit" class="btn btn--primary" type="submit">Gửi câu trả lời làm rõ</button>
+          </div>
+        </form>
+        <div id="probe-error" class="alert alert--error" role="alert" hidden></div>
+        <div id="probe-results" class="stack"></div>
+        <p id="probe-variant-note" class="form-hint" style="margin: 0;"></p>
+      </section>
+
+      <section id="answer-replay-section" class="probe-panel" aria-labelledby="answer-replay-heading" hidden style="margin-top: var(--space-4);">
+        <div>
+          <h2 id="answer-replay-heading">Decision Replay từ bài trả lời này</h2>
+          <p id="answer-replay-summary" class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);"></p>
+        </div>
+        <form id="answer-replay-form" method="post" action="#">
+          <button id="answer-replay-submit" class="btn btn--secondary" type="submit">Mở &amp; tua lại Decision Replay từ bài làm</button>
+        </form>
+      </section>
+    </div>
+
+    <!-- Footer Navigation Bar -->
+    <div class="review-footer-actions">
+      <div class="action-row">
+        {% if session.state == "in_progress" and session.current_answer and answer_id == session.current_answer.answer_id and answer_revision|int == session.current_answer.revision %}
+          <button id="next-question" class="btn btn--primary" type="button" hidden>
+            {% if session.progress.current_index + 1 == session.progress.total_questions %}Hoàn tất phiên{% else %}Câu tiếp theo{% endif %}
+          </button>
+        {% endif %}
+        <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập theo điểm thiếu</a>
+      </div>
+      <a class="btn btn--ghost" href="/sessions/{{ session.session_id }}/summary">Xem tổng kết phiên</a>
+    </div>
+  </section>
+</div>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261127-p3" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/evidence.js?v=20261128-merged" defer></script>{% endblock %}

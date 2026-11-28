@@ -44,7 +44,6 @@ test("api_client exposes draft, submit, follow-up, and replay methods", async ()
     "getSessionSummary",
     "getExerciseRecommendations",
     "getExercise",
-    "startPractice",
     "getFollowUpPlan",
     "submitFollowUp",
     "getAnswerReplay",

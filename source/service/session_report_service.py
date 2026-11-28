@@ -248,11 +248,9 @@ class SessionReportService:
                         if matches and all(item.exercise.estimated_duration_minutes is not None for item in matches)
                         else None
                     ),
-                    alternate_question_available=any(item.alternate_question is not None for item in matches),
+                    alternate_question_available=False,
                     note=(
-                        "Làm bài nền tảng trước, rồi thử lại bằng câu hỏi đã duyệt khác."
-                        if matches and any(item.alternate_question is not None for item in matches)
-                        else "Chưa có biến thể đã duyệt phù hợp để thử lại."
+                        "Đọc hướng dẫn theo thứ tự tiên quyết và đối chiếu lại bài làm đã lưu."
                         if matches else "Chưa có bài tập đã duyệt khớp tiêu chí này."
                     ),
                 ))

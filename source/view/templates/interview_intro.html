@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "partials/icons.html" import icon -%}
+{% set nav_active = "interview" %}
+
+{% block title %}Phỏng vấn ảo — interviewUS{% endblock %}
+
+{% block content %}
+<section class="card welcome-hero" aria-labelledby="welcome-heading">
+  <div class="welcome-hero__grid">
+    <div class="stack">
+      <div>
+        <span class="badge">Phiên bản MVP · Tiếng Việt</span>
+      </div>
+      <h1 id="welcome-heading">Luyện phỏng vấn kỹ thuật Backend với căn cứ từ bài làm</h1>
+      <p class="welcome-hero__lead">
+        Thực hành trả lời tự luận cho vị trí <strong>Backend Intern / Fresher</strong>.
+        Mỗi câu trả lời được đối chiếu trực tiếp với tiêu chí quan sát được và trích dẫn nguyên văn,
+        giúp bạn phân biệt rõ phần đã đạt, phần thiếu yêu cầu và phần chưa đủ bằng chứng.
+      </p>
+
+      <div class="action-row">
+        <a class="btn btn--primary" href="/setup" id="open-interview-setup">
+          <span>Bắt đầu luyện tập</span>
+          {{ icon('arrow') }}
+        </a>
+        <a class="btn btn--secondary" href="/learning-path">
+          {{ icon('route') }}
+          <span>Xem lộ trình Java</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="welcome-hero__specs">
+      <h2 class="welcome-hero__specs-title">Thông tin cấu trúc phiên</h2>
+      <ul class="meta-list welcome-spec-list" aria-label="Thông tin cấu trúc phiên">
+        <li>
+          <span class="welcome-spec-icon" aria-hidden="true">{{ icon('layers') }}</span>
+          <div>
+            <strong>Cấu trúc cố định:</strong>
+            4 câu hỏi tiếng Việt (Kiến thức lập trình, Tình huống kỹ thuật, Giải thích thuật toán, Đánh giá mã nguồn).
+          </div>
+        </li>
+        <li>
+          <span class="welcome-spec-icon" aria-hidden="true">{{ icon('clock') }}</span>
+          <div>
+            <strong>Thời lượng ước tính:</strong>
+            khoảng 25–35 phút (ước tính tham khảo, không giới hạn đếm ngược cứng).
+          </div>
+        </li>
+        <li>
+          <span class="welcome-spec-icon" aria-hidden="true">{{ icon('shield') }}</span>
+          <div>
+            <strong>Quyền riêng tư:</strong>
+            Không yêu cầu tạo tài khoản, không thu thập CV hay thông tin cá nhân.
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+{% include "partials/session_history.html" %}
+{% endblock %}
