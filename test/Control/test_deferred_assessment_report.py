@@ -66,6 +66,8 @@ def test_deferred_four_question_flow_and_three_part_report(tmp_path: Path) -> No
             before = client.get(f"/api/sessions/{session_id}/summary").json()
             assert before["report"]["status"] == "assessing"
             assert before["report"]["overview"]["evaluated_count"] < 4
+            assert before["scored_points_total"] is None
+            assert before["scored_points_maximum"] is None
         finally:
             release.set()
             wait_for_evaluation_queue(app)
@@ -80,7 +82,15 @@ def test_deferred_four_question_flow_and_three_part_report(tmp_path: Path) -> No
             assert replay.json()["result"]["evaluation_id"] == first.json()["result"]["evaluation_id"]
         assert provider.call_count == 4
 
-        report = client.get(f"/api/sessions/{session_id}/summary").json()["report"]
+        summary_after = client.get(f"/api/sessions/{session_id}/summary").json()
+        assert "total_score" not in summary_after
+        assert summary_after["scored_points_total"] == sum(
+            item["total_score"] for item in summary_after["outcomes"]
+        )
+        assert summary_after["scored_points_maximum"] == sum(
+            item["maximum_score"] for item in summary_after["outcomes"]
+        )
+        report = summary_after["report"]
         assert report["status"] == "complete"
         assert set(report) == {"session_id", "status", "overview", "details", "proposals", "message"}
         assert len(report["details"]) == 4
@@ -146,7 +156,10 @@ def test_timeout_keeps_report_partial_until_saved_answer_retry(tmp_path: Path) -
         )
         wait_for_evaluation_queue(app)
 
-        partial = client.get(f"/api/sessions/{session_id}/summary").json()["report"]
+        partial_summary = client.get(f"/api/sessions/{session_id}/summary").json()
+        assert partial_summary["scored_points_total"] is None
+        assert partial_summary["scored_points_maximum"] is None
+        partial = partial_summary["report"]
         assert partial["status"] == "partial_failure"
         assert partial["details"][0]["answer_text"] == original_text
         assert partial["details"][0]["total_score"] is None
@@ -158,6 +171,9 @@ def test_timeout_keeps_report_partial_until_saved_answer_retry(tmp_path: Path) -
         wait_for_evaluation_queue(app)
         assert attempts == 5
 
-        complete = client.get(f"/api/sessions/{session_id}/summary").json()["report"]
+        complete_summary = client.get(f"/api/sessions/{session_id}/summary").json()
+        assert complete_summary["scored_points_total"] is not None
+        assert complete_summary["scored_points_maximum"] == 24
+        complete = complete_summary["report"]
         assert complete["status"] == "complete"
         assert complete["details"][0]["answer_text"] == original_text

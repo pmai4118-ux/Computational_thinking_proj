@@ -222,9 +222,10 @@ def build_pages_router(
         "insufficient_history": "Mới quan sát 1 lần",
     }
     confidence_labels = {
-        "limited": "Bằng chứng còn ít",
-        "mixed": "Kết quả qua các phiên không đồng đều",
-        "consistent": "Quan sát lặp lại ổn định",
+        "limited": "Mới quan sát 1 lần (bằng chứng còn ít)",
+        "mixed": "Kết quả chưa đồng đều qua các phiên",
+        "repeated": "Quan sát lặp lại ổn định",
+        "unresolved": "Chưa đủ căn cứ để kết luận",
     }
 
     @router.get("/", response_class=HTMLResponse)
@@ -268,8 +269,18 @@ def build_pages_router(
         ]
         counts = {
             "strength": sum(1 for e in profile_dto.entries if e.state.value == "observed_strength"),
+            "strength_confirmed": sum(
+                1
+                for e in profile_dto.entries
+                if e.state.value == "observed_strength" and e.evidence_confidence.value == "repeated"
+            ),
+            "strength_initial": sum(
+                1
+                for e in profile_dto.entries
+                if e.state.value == "observed_strength" and e.evidence_confidence.value != "repeated"
+            ),
             "practice": sum(1 for e in profile_dto.entries if e.state.value == "needs_practice"),
-            "unresolved": sum(1 for e in profile_dto.entries if e.state.value == "unresolved"),
+            "unresolved": sum(1 for e in profile_dto.entries if e.state.value == "insufficient_evidence"),
         }
         html = profile_template.render(
             demo_mode_label=controller.demo_mode_label,
@@ -718,7 +729,7 @@ def build_pages_router(
                 apply_owner_cookie(resp, token)
             return resp
         redirect = RedirectResponse(
-            url=f"/jd/{created.analysis_id}", status_code=status.HTTP_303_SEE_OTHER
+            url=f"/jd/{created.analysis_id}#jd-result", status_code=status.HTTP_303_SEE_OTHER
         )
         if created_new:
             apply_owner_cookie(redirect, token)

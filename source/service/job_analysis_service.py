@@ -23,6 +23,16 @@ from source.service.competency_profile_service import CompetencyProfileService
 NORMALIZATION_VERSION = "jd_rules/v1"
 MAX_JD_TEXT_LENGTH = 30_000
 
+_CRITERION_TYPE_LABELS: dict[str, str] = {
+    "behavior_explanation": "Giải thích hành vi mã",
+    "contract_preservation": "Giữ hợp đồng & hành vi bên gọi",
+    "test_design": "Thiết kế ca kiểm thử",
+    "failure_analysis": "Phân tích lỗi & tranh chấp",
+    "invariant_preservation": "Bảo vệ bất biến dữ liệu",
+    "correctness_argument": "Lập luận tính đúng đắn",
+    "complexity_analysis": "Phân tích độ phức tạp",
+}
+
 
 class JobAnalysisError(ValueError):
     """Base error for JD import and skill-gap workflows."""
@@ -283,8 +293,12 @@ class JobAnalysisService:
                 weak_types = tuple(
                     e.criterion_type for e in entries if e.state is CompetencyState.NEEDS_PRACTICE
                 )
+                weak_labels = tuple(
+                    _CRITERION_TYPE_LABELS.get(criterion_type, criterion_type)
+                    for criterion_type in weak_types
+                )
                 explanation = (
-                    f"Hồ sơ hiện ghi nhận điểm cần luyện ở nhóm tiêu chí: {', '.join(weak_types)}."
+                    f"Hồ sơ hiện ghi nhận điểm cần luyện ở nhóm tiêu chí: {', '.join(weak_labels)}."
                 )
             elif any(e.state is CompetencyState.OBSERVED_STRENGTH for e in entries):
                 state = "observed_strength"
@@ -327,7 +341,7 @@ class JobAnalysisService:
         else:
             summary_note = (
                 f"Trích xuất được {len(gaps)} kỹ năng khớp danh mục MVP "
-                f"({strength_count} đã vững, {needs_practice_count} cần luyện thêm, "
+                f"({strength_count} đạt gần nhất trong hồ sơ, {needs_practice_count} cần luyện thêm, "
                 f"{unobserved_count} chưa kiểm tra, {unresolved_count} chưa đủ căn cứ) "
                 f"và {len(record.unmatched_terms)} nhóm yêu cầu ngoài danh mục hiện tại."
             )

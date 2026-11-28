@@ -95,6 +95,8 @@ class SessionSummaryRecord:
     unresolved_categories: tuple[str, ...]
     outcomes: tuple[QuestionOutcomeRecord, ...]
     observed_gaps: tuple[ConfirmedGap, ...]
+    scored_points_total: int | None = None
+    scored_points_maximum: int | None = None
 
 
 class RecommendationService:
@@ -400,6 +402,28 @@ class RecommendationService:
                 )
             )
 
+        all_scored = (
+            len(outcomes) == len(session.question_refs)
+            and len(outcomes) > 0
+            and all(
+                outcome.evaluation_status is EvaluationStatus.COMPLETED
+                and outcome.total_score is not None
+                and outcome.maximum_score is not None
+                and outcome.unresolved_criteria_count == 0
+                for outcome in outcomes
+            )
+        )
+        scored_points_total = (
+            sum(outcome.total_score for outcome in outcomes if outcome.total_score is not None)
+            if all_scored
+            else None
+        )
+        scored_points_maximum = (
+            sum(outcome.maximum_score for outcome in outcomes if outcome.maximum_score is not None)
+            if all_scored
+            else None
+        )
+
         return SessionSummaryRecord(
             session_id=session.id,
             state=session.state,
@@ -409,6 +433,8 @@ class RecommendationService:
             unresolved_categories=tuple(unresolved_categories),
             outcomes=tuple(outcomes),
             observed_gaps=gaps,
+            scored_points_total=scored_points_total,
+            scored_points_maximum=scored_points_maximum,
         )
 
     def start_practice(

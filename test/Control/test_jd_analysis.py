@@ -70,6 +70,9 @@ def test_jd_analysis_extracts_verbatim_evidence_gaps_and_outside_catalog_terms(t
             assert gap["evidence"]
             for ev in gap["evidence"]:
                 assert SAMPLE_JD[ev["start_offset"] : ev["end_offset"]] == ev["quote"]
+            # Vietnamese explanation must not leak raw English criterion_type identifiers.
+            for raw_slug in ("behavior_explanation", "contract_preservation", "test_design", "failure_analysis"):
+                assert raw_slug not in gap["explanation"]
 
         # Out-of-catalog backend terms are flagged transparently, never coerced.
         unmatched_labels = {item["term_label"] for item in data["unmatched_terms"]}
@@ -108,7 +111,7 @@ def test_jd_analysis_rejects_invalid_url_and_handles_missing_metadata_as_null(tm
         assert payload["published_at"] is None
         assert payload["company"] is None
 
-        # Form POST workflow redirects cleanly to detail page.
+        # Form POST workflow redirects cleanly to detail page anchored at results.
         form_resp = client.post(
             "/jd",
             data={"raw_text": "Cần biết PostgreSQL transaction và pytest unit test."},
@@ -116,4 +119,7 @@ def test_jd_analysis_rejects_invalid_url_and_handles_missing_metadata_as_null(tm
         )
         assert form_resp.status_code == 303
         assert form_resp.headers["location"].startswith("/jd/jd.")
-        assert client.get(form_resp.headers["location"]).status_code == 200
+        assert form_resp.headers["location"].endswith("#jd-result")
+        detail_resp = client.get(form_resp.headers["location"])
+        assert detail_resp.status_code == 200
+        assert 'id="jd-result"' in detail_resp.text

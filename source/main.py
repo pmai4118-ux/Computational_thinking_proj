@@ -67,7 +67,10 @@ from source.service.session_report_service import SessionReportService
 from source.service.providers.factory import create_evidence_interpreter, create_replay_simulator
 from source.service.providers.interfaces import EvidenceInterpreter
 from source.service.providers.replay_provider import ReplaySimulator
-from source.service.seed_loader import load_seed_catalog_into_repository
+from source.service.seed_loader import (
+    load_seed_catalog_into_repository,
+    sync_seed_catalog_if_needed,
+)
 from source.view.pages import build_pages_router
 from source.Control.evaluation_controller import build_evaluation_router
 
@@ -157,19 +160,7 @@ def create_app(
         )
 
     if auto_seed:
-        existing_skills = resolved_content_repo.list_skills()
-        needs_metadata_backfill = False
-        if existing_skills:
-            approved_qs = resolved_content_repo.list_approved_questions(
-                role="backend_developer", level="intern_fresher", language="vi"
-            )
-            needs_metadata_backfill = any(
-                q.coding_config is None
-                or (q.category == "technical_case" and q.replay_grounding is None)
-                for q in approved_qs
-            )
-        if not existing_skills or needs_metadata_backfill:
-            load_seed_catalog_into_repository(resolved_content_repo)
+        sync_seed_catalog_if_needed(resolved_content_repo)
 
     resolved_interpreter = (
         interpreter if interpreter is not None else create_evidence_interpreter(resolved_settings)

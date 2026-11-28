@@ -109,6 +109,8 @@ class SessionSummaryController:
                 )
                 for gap in report.observed_gaps
             ),
+            scored_points_total=report.scored_points_total,
+            scored_points_maximum=report.scored_points_maximum,
             report=SessionReportDTO(
                 session_id=session_id,
                 status=three_part["status"],

@@ -142,7 +142,7 @@
     "schema_version": "question-record/0.1-proposal",
     "example_only": false,
     "id": "prog.c02.closure_late_binding.v1",
-    "version": 1,
+    "version": 2,
     "category": "programming_knowledge",
     "language": "vi",
     "role": "backend_developer",
@@ -167,12 +167,12 @@
     },
     "adaptation": {
       "kind": "adapted_open_source_documentation",
-      "summary": "Chuyển ngữ từ mục 'Why do lambdas defined in a loop with different values all return the same result?' trong tài liệu chính thức CPython (Doc/faq/programming.rst @ 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2); thêm ràng buộc giữ nguyên chữ ký gọi không đối số `validators[i]()`.",
+      "summary": "Chuyển ngữ từ mục 'Why do lambdas defined in a loop with different values all return the same result?' trong tài liệu chính thức CPython (Doc/faq/programming.rst @ 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2); thêm ràng buộc giữ nguyên chữ ký gọi không đối số `validators[i]()` và căn chỉnh tiêu chí kiểm thử v2 theo hành vi quan sát được của `build_validators()`.",
       "translator_id": "nkphuc"
     },
     "rubric": {
       "id": "rubric.c02.closure_late_binding.v1",
-      "version": 1,
+      "version": 2,
       "criteria": [
         {
           "id": "c02.q2.late_binding",
@@ -225,26 +225,26 @@
         {
           "id": "c02.q2.tests",
           "criterion_type": "test_design",
-          "label": "Kiểm thử toàn bộ danh sách hàm và tính độc lập với biến ngoài",
+          "label": "Kiểm thử toàn bộ danh sách hàm và xác nhận kết quả độc lập",
           "expected_evidence": [
-            "Kiểm tra `[fn() for fn in validators] == [0, 1, 4, 9, 16]`.",
-            "Kiểm tra gán lại biến `step` sau vòng lặp (ví dụ `step = 99`) không làm đổi kết quả của các hàm đã tạo."
+            "Kiểm tra toàn bộ 5 hàm trong danh sách trả về đúng dãy `[fn() for fn in validators] == [0, 1, 4, 9, 16]` (hoặc kiểm tra từng chỉ số từ 0 đến 4) bằng lời gọi không đối số `validators[i]()`.",
+            "Xác nhận các phần tử đại diện khác nhau (ví dụ `validators[1]() == 1`, `validators[3]() == 9`) cho kết quả độc lập thay vì cùng trả về `16`, và kết quả ổn định khi gọi lại (hoặc kiểm tra `len(validators) == 5`)."
           ],
           "levels": [
             {
               "score": 0,
-              "description": "Không nêu kiểm thử hoặc kết quả kỳ vọng sai."
+              "description": "Không nêu kiểm thử hoặc kết quả kỳ vọng sai với bản sửa."
             },
             {
               "score": 1,
-              "description": "Kiểm tra kết quả `[0, 1, 4, 9, 16]` nhưng chưa kiểm tra việc thay đổi `step` ngoài vòng lặp không ảnh hưởng closure."
+              "description": "Chỉ kiểm tra rời rạc một phần tử đơn lẻ (ví dụ chỉ gọi `validators[1]()`) mà chưa kiểm chứng toàn bộ danh sách 5 hàm hoặc chưa xác nhận nhiều chỉ số khác nhau trả về các giá trị độc lập."
             },
             {
               "score": 2,
-              "description": "Kiểm tra cả dãy kết quả `[0, 1, 4, 9, 16]` lẫn tính bất biến khi thay đổi biến `step` ở scope ngoài."
+              "description": "Kiểm tra đầy đủ toàn bộ 5 hàm (`[0, 1, 4, 9, 16]`) bằng lời gọi không đối số `validators[i]()` và xác nhận các phần tử đại diện (như `validators[1]() == 1`, `validators[3]() == 9`) trả về kết quả độc lập, nhất quán."
             }
           ],
-          "equivalent_answers": "Chấp nhận kiểm tra trên các chỉ số đại diện kèm kiểm chứng gán lại `step` sau vòng lặp."
+          "equivalent_answers": "Chấp nhận kiểm thử bằng `assert`, `pytest`/`unittest` hoặc mô tả rõ đầu vào và kết quả mong đợi cho toàn bộ 5 phần tử; không yêu cầu gán lại biến cục bộ `step` bên ngoài `build_validators()` vì API không để lộ biến này ra ngoài."
         }
       ],
       "scoring": {
@@ -265,7 +265,7 @@
       "status": "approved",
       "curator_id": "nkphuc",
       "reviewer_id": "Tin",
-      "reviewed_at": "2026-11-18T04:40:00Z",
+      "reviewed_at": "2026-11-27T14:30:00Z",
       "checks": {
         "source_and_license_verified": true,
         "original_and_adaptation_preserved": true,
@@ -274,7 +274,7 @@
         "equivalent_answers_checked": true,
         "review_cases_checked": true
       },
-      "notes": "Nguồn gốc CPython Programming FAQ (PSF-2.0) đã xác minh tại commit 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2."
+      "notes": "Nguồn gốc CPython Programming FAQ (PSF-2.0) đã xác minh tại commit 94276402cf3b3a5e1fa96cedb33a4dc498a77ed2. Bản v2 căn chỉnh tiêu chí c02.q2.tests để chỉ chấm hành vi kiểm chứng được qua API build_validators()."
     }
   }
 ]

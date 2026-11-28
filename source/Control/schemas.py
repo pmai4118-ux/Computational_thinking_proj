@@ -540,6 +540,8 @@ class SessionSummaryDTO(BaseModel):
     unresolved_categories: tuple[str, ...] = ()
     outcomes: tuple[QuestionOutcomeSummaryDTO, ...] = ()
     observed_gaps: tuple[ObservedGapDTO, ...] = ()
+    scored_points_total: int | None = Field(default=None, ge=0)
+    scored_points_maximum: int | None = Field(default=None, ge=1)
     report: SessionReportDTO | None = None
 
 

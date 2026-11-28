@@ -68,7 +68,11 @@ test("background summary polling shows progress, avoids auto-evaluate, and prese
   };
   const finished = structuredClone(pending);
   finished.completed_question_count = 1;
+  finished.scored_points_total = 5;
+  finished.scored_points_maximum = 6;
   finished.outcomes[0].evaluation_status = "completed";
+  finished.outcomes[0].total_score = 5;
+  finished.outcomes[0].maximum_score = 6;
   finished.report.status = "complete";
   finished.report.overview.evaluated_count = 1;
   finished.report.details[0].evaluation_status = "completed";
@@ -98,6 +102,8 @@ test("background summary polling shows progress, avoids auto-evaluate, and prese
   await flush();
 
   assert.equal(evaluateCalls, 0);
+  assert.equal(element("#summary-state").textContent, "Đã nộp đủ bài");
+  assert.equal(element("#summary-eval-state").textContent, "Đang chấm AI (0/1 câu)");
   assert.equal(element("#summary-status").hidden, false);
   assert.equal(timers.length, 1);
   assert.equal(timers[0].delay, 5000);
@@ -111,6 +117,8 @@ test("background summary polling shows progress, avoids auto-evaluate, and prese
 
   assert.equal(evaluateCalls, 0);
   assert.equal(element("#coverage-count").textContent, "Có kết quả 1 / 1 câu");
+  assert.equal(element("#summary-eval-state").textContent, "Đã chấm xong (1/1 câu)");
+  assert.equal(element("#session-score-value").textContent, "5 / 6 điểm");
   assert.equal(element("#summary-status").hidden, true);
   const refreshedDetails = findDetails(element("#outcomes-list"));
   assert.equal(refreshedDetails.length, 1);
