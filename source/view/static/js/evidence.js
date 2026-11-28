@@ -636,7 +636,7 @@
       replaySection.hidden = false;
       if (replaySummary) {
         const title = info.question_title || "Tình huống kỹ thuật";
-        replaySummary.textContent = `${title}: mở phòng thí nghiệm rẽ nhánh What-If từ bài làm gốc để thử phương án khác và so sánh kết cục (không thay đổi điểm đã công bố).`;
+        replaySummary.textContent = `${title}: mở phòng thí nghiệm rẽ nhánh thử phương án khác từ bài làm gốc để đối chiếu kết cục (không thay đổi điểm đã công bố).`;
       }
       if (replayForm) {
         replayForm.action = `/sessions/${encodeURIComponent(sessionId)}/answers/${encodeURIComponent(answerId)}/replay/start?revision=${encodeURIComponent(String(answerRevision))}`;
@@ -673,12 +673,31 @@
       if (probeError) probeError.hidden = true;
       if (probeResults) {
         probeResults.replaceChildren();
+        const probeStatusLabels = {
+          met: "Đạt",
+          unmet: "Chưa đạt",
+          insufficient_evidence: "Chưa đủ bằng chứng",
+          evaluated: "Đã đánh giá",
+          pending: "Đang chờ",
+          processing: "Đang đánh giá",
+          failed: "Chưa hoàn tất",
+        };
         for (const item of plan.existing_probes || []) {
-          const box = element("article", "card card--subtle stack");
-          box.append(element("p", "", `Tiêu chí đào sâu: ${item.criterion_label} (${item.outcome_status || item.status})`));
+          const box = element("article", "probe-result-card");
+          const head = element("div", "probe-result-card__head");
+          head.append(element("span", "probe-result-card__title", `Tiêu chí đào sâu: ${item.criterion_label}`));
+          const rawStatus = item.outcome_status || item.status || "";
+          const localizedStatus = probeStatusLabels[rawStatus] || statusLabels[rawStatus] || "Đã ghi nhận";
+          const statusTone = rawStatus === "met" || rawStatus === "evaluated"
+            ? "badge--met"
+            : rawStatus === "unmet" || rawStatus === "failed"
+              ? "badge--unmet"
+              : "badge--unresolved";
+          head.append(element("span", `badge ${statusTone}`, localizedStatus));
+          box.append(head);
           if (item.response_text) box.append(element("p", "text-secondary", `Phần làm rõ đã gửi: ${item.response_text}`));
           if (item.outcome_score !== null && item.outcome_score !== undefined) {
-            box.append(element("p", "", `Điểm sau làm rõ: ${item.outcome_score} / ${item.outcome_max_score}`));
+            box.append(element("p", "probe-result-card__score", `Điểm sau làm rõ: ${item.outcome_score} / ${item.outcome_max_score}`));
           }
           if (item.outcome_explanation) box.append(element("p", "", item.outcome_explanation));
           probeResults.append(box);

@@ -5,21 +5,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="/static/js/theme.js?v=20261127-global"></script>
+  <script src="/static/js/theme.js?v=20261128-ux2"></script>
   <title>{% block title %}Luyện phỏng vấn kỹ thuật Backend — interviewUS{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/tokens.css?v=20261128-wide">
-  <link rel="stylesheet" href="/static/css/components.css?v=20261128-wide">
-  {% if current_nav == 'learning_path' %}
-    <link rel="stylesheet" href="/static/css/stitch.css?v=20261128-wide">
-  {% endif %}
-  <link rel="stylesheet" href="/static/css/activity.css?v=20261128-wide">
-  <link rel="stylesheet" href="/static/css/session_history.css?v=20261128-wide">
+  <link rel="stylesheet" href="/static/css/tokens.css?v=20261128-ux2">
+  <link rel="stylesheet" href="/static/css/components.css?v=20261128-ux2">
+  <link rel="stylesheet" href="/static/css/stitch.css?v=20261128-ux2">
+  <link rel="stylesheet" href="/static/css/activity.css?v=20261128-ux2">
+  <link rel="stylesheet" href="/static/css/session_history.css?v=20261128-ux2">
   {% block extra_head %}{% endblock %}
-  <link rel="stylesheet" href="/static/css/theme.css?v=20261128-wide">
+  <link rel="stylesheet" href="/static/css/theme.css?v=20261128-ux2">
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <a class="skip-link" href="#main-content">Chuyển tới nội dung chính</a>
@@ -41,14 +39,11 @@
         </div>
       </div>
 
-      <nav class="site-nav" aria-label="Điều hướng chính">
-        <a class="site-nav__link {% if current_nav == 'home' %}site-nav__link--active{% endif %}" href="/" {% if current_nav == 'home' %}aria-current="page"{% endif %}>Trang chủ</a>
-        <a class="site-nav__link {% if current_nav == 'interview' %}site-nav__link--active{% endif %}" href="/interview" {% if current_nav == 'interview' %}aria-current="page"{% endif %}>Phỏng vấn ảo</a>
-        <a class="site-nav__link {% if current_nav == 'learning_path' %}site-nav__link--active{% endif %}" href="/learning-path" {% if current_nav == 'learning_path' %}aria-current="page"{% endif %}>Lộ trình Java</a>
-        <a class="site-nav__link {% if current_nav == 'jd' %}site-nav__link--active{% endif %}" href="/jd" {% if current_nav == 'jd' %}aria-current="page"{% endif %}>Phân tích JD</a>
-        <a class="site-nav__link {% if current_nav == 'replays' %}site-nav__link--active{% endif %}" href="/replays" {% if current_nav == 'replays' %}aria-current="page"{% endif %}>Decision Replay</a>
-        <a class="site-nav__link {% if current_nav == 'profile' %}site-nav__link--active{% endif %}" href="/profile" {% if current_nav == 'profile' %}aria-current="page"{% endif %}>Hồ sơ năng lực</a>
-        <a class="site-nav__link {% if current_nav == 'history' %}site-nav__link--active{% endif %}" href="/history" {% if current_nav == 'history' %}aria-current="page"{% endif %}>Lịch sử phiên</a>
+      <nav class="site-nav{% if nav_in_session | default(false) %} site-nav--in-session{% endif %}" aria-label="Điều hướng chính">
+        <a class="site-nav__link{% if current_nav == 'interview' %} site-nav__link--active{% endif %}" href="/interview"{% if current_nav == 'interview' %} aria-current="page"{% endif %}>Phỏng vấn ảo</a>
+        <a class="site-nav__link{% if current_nav == 'replays' %} site-nav__link--active{% endif %}" href="/replays"{% if current_nav == 'replays' %} aria-current="page"{% endif %}>Mô phỏng tình huống</a>
+        <a class="site-nav__link{% if current_nav == 'learning_path' %} site-nav__link--active{% endif %}" href="/learning-path"{% if current_nav == 'learning_path' %} aria-current="page"{% endif %}>Lộ trình Java</a>
+        <a class="site-nav__link{% if current_nav == 'jd' %} site-nav__link--active{% endif %}" href="/jd"{% if current_nav == 'jd' %} aria-current="page"{% endif %}>Phân tích JD</a>
       </nav>
 
       <div class="site-header__right">
@@ -65,14 +60,14 @@
             {{ demo_mode_label }}
           </span>
         {% endif %}
-        <div class="session-owner-pill" title="Phiên được gắn ẩn danh với trình duyệt hiện tại">
+        <a class="session-owner-pill{% if current_nav == 'profile' %} is-active{% endif %}" href="/profile"{% if current_nav == 'profile' %} aria-current="page"{% endif %} title="Xem hồ sơ năng lực ẩn danh trên trình duyệt này" aria-label="Hồ sơ ẩn danh">
           <span class="session-owner-pill__avatar" aria-hidden="true">
-            <span class="material-symbols-outlined" style="font-size: 15px;">shield_person</span>
+            <span class="material-symbols-outlined">shield_person</span>
           </span>
           <span class="session-owner-pill__meta">
-            <span class="session-owner-pill__title">Phiên ẩn danh</span>
+            <span class="session-owner-pill__title">Hồ sơ ẩn danh</span>
           </span>
-        </div>
+        </a>
       </div>
     </div>
   </header>
@@ -80,144 +75,72 @@
   <div class="app-shell" id="app-shell">
     <aside class="app-sidebar" id="app-sidebar" aria-label="Thanh bên điều hướng">
       <div class="app-sidebar__head">
+        <span class="app-sidebar__head-label">Không gian học</span>
         <button type="button" class="app-sidebar__icon-btn" id="app-sidebar-collapse" aria-label="Thu gọn thanh bên" aria-expanded="true" title="Thu gọn thanh bên">
           <span class="material-symbols-outlined" aria-hidden="true">dock_to_left</span>
         </button>
-        <button type="button" class="icon-button app-sidebar__close" id="app-sidebar-close" aria-label="Đóng thanh điều hướng">
+        <button type="button" class="icon-button app-sidebar__close" id="app-sidebar-close" aria-label="Đóng thanh điều hướng" title="Đóng thanh điều hướng">
           <span class="material-symbols-outlined" aria-hidden="true">close</span>
         </button>
       </div>
 
       <div class="app-sidebar__scroll">
-        <details class="sidebar-group" open>
-          <summary class="sidebar-group__summary">
-            <span class="sidebar-group__title">
-              <span class="material-symbols-outlined" aria-hidden="true">space_dashboard</span>
-              <span>Không gian chính</span>
-            </span>
-            <span class="material-symbols-outlined sidebar-group__chevron" aria-hidden="true">expand_more</span>
-          </summary>
-          <div class="sidebar-group__list">
-            <a class="app-sidebar__link {% if current_nav == 'home' %}is-active{% endif %}" href="/" title="Trang chủ" {% if current_nav == 'home' %}aria-current="page"{% endif %}>
+        <a class="app-sidebar__cta" href="/setup" title="Bắt đầu phiên mới" aria-label="Bắt đầu phiên mới">
+          <span class="material-symbols-outlined" aria-hidden="true">add_circle</span>
+          <span>Bắt đầu phiên mới</span>
+        </a>
+
+        <div class="sidebar-section" role="group" aria-labelledby="sidebar-group-practice">
+          <p class="sidebar-section__label" id="sidebar-group-practice">Luyện tập</p>
+          <div class="sidebar-section__list">
+            <a class="app-sidebar__link{% if current_nav == 'home' %} is-active{% endif %}" href="/"{% if current_nav == 'home' %} aria-current="page"{% endif %} title="Trang chủ" aria-label="Trang chủ">
               <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">home</span>
               <span>Trang chủ</span>
             </a>
-            <a class="app-sidebar__link {% if current_nav == 'interview' %}is-active{% endif %}" href="/interview" title="Phỏng vấn ảo" {% if current_nav == 'interview' %}aria-current="page"{% endif %}>
+            <a class="app-sidebar__link{% if current_nav == 'interview' %} is-active{% endif %}" href="/interview"{% if current_nav == 'interview' %} aria-current="page"{% endif %} title="Phỏng vấn ảo" aria-label="Phỏng vấn ảo">
               <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">forum</span>
               <span>Phỏng vấn ảo</span>
             </a>
-            <a class="app-sidebar__link" href="/setup" title="Thiết lập phiên mới">
-              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">add_circle</span>
-              <span>Thiết lập phiên mới</span>
+            <a class="app-sidebar__link{% if current_nav == 'replays' %} is-active{% endif %}" href="/replays"{% if current_nav == 'replays' %} aria-current="page"{% endif %} title="Mô phỏng tình huống" aria-label="Mô phỏng tình huống">
+              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">account_tree</span>
+              <span>Mô phỏng tình huống</span>
             </a>
-            <a class="app-sidebar__link {% if current_nav == 'learning_path' %}is-active{% endif %}" href="/learning-path" title="Lộ trình Java" {% if current_nav == 'learning_path' %}aria-current="page"{% endif %}>
+          </div>
+        </div>
+
+        <div class="sidebar-section" role="group" aria-labelledby="sidebar-group-learning">
+          <p class="sidebar-section__label" id="sidebar-group-learning">Học tập &amp; Thị trường</p>
+          <div class="sidebar-section__list">
+            <a class="app-sidebar__link{% if current_nav == 'learning_path' %} is-active{% endif %}" href="/learning-path"{% if current_nav == 'learning_path' %} aria-current="page"{% endif %} title="Lộ trình Java" aria-label="Lộ trình Java">
               <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">route</span>
               <span>Lộ trình Java</span>
             </a>
-            <a class="app-sidebar__link {% if current_nav == 'jd' %}is-active{% endif %}" href="/jd" title="Phân tích JD" {% if current_nav == 'jd' %}aria-current="page"{% endif %}>
+            <a class="app-sidebar__link{% if current_nav == 'jd' %} is-active{% endif %}" href="/jd"{% if current_nav == 'jd' %} aria-current="page"{% endif %} title="Phân tích JD" aria-label="Phân tích JD">
               <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">description</span>
               <span>Phân tích JD</span>
             </a>
-            <a class="app-sidebar__link {% if current_nav == 'replays' %}is-active{% endif %}" href="/replays" title="Decision Replay" {% if current_nav == 'replays' %}aria-current="page"{% endif %}>
-              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">account_tree</span>
-              <span>Decision Replay</span>
-            </a>
-            <a class="app-sidebar__link {% if current_nav == 'profile' %}is-active{% endif %}" href="/profile" title="Hồ sơ năng lực" {% if current_nav == 'profile' %}aria-current="page"{% endif %}>
-              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">insights</span>
+          </div>
+        </div>
+
+        <div class="sidebar-section" role="group" aria-labelledby="sidebar-group-progress">
+          <p class="sidebar-section__label" id="sidebar-group-progress">Tiến độ của bạn</p>
+          <div class="sidebar-section__list">
+            <a class="app-sidebar__link{% if current_nav == 'profile' %} is-active{% endif %}" href="/profile"{% if current_nav == 'profile' %} aria-current="page"{% endif %} title="Hồ sơ năng lực" aria-label="Hồ sơ năng lực">
+              <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">analytics</span>
               <span>Hồ sơ năng lực</span>
             </a>
-            <a class="app-sidebar__link {% if current_nav == 'history' %}is-active{% endif %}" href="/history" title="Lịch sử phiên" {% if current_nav == 'history' %}aria-current="page"{% endif %}>
+            <a class="app-sidebar__link{% if current_nav == 'history' %} is-active{% endif %}" href="/history"{% if current_nav == 'history' %} aria-current="page"{% endif %} title="Lịch sử phiên" aria-label="Lịch sử phiên">
               <span class="material-symbols-outlined app-sidebar__icon" aria-hidden="true">history</span>
               <span>Lịch sử phiên</span>
             </a>
           </div>
-        </details>
-
-        <details class="sidebar-group" open>
-          <summary class="sidebar-group__summary">
-            <span class="sidebar-group__title">
-              <span class="material-symbols-outlined" aria-hidden="true">school</span>
-              <span>Chặng Java Backend</span>
-            </span>
-            <span class="material-symbols-outlined sidebar-group__chevron" aria-hidden="true">expand_more</span>
-          </summary>
-          <div class="sidebar-group__list">
-            <a class="app-sidebar__sublink" href="/learning-path">
-              <span class="material-symbols-outlined" aria-hidden="true">terminal</span>
-              <span>01 · Java nền tảng</span>
-            </a>
-            <a class="app-sidebar__sublink" href="/learning-path">
-              <span class="material-symbols-outlined" aria-hidden="true">database</span>
-              <span>02 · Web &amp; dữ liệu</span>
-            </a>
-            <a class="app-sidebar__sublink" href="/learning-path">
-              <span class="material-symbols-outlined" aria-hidden="true">layers</span>
-              <span>03 · Spring Backend</span>
-            </a>
-            <a class="app-sidebar__sublink" href="/learning-path">
-              <span class="material-symbols-outlined" aria-hidden="true">cloud_sync</span>
-              <span>04 · Vận hành &amp; mở rộng</span>
-            </a>
-            <a class="app-sidebar__sublink" href="/learning-path">
-              <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
-              <span>05 · Nâng cao tùy chọn</span>
-            </a>
-          </div>
-        </details>
-
-        <details class="sidebar-group">
-          <summary class="sidebar-group__summary">
-            <span class="sidebar-group__title">
-              <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
-              <span>Đánh giá &amp; Rubric</span>
-            </span>
-            <span class="material-symbols-outlined sidebar-group__chevron" aria-hidden="true">expand_more</span>
-          </summary>
-          <div class="sidebar-group__list">
-            <a class="app-sidebar__sublink" href="/setup">
-              <span class="material-symbols-outlined" aria-hidden="true">quiz</span>
-              <span>Kiểm tra đầu vào (4 câu)</span>
-            </a>
-            <a class="app-sidebar__sublink" href="/interview">
-              <span class="material-symbols-outlined" aria-hidden="true">rule</span>
-              <span>Đối chiếu tiêu chí Rubric</span>
-            </a>
-            <a class="app-sidebar__sublink" href="/history">
-              <span class="material-symbols-outlined" aria-hidden="true">format_quote</span>
-              <span>Trích dẫn &amp; phản hồi</span>
-            </a>
-          </div>
-        </details>
-
-        <details class="sidebar-group">
-          <summary class="sidebar-group__summary">
-            <span class="sidebar-group__title">
-              <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
-              <span>Tài liệu &amp; Lịch học</span>
-            </span>
-            <span class="material-symbols-outlined sidebar-group__chevron" aria-hidden="true">expand_more</span>
-          </summary>
-          <div class="sidebar-group__list">
-            <a class="app-sidebar__sublink" href="/learning-path#course-heading">
-              <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
-              <span>Khóa học tham khảo</span>
-            </a>
-            <a class="app-sidebar__sublink" href="/learning-path">
-              <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
-              <span>Lịch trình hôm nay</span>
-            </a>
-          </div>
-        </details>
+        </div>
       </div>
 
       <div class="app-sidebar__foot">
-        <button type="button" class="app-sidebar__foot-btn" id="app-sidebar-settings" title="Settings">
-          <span class="material-symbols-outlined" aria-hidden="true">settings</span>
-          <span>Settings</span>
-        </button>
-        <button type="button" class="app-sidebar__foot-btn app-sidebar__foot-btn--danger" id="app-sidebar-logout" title="Logout">
-          <span class="material-symbols-outlined" aria-hidden="true">logout</span>
-          <span>Logout</span>
+        <button type="button" class="app-sidebar__foot-btn" id="app-sidebar-settings" title="Cài đặt hiển thị" aria-label="Cài đặt hiển thị">
+          <span class="material-symbols-outlined" aria-hidden="true">tune</span>
+          <span>Cài đặt hiển thị</span>
         </button>
       </div>
     </aside>
@@ -227,21 +150,21 @@
       <div class="modal-accent-bar" aria-hidden="true"></div>
       <header class="modal-header">
         <div>
-          <span class="stitch-eyebrow">Cài đặt ứng dụng</span>
-          <h2 id="app-settings-title">Settings</h2>
-          <p>Tùy chỉnh giao diện hiển thị và phiên ẩn danh hiện tại.</p>
+          <span class="stitch-eyebrow">Tùy chỉnh giao diện</span>
+          <h2 id="app-settings-title">Cài đặt hiển thị</h2>
+          <p>Điều chỉnh chế độ sáng/tối và truy cập nhanh tiến độ ẩn danh trên trình duyệt này.</p>
         </div>
-        <button type="button" class="icon-button" id="close-app-settings" aria-label="Đóng cài đặt">
+        <button type="button" class="icon-button" id="close-app-settings" aria-label="Đóng cài đặt hiển thị" title="Đóng cài đặt hiển thị">
           <span class="material-symbols-outlined" aria-hidden="true">close</span>
         </button>
       </header>
       <div class="modal-content app-settings-body">
         <div class="app-settings-row">
-          <div>
+          <div class="app-settings-row__copy">
             <strong>Chế độ giao diện</strong>
             <p class="muted">Chuyển nhanh giữa Sáng (#F7F5EF) và Tối (#131E1D).</p>
           </div>
-          <div class="theme-switch" role="group" aria-label="Giao diện sáng tối">
+          <div class="theme-switch" role="group" aria-label="Chọn giao diện sáng tối">
             <button type="button" class="theme-switch__button" data-theme-mode="light" aria-pressed="true">
               <span class="material-symbols-outlined" aria-hidden="true">light_mode</span><span>Sáng</span>
             </button>
@@ -250,17 +173,31 @@
             </button>
           </div>
         </div>
+
         <div class="app-settings-row">
-          <div>
-            <strong>Phiên ẩn danh trình duyệt</strong>
-            <p class="muted">Dữ liệu tiến độ và bản nháp được lưu cục bộ trên trình duyệt này.</p>
+          <div class="app-settings-row__copy">
+            <strong>Tiến độ ẩn danh trên trình duyệt</strong>
+            <p class="muted">Không yêu cầu tài khoản. Các phiên phỏng vấn và hồ sơ năng lực được gắn với trình duyệt hiện tại.</p>
           </div>
-          <a class="btn btn--secondary" href="/history">Xem lịch sử</a>
+          <div class="app-settings-row__actions">
+            <a class="btn btn--secondary" href="/profile">Hồ sơ năng lực</a>
+            <a class="btn btn--secondary" href="/history">Lịch sử phiên</a>
+          </div>
         </div>
+
+        <div class="app-settings-row">
+          <div class="app-settings-row__copy">
+            <strong>Đặt lại tùy chọn hiển thị</strong>
+            <p class="muted">Chỉ khôi phục giao diện sáng và trạng thái thanh bên mặc định trên trình duyệt; không xóa phiên đã lưu.</p>
+          </div>
+          <button type="button" class="btn btn--ghost" id="app-reset-preferences">Đặt lại tùy chọn hiển thị</button>
+        </div>
+
+        <p id="app-reset-status" class="app-settings-status" role="status" aria-live="polite" hidden></p>
       </div>
       <footer class="modal-footer">
-        <span class="muted">interviewUS</span>
-        <button type="button" class="btn btn--primary" id="done-app-settings">Xong</button>
+        <span class="muted">interviewUS · Không yêu cầu tài khoản</span>
+        <button type="button" class="btn btn--primary" id="done-app-settings">Đóng</button>
       </footer>
     </dialog>
 
@@ -288,7 +225,7 @@
       <footer class="site-footer">
         <div class="site-footer__inner">
           <div class="site-footer__brand">
-            <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px; color: var(--stitch-primary);">terminal</span>
+            <span class="material-symbols-outlined site-footer__brand-icon" aria-hidden="true">terminal</span>
             <span>interviewUS</span>
             <span aria-hidden="true">•</span>
             <span>© 2026 Nền tảng tự luận kỹ thuật IT.</span>
@@ -297,9 +234,11 @@
             Ngân hàng câu hỏi và bài tập từ nguồn mở có giấy phép đã xác minh. Điểm số tính bằng quy tắc Rubric trên trích dẫn nguyên văn.
           </p>
           <div class="site-footer__links">
-            <a class="site-footer__link" href="/">Trang chủ</a>
             <a class="site-footer__link" href="/interview">Phỏng vấn ảo</a>
+            <a class="site-footer__link" href="/replays">Mô phỏng tình huống</a>
             <a class="site-footer__link" href="/learning-path">Lộ trình Java</a>
+            <a class="site-footer__link" href="/jd">Phân tích JD</a>
+            <a class="site-footer__link" href="/profile">Hồ sơ năng lực</a>
             <a class="site-footer__link" href="/history">Lịch sử phiên</a>
           </div>
         </div>
@@ -308,8 +247,8 @@
     </div>
   </div>
 
-  <script src="/static/js/api_client.js?v=20261128-merged" defer></script>
-  <script src="/static/js/activity.js?v=20261127-1" defer></script>
+  <script src="/static/js/api_client.js?v=20261128-ux2" defer></script>
+  <script src="/static/js/activity.js?v=20261128-ux2" defer></script>
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>

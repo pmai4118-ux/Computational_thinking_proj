@@ -1,15 +1,20 @@
 {% extends "base.html" %}
-{% from "partials/icons.html" import icon -%}
 {% set nav_active = "interview" %}
 
 {% block title %}Phỏng vấn ảo — interviewUS{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="/static/css/interview_hub.css?v=20261128-ux2">
+{% endblock %}
 
 {% block content %}
-<section class="card welcome-hero" aria-labelledby="welcome-heading">
+<section class="card welcome-hero intro-hero" aria-labelledby="welcome-heading">
   <div class="welcome-hero__grid">
-    <div class="stack">
+    <div class="stack intro-hero__main">
       <div>
-        <span class="badge">Phiên bản MVP · Tiếng Việt</span>
+        <span class="badge intro-hero__badge">
+          <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+          <span>Phỏng vấn tự luận · Backend Intern / Fresher</span>
+        </span>
       </div>
       <h1 id="welcome-heading">Luyện phỏng vấn kỹ thuật Backend với căn cứ từ bài làm</h1>
       <p class="welcome-hero__lead">
@@ -18,37 +23,89 @@
         giúp bạn phân biệt rõ phần đã đạt, phần thiếu yêu cầu và phần chưa đủ bằng chứng.
       </p>
 
-      <div class="action-row">
+      <div class="action-row intro-hero__actions">
         <a class="btn btn--primary" href="/setup" id="open-interview-setup">
           <span>Bắt đầu luyện tập</span>
-          {{ icon('arrow') }}
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
         </a>
         <a class="btn btn--secondary" href="/learning-path">
-          {{ icon('route') }}
+          <span class="material-symbols-outlined" aria-hidden="true">route</span>
           <span>Xem lộ trình Java</span>
+        </a>
+      </div>
+
+      <div class="intro-shortcuts" aria-label="Lối tắt luyện tập liên quan">
+        <a class="intro-shortcut" href="/profile">
+          <span class="intro-shortcut__icon" aria-hidden="true">
+            <span class="material-symbols-outlined">analytics</span>
+          </span>
+          <span class="intro-shortcut__text">
+            <strong>Hồ sơ năng lực</strong>
+            <span>Theo dõi kỹ năng qua các phiên</span>
+          </span>
+          <span class="material-symbols-outlined intro-shortcut__arrow" aria-hidden="true">chevron_right</span>
+        </a>
+        <a class="intro-shortcut" href="/replays">
+          <span class="intro-shortcut__icon" aria-hidden="true">
+            <span class="material-symbols-outlined">account_tree</span>
+          </span>
+          <span class="intro-shortcut__text">
+            <strong>Mô phỏng tình huống</strong>
+            <span>Thử rẽ nhánh từ bài tình huống</span>
+          </span>
+          <span class="material-symbols-outlined intro-shortcut__arrow" aria-hidden="true">chevron_right</span>
         </a>
       </div>
     </div>
 
-    <div class="welcome-hero__specs">
-      <h2 class="welcome-hero__specs-title">Thông tin cấu trúc phiên</h2>
+    <div class="welcome-hero__specs intro-specs">
+      <div class="intro-specs__head">
+        <h2 class="welcome-hero__specs-title">Cấu trúc phiên 4 câu hỏi</h2>
+        <span class="intro-specs__pill">4 nhóm kỹ năng</span>
+      </div>
+
+      <ul class="intro-group-chips" aria-label="Bốn nhóm câu hỏi trong phiên">
+        <li class="intro-group-chip">
+          <span class="material-symbols-outlined" aria-hidden="true">code</span>
+          <span>Kiến thức lập trình</span>
+        </li>
+        <li class="intro-group-chip">
+          <span class="material-symbols-outlined" aria-hidden="true">database</span>
+          <span>Tình huống kỹ thuật</span>
+        </li>
+        <li class="intro-group-chip">
+          <span class="material-symbols-outlined" aria-hidden="true">memory</span>
+          <span>Giải thích thuật toán</span>
+        </li>
+        <li class="intro-group-chip">
+          <span class="material-symbols-outlined" aria-hidden="true">rate_review</span>
+          <span>Đánh giá mã nguồn</span>
+        </li>
+      </ul>
+
       <ul class="meta-list welcome-spec-list" aria-label="Thông tin cấu trúc phiên">
         <li>
-          <span class="welcome-spec-icon" aria-hidden="true">{{ icon('layers') }}</span>
-          <div>
-            <strong>Cấu trúc cố định:</strong>
-            4 câu hỏi tiếng Việt (Kiến thức lập trình, Tình huống kỹ thuật, Giải thích thuật toán, Đánh giá mã nguồn).
-          </div>
-        </li>
-        <li>
-          <span class="welcome-spec-icon" aria-hidden="true">{{ icon('clock') }}</span>
+          <span class="welcome-spec-icon" aria-hidden="true">
+            <span class="material-symbols-outlined">schedule</span>
+          </span>
           <div>
             <strong>Thời lượng ước tính:</strong>
             khoảng 25–35 phút (ước tính tham khảo, không giới hạn đếm ngược cứng).
           </div>
         </li>
         <li>
-          <span class="welcome-spec-icon" aria-hidden="true">{{ icon('shield') }}</span>
+          <span class="welcome-spec-icon" aria-hidden="true">
+            <span class="material-symbols-outlined">fact_check</span>
+          </span>
+          <div>
+            <strong>Chấm minh bạch theo rubric:</strong>
+            Đối chiếu trực tiếp trên bài đã lưu, tách biệt rõ tiêu chí chưa đủ bằng chứng với điểm 0.
+          </div>
+        </li>
+        <li>
+          <span class="welcome-spec-icon" aria-hidden="true">
+            <span class="material-symbols-outlined">verified_user</span>
+          </span>
           <div>
             <strong>Quyền riêng tư:</strong>
             Không yêu cầu tạo tài khoản, không thu thập CV hay thông tin cá nhân.

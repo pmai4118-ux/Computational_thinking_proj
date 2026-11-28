@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% set nav_active = "interview" %}
+{% set nav_in_session = true %}
 
 {% block title %}Không gian trả lời — interviewUS{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css?v=20261128-merged">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css?v=20261128-ux2">{% endblock %}
 
 {% block content %}
 <section class="card workspace-card" aria-labelledby="workspace-heading"
@@ -15,7 +16,7 @@
          data-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"
          data-answer-revision="{{ session.current_answer.revision if session.current_answer else '' }}">
 
-  <!-- 1. Top Status Banner -->
+  <!-- 1. Compact Top Status Banner -->
   <div class="workspace-topline">
     <div class="workspace-topline__title">
       <div class="workspace-topline__meta-row">
@@ -55,29 +56,7 @@
 
   {% if session.current_question %}
     <div class="workspace-layout">
-      <!-- 2. Hints Shell (Honest, closed by default, no fabricated hints or rubric leaks) -->
-      <section class="workspace-hints-card" aria-labelledby="hints-heading">
-        <div class="workspace-hints-card__header">
-          <h2 id="hints-heading" class="workspace-hints-card__title">
-            <span aria-hidden="true">💡</span>
-            <span>Gợi ý giải pháp &amp; Định hướng logic</span>
-          </h2>
-          <span class="badge">Chưa hỗ trợ gợi ý trước khi nộp</span>
-        </div>
-        <details class="workspace-hints-details">
-          <summary>
-            <span>Thông tin về gợi ý trong phiên hiện tại</span>
-            <span class="form-hint" style="font-weight: 700; color: var(--theme-accent, var(--brand-700));">Nhấn để xem ▾</span>
-          </summary>
-          <div class="workspace-hints-details__body">
-            <p style="margin: 0.75rem 0 0;">
-              Phiên hiện tại chưa hỗ trợ gợi ý trước khi nộp. Hãy trình bày rõ giả định, phương án giải quyết, đánh đổi và cách kiểm tra để hệ thống đối chiếu minh bạch theo rubric sau khi nộp bài.
-            </p>
-          </div>
-        </details>
-      </section>
-
-      <!-- 3. Question Specification Card -->
+      <!-- 2. Left Sticky Pane: Question & Code Reference -->
       <article class="workspace-question reading-measure" aria-labelledby="question-heading">
         <div class="workspace-question__header">
           <div class="workspace-tags">
@@ -92,7 +71,7 @@
               <span class="badge">Nguồn mở · {{ session.current_question.source.license_spdx }}</span>
             {% endif %}
           </div>
-          <span class="form-hint" style="font-size: 0.75rem;">Tự luận kỹ thuật · Không khóa đếm ngược</span>
+          <span class="workspace-question__timing-note">Tự luận kỹ thuật · Không khóa đếm ngược</span>
         </div>
 
         <h2 id="question-heading">Đề bài chi tiết</h2>
@@ -105,7 +84,7 @@
                 <span class="workspace-code-dot workspace-code-dot--red"></span>
                 <span class="workspace-code-dot workspace-code-dot--amber"></span>
                 <span class="workspace-code-dot workspace-code-dot--green"></span>
-                <span style="margin-left: 0.5rem; font-weight: 700; color: #e2e8f0;">Đoạn mã tham chiếu (chỉ đọc)</span>
+                <span class="workspace-code-frame__title">Đoạn mã tham chiếu (chỉ đọc)</span>
               </div>
               <span class="workspace-code-lang">{{ session.current_question.code_language or "Code" }}</span>
             </div>
@@ -116,7 +95,7 @@
         {% if session.current_question.constraints %}
           <div class="workspace-constraints-box">
             <h3>
-              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px; color: var(--theme-accent, var(--brand-600));">info</span>
+              <span class="material-symbols-outlined" aria-hidden="true">info</span>
               <span>Ràng buộc cần lưu ý</span>
             </h3>
             <ul class="constraint-list">
@@ -124,6 +103,11 @@
             </ul>
           </div>
         {% endif %}
+
+        <p class="workspace-question__note">
+          <span class="material-symbols-outlined" aria-hidden="true">tips_and_updates</span>
+          <span>Phiên hiện tại chưa hỗ trợ gợi ý trước khi nộp. Hãy nêu rõ giả định, phương án, đánh đổi và cách kiểm tra.</span>
+        </p>
 
         <div class="workspace-question__footer">
           <div>
@@ -136,11 +120,11 @@
               <span>Nguồn: {{ session.current_question.source.source_id }}</span>
             {% endif %}
           </div>
-          <span style="font-family: var(--font-label);">ID: {{ session.current_question.id }} (v{{ session.current_question.version }})</span>
+          <span class="workspace-question__id">ID: {{ session.current_question.id }} (v{{ session.current_question.version }})</span>
         </div>
       </article>
 
-      <!-- 4. Solution Editor Card -->
+      <!-- 3. Right Pane: Answer Composer & Coding Box -->
       <form id="answer-form" class="workspace-answer-form" method="post" action="/sessions/{{ session.session_id }}/answers" novalidate>
         <div class="answer-panel-heading">
           <div class="answer-panel-heading__top">
@@ -149,9 +133,9 @@
                 <span>Trình bày cách giải</span>
                 <span class="answer-panel-dot" aria-hidden="true"></span>
               </h2>
-              <p class="form-hint" style="margin-top: 0.125rem;">Nêu cách suy nghĩ, giả định và cách kiểm tra kết quả.</p>
+              <p class="form-hint answer-panel-heading__sub">Nêu cách suy nghĩ, giả định và cách kiểm tra kết quả.</p>
             </div>
-            <span class="badge">Tự động lưu nháp trong tab</span>
+            <span class="badge">Tự động lưu nháp</span>
           </div>
 
           {% if not session.current_answer %}
@@ -177,31 +161,28 @@
           </div>
         {% endif %}
 
-        <!-- Plain-text toolbar (real plain-text insertion + honestly disabled unsupported controls) -->
+        <!-- Plain-text snippet toolbar -->
         {% if not session.current_answer %}
           <div class="workspace-toolbar" id="editor-toolbar" hidden>
             <div class="workspace-toolbar__group">
               <button type="button" class="workspace-toolbar__btn" data-insert-snippet="- " title="Chèn gạch đầu dòng văn bản thuần">
-                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">format_list_bulleted</span>
+                <span class="material-symbols-outlined" aria-hidden="true">format_list_bulleted</span>
                 <span>Danh sách</span>
               </button>
               <button type="button" class="workspace-toolbar__btn" data-insert-snippet="```&#10;&#10;```" title="Chèn khung mã văn bản thuần">
-                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">code</span>
+                <span class="material-symbols-outlined" aria-hidden="true">code</span>
                 <span>Khối mã</span>
               </button>
             </div>
-            <button type="button" class="workspace-toolbar__btn" disabled aria-disabled="true" title="Chức năng nhập bằng giọng nói chưa được hỗ trợ">
-              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">mic_off</span>
-              <span>Voice AI (Chưa hỗ trợ)</span>
-            </button>
+            <span class="workspace-toolbar__hint">Chèn nhanh định dạng văn bản thuần</span>
           </div>
         {% endif %}
 
         <!-- Structured Argument Outline Boxes (managed by workspace.js when composing) -->
         <div id="argument-outline-wrap" hidden>
           <div class="argument-boxes-list" id="argument-boxes-container"></div>
-          <button type="button" class="argument-add-btn" id="add-argument-box" style="margin-top: 0.75rem;">
-            <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px;">add</span>
+          <button type="button" class="argument-add-btn" id="add-argument-box">
+            <span class="material-symbols-outlined" aria-hidden="true">add</span>
             <span>Thêm khung luận điểm</span>
           </button>
         </div>
@@ -227,7 +208,8 @@
             <input type="hidden" name="code_language" value="{{ coding_lang }}">
             <div class="coding-box__header">
               <div class="coding-box__title-group">
-                <label class="form-label" for="answer-code" style="margin: 0;">Khung viết mã / kiểm thử</label>
+                <span class="material-symbols-outlined coding-box__icon" aria-hidden="true">terminal</span>
+                <label class="form-label coding-box__label" for="answer-code">Khung viết mã / kiểm thử</label>
                 <span class="badge coding-box__lang">{{ coding_lang }}</span>
                 {% if coding_mode == "required" %}
                   <span class="badge badge--met">Đề có yêu cầu viết mã</span>
@@ -237,7 +219,7 @@
               </div>
               <div class="coding-box__actions">
                 {% if coding_mode == "optional" %}
-                  <button class="btn btn--ghost btn--sm" id="toggle-coding-box" type="button" aria-expanded="false">
+                  <button class="btn btn--ghost coding-box__toggle" id="toggle-coding-box" type="button" aria-expanded="false">
                     Mở khung viết mã
                   </button>
                 {% endif %}
@@ -246,13 +228,13 @@
 
             <div class="coding-box__body" id="coding-box-body" {% if coding_mode == "optional" %}hidden{% endif %}>
               <div class="coding-box__toolbar">
-                <span class="coding-box__hint">Hỗ trợ Tab (4 dấu cách), Shift+Tab bỏ thụt lề và Enter tự giữ lề.</span>
+                <span class="coding-box__hint">Tab: thụt 4 dấu cách · Shift+Tab: bỏ thụt · Enter: giữ lề</span>
                 <div class="coding-box__toolbar-buttons">
                   {% if coding_cfg and coding_cfg.starter_code and not session.current_answer %}
-                    <button class="btn btn--secondary btn--sm" id="insert-starter-code" type="button">Chèn khung mẫu</button>
+                    <button class="btn btn--secondary coding-box__tool-btn" id="insert-starter-code" type="button">Chèn khung mẫu</button>
                   {% endif %}
                   {% if not session.current_answer %}
-                    <button class="btn btn--ghost btn--sm" id="clear-code" type="button">Xóa mã</button>
+                    <button class="btn btn--ghost coding-box__tool-btn" id="clear-code" type="button">Xóa mã</button>
                   {% endif %}
                 </div>
               </div>
@@ -310,4 +292,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261128-merged" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261128-ux2" defer></script>{% endblock %}

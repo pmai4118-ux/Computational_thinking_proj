@@ -3,122 +3,252 @@
 {% block title %}Trang chủ — interviewUS{% endblock %}
 {% block body_class %}homepage-shell{% endblock %}
 {% block extra_head %}
-  <link rel="stylesheet" href="/static/css/homepage.colors.css?v=20261127">
-  <link rel="stylesheet" href="/static/css/homepage.utilities.css?v=20261127">
-  <link rel="stylesheet" href="/static/css/homepage.css?v=20261127">
+  <link rel="stylesheet" href="/static/css/homepage.colors.css?v=20261128-ux2">
+  <link rel="stylesheet" href="/static/css/homepage.utilities.css?v=20261128-ux2">
+  <link rel="stylesheet" href="/static/css/homepage.css?v=20261128-ux2">
 {% endblock %}
 {% block content %}
-<div aria-hidden="true" class="pointer-events-none fixed inset-0 z-0 overflow-hidden"><div class="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]"></div><div class="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full bg-secondary-container/5 blur-[100px]"></div><div class="absolute -bottom-40 left-1/3 w-[600px] h-[600px] rounded-full bg-primary-fixed-dim/20 blur-[140px]"></div></div>
-<div class="homepage-content relative z-10" aria-labelledby="welcome-heading">
-<div class="flex flex-col w-full">
-<section class="relative w-full max-w-7xl mx-auto px-margin-mobile md:px-margin-tablet lg:px-margin py-space-xl">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
-<div class="lg:col-span-7 flex flex-col gap-space-md">
-<div class="inline-flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-white/80 backdrop-blur-md shadow-[0_4px_16px_rgba(15,118,110,0.08)] w-fit">
-<span class="text-primary-container text-body-md font-bold">🌟</span>
-<span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">Nền tảng luyện phỏng vấn kỹ thuật thế hệ mới</span>
-</div>
-<h1 id="welcome-heading" class="font-display-hero text-display-hero text-on-surface tracking-tight leading-[1.08]">
-          Luyện từng câu,<br>
-<span class="text-primary font-extrabold drop-shadow-[0_4px_24px_rgba(15,118,110,0.25)]">vững từng bước.</span>
-</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
-          Luyện trả lời tự luận kỹ thuật với <strong class="text-on-surface font-semibold">Trợ lý Us-Bot AI</strong> và lộ trình cá nhân hóa cho sinh viên CNTT và Intern/Fresher.
-        </p>
-<div class="flex flex-wrap items-center gap-space-md pt-space-sm">
-<a class="inline-flex items-center justify-center gap-space-sm px-space-xl py-space-md rounded-2xl bg-primary-container text-on-primary font-title-md text-title-md font-bold shadow-[0_12px_28px_rgba(15,118,110,0.38)] hover:scale-[1.02] hover:shadow-[0_16px_36px_rgba(15,118,110,0.48)] transition-all" href="/setup">
-<span class="material-symbols-outlined text-[22px]" aria-hidden="true">play_circle</span>
-<span>Bắt đầu luyện tập</span>
-</a>
-<a class="inline-flex items-center justify-center gap-space-sm px-space-xl py-space-md rounded-2xl bg-white/75 backdrop-blur-xl text-primary font-title-md text-title-md font-bold shadow-[0_6px_20px_rgba(15,118,110,0.1)] hover:bg-white hover:shadow-[0_10px_28px_rgba(15,118,110,0.18)] transition-all" href="/interview">
-<span class="material-symbols-outlined text-[22px]" aria-hidden="true">forum</span>
-<span>Khám phá phỏng vấn ảo</span>
-</a>
-</div>
-</div>
-<div class="lg:col-span-5 relative">
-<div class="absolute -inset-4 rounded-3xl bg-gradient-to-tr from-primary/20 via-secondary-container/15 to-transparent blur-2xl pointer-events-none"></div>
-<div class="relative bg-white/80 backdrop-blur-2xl rounded-3xl p-space-lg shadow-[0_20px_50px_rgba(15,118,110,0.14)] flex flex-col gap-space-md">
-<div class="home-console-heading flex items-center justify-between">
-<div class="flex items-center gap-space-sm">
-<div class="relative w-12 h-12 rounded-2xl bg-primary-container text-on-primary flex items-center justify-center shadow-[0_8px_20px_rgba(15,118,110,0.35)]">
-<span class="material-symbols-outlined text-[26px]" aria-hidden="true">smart_toy</span>
-<span class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-white flex items-center justify-center">
-<span class="w-2 h-2 rounded-full bg-primary-container "></span>
-</span>
-</div>
-<div class="flex flex-col">
-<span class="font-title-md text-title-md font-bold text-on-surface leading-tight">Us-Bot AI Interviewer</span>
-<span class="font-label-sm text-label-sm uppercase text-primary font-bold">Trợ lý luyện phỏng vấn tự luận</span>
-</div>
-</div>
-<div class="px-space-sm py-1 rounded-full bg-surface-container-high/70 font-label-sm text-label-sm font-bold text-on-surface-variant">
-              MINH HỌA
-            </div>
-</div>
-<div class="p-space-md rounded-2xl bg-surface-container-low/70 backdrop-blur-md flex flex-col gap-space-xs shadow-sm">
-<div class="flex items-center justify-between">
-<span class="font-label-sm text-label-sm uppercase text-primary font-bold">Quy trình luyện phỏng vấn</span>
-<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold">Tự luận kỹ thuật</span>
-</div>
-<p class="font-title-md text-title-md font-semibold text-on-surface">
-              Đọc câu hỏi, trình bày cách giải thích của bạn và nhận phản hồi dựa trên bằng chứng trong bài làm.
-            </p>
-</div>
-<div class="flex items-center justify-between p-space-sm rounded-xl bg-white/90 backdrop-blur-lg shadow-md -mt-2">
-<div class="flex items-center gap-space-xs text-primary font-title-md text-body-sm font-bold">
-<span class="material-symbols-outlined text-[18px]" aria-hidden="true">data_object</span>
-<span>Đối chiếu câu trả lời theo rubric</span>
-</div>
-<span class="px-space-sm py-0.5 rounded-md bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold">Có căn cứ</span>
-</div>
-<div class="p-space-md rounded-2xl bg-gradient-to-r from-primary-fixed/60 to-white/90 backdrop-blur-xl flex items-center justify-between shadow-[0_6px_20px_rgba(15,118,110,0.12)]">
-<div class="flex items-center gap-space-sm">
-<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-headline-sm text-headline-sm font-extrabold shadow-sm">
-                AI
+<div class="homepage-content" aria-labelledby="welcome-heading">
+  <div class="home-flow">
+    <!-- Section 1: Hero & Honest Us-Bot Preview -->
+    <section class="home-section home-hero">
+      <div class="home-hero__grid">
+        <div class="home-hero__copy">
+          <div class="home-hero-badge">
+            <span class="material-symbols-outlined home-hero-badge__icon" aria-hidden="true">verified</span>
+            <span>Nền tảng luyện phỏng vấn kỹ thuật cho sinh viên &amp; Fresher</span>
+          </div>
+
+          <h1 id="welcome-heading" class="home-hero__title">
+            Luyện từng câu,<br>
+            <span class="home-hero__accent">vững từng bước.</span>
+          </h1>
+
+          <p class="home-hero__lead">
+            Luyện trả lời tự luận kỹ thuật cùng <strong>Trợ lý Us-Bot AI</strong>, mô phỏng rẽ nhánh tình huống Backend và xây dựng lộ trình Java cá nhân hóa — không cần tạo tài khoản.
+          </p>
+
+          <div class="home-hero__actions">
+            <a class="home-btn home-btn--primary" href="/setup">
+              <span class="material-symbols-outlined" aria-hidden="true">play_circle</span>
+              <span>Bắt đầu luyện tập</span>
+            </a>
+            <a class="home-btn home-btn--secondary" href="/interview">
+              <span class="material-symbols-outlined" aria-hidden="true">forum</span>
+              <span>Khám phá phỏng vấn ảo</span>
+            </a>
+          </div>
+
+          <ul class="home-trust-strip" aria-label="Nguyên tắc luyện tập">
+            <li class="home-trust-chip">
+              <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
+              <span>Chấm theo tiêu chí Rubric rõ ràng</span>
+            </li>
+            <li class="home-trust-chip">
+              <span class="material-symbols-outlined" aria-hidden="true">format_quote</span>
+              <span>Trích dẫn nguyên văn từ bài làm</span>
+            </li>
+            <li class="home-trust-chip">
+              <span class="material-symbols-outlined" aria-hidden="true">shield_person</span>
+              <span>Ẩn danh ngay trên trình duyệt</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="home-console-wrap">
+          <div class="home-console" aria-label="Minh họa luồng luyện tập cùng Us-Bot AI">
+            <div class="home-console__head">
+              <div class="home-console__brand">
+                <div class="home-console__avatar" aria-hidden="true">
+                  <span class="material-symbols-outlined">smart_toy</span>
+                </div>
+                <div class="home-console__identity">
+                  <span class="home-console__name">Us-Bot AI Interviewer</span>
+                  <span class="home-console__role">Trợ lý luyện phỏng vấn tự luận</span>
+                </div>
               </div>
-<div class="flex flex-col">
-<span class="font-title-md text-title-md font-bold text-on-surface">Phản hồi theo tiêu chí</span>
-<span class="font-body-sm text-body-sm text-on-surface-variant">Bằng chứng · nhận xét · gợi ý ôn tập</span>
-</div>
-</div>
-<span class="material-symbols-outlined text-primary text-[28px]" aria-hidden="true">verified</span>
-</div>
-<div class="flex items-center gap-1.5 justify-center py-space-xs px-space-md rounded-xl bg-surface-container-high/40">
-<span class="w-1 h-3 rounded-full bg-primary-container "></span>
-<span class="w-1 h-6 rounded-full bg-primary-container"></span>
-<span class="w-1 h-4 rounded-full bg-primary-container "></span>
-<span class="w-1 h-8 rounded-full bg-primary-container"></span>
-<span class="w-1 h-5 rounded-full bg-primary-container "></span>
-<span class="w-1 h-3 rounded-full bg-primary-container"></span>
-<span class="font-label-md text-label-md text-primary font-semibold pl-space-xs">Minh họa cách Us-Bot hỗ trợ bạn luyện tập</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-<section class="w-full max-w-7xl mx-auto px-margin-mobile md:px-margin-tablet lg:px-margin py-space-xl"><div class="flex flex-col items-center text-center gap-space-xs mb-space-xl"><span class="font-label-md text-label-md text-primary font-bold uppercase tracking-widest">Phương Pháp Luyện Tập</span><h2 class="font-headline-lg text-headline-lg font-bold text-on-surface tracking-tight">Luyện tập có định hướng, tiến bộ từng bước</h2><p class="font-body-md text-body-md text-on-surface-variant max-w-xl">Kết nối câu trả lời, phản hồi có căn cứ và bài học phù hợp với mục tiêu của bạn.</p></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg items-stretch"><div class="flex flex-col justify-between p-space-xl rounded-3xl bg-white/75 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,118,110,0.06)] hover:shadow-[0_16px_40px_rgba(15,118,110,0.12)] transition-all"><div class="flex flex-col gap-space-md"><div class="w-14 h-14 rounded-2xl bg-secondary-fixed flex items-center justify-center text-primary shadow-sm"><span class="material-symbols-outlined text-[30px]" aria-hidden="true">quiz</span></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-primary font-bold uppercase">Câu hỏi &amp; lập luận</span><h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Câu Hỏi Tự Luận Kỹ Thuật</h3><p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">Luyện giải thích kiến thức, phân tích tình huống và trình bày lập luận trong phiên phỏng vấn.</p></div><ul class="flex flex-col gap-space-sm pt-space-xs"><li class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]" aria-hidden="true">check_circle</span><span>Tiêu chí đánh giá rõ ràng theo từng câu</span></li><li class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]" aria-hidden="true">check_circle</span><span>Lưu bài làm và xem lại lịch sử phiên</span></li></ul></div><div class="pt-space-lg"><a class="inline-flex items-center gap-space-xs font-title-md text-title-md font-bold text-primary hover:gap-space-sm transition-all" href="/interview"><span>Khám phá cấu trúc phiên</span><span class="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_forward</span></a></div></div><div class="relative flex flex-col justify-between p-space-xl rounded-3xl bg-gradient-to-b from-white/95 to-primary-fixed/20 backdrop-blur-2xl shadow-[0_20px_50px_rgba(15,118,110,0.16)] ring-2 ring-primary-container lg:-translate-y-4"><div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-space-md py-1 rounded-full bg-primary-container text-on-primary font-label-md text-label-md font-extrabold uppercase shadow-md flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" aria-hidden="true">star</span><span>Trọng Tâm Nổi Bật</span></div><div class="flex flex-col gap-space-md pt-space-xs"><div class="w-16 h-16 rounded-2xl bg-primary-container text-on-primary flex items-center justify-center shadow-lg shadow-primary-container/30"><span class="material-symbols-outlined text-[34px]" aria-hidden="true">forum</span></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-primary font-bold uppercase">Thực hành phỏng vấn</span><h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Phỏng Vấn Ảo Us-Bot AI</h3><p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">Trình bày câu trả lời bằng văn bản, xem bằng chứng được đối chiếu và nhận gợi ý cải thiện.</p></div><div class="grid grid-cols-2 gap-space-xs pt-space-xs"><div class="p-space-xs rounded-xl bg-white/80 text-center font-label-sm text-label-sm font-bold text-primary shadow-sm">Phản hồi từng câu</div><div class="p-space-xs rounded-xl bg-white/80 text-center font-label-sm text-label-sm font-bold text-primary shadow-sm">Tổng kết cuối phiên</div></div></div><div class="pt-space-lg"><a class="w-full inline-flex items-center justify-center gap-space-sm px-space-lg py-space-md rounded-2xl bg-primary-container text-on-primary font-title-md text-title-md font-bold shadow-[0_8px_24px_rgba(15,118,110,0.35)] hover:scale-[1.02] transition-all" href="/interview"><span>Bắt đầu phỏng vấn ảo ngay</span><span class="material-symbols-outlined text-[20px]" aria-hidden="true">bolt</span></a></div></div><div class="flex flex-col justify-between p-space-xl rounded-3xl bg-white/75 backdrop-blur-xl shadow-[0_10px_30px_rgba(15,118,110,0.06)] hover:shadow-[0_16px_40px_rgba(15,118,110,0.12)] transition-all"><div class="flex flex-col gap-space-md"><div class="w-14 h-14 rounded-2xl bg-secondary-fixed flex items-center justify-center text-primary shadow-sm"><span class="material-symbols-outlined text-[30px]" aria-hidden="true">timeline</span></div><div class="flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-primary font-bold uppercase">Học theo mục tiêu</span><h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Lộ Trình Cá Nhân Hóa</h3><p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">Lộ trình thiết kế riêng theo vị trí mục tiêu và quỹ thời gian.</p></div><ul class="flex flex-col gap-space-sm pt-space-xs"><li class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]" aria-hidden="true">check_circle</span><span>Chọn mục tiêu và bài đã tự học</span></li><li class="flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface"><span class="material-symbols-outlined text-primary text-[18px]" aria-hidden="true">check_circle</span><span>Bài đọc, thực hành có nguồn và tiến độ học</span></li></ul></div><div class="pt-space-lg"><a class="inline-flex items-center gap-space-xs font-title-md text-title-md font-bold text-primary hover:gap-space-sm transition-all" href="/learning-path"><span>Thiết kế lộ trình của bạn</span><span class="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_forward</span></a></div></div></div></section>
-<section class="w-full max-w-7xl mx-auto px-margin-mobile md:px-margin-tablet lg:px-margin py-space-xl mb-space-lg">
-<div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary via-primary-container to-secondary p-space-xl text-on-primary flex flex-col md:flex-row items-center justify-between gap-space-lg shadow-[0_24px_64px_rgba(15,118,110,0.35)]">
-<div class="flex flex-col gap-space-xs max-w-2xl text-center md:text-left">
-<span class="font-label-md text-label-md uppercase tracking-widest text-on-primary-container font-extrabold">Sẵn sàng chinh phục cơ hội nghề nghiệp?</span>
-<h2 class="font-headline-lg text-headline-lg font-extrabold text-white leading-tight">
-          Bắt đầu phiên phỏng vấn thử đầu tiên ngay hôm nay.
-        </h2>
-<p class="font-body-md text-body-md text-on-primary-container">
-          Chọn mục tiêu, xác nhận thiết lập và bắt đầu trình bày câu trả lời của bạn.
+              <span class="home-console__demo-tag">MINH HỌA</span>
+            </div>
+
+            <div class="home-console__prompt-box">
+              <div class="home-console__prompt-meta">
+                <span class="home-console__eyebrow">Quy trình luyện phỏng vấn</span>
+                <span class="home-console__pill">Tự luận kỹ thuật</span>
+              </div>
+              <p class="home-console__prompt-text">
+                Đọc câu hỏi, trình bày lập luận hoặc mã giải thích của bạn và nhận phản hồi dựa trên bằng chứng ngay trong bài làm.
+              </p>
+            </div>
+
+            <div class="home-console__check-row">
+              <div class="home-console__check-title">
+                <span class="material-symbols-outlined" aria-hidden="true">data_object</span>
+                <span>Đối chiếu câu trả lời theo rubric</span>
+              </div>
+              <span class="home-console__status-pill">Có căn cứ</span>
+            </div>
+
+            <div class="home-console__feedback-box">
+              <div class="home-console__feedback-main">
+                <div class="home-console__ai-badge" aria-hidden="true">AI</div>
+                <div class="home-console__feedback-copy">
+                  <strong>Phản hồi theo từng tiêu chí</strong>
+                  <span>Bằng chứng · nhận xét · gợi ý ôn tập</span>
+                </div>
+              </div>
+              <span class="material-symbols-outlined home-console__verified" aria-hidden="true">verified</span>
+            </div>
+
+            <ol class="home-console__steps" aria-label="3 bước trong phiên luyện tập">
+              <li><span>1. Trình bày</span></li>
+              <li><span>2. Đối chiếu</span></li>
+              <li><span>3. Ôn đúng lỗ hổng</span></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Unified 4-Card Ecosystem Grid -->
+    <section class="home-section home-eco-section" aria-labelledby="ecosystem-heading">
+      <div class="home-section__head">
+        <span class="home-section__eyebrow">Hệ sinh thái interviewUS</span>
+        <h2 id="ecosystem-heading" class="home-section__title">Hệ sinh thái luyện tập toàn diện</h2>
+        <p class="home-section__lead">
+          Kết nối liền mạch từ phòng phỏng vấn tự luận, rẽ nhánh tình huống thực tế đến phân tích tin tuyển dụng và lộ trình Java Backend.
         </p>
+      </div>
+
+      <div class="home-eco-grid">
+        <article class="home-eco-card home-eco-card--featured">
+          <div class="home-eco-card__top">
+            <div class="home-eco-card__icon home-eco-card__icon--solid" aria-hidden="true">
+              <span class="material-symbols-outlined">forum</span>
+            </div>
+            <span class="home-eco-card__badge">Trọng tâm</span>
+          </div>
+          <div class="home-eco-card__body">
+            <span class="home-eco-card__kicker">Thực hành phỏng vấn</span>
+            <h3 class="home-eco-card__title">Phỏng vấn ảo Us-Bot AI</h3>
+            <p class="home-eco-card__desc">
+              Hoàn thành phiên 4 câu tự luận và viết mã Backend, đối chiếu bằng chứng nguyên văn theo rubric và luyện thêm câu hỏi đào sâu khi còn thiếu ý.
+            </p>
+            <div class="home-eco-chips">
+              <span class="home-eco-chip">Phản hồi từng câu</span>
+              <span class="home-eco-chip">Tổng kết cuối phiên</span>
+            </div>
+          </div>
+          <div class="home-eco-card__foot">
+            <a class="home-eco-cta home-eco-cta--solid" href="/interview">
+              <span>Vào phỏng vấn ảo</span>
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="home-eco-card">
+          <div class="home-eco-card__top">
+            <div class="home-eco-card__icon" aria-hidden="true">
+              <span class="material-symbols-outlined">route</span>
+            </div>
+          </div>
+          <div class="home-eco-card__body">
+            <span class="home-eco-card__kicker">Học theo mục tiêu</span>
+            <h3 class="home-eco-card__title">Lộ trình Java Backend</h3>
+            <p class="home-eco-card__desc">
+              Thiết kế kế hoạch học Java theo vị trí Intern/Fresher, số tuần và quỹ giờ rảnh — đi kèm bài đọc chính thống, thực hành có nguồn và lịch học mỗi ngày.
+            </p>
+            <div class="home-eco-chips">
+              <span class="home-eco-chip">Theo chặng rõ ràng</span>
+              <span class="home-eco-chip">Nguồn mở xác minh</span>
+            </div>
+          </div>
+          <div class="home-eco-card__foot">
+            <a class="home-eco-link" href="/learning-path">
+              <span>Thiết kế lộ trình của bạn</span>
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="home-eco-card">
+          <div class="home-eco-card__top">
+            <div class="home-eco-card__icon" aria-hidden="true">
+              <span class="material-symbols-outlined">description</span>
+            </div>
+          </div>
+          <div class="home-eco-card__body">
+            <span class="home-eco-card__kicker">Định hướng thị trường</span>
+            <h3 class="home-eco-card__title">Phân tích JD &amp; Hồ sơ năng lực</h3>
+            <p class="home-eco-card__desc">
+              Dán tin tuyển dụng thực tế để phát hiện nhanh kỹ năng cần bù đắp, đồng thời theo dõi các tiêu chí đã vững và cần luyện qua từng phiên phỏng vấn.
+            </p>
+            <div class="home-eco-chips">
+              <span class="home-eco-chip">Đối chiếu JD thực tế</span>
+              <span class="home-eco-chip">Tích lũy năng lực</span>
+            </div>
+          </div>
+          <div class="home-eco-card__foot home-eco-card__foot--split">
+            <a class="home-eco-link" href="/jd">
+              <span>Phân tích JD</span>
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+            <a class="home-eco-link home-eco-link--muted" href="/profile">
+              <span>Hồ sơ năng lực</span>
+              <span class="material-symbols-outlined" aria-hidden="true">analytics</span>
+            </a>
+          </div>
+        </article>
+
+        <article class="home-eco-card">
+          <div class="home-eco-card__top">
+            <div class="home-eco-card__icon" aria-hidden="true">
+              <span class="material-symbols-outlined">account_tree</span>
+            </div>
+          </div>
+          <div class="home-eco-card__body">
+            <span class="home-eco-card__kicker">Phòng thí nghiệm rẽ nhánh</span>
+            <h3 class="home-eco-card__title">Mô phỏng tình huống Replay</h3>
+            <p class="home-eco-card__desc">
+              Thử nghiệm các phương án xử lý khác nhau từ chính bài tình huống Backend bạn đã nộp để đối chiếu an toàn dữ liệu và hiệu năng vận hành.
+            </p>
+            <div class="home-eco-chips">
+              <span class="home-eco-chip">Cây quyết định tương tác</span>
+              <span class="home-eco-chip">Không đổi điểm gốc</span>
+            </div>
+          </div>
+          <div class="home-eco-card__foot">
+            <a class="home-eco-link" href="/replays">
+              <span>Mở mô phỏng tình huống</span>
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Section 3: Final Action Banner -->
+    <section class="home-section home-final-section">
+      <div class="home-final-banner">
+        <div class="home-final-banner__copy">
+          <span class="home-final-banner__eyebrow">Sẵn sàng bắt đầu luyện tập?</span>
+          <h2 class="home-final-banner__title">Bắt đầu phiên phỏng vấn thử đầu tiên ngay hôm nay.</h2>
+          <p class="home-final-banner__desc">
+            Chọn chế độ đánh giá phù hợp, trình bày lập luận kỹ thuật của bạn và nhận phản hồi minh bạch dựa trên rubric.
+          </p>
+        </div>
+        <div class="home-final-banner__actions">
+          <a class="home-banner-btn home-banner-btn--light" href="/interview">
+            <span>Bắt đầu phỏng vấn</span>
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+          </a>
+          <a class="home-banner-btn home-banner-btn--outline" href="/history">
+            <span class="material-symbols-outlined" aria-hidden="true">history</span>
+            <span>Lịch sử phiên</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
 </div>
-<div class="flex flex-col sm:flex-row items-center gap-space-sm flex-shrink-0">
-<a class="px-space-xl py-space-md rounded-2xl bg-white text-primary font-title-md text-title-md font-bold hover:scale-105 shadow-lg transition-all" href="/interview">
-          Bắt đầu phỏng vấn
-        </a>
-</div>
-</div>
-</section>
-</div>
-</div>
-{% endblock %}
-{% block site_footer %}
-<footer class="relative z-10 w-full bg-surface-container-lowest/80 backdrop-blur-lg mt-space-xl shadow-[0_-1px_16px_rgba(15,118,110,0.03)]"><div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-tablet lg:px-margin py-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex flex-col sm:flex-row items-center gap-space-xs sm:gap-space-md text-center sm:text-left"><span class="font-body-sm text-body-sm text-on-surface-variant">© 2026 <strong class="text-on-surface font-title-md text-body-sm">interviewUS</strong>. Luyện tự luận kỹ thuật &amp; học Java Backend.</span><div class="flex items-center gap-space-md"><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="/interview">Phỏng vấn ảo</a><span class="text-outline-variant font-body-sm text-body-sm">•</span><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="/learning-path">Lộ trình Java</a><span class="text-outline-variant font-body-sm text-body-sm">•</span><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="/jd">Phân tích JD</a><span class="text-outline-variant font-body-sm text-body-sm">•</span><a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" href="/replays">Decision Replay</a></div></div><div class="flex items-center gap-space-md"><a class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors px-space-md py-space-xs rounded-full bg-white/60 hover:bg-surface-container" href="/history"><span class="material-symbols-outlined text-[16px]">forum</span><span>Lịch sử phiên</span></a><a class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors px-space-md py-space-xs rounded-full bg-white/60 hover:bg-surface-container" href="/setup"><span class="material-symbols-outlined text-[16px]">code</span><span>Bắt đầu luyện tập</span></a></div></div></footer>
 {% endblock %}

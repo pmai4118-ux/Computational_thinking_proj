@@ -42,6 +42,18 @@
 
   setSelectedMode(timingInput ? timingInput.value : "after_session");
 
+  function setSubmitLabel(text) {
+    if (!submitBtn) return;
+    const labelNode = typeof submitBtn.querySelector === "function"
+      ? submitBtn.querySelector("[data-cta-label]")
+      : null;
+    if (labelNode) {
+      labelNode.textContent = text;
+    } else {
+      submitBtn.textContent = text;
+    }
+  }
+
   let submitting = false;
   form.addEventListener("submit", async (event) => {
     if (submitting) {
@@ -53,7 +65,7 @@
     if (!api || typeof api.createSession !== "function") {
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = "Đang khởi tạo phiên…";
+        setSubmitLabel("Đang khởi tạo phiên…");
       }
       return;
     }
@@ -68,7 +80,7 @@
     }
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = "Đang khởi tạo phiên…";
+      setSubmitLabel("Đang khởi tạo phiên…");
     }
 
     try {
@@ -85,7 +97,7 @@
       submitting = false;
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Xác nhận bắt đầu phỏng vấn";
+        setSubmitLabel("Xác nhận bắt đầu phỏng vấn");
       }
       if (apiErrorBox) {
         const msg = [

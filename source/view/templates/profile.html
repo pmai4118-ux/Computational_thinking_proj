@@ -1,83 +1,179 @@
 {% extends "base.html" %}
+{% set nav_active = "profile" %}
 
 {% block title %}Hồ sơ năng lực — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/features.css?v=20261127-p1">
+<link rel="stylesheet" href="/static/css/features.css?v=20261128-ux2">
 {% endblock %}
 
 {% block content %}
-<section class="card stack" aria-labelledby="profile-heading">
-  <div class="results-header">
-    <div>
+<section class="mvp-page profile-page" aria-labelledby="profile-heading">
+  <header class="mvp-hero">
+    <div class="mvp-hero__copy">
+      <span class="mvp-eyebrow-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">insights</span>
+        <span>Tổng hợp năng lực kỹ thuật</span>
+      </span>
       <h1 id="profile-heading">Hồ sơ năng lực qua các phiên</h1>
-      <p class="text-secondary reading-measure">
+      <p class="mvp-hero__lead reading-measure">
         Tổng hợp từ các câu trả lời đã hoàn tất đánh giá trên trình duyệt này. Hồ sơ chỉ phản ánh tiêu chí đã quan sát được và dùng để ưu tiên câu hỏi phù hợp khi bạn mở phiên mới.
       </p>
     </div>
-    <div class="action-row">
-      <a class="btn btn--primary" href="/setup">Mở phiên mới theo hồ sơ</a>
-      <a class="btn btn--secondary" href="/jd">Đối chiếu với JD</a>
+    <div class="mvp-hero__actions">
+      <a class="btn btn--primary" href="/setup">
+        <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+        <span>Mở phiên mới theo hồ sơ</span>
+      </a>
+      <a class="btn btn--secondary" href="/jd">
+        <span class="material-symbols-outlined" aria-hidden="true">description</span>
+        <span>Đối chiếu với JD</span>
+      </a>
     </div>
-  </div>
+  </header>
 
   {% if profile.entries %}
-    <div class="summary-strip" aria-label="Thống kê hồ sơ năng lực">
-      <div class="metric-box">
-        <p class="metric-box__value">{{ counts.strength }}</p>
-        <p class="metric-box__label">Tiêu chí đã vững</p>
+    <div class="mvp-kpi-grid" aria-label="Thống kê hồ sơ năng lực">
+      <div class="mvp-kpi-card mvp-kpi-card--met">
+        <span class="mvp-kpi-card__icon" aria-hidden="true">
+          <span class="material-symbols-outlined">verified</span>
+        </span>
+        <div class="mvp-kpi-card__body">
+          <p class="mvp-kpi-card__value">{{ counts.strength }}</p>
+          <p class="mvp-kpi-card__label">Tiêu chí đã vững</p>
+        </div>
       </div>
-      <div class="metric-box">
-        <p class="metric-box__value">{{ counts.practice }}</p>
-        <p class="metric-box__label">Tiêu chí cần luyện thêm</p>
+      <div class="mvp-kpi-card mvp-kpi-card--unmet">
+        <span class="mvp-kpi-card__icon" aria-hidden="true">
+          <span class="material-symbols-outlined">track_changes</span>
+        </span>
+        <div class="mvp-kpi-card__body">
+          <p class="mvp-kpi-card__value">{{ counts.practice }}</p>
+          <p class="mvp-kpi-card__label">Tiêu chí cần luyện thêm</p>
+        </div>
       </div>
-      <div class="metric-box">
-        <p class="metric-box__value">{{ counts.unresolved }}</p>
-        <p class="metric-box__label">Chưa đủ căn cứ (không tính 0 điểm)</p>
+      <div class="mvp-kpi-card mvp-kpi-card--unresolved">
+        <span class="mvp-kpi-card__icon" aria-hidden="true">
+          <span class="material-symbols-outlined">help_outline</span>
+        </span>
+        <div class="mvp-kpi-card__body">
+          <p class="mvp-kpi-card__value">{{ counts.unresolved }}</p>
+          <p class="mvp-kpi-card__label">Chưa đủ căn cứ (không tính 0 điểm)</p>
+        </div>
       </div>
-      <div class="metric-box">
-        <p class="metric-box__value">{{ profile.entries | length }}</p>
-        <p class="metric-box__label">Tổng nhóm tiêu chí đã quan sát</p>
+      <div class="mvp-kpi-card mvp-kpi-card--accent">
+        <span class="mvp-kpi-card__icon" aria-hidden="true">
+          <span class="material-symbols-outlined">analytics</span>
+        </span>
+        <div class="mvp-kpi-card__body">
+          <p class="mvp-kpi-card__value">{{ profile.entries | length }}</p>
+          <p class="mvp-kpi-card__label">Tổng nhóm tiêu chí đã quan sát</p>
+        </div>
       </div>
     </div>
 
     {% for group in grouped_entries %}
-      <section class="skill-group" aria-labelledby="skill-{{ loop.index }}">
-        <h2 id="skill-{{ loop.index }}">{{ group.skill_label }}</h2>
+      <section class="mvp-section-card profile-skill-group" aria-labelledby="skill-{{ loop.index }}">
+        <div class="mvp-section-head">
+          <div class="mvp-section-head__title-group">
+            <span class="mvp-section-icon" aria-hidden="true">
+              <span class="material-symbols-outlined">layers</span>
+            </span>
+            <h2 id="skill-{{ loop.index }}">{{ group.skill_label }}</h2>
+          </div>
+          <span class="mvp-count-pill">{{ group.entries | length }} tiêu chí</span>
+        </div>
+
         <ul class="profile-entry-list">
           {% for entry in group.entries %}
-            <li class="profile-entry">
-              <div class="stack" style="gap: var(--space-2);">
+            <li class="profile-entry profile-entry--{{ entry.state.value }}">
+              <div class="profile-entry__header">
                 <div class="profile-entry__meta">
-                  <strong>{{ criterion_type_labels.get(entry.criterion_type, entry.criterion_type) }}</strong>
+                  <h3 class="profile-entry__title">{{ criterion_type_labels.get(entry.criterion_type, entry.criterion_type) }}</h3>
                   {% if entry.state.value == "observed_strength" %}
-                    <span class="badge badge--met">Đã vững qua quan sát</span>
+                    <span class="badge badge--met">
+                      <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                      <span>Đã vững qua quan sát</span>
+                    </span>
                   {% elif entry.state.value == "needs_practice" %}
-                    <span class="badge badge--unmet">Cần luyện thêm</span>
+                    <span class="badge badge--unmet">
+                      <span class="material-symbols-outlined" aria-hidden="true">flag</span>
+                      <span>Cần luyện thêm</span>
+                    </span>
                   {% else %}
-                    <span class="badge badge--unresolved">Chưa đủ căn cứ</span>
+                    <span class="badge badge--unresolved">
+                      <span class="material-symbols-outlined" aria-hidden="true">help</span>
+                      <span>Chưa đủ căn cứ</span>
+                    </span>
                   {% endif %}
-                  <span class="badge">{{ trend_labels.get(entry.trend.value, entry.trend.value) }}</span>
-                  <span class="badge">{{ confidence_labels.get(entry.evidence_confidence.value, entry.evidence_confidence.value) }}</span>
                 </div>
-                <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);">
-                  Đã quan sát {{ entry.observed_count }} lần ({{ entry.met_count }} đạt · {{ entry.unmet_count }} chưa đạt · {{ entry.unresolved_count }} chưa đủ căn cứ).
-                  {% if entry.selection_priority > 0 %}
-                    Độ ưu tiên chọn đề tiếp theo: <strong>{{ "%.0f"|format(entry.selection_priority * 100) }}%</strong>.
-                  {% endif %}
-                </p>
-                {% if entry.recent_scored %}
-                  <div class="score-chips" aria-label="Điểm các lượt gần nhất">
-                    <span class="text-secondary" style="font-size: var(--font-size-xs); margin-right: var(--space-1);">Gần nhất:</span>
-                    {% for s in entry.recent_scored %}
-                      <span class="score-chip">{{ s.score }}/{{ s.maximum_score }}</span>
-                    {% endfor %}
+
+                <div class="profile-entry__signals">
+                  <span class="profile-signal profile-signal--{{ entry.trend.value }}">
+                    <span class="material-symbols-outlined" aria-hidden="true">
+                      {%- if entry.trend.value == "improving" -%}trending_up
+                      {%- elif entry.trend.value == "declining" -%}trending_down
+                      {%- elif entry.trend.value == "stable" -%}trending_flat
+                      {%- else -%}radio_button_checked{%- endif -%}
+                    </span>
+                    <span>{{ trend_labels.get(entry.trend.value, entry.trend.value) }}</span>
+                  </span>
+                  <span class="profile-signal">
+                    <span class="material-symbols-outlined" aria-hidden="true">
+                      {%- if entry.evidence_confidence.value == "consistent" -%}verified_user
+                      {%- elif entry.evidence_confidence.value == "mixed" -%}rule
+                      {%- else -%}hourglass_top{%- endif -%}
+                    </span>
+                    <span>{{ confidence_labels.get(entry.evidence_confidence.value, entry.evidence_confidence.value) }}</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="profile-entry__progress">
+                {% if entry.observed_count > 0 %}
+                  <div class="profile-obs-bar"
+                       role="img"
+                       aria-label="Phân bổ {{ entry.observed_count }} lần quan sát: {{ entry.met_count }} đạt, {{ entry.unmet_count }} chưa đạt, {{ entry.unresolved_count }} chưa đủ căn cứ">
+                    {% if entry.met_count > 0 %}
+                      <span class="profile-obs-bar__seg profile-obs-bar__seg--met" style="flex: {{ entry.met_count }} 0 0;"></span>
+                    {% endif %}
+                    {% if entry.unmet_count > 0 %}
+                      <span class="profile-obs-bar__seg profile-obs-bar__seg--unmet" style="flex: {{ entry.unmet_count }} 0 0;"></span>
+                    {% endif %}
+                    {% if entry.unresolved_count > 0 %}
+                      <span class="profile-obs-bar__seg profile-obs-bar__seg--unresolved" style="flex: {{ entry.unresolved_count }} 0 0;"></span>
+                    {% endif %}
                   </div>
                 {% endif %}
+
+                <div class="profile-obs-meta">
+                  <p class="profile-obs-text">
+                    Đã quan sát <strong>{{ entry.observed_count }}</strong> lần ({{ entry.met_count }} đạt · {{ entry.unmet_count }} chưa đạt · {{ entry.unresolved_count }} chưa đủ căn cứ).
+                  </p>
+                  {% if entry.selection_priority > 0 %}
+                    <span class="profile-priority-pill">
+                      <span class="material-symbols-outlined" aria-hidden="true">priority_high</span>
+                      <span>Độ ưu tiên chọn đề: <strong>{{ "%.0f"|format(entry.selection_priority * 100) }}%</strong></span>
+                    </span>
+                  {% endif %}
+                </div>
               </div>
-              <div class="action-row">
-                <a class="btn btn--secondary"
+
+              <div class="profile-entry__footer">
+                <div class="profile-entry__scores">
+                  {% if entry.recent_scored %}
+                    <div class="score-chips" aria-label="Điểm các lượt gần nhất">
+                      <span class="score-chips__label">Gần nhất:</span>
+                      {% for s in entry.recent_scored %}
+                        <span class="score-chip">{{ s.score }}/{{ s.maximum_score }}</span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <a class="btn btn--secondary btn--sm"
                    href="/sessions/{{ entry.latest_session_id }}/review?answer_id={{ entry.latest_answer_ref.id }}&amp;revision={{ entry.latest_answer_ref.revision }}">
-                  Xem bằng chứng gần nhất
+                  <span>Xem bằng chứng gần nhất</span>
+                  <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
                 </a>
               </div>
             </li>
@@ -86,9 +182,12 @@
       </section>
     {% endfor %}
   {% else %}
-    <div class="card card--subtle stack">
-      <p style="margin: 0;"><strong>{{ profile.message or "Chưa có dữ liệu hồ sơ năng lực." }}</strong></p>
-      <p class="text-secondary reading-measure" style="margin: 0;">
+    <div class="mvp-section-card mvp-empty-card">
+      <span class="mvp-empty-card__icon" aria-hidden="true">
+        <span class="material-symbols-outlined">insights</span>
+      </span>
+      <h2>{{ profile.message or "Chưa có dữ liệu hồ sơ năng lực." }}</h2>
+      <p class="text-secondary reading-measure">
         Hoàn tất ít nhất một phiên phỏng vấn 4 câu để hệ thống tổng hợp điểm mạnh, điểm cần luyện và tự động cá nhân hóa câu hỏi ở phiên tiếp theo.
       </p>
       <div class="action-row">

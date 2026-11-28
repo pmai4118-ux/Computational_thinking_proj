@@ -46,16 +46,16 @@
   function appendSection(card, title, values, emptyText) {
     const section = node("section", "exercise-card__section");
     section.append(node("h3", "", title));
-    const listNode = node("ul", "");
+    const listNode = node("ul", "exercise-prereq-list");
     if (values && values.length) {
       for (const value of values) {
-        const entry = node("li", "");
+        const entry = node("li", "exercise-prereq-chip");
         entry.append(document.createTextNode("Mã bài: "));
         entry.append(node("code", "", value));
         listNode.append(entry);
       }
     } else {
-      listNode.append(node("li", "", emptyText));
+      listNode.append(node("li", "exercise-prereq-empty", emptyText));
     }
     section.append(listNode);
     card.append(section);
@@ -136,7 +136,22 @@
   function renderExercise(group) {
     const item = group.primary;
     const card = node("article", "exercise-card");
-    card.append(node("h2", "", item.title));
+
+    const topMeta = node("div", "exercise-meta exercise-card__top");
+    const skillBadges = node("div", "exercise-card__badges");
+    for (const skill of group.skillIds) {
+      skillBadges.append(node("span", "badge exercise-skill-badge", formatSkillLabel(skill)));
+    }
+    topMeta.append(skillBadges);
+    topMeta.append(node(
+      "span",
+      "badge exercise-duration-chip",
+      `Thời lượng ước tính: ${item.estimated_duration_minutes == null ? "chưa có" : `${item.estimated_duration_minutes} phút`}`
+    ));
+    card.append(topMeta);
+
+    card.append(node("h2", "exercise-card__title", item.title));
+    card.append(node("p", "exercise-card__summary", item.summary));
 
     const gapSection = node("section", "exercise-card__reason");
     gapSection.append(node("h3", "", "Vì sao bài này phù hợp"));
@@ -151,13 +166,6 @@
     }
     card.append(gapSection);
 
-    card.append(node("p", "exercise-card__summary", item.summary));
-
-    const meta = node("div", "exercise-meta");
-    meta.append(node("span", "badge", `Thời lượng ước tính: ${item.estimated_duration_minutes == null ? "chưa có" : `${item.estimated_duration_minutes} phút`}`));
-    for (const skill of group.skillIds) meta.append(node("span", "badge", formatSkillLabel(skill)));
-    card.append(meta);
-
     appendSection(card, "Bài cần học trước", item.prerequisite_ids, "Không yêu cầu bài tiên quyết.");
 
     const detailSection = node("section", "exercise-card__section");
@@ -170,7 +178,7 @@
     card.append(detailSection);
 
     const source = item.source || {};
-    const sourceSection = node("section", "exercise-card__section");
+    const sourceSection = node("section", "exercise-card__section exercise-card__source");
     sourceSection.append(node("h3", "", "Nguồn nội dung"));
     const sourceUrl = source.url ? safeExternalUrl(source.url) : null;
     if (sourceUrl) {
@@ -201,6 +209,7 @@
     const noMatches = grouped.length === 0;
     empty.hidden = !noMatches;
     list.hidden = noMatches;
+    message.hidden = noMatches || !data.message;
     if (noMatches && data.unmatched_skill_ids && data.unmatched_skill_ids.length) {
       emptyReason.textContent = `Chưa tìm thấy bài đã duyệt cho kỹ năng: ${data.unmatched_skill_ids.map(formatSkillLabel).join(", ")}. Không tạo bài thay thế tự động.`;
     } else if (noMatches && skillId) {

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
+{% set nav_active = "replays" %}
 
-{% block page_id %}replays{% endblock %}
 {% block title %}Decision Replay — Cây quyết định tương tác — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/features.css?v=20261128-sbx1">
+<link rel="stylesheet" href="/static/css/features.css?v=20261128-ux2">
 {% endblock %}
 
 {% block content %}
@@ -19,7 +19,10 @@
   <header class="replay-prompt-band">
     <div class="replay-topbar">
       <div class="replay-topbar__title-group">
-        <span class="replay-topbar__kicker">Decision Replay</span>
+        <span class="replay-topbar__kicker">
+          <span class="material-symbols-outlined" aria-hidden="true">account_tree</span>
+          <span>Mô phỏng tình huống</span>
+        </span>
         <h1 id="replay-run-heading" class="replay-prompt-title">{{ display_title }}</h1>
       </div>
 
@@ -30,15 +33,22 @@
                   class="btn btn--highlight btn--sm replay-answer-trigger"
                   aria-haspopup="dialog"
                   aria-controls="replay-answer-dialog">
-            Xem bài trả lời của bạn
+            <span class="material-symbols-outlined" aria-hidden="true">article</span>
+            <span>Xem bài trả lời của bạn</span>
           </button>
         {% endif %}
 
         <nav class="replay-leave-nav" aria-label="Điều hướng rời trang Replay">
           {% if active_run.linked_session_id %}
-            <a class="replay-leave-link" href="/sessions/{{ active_run.linked_session_id }}/summary">Về tổng kết phiên</a>
+            <a class="replay-leave-link" href="/sessions/{{ active_run.linked_session_id }}/summary">
+              <span class="material-symbols-outlined" aria-hidden="true">summarize</span>
+              <span>Về tổng kết phiên</span>
+            </a>
           {% endif %}
-          <a class="replay-leave-link" href="/replays">Trung tâm Replay</a>
+          <a class="replay-leave-link" href="/replays">
+            <span class="material-symbols-outlined" aria-hidden="true">grid_view</span>
+            <span>Trung tâm Replay</span>
+          </a>
         </nav>
       </div>
     </div>
@@ -48,8 +58,10 @@
                class="replay-disclosure-trigger"
                aria-controls="replay-full-prompt-panel"
                aria-expanded="false">
-        <span class="replay-disclosure-trigger__caret" aria-hidden="true">▸</span>
-        <span class="replay-disclosure-trigger__label">Xem đầy đủ đề bài</span>
+        <span class="replay-disclosure-trigger__pill">
+          <span class="replay-disclosure-trigger__caret material-symbols-outlined" aria-hidden="true">chevron_right</span>
+          <span class="replay-disclosure-trigger__label">Xem đầy đủ đề bài</span>
+        </span>
         <span class="replay-prompt-preview">{{ active_run.question_prompt or active_run.summary }}</span>
       </summary>
 
@@ -108,7 +120,10 @@
   <section id="replay-tree-stage" class="replay-stage" aria-label="Cây quyết định tương tác">
     <div class="replay-stage-bar">
       <div class="replay-stage-bar__info">
-        <p class="replay-sim-notice">Kết quả mô phỏng · Không tính vào điểm phỏng vấn</p>
+        <p class="replay-sim-notice">
+          <span class="material-symbols-outlined" aria-hidden="true">science</span>
+          <span>Kết quả mô phỏng · Không tính vào điểm phỏng vấn</span>
+        </p>
         <p id="replay-overview-hint" class="replay-overview-hint">Chọn một nhánh để xem kết quả</p>
       </div>
       <div class="replay-stage-controls">
@@ -121,7 +136,8 @@
           </button>
         </div>
         <button id="replay-parent-btn" type="button" class="btn btn--secondary btn--sm" hidden>
-          Về nhánh trước
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          <span>Về nhánh trước</span>
         </button>
       </div>
     </div>
@@ -164,7 +180,7 @@
                   class="replay-detail-close"
                   aria-label="Đóng khung chi tiết và quay về toàn khung cây"
                   title="Đóng khung chi tiết">
-            <span aria-hidden="true">×</span>
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
             <span>Đóng</span>
           </button>
         </div>
@@ -214,7 +230,7 @@
 
             <details id="replay-sim-details" class="replay-sim-details">
               <summary id="replay-sim-details-summary" class="replay-sim-details__summary">
-                <span class="replay-sim-details__caret" aria-hidden="true">▸</span>
+                <span class="replay-sim-details__caret material-symbols-outlined" aria-hidden="true">chevron_right</span>
                 <span>Xem chi tiết mô phỏng</span>
               </summary>
               <div id="replay-sim-details-body" class="replay-sim-details__body"></div>
@@ -327,69 +343,95 @@
   <script id="replay-initial-data" type="application/json">{{ initial_run_json | safe }}</script>
 </section>
 {% else %}
-<section class="stack replay-hub" aria-labelledby="replays-hub-heading">
-  <section class="card stack replay-hub__hero">
-    <div class="sbx-card__head">
-      <div>
-        <p class="eyebrow">Decision Replay · Tình huống kỹ thuật (Technical Case)</p>
-        <h1 id="replays-hub-heading">Phòng thí nghiệm rẽ nhánh từ bài làm của bạn</h1>
-      </div>
-      <span class="sbx-card__index" aria-hidden="true">01</span>
+<section class="mvp-page replay-hub" aria-labelledby="replays-hub-heading">
+  <header class="mvp-hero">
+    <div class="mvp-hero__copy">
+      <span class="mvp-eyebrow-pill">
+        <span class="material-symbols-outlined" aria-hidden="true">account_tree</span>
+        <span>Mô phỏng rẽ nhánh · Tình huống kỹ thuật</span>
+      </span>
+      <h1 id="replays-hub-heading">Phòng thí nghiệm rẽ nhánh từ bài làm của bạn</h1>
+      <p class="mvp-hero__lead reading-measure">
+        Chọn trực tiếp một câu <strong>Tình huống kỹ thuật</strong> bạn đã hoàn tất trong phiên phỏng vấn (đủ 4/4 câu) để xem cây quyết định tương tác, tua lại rẽ nhánh thử phương án khác và đối chiếu tính đúng đắn dữ liệu và hiệu năng vận hành — hoàn toàn không làm thay đổi điểm đã công bố.
+      </p>
     </div>
-    <p class="text-secondary reading-measure" style="margin: 0;">
-      Chọn trực tiếp một câu <strong>Tình huống kỹ thuật</strong> bạn đã hoàn tất trong phiên phỏng vấn (đủ 4/4 câu) để xem cây quyết định tương tác, tua lại rẽ nhánh thử phương án khác và đối chiếu Safety vs Operational — hoàn toàn không làm thay đổi điểm đã công bố.
-    </p>
+    <div class="mvp-hero__actions">
+      <a class="btn btn--primary" href="/setup">
+        <span class="material-symbols-outlined" aria-hidden="true">play_arrow</span>
+        <span>Bắt đầu phiên luyện tập</span>
+      </a>
+      <a class="btn btn--secondary" href="/history">
+        <span class="material-symbols-outlined" aria-hidden="true">history</span>
+        <span>Lịch sử phiên</span>
+      </a>
+    </div>
+  </header>
 
-    <section class="stack" aria-labelledby="your-answers-replay-heading">
-      <div class="skill-group__head">
-        <div class="skill-group__title-wrap">
-          <span class="skill-group__index" aria-hidden="true">01</span>
-          <h2 id="your-answers-replay-heading" class="skill-group__title">Bài Tình huống từ các phiên luyện tập của bạn</h2>
+  <section class="mvp-section-card stack" aria-labelledby="your-answers-replay-heading">
+    <div class="mvp-section-head">
+      <div class="mvp-section-head__title-group">
+        <span class="mvp-section-icon" aria-hidden="true">
+          <span class="material-symbols-outlined">history_edu</span>
+        </span>
+        <div>
+          <h2 id="your-answers-replay-heading">Bài Tình huống từ các phiên luyện tập của bạn</h2>
+          <p class="mvp-section-subtitle">Gắn trực tiếp với bài làm đã nộp và căn cứ chấm điểm gốc của phiên.</p>
         </div>
-        {% if eligible_answers %}
-          <span class="skill-group__count">{{ eligible_answers|length }} bài làm</span>
-        {% endif %}
       </div>
-
       {% if eligible_answers %}
-        <ul class="replay-list">
-          {% for item in eligible_answers %}
-            <li class="skill-group replay-hub-card{% if item.eligible %} replay-hub-card--ready{% else %} replay-hub-card--locked{% endif %}">
-              <div class="results-header">
-                <div class="stack" style="gap: var(--space-2);">
-                  <div class="profile-entry__meta">
-                    <h3 class="profile-entry__title">{{ item.question_title }}</h3>
-                    {% if item.eligible %}
-                      <span class="badge badge--met">Sẵn sàng mở Replay</span>
-                    {% else %}
-                      <span class="badge badge--unresolved">Chưa đủ {{ item.total_questions }}/{{ item.total_questions }} câu</span>
-                    {% endif %}
-                  </div>
-                  <div class="profile-meta-bar">
-                    {% if item.total_score is not none and item.maximum_score is not none %}
-                      <span class="profile-meta-item">
-                        <span class="profile-meta-item__key">Điểm gốc</span>
-                        <span class="profile-meta-item__val">Điểm gốc: {{ item.total_score }}/{{ item.maximum_score }}</span>
-                      </span>
-                    {% endif %}
-                    {% if item.existing_run_id %}
-                      <span class="profile-meta-item">
-                        <span class="profile-meta-item__key">Tiến độ</span>
-                        <span class="profile-meta-item__val">Đã khám phá {{ item.explored_nodes_count }} bước</span>
-                      </span>
-                    {% endif %}
-                  </div>
-                  <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);">
-                    Trích bài làm: “{{ item.answer_excerpt }}”
-                  </p>
-                  <details class="tech-meta">
-                    <summary>Thông tin kỹ thuật</summary>
-                    <p class="form-hint">Mã phiên: <code>{{ item.session_id }}</code></p>
-                  </details>
-                  {% if item.lock_reason %}
-                    <p class="form-hint" style="margin: 0;">{{ item.lock_reason }}</p>
-                  {% endif %}
-                </div>
+        <span class="mvp-count-pill">{{ eligible_answers|length }} bài làm</span>
+      {% endif %}
+    </div>
+
+    {% if eligible_answers %}
+      <ul class="replay-list">
+        {% for item in eligible_answers %}
+          <li class="replay-hub-card{% if item.eligible %} replay-hub-card--ready{% else %} replay-hub-card--locked{% endif %}">
+            <div class="replay-hub-card__body">
+              <div class="replay-hub-card__top">
+                {% if item.eligible %}
+                  <span class="badge badge--met">
+                    <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+                    <span>Sẵn sàng mở Replay</span>
+                  </span>
+                {% else %}
+                  <span class="badge badge--unresolved">
+                    <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+                    <span>Chưa đủ {{ item.total_questions }}/{{ item.total_questions }} câu</span>
+                  </span>
+                {% endif %}
+
+                {% if item.total_score is not none and item.maximum_score is not none %}
+                  <span class="replay-meta-pill">Điểm gốc: <strong>{{ item.total_score }}/{{ item.maximum_score }}</strong></span>
+                {% endif %}
+
+                {% if item.existing_run_id %}
+                  <span class="replay-meta-pill replay-meta-pill--accent">
+                    <span class="material-symbols-outlined" aria-hidden="true">explore</span>
+                    <span>Đã khám phá <strong>{{ item.explored_nodes_count }}</strong> bước</span>
+                  </span>
+                {% endif %}
+              </div>
+
+              <h3 class="replay-hub-card__title">{{ item.question_title }}</h3>
+
+              <p class="replay-hub-card__excerpt">
+                Trích bài làm: “{{ item.answer_excerpt }}”
+              </p>
+
+              {% if item.lock_reason %}
+                <p class="replay-hub-card__lock-note">
+                  <span class="material-symbols-outlined" aria-hidden="true">info</span>
+                  <span>{{ item.lock_reason }}</span>
+                </p>
+              {% endif %}
+
+              <div class="replay-hub-card__footer">
+                <details class="tech-meta">
+                  <summary>Thông tin kỹ thuật</summary>
+                  <p class="form-hint">Mã phiên: <code>{{ item.session_id }}</code></p>
+                </details>
+
                 <div class="action-row">
                   {% if item.eligible %}
                     <form method="post"
@@ -404,46 +446,62 @@
                   {% endif %}
                 </div>
               </div>
-            </li>
-          {% endfor %}
-        </ul>
-      {% else %}
-        <div class="empty-state">
-          <h3>Chưa có câu Tình huống kỹ thuật nào từ phiên luyện tập của bạn</h3>
-          <p class="text-secondary">
-            Hãy bắt đầu và hoàn tất đủ 4/4 câu của một phiên luyện phỏng vấn Backend. Ngay khi xong, bài Tình huống kỹ thuật của bạn sẽ tự động xuất hiện ở đây để bấm mở Decision Replay trong 1 click.
-          </p>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="mvp-empty-card">
+        <span class="mvp-empty-card__icon" aria-hidden="true">
+          <span class="material-symbols-outlined">account_tree</span>
+        </span>
+        <h3>Chưa có câu Tình huống kỹ thuật nào từ phiên luyện tập của bạn</h3>
+        <p class="text-secondary reading-measure">
+          Hãy bắt đầu và hoàn tất đủ 4/4 câu của một phiên luyện phỏng vấn Backend. Ngay khi xong, bài Tình huống kỹ thuật của bạn sẽ tự động xuất hiện ở đây để bấm mở Decision Replay trong 1 click.
+        </p>
+        <div class="action-row">
           <a class="btn btn--primary" href="/setup">Bắt đầu phiên luyện tập</a>
         </div>
-      {% endif %}
-    </section>
+      </div>
+    {% endif %}
   </section>
 
-  <section class="card stack" aria-labelledby="standalone-cases-heading">
-    <div class="sbx-card__head">
-      <div>
-        <p class="eyebrow">02 · Kịch bản mẫu độc lập</p>
-        <h2 id="standalone-cases-heading">Xem thử kịch bản mẫu độc lập (chưa gắn bài làm)</h2>
+  <section class="mvp-section-card stack" aria-labelledby="standalone-cases-heading">
+    <div class="mvp-section-head">
+      <div class="mvp-section-head__title-group">
+        <span class="mvp-section-icon mvp-section-icon--subtle" aria-hidden="true">
+          <span class="material-symbols-outlined">science</span>
+        </span>
+        <div>
+          <h2 id="standalone-cases-heading">Xem thử kịch bản mẫu độc lập (chưa gắn bài làm)</h2>
+          <p class="mvp-section-subtitle">Dành cho việc làm quen giao diện cây quyết định trước khi thi thật. Mọi câu Tình huống kỹ thuật đã kiểm duyệt trong ngân hàng câu hỏi đều tự động có mặt tại đây.</p>
+        </div>
       </div>
-      <span class="sbx-card__index" aria-hidden="true">02</span>
+      {% if cases %}
+        <span class="mvp-count-pill">{{ cases|length }} kịch bản mẫu</span>
+      {% endif %}
     </div>
-    <p class="text-secondary reading-measure" style="margin: 0; font-size: var(--font-size-sm);">
-      Dành cho việc làm quen giao diện cây quyết định trước khi thi thật. Mọi câu Tình huống kỹ thuật đã kiểm duyệt trong ngân hàng câu hỏi đều tự động có mặt tại đây.
-    </p>
-    <ul class="replay-list">
+
+    <ul class="replay-cases-grid">
       {% for item in cases %}
-        <li class="profile-entry replay-case-item">
-          <div class="stack" style="gap: var(--space-1); max-width: 46rem;">
-            <strong class="profile-entry__title">{{ item.title }}</strong>
-            <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);">{{ item.summary }}</p>
+        <li class="replay-case-card">
+          <div class="replay-case-card__content">
+            <span class="replay-case-card__tag">
+              <span class="material-symbols-outlined" aria-hidden="true">fork_right</span>
+              <span>Kịch bản mẫu</span>
+            </span>
+            <h3 class="replay-case-card__title">{{ item.title }}</h3>
+            <p class="replay-case-card__summary">{{ item.summary }}</p>
+          </div>
+          <div class="replay-case-card__footer">
             <details class="tech-meta">
               <summary>Mã câu hỏi &amp; nguồn tham chiếu</summary>
               <p class="form-hint">Mã câu hỏi: <code>{{ item.question_id }}</code> · Nguồn: <code>{{ item.source_id }}</code></p>
             </details>
+            <form method="post" action="/replays/cases/{{ item.question_id }}/start">
+              <button type="submit" class="btn btn--secondary btn--sm">Xem thử độc lập</button>
+            </form>
           </div>
-          <form method="post" action="/replays/cases/{{ item.question_id }}/start">
-            <button type="submit" class="btn btn--secondary">Xem thử độc lập</button>
-          </form>
         </li>
       {% endfor %}
     </ul>
@@ -454,6 +512,6 @@
 
 {% block extra_scripts %}
 {% if active_run %}
-<script src="/static/js/replay.js?v=20261128-sbx1" defer></script>
+<script src="/static/js/replay.js?v=20261128-ux2" defer></script>
 {% endif %}
 {% endblock %}

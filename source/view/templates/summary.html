@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% set nav_active = "interview" %}
 
 {% block title %}Tổng kết phiên — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/results.css?v=20261128-merged">
-<link rel="stylesheet" href="/static/css/summary.css?v=20261128-merged">
-<link rel="stylesheet" href="/static/css/features.css?v=20261128-merged">
+<link rel="stylesheet" href="/static/css/results.css?v=20261128-ux2">
+<link rel="stylesheet" href="/static/css/summary.css?v=20261128-ux2">
+<link rel="stylesheet" href="/static/css/features.css?v=20261128-ux2">
 {% endblock %}
 
 {% block content %}
@@ -14,7 +15,7 @@
   <header class="summary-hero">
     <div class="summary-hero__copy">
       <div class="summary-hero__meta">
-        <span class="violet-pill summary-hero__session-pill">
+        <span class="accent-pill summary-hero__session-pill">
           <span class="summary-pulse-dot" aria-hidden="true"></span>
           <span>
             {% if session_display is defined and session_display %}
@@ -42,7 +43,10 @@
         <span>Về trang bắt đầu</span>
       </a>
       {% if session.state == "in_progress" %}
-      <a class="btn btn--primary" href="/sessions/{{ session.session_id }}">Tiếp tục phiên {{ icon('arrow') }}</a>
+      <a class="btn btn--primary" href="/sessions/{{ session.session_id }}">
+        <span>Tiếp tục phiên</span>
+        <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+      </a>
       {% else %}
       <a class="btn btn--primary" href="/setup">
         <span class="material-symbols-outlined" aria-hidden="true">replay</span>
@@ -97,13 +101,17 @@
         </div>
       </div>
     </section>
+
     <section id="summary-replay-banner" class="replay-callout" aria-labelledby="summary-replay-heading" hidden>
       <div class="replay-callout__body">
-        <span class="badge badge--met" style="align-self: flex-start;">Decision Replay · Tình huống kỹ thuật</span>
+        <span class="badge badge--met replay-callout__badge">
+          <span class="material-symbols-outlined" aria-hidden="true">account_tree</span>
+          <span>Decision Replay · Tình huống kỹ thuật</span>
+        </span>
         <h2 id="summary-replay-heading">Phòng thí nghiệm rẽ nhánh từ bài Tình huống của bạn</h2>
         <p id="summary-replay-text" class="text-secondary"></p>
       </div>
-      <div id="summary-replay-actions" class="action-row"></div>
+      <div id="summary-replay-actions" class="action-row replay-callout__actions"></div>
     </section>
 
     <section class="summary-section" aria-labelledby="outcomes-heading">
@@ -131,6 +139,7 @@
       <p id="gaps-empty" class="empty-state summary-empty-card" hidden>Chưa có điểm thiếu nào được xác nhận trong dữ liệu phiên.</p>
     </section>
   </div>
+
   <div class="summary-bottom-bar action-row">
     <div class="summary-bottom-copy">
       <span class="summary-bottom-icon" aria-hidden="true">
@@ -138,17 +147,31 @@
       </span>
       <div>
         <strong>Luyện tập tiếp theo sau phiên</strong>
-        <p>Mở bài luyện phù hợp với các điểm thiếu đã quan sát hoặc bắt đầu lượt phỏng vấn mới.</p>
+        <p>Mở bài luyện phù hợp với các điểm thiếu đã quan sát, xem hồ sơ năng lực hoặc bắt đầu lượt phỏng vấn mới.</p>
       </div>
     </div>
     <div class="summary-bottom-actions">
-      {% if session.state == "in_progress" %}<a class="btn btn--primary" href="/sessions/{{ session.session_id }}">Tiếp tục phiên</a>{% endif %}
-      <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập</a>
-      <a class="btn btn--ghost" href="/profile">Xem hồ sơ năng lực</a>
-      <a class="btn btn--primary" href="/setup">Bắt đầu phiên mới</a>
+      {% if session.state == "in_progress" %}
+        <a class="btn btn--primary" href="/sessions/{{ session.session_id }}">
+          <span>Tiếp tục phiên</span>
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+        </a>
+      {% endif %}
+      <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/exercises">
+        <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+        <span>Xem bài tập</span>
+      </a>
+      <a class="btn btn--secondary" href="/profile">
+        <span class="material-symbols-outlined" aria-hidden="true">analytics</span>
+        <span>Xem hồ sơ năng lực</span>
+      </a>
+      <a class="btn btn--primary" href="/setup">
+        <span class="material-symbols-outlined" aria-hidden="true">replay</span>
+        <span>Bắt đầu phiên mới</span>
+      </a>
     </div>
   </div>
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/summary.js?v=20261128-merged" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/summary.js?v=20261128-ux2" defer></script>{% endblock %}

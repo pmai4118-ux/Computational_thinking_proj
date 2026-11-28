@@ -18,13 +18,23 @@
     let currentKind = null;
     const art = element("div", "activity-art");
     art.setAttribute("aria-hidden", "true");
-    art.append(element("span", "activity-orbit activity-orbit--outer"), element("span", "activity-orbit activity-orbit--inner"), element("span", "activity-core", "✦"));
+    const core = element("span", "activity-core");
+    core.append(element("span", "material-symbols-outlined", "auto_awesome"));
+    art.append(
+      element("span", "activity-orbit activity-orbit--outer"),
+      element("span", "activity-orbit activity-orbit--inner"),
+      core
+    );
     const copy = element("div", "activity-copy");
     const eyebrow = element("span", "activity-eyebrow");
     const title = element("h2", "activity-title");
     const description = element("p", "activity-description");
     const steps = element("div", "activity-steps");
-    steps.append(element("span", "activity-step is-done", "✓ Bài đã lưu"), element("span", "activity-step is-current", "Đối chiếu rubric"), element("span", "activity-step", "Kết quả"));
+    steps.append(
+      element("span", "activity-step is-done", "✓ Bài đã lưu"),
+      element("span", "activity-step is-current", "Đối chiếu rubric"),
+      element("span", "activity-step", "Kết quả")
+    );
     const meter = element("progress", "activity-meter");
     meter.setAttribute("aria-label", "Tiến độ xử lý");
     const footer = element("div", "activity-footer");

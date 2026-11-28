@@ -1,9 +1,20 @@
 {% extends "base.html" %}
 {% set nav_active = "learning_path" %}
 {% block title %}Lộ trình cá nhân hóa Java Backend — interviewUS{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="/static/css/learning_path.css?v=20261127-stitch-v4">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/learning_path.css?v=20261128-ux2">{% endblock %}
 {% block content %}
-<div class="roadmap-meta"><span class="violet-pill">Java Backend · Học theo chặng</span><span class="muted">Tài liệu chính thức &amp; thực hành có nguồn</span></div>
+<header class="roadmap-page-header">
+  <div class="roadmap-meta">
+    <span class="accent-pill">
+      <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">route</span>
+      <span>Java Backend · Học theo chặng</span>
+    </span>
+    <span class="roadmap-meta__note">Tài liệu chính thức &amp; thực hành có nguồn</span>
+  </div>
+  <h1 class="roadmap-page-title">Lộ trình cá nhân hóa Java Backend</h1>
+  <p class="roadmap-page-subtitle">5 chặng học từ nền tảng đến vận hành, sắp xếp theo bài tiên quyết và quỹ giờ hàng tuần của bạn.</p>
+</header>
+
 <p id="learning-loading" class="card" role="status">Đang chuẩn bị không gian học tập…</p>
 <div id="learning-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
 <button id="learning-reload" class="btn btn--secondary" type="button" hidden>Tải lại học liệu</button>
@@ -16,7 +27,7 @@
     <div class="baseline-copy">
       <div class="baseline-eyebrow-row">
         <span class="stitch-eyebrow">Kiểm tra đầu vào</span>
-        <span class="violet-pill" id="baseline-status-pill">Chưa làm kiểm tra đầu vào</span>
+        <span class="accent-pill" id="baseline-status-pill">Chưa làm kiểm tra đầu vào</span>
       </div>
       <h2 id="baseline-heading">Kiểm tra kiến thức nền tảng Backend Java</h2>
       <p id="baseline-summary-copy">
@@ -69,7 +80,7 @@
           <h2 id="today-schedule-summary">Chưa có lịch trình — mở để xem việc cần làm hôm nay</h2>
         </div>
         <div class="today-schedule-card__actions">
-          <span id="phase-progress-label" class="violet-pill"></span>
+          <span id="phase-progress-label" class="accent-pill"></span>
           <button class="btn btn--primary today-schedule-card__btn" id="open-today-schedule" type="button">
             <span>Việc làm hôm nay</span>
             <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 18px;">arrow_forward</span>
@@ -84,13 +95,13 @@
         <p id="lesson-filter-status" role="status" aria-live="polite"></p>
       </div>
       <div class="roadmap-canvas">
-        <!-- Lộ trình cá nhân hóa: bước thiết lập đầu tiên ngay trên LESSON 01 -->
-        <section class="roadmap-plan-entry" aria-label="Thiết lập lộ trình cá nhân hóa">
+        <!-- Bước thiết lập lộ trình ngay trên LESSON 01 -->
+        <section class="roadmap-plan-entry" aria-labelledby="roadmap-plan-entry-heading">
           <span class="feature-icon roadmap-plan-entry__icon" aria-hidden="true">{{ icon('settings') }}</span>
           <div class="roadmap-plan-entry__body">
             <div class="roadmap-plan-entry__head">
-              <h1 class="roadmap-plan-entry__title">Lộ trình cá nhân hóa</h1>
-              <span class="violet-pill">Theo mục tiêu của bạn</span>
+              <h2 id="roadmap-plan-entry-heading" class="roadmap-plan-entry__title">Lộ trình cá nhân hóa</h2>
+              <span class="accent-pill">Theo mục tiêu của bạn</span>
               <span class="plan-status-tag is-unconfigured" id="plan-config-tag">Chưa thiết lập</span>
             </div>
             <div class="roadmap-chips">
@@ -103,10 +114,10 @@
         </section>
         <div id="lesson-list"></div>
       </div>
-      <section class="plan-strip card">
-        <span class="phase-heading-icon">{{ icon('shield') }}</span>
+      <section class="plan-strip card" aria-labelledby="plan-strip-heading">
+        <span class="phase-heading-icon" aria-hidden="true">{{ icon('shield') }}</span>
         <div>
-          <h3>Luyện cách trình bày và lập luận</h3>
+          <h2 id="plan-strip-heading">Luyện cách trình bày và lập luận</h2>
           <p>Phiên phỏng vấn Backend · tự luận · phản hồi theo rubric</p>
         </div>
         <a class="btn btn--secondary" href="/setup">Luyện phỏng vấn {{ icon('arrow') }}</a>
@@ -127,7 +138,7 @@
 
   <section class="card learning-courses" aria-labelledby="course-heading">
     <div class="course-heading">
-      <span class="feature-icon">{{ icon('book') }}</span>
+      <span class="feature-icon" aria-hidden="true">{{ icon('book') }}</span>
       <div>
         <h2 id="course-heading">Học từ những nguồn đáng tin cậy</h2>
         <p>Tài liệu miễn phí là phần chính. Chương trình trả phí được ghi rõ để tham khảo.</p>
@@ -138,7 +149,7 @@
   </section>
 </div>
 
-<!-- Modal Cấu hình Mục tiêu & Quỹ thời gian (Stitch-aligned, gọn chữ) -->
+<!-- Modal Cấu hình Mục tiêu & Quỹ thời gian -->
 <dialog class="stitch-modal settings-modal" id="learning-settings" aria-labelledby="plan-heading">
   <div class="modal-accent-bar" aria-hidden="true"></div>
   <form id="learning-form">
@@ -149,7 +160,7 @@
         </span>
         <div>
           <div class="settings-modal__badges">
-            <span class="violet-pill">
+            <span class="accent-pill">
               <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 14px;">auto_awesome</span>
               Mục tiêu &amp; quỹ thời gian
             </span>
@@ -169,38 +180,39 @@
         </div>
 
         <div class="settings-field-group">
-          <div class="settings-track-chips" role="group" aria-label="Chọn nhanh mục tiêu lộ trình">
-            <button type="button" class="settings-track-chip" data-track-chip="foundation">
-              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">school</span>
+          <span class="settings-mini-label" id="settings-track-label">Mục tiêu lộ trình</span>
+          <div class="settings-track-chips" role="group" aria-labelledby="settings-track-label">
+            <button type="button" class="settings-track-chip" data-track-chip="foundation" aria-pressed="false">
+              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">school</span>
               <span>Nền tảng Java &amp; SQL</span>
             </button>
-            <button type="button" class="settings-track-chip is-selected" data-track-chip="backend">
-              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">terminal</span>
+            <button type="button" class="settings-track-chip is-selected" data-track-chip="backend" aria-pressed="true">
+              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">terminal</span>
               <span>Java Backend Intern / Fresher</span>
             </button>
-            <button type="button" class="settings-track-chip" data-track-chip="advanced">
-              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">layers</span>
+            <button type="button" class="settings-track-chip" data-track-chip="advanced" aria-pressed="false">
+              <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">layers</span>
               <span>Toàn bộ &amp; nâng cao</span>
             </button>
           </div>
         </div>
 
-        <div class="modal-glass-inner">
+        <div class="modal-glass-inner settings-priority-card">
           <div class="settings-inner-head">
-            <span class="settings-mini-label">Ưu tiên nội dung</span>
-            <div class="settings-mode-tabs" role="group" aria-label="Chọn nhanh chế độ ưu tiên">
+            <span class="settings-mini-label" id="settings-mode-label">Ưu tiên nội dung</span>
+            <div class="settings-mode-tabs" role="group" aria-labelledby="settings-mode-label">
               <button type="button" class="settings-mode-tab is-active" data-mode-tab="full_track" aria-pressed="true">
-                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">route</span>
+                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">route</span>
                 <span>Toàn bộ mục tiêu</span>
               </button>
               <button type="button" class="settings-mode-tab" data-mode-tab="confirmed_gaps" aria-pressed="false">
-                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 15px;">fact_check</span>
+                <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 16px;">fact_check</span>
                 <span>Điểm cần củng cố</span>
               </button>
             </div>
           </div>
 
-          <div class="learning-budget settings-select-grid">
+          <div class="learning-budget settings-select-grid" id="settings-native-selects">
             <div class="settings-select-field">
               <label for="learning-track">Mục tiêu</label>
               <select id="learning-track" class="form-select">
@@ -219,7 +231,7 @@
           </div>
 
           <div class="settings-profile-row">
-            <label class="learning-check" style="margin: 0;">
+            <label class="learning-check settings-check--tight">
               <input id="learning-profile" type="checkbox" checked>
               <span>Dùng điểm thiếu từ hồ sơ trình duyệt</span>
             </label>
@@ -257,8 +269,8 @@
               </div>
               <span class="settings-date-arrow" aria-hidden="true">{{ icon('arrow') }}</span>
               <div class="settings-date-col settings-date-col--end">
-                <span class="settings-mini-label" style="color: var(--stitch-primary);">Dự kiến xong</span>
-                <strong id="settings-date-end" style="color: var(--stitch-primary);">Sau 12 tuần</strong>
+                <span class="settings-mini-label settings-accent-text">Dự kiến xong</span>
+                <strong id="settings-date-end" class="settings-accent-text">Sau 12 tuần</strong>
               </div>
             </div>
             <div class="settings-inline-input">
@@ -269,11 +281,11 @@
 
           <div class="modal-glass-inner settings-presets-card">
             <span class="settings-mini-label">Mốc gợi ý</span>
-            <div class="duration-chips" aria-label="Chọn nhanh số tuần">
-              <button type="button" data-weeks="4"><strong>4 tuần</strong><small>Tốc hành</small></button>
-              <button type="button" data-weeks="8"><strong>8 tuần</strong><small>Tập trung</small></button>
-              <button type="button" data-weeks="12" class="is-selected"><strong>12 tuần</strong><small>Khuyên dùng</small></button>
-              <button type="button" data-weeks="24"><strong>24 tuần</strong><small>Thong thả</small></button>
+            <div class="duration-chips" role="group" aria-label="Chọn nhanh số tuần">
+              <button type="button" data-weeks="4" aria-pressed="false"><strong>4 tuần</strong><small>Tốc hành</small></button>
+              <button type="button" data-weeks="8" aria-pressed="false"><strong>8 tuần</strong><small>Tập trung</small></button>
+              <button type="button" data-weeks="12" class="is-selected" aria-pressed="true"><strong>12 tuần</strong><small>Khuyên dùng</small></button>
+              <button type="button" data-weeks="24" aria-pressed="false"><strong>24 tuần</strong><small>Thong thả</small></button>
             </div>
           </div>
         </div>
@@ -286,22 +298,22 @@
         <div class="settings-section__head">
           <h3 id="settings-sec-3"><span class="step-number">3</span> Quỹ giờ mỗi tuần</h3>
           <div class="settings-hours-summary">
-            <span class="violet-pill" id="settings-hours-pill">8 giờ / tuần</span>
+            <span class="accent-pill" id="settings-hours-pill">8 giờ / tuần</span>
           </div>
         </div>
 
         <div class="modal-glass-inner settings-hours-card">
           <div class="settings-inner-head">
             <span class="settings-mini-label">Giờ học / tuần</span>
-            <span class="settings-section__meta">Tổng ước tính: <strong id="settings-total-hours" style="color: var(--stitch-primary);">96 giờ</strong></span>
+            <span class="settings-section__meta">Tổng ước tính: <strong id="settings-total-hours" class="settings-accent-text">96 giờ</strong></span>
           </div>
 
-          <div class="hours-chips" aria-label="Chọn nhanh số giờ mỗi tuần">
-            <button type="button" data-hours="4"><strong>4 giờ</strong><small>Nhẹ</small></button>
-            <button type="button" data-hours="8" class="is-selected"><strong>8 giờ</strong><small>Khuyên dùng</small></button>
-            <button type="button" data-hours="12"><strong>12 giờ</strong><small>Tập trung</small></button>
-            <button type="button" data-hours="15"><strong>15 giờ</strong><small>Tăng tốc</small></button>
-            <button type="button" data-hours="20"><strong>20 giờ</strong><small>Chuyên sâu</small></button>
+          <div class="hours-chips" role="group" aria-label="Chọn nhanh số giờ mỗi tuần">
+            <button type="button" data-hours="4" aria-pressed="false"><strong>4 giờ</strong><small>Nhẹ</small></button>
+            <button type="button" data-hours="8" class="is-selected" aria-pressed="true"><strong>8 giờ</strong><small>Khuyên dùng</small></button>
+            <button type="button" data-hours="12" aria-pressed="false"><strong>12 giờ</strong><small>Tập trung</small></button>
+            <button type="button" data-hours="15" aria-pressed="false"><strong>15 giờ</strong><small>Tăng tốc</small></button>
+            <button type="button" data-hours="20" aria-pressed="false"><strong>20 giờ</strong><small>Chuyên sâu</small></button>
           </div>
 
           <div class="settings-hours-footer">
@@ -318,7 +330,7 @@
       </section>
 
       <section class="modal-section confirmation-card">
-        <label class="learning-check" style="margin: 0;">
+        <label class="learning-check settings-check--tight">
           <input id="learning-confirm" type="checkbox" required>
           <span>Tôi xác nhận mục tiêu và quỹ thời gian (tiến độ tự khai lưu trên trình duyệt này).</span>
         </label>
@@ -328,7 +340,7 @@
       <p id="settings-error" class="alert alert--error" role="alert" hidden></p>
     </div>
 
-    <div class="modal-divider" style="margin: 0;" aria-hidden="true"></div>
+    <div class="modal-divider settings-footer-divider" aria-hidden="true"></div>
 
     <footer class="modal-footer">
       <span class="learning-note settings-preview-note">
@@ -348,7 +360,7 @@
   <header class="modal-header lesson-dialog__header">
     <div class="lesson-dialog__head-main">
       <div class="lesson-dialog__top-row">
-        <span id="lesson-dialog-meta" class="violet-pill lesson-meta-pill"></span>
+        <span id="lesson-dialog-meta" class="accent-pill lesson-meta-pill"></span>
         <button id="close-lesson" class="icon-button" type="button" aria-label="Đóng bài học">{{ icon('close') }}</button>
       </div>
       <h2 id="lesson-dialog-title"></h2>
@@ -370,7 +382,7 @@
   <div class="modal-accent-bar" aria-hidden="true"></div>
   <header class="modal-header today-dialog__header">
     <div>
-      <span class="violet-pill">
+      <span class="accent-pill">
         <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 14px;">today</span>
         Lịch trình hôm nay
       </span>
@@ -396,4 +408,4 @@
   </footer>
 </dialog>
 {% endblock %}
-{% block extra_scripts %}<script src="/static/js/learning_path.js?v=20261127-stitch-v4" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/learning_path.js?v=20261128-ux2" defer></script>{% endblock %}

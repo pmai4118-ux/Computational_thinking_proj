@@ -30,6 +30,15 @@
   }
   const access = {free_reading:'Đọc miễn phí',free_public:'Miễn phí công khai',free_reading_cloud_may_cost:'Bài đọc miễn phí · cloud lab có thể mất phí',free_registration_announced_2024:'Thông báo miễn phí 2024 · cần đăng ký, chưa thử lab hiện tại',paid_or_limited_preview:'Trả phí / preview giới hạn',legacy_optional:'Tài liệu cũ · bổ trợ tùy chọn'};
 
+  function enhanceSettingsSelects() {
+    const selectGrid = $('settings-native-selects');
+    if (!selectGrid) return;
+    selectGrid.classList.add('sr-only');
+    selectGrid.setAttribute('aria-hidden', 'true');
+    $('learning-track')?.setAttribute('tabindex', '-1');
+    $('learning-mode')?.setAttribute('tabindex', '-1');
+  }
+
   function formatDateVi(date) {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -368,7 +377,7 @@
     host.append(readingSection);
 
     const practiceShell = node('section', null, 'practice-section-shell');
-    practiceShell.append(buildSectionHeader('Bài thực hành áp dụng', node('span', `${lesson.practices.length} bài thực hành`, 'violet-pill practice-count-pill')));
+    practiceShell.append(buildSectionHeader('Bài thực hành áp dụng', node('span', `${lesson.practices.length} bài thực hành`, 'accent-pill practice-count-pill')));
     const practiceList = node('div', null, 'practice-card-stack');
     lesson.practices.forEach((practice, pIdx) => {
       const block = node('article', null, 'learning-practice');
@@ -524,7 +533,7 @@
     stats.append(
       node('span', `${todayItems.length} mục ưu tiên`, 'pill'),
       node('span', `~${totalMinutes} phút ước tính`, 'pill'),
-      node('span', lastPlan ? 'Theo lộ trình cá nhân hóa' : `Theo chặng ${activePhase}`, 'violet-pill')
+      node('span', lastPlan ? 'Theo lộ trình cá nhân hóa' : `Theo chặng ${activePhase}`, 'accent-pill')
     );
     tasksPanel.append(stats);
 
@@ -556,7 +565,7 @@
         const l = lessons.get(slot.lesson_id);
         const row = node('div', null, 'today-week-row');
         row.append(
-          node('span', `Tuần ${slot.week}`, 'violet-pill'),
+          node('span', `Tuần ${slot.week}`, 'accent-pill'),
           node('strong', l ? `${slot.lesson_id} — ${l.title}` : slot.lesson_id),
           node('small', `${slot.minutes} phút`)
         );
@@ -645,5 +654,6 @@
     }catch(error){$('learning-error').textContent=error.message||'Chưa tải được học liệu. Hãy thử lại.';$('learning-error').hidden=false;$('learning-reload').hidden=false;}
     finally{catalogActivity?.stop();$('learning-loading').hidden=true;}
   }
+  enhanceSettingsSelects();
   $('learning-reload').addEventListener('click',load);load();
 })();

@@ -2548,7 +2548,7 @@
     let panState = null;
 
     treeViewport.addEventListener("pointerdown", (event) => {
-      if (!event || !isTreeCanvasVisible()) return;
+      if (!event || !isTreeCanvasVisible() || panState) return;
       if (event.button !== undefined && event.button !== 0) return;
       if (
         event.target &&
@@ -2564,7 +2564,6 @@
         originTx: camera.tx,
         originTy: camera.ty,
         moved: false,
-        isTouch: event.pointerType === "touch",
       };
     });
 
@@ -2581,9 +2580,7 @@
         }
       }
       camera.tx = panState.originTx + dx;
-      if (!panState.isTouch) {
-        camera.ty = panState.originTy + dy;
-      }
+      camera.ty = panState.originTy + dy;
       camera.userAdjusted = true;
       applyCamera({ smooth: false });
     });

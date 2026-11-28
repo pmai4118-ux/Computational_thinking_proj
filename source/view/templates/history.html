@@ -7,7 +7,51 @@
     <h1>Lịch sử phiên phỏng vấn</h1>
     <p class="text-secondary">Các phiên của bạn trên trình duyệt này. Chọn một phiên để tiếp tục hoặc xem tổng kết.</p>
   </div>
-  <a class="btn btn--primary" href="/setup">Bắt đầu phiên mới {{ icon('arrow') }}</a>
+  <a class="btn btn--primary" href="/setup">
+    <span class="material-symbols-outlined" aria-hidden="true">add_circle</span>
+    <span>Bắt đầu phiên mới</span>
+  </a>
 </header>
 {% include "partials/session_history.html" %}
+{% endblock %}
+{% block extra_scripts %}
+<script>
+(() => {
+  'use strict';
+  const section = document.querySelector('[data-session-history][data-history-scope="all"]');
+  if (!section) return;
+  const buttons = Array.from(section.querySelectorAll('[data-history-filter]'));
+  const rows = Array.from(section.querySelectorAll('.session-list > li[data-session-id]'));
+  const emptyBox = section.querySelector('#history-filter-empty');
+  const resetBtn = section.querySelector('#history-filter-reset');
+  const countBadge = section.querySelector('[data-history-count]');
+  if (!buttons.length || !rows.length) return;
+
+  const applyFilter = (target) => {
+    let visible = 0;
+    for (const row of rows) {
+      const state = row.dataset.historyState || '';
+      const show = target === 'all' || state === target;
+      row.hidden = !show;
+      if (show) visible += 1;
+    }
+    for (const btn of buttons) {
+      const active = btn.dataset.historyFilter === target;
+      btn.setAttribute('aria-pressed', String(active));
+      btn.classList.toggle('is-active', active);
+    }
+    if (emptyBox) emptyBox.hidden = visible > 0;
+    if (countBadge) {
+      countBadge.textContent = target === 'all'
+        ? `${rows.length} phiên`
+        : `${visible} / ${rows.length} phiên`;
+    }
+  };
+
+  for (const btn of buttons) {
+    btn.addEventListener('click', () => applyFilter(btn.dataset.historyFilter || 'all'));
+  }
+  resetBtn?.addEventListener('click', () => applyFilter('all'));
+})();
+</script>
 {% endblock %}

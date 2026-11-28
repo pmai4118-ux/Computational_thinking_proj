@@ -1,23 +1,23 @@
 /* Shared Design Tokens — interviewUS (Warm Off-White & Forest Teal)
- * Vietnamese-ready typography, high-contrast surfaces for reading prompts/answers,
- * evidence quote highlighting, and accessible keyboard focus states.
+ * Vietnamese-ready typography, WCAG 2.2 AA contrast surfaces for reading prompts/answers,
+ * evidence quote highlighting, Emil motion curves, and accessible keyboard focus states.
  */
 
 :root {
-  /* Core Palette (Warm Cream #F7F5EF + Crisp White Cards) */
+  /* Core Palette (Warm Off-White #F7F5EF + Crisp White Cards) */
   --color-canvas: #F7F5EF;
   --color-surface: #FFFFFF;
-  --color-surface-elevated: #FAFAF8;
+  --color-surface-elevated: #FAFAF7;
   --color-surface-low: #EEEFE9;
   --color-surface-container: #E7E9E2;
   --color-surface-high: #DFE2DA;
   --color-surface-highest: #D5D9D0;
   --color-subtle: #E6F4F1;
-  --color-border: #E0E3DC;
-  --color-border-strong: #C3C9C0;
+  --color-border: #DFE3DC;
+  --color-border-strong: #C2C9C0;
 
-  /* Stitch Palette Architecture (Emerald Teal + Deep Forest Teal #0B4E4A) */
-  --stitch-primary: #0D7A6F;
+  /* Stitch Palette Architecture (Forest Teal #0A6E64 / #0B4E4A / #2BB5A0) */
+  --stitch-primary: #0A6E64;
   --stitch-primary-container: #2BB5A0;
   --stitch-secondary: #0B4E4A;
   --stitch-secondary-container: #149A8A;
@@ -27,43 +27,51 @@
   --stitch-secondary-fixed: #E5F5F2;
   --stitch-on-secondary-fixed: #0B4E4A;
   --stitch-tertiary-fixed: #ECEEE9;
-  --stitch-outline: #6E7B7A;
+  --stitch-outline: #536160;
   --stitch-outline-variant: #D5DAD3;
-  --stitch-on-surface: #1A2B2A;
-  --stitch-on-surface-variant: #5E6B69;
+  --stitch-on-surface: #162626;
+  --stitch-on-surface-variant: #3F4E4D;
 
-  /* Workspace Brand Ramp (Emerald Teal) */
+  /* Workspace Brand Ramp (Forest Teal) */
   --brand-50: #F0FAF8;
   --brand-100: #DDF3F0;
   --brand-200: #BCE6E0;
   --brand-300: #7AD0C5;
-  --brand-400: #3AB5A6;
+  --brand-400: #2BB5A0;
   --brand-500: #149A8A;
   --brand-600: #0F8B7D;
-  --brand-700: #0D7A6F;
-  --brand-800: #0F5954;
+  --brand-700: #0A6E64;
+  --brand-800: #0B4E4A;
   --brand-900: #0F3D3E;
 
-  /* Brand & Interactive */
+  /* Brand & Interactive (WCAG 2.2 AA verified pairs) */
   --color-primary: #0D7A6F;
-  --color-primary-hover: #0F8B7D;
-  --color-primary-active: #0F5954;
-  --color-on-primary: #ffffff;
-  --color-accent-violet-subtle: #E8F4F2;
+  --color-primary-hover: #0A6E64;
+  --color-primary-active: #0B4E4A;
+  --color-on-primary: #FFFFFF;
+  --color-primary-solid: #0B4E4A;
+  --color-primary-solid-hover: #0A6E64;
+  --color-on-primary-solid: #FFFFFF;
+  --color-accent-bright: #2BB5A0;
+  --color-on-accent-bright: #072220;
+  --color-badge-bg: #E6F4F1;
+  --color-badge-text: #0A6E64;
+  --color-accent-subtle: #E6F4F1;
+  --color-accent-violet-subtle: var(--color-accent-subtle);
   --color-hero-start: #F7F5EF;
   --color-hero-end: #F7F5EF;
 
   /* Light-mode semantic theme variables */
   --theme-surface-rgb: 255 255 255;
   --theme-tint-rgb: 247 245 239;
-  --theme-border-rgb: 224 227 220;
+  --theme-border-rgb: 223 227 220;
   --theme-tint: #F1F4F2;
-  --theme-border: #E0E3DC;
-  --theme-ink: #1A2B2A;
-  --theme-muted: #5E6B69;
-  --theme-accent: #0D7A6F;
+  --theme-border: #DFE3DC;
+  --theme-ink: #162626;
+  --theme-muted: #3F4E4D;
+  --theme-accent: #0A6E64;
   --theme-green-bg: #E5F5F2;
-  --theme-green-text: #0D7A6F;
+  --theme-green-text: #0A6E64;
   --theme-yellow-bg: #FFFBEB;
   --theme-yellow-text: #92400E;
   --theme-red-bg: #FEF2F2;
@@ -73,42 +81,44 @@
   --theme-pink-bg: #FCE7F3;
   --theme-pink-text: #BE185D;
 
-  /* Text Hierarchy (WCAG AA contrast against #F7F7F4 and #FFFFFF) */
-  --color-text: #1A2E2E;
-  --color-text-secondary: #556363;
-  --color-text-muted: #6E7B7A;
+  /* Text Hierarchy (WCAG 2.2 AA against #F7F5EF, #FFFFFF, and #EEEFE9) */
+  --color-text: #162626;
+  --color-text-secondary: #3F4E4D;
+  --color-text-muted: #536160;
 
   /* Criterion & Evaluation Status Semantics (always paired with text/icon labels) */
-  --color-status-met-bg: #ecfdf5;
-  --color-status-met-border: #10b981;
+  --color-status-met-bg: #ECFDF5;
+  --color-status-met-border: #059669;
   --color-status-met-text: #047857;
 
-  --color-status-unmet-bg: #fef2f2;
-  --color-status-unmet-border: #ef4444;
-  --color-status-unmet-text: #b91c1c;
+  --color-status-unmet-bg: #FEF2F2;
+  --color-status-unmet-border: #DC2626;
+  --color-status-unmet-text: #B91C1C;
 
-  --color-status-unresolved-bg: #fffbeb;
-  --color-status-unresolved-border: #d97706;
-  --color-status-unresolved-text: #92400e;
+  --color-status-unresolved-bg: #FFFBEB;
+  --color-status-unresolved-border: #D97706;
+  --color-status-unresolved-text: #92400E;
 
-  --color-status-error-bg: #fff1f2;
-  --color-status-error-border: #e11d48;
-  --color-status-error-text: #881337;
+  --color-status-error-bg: #FFF1F2;
+  --color-status-error-border: #E11D48;
+  --color-status-error-text: #9F1239;
 
   /* Exact Evidence Quote Highlight */
   --color-evidence-highlight-bg: #D1FAE5;
   --color-evidence-highlight-active-bg: #A7F3D0;
   --color-evidence-highlight-border: #059669;
 
-  /* Surface Chrome & Elevation Tiers (Clean subtle shadows on #F7F7F4) */
-  --surface-glass-bg: rgba(255, 255, 255, 0.90);
+  /* Surface Chrome & Elevation Tiers (Forest-tinted shadows on #F7F5EF) */
+  --surface-glass-bg: rgba(255, 255, 255, 0.92);
   --surface-glass-card: rgba(255, 255, 255, 0.96);
-  --surface-glass-border: rgba(226, 229, 223, 0.9);
-  --surface-glass-blur: 12px;
+  --surface-glass-border: rgba(223, 227, 220, 0.92);
+  --surface-glass-blur: 14px;
+  --backdrop-scrim: rgba(15, 31, 30, 0.44);
   --shadow-card: 0 1px 3px 0 rgba(15, 61, 62, 0.05), 0 1px 2px -1px rgba(15, 61, 62, 0.03);
   --shadow-glass-tier1: 0 4px 16px -2px rgba(15, 61, 62, 0.06), 0 1px 4px -1px rgba(15, 61, 62, 0.03);
   --shadow-glass-tier2: 0 12px 28px -4px rgba(15, 61, 62, 0.09), 0 4px 10px -2px rgba(15, 61, 62, 0.04);
-  --shadow-violet-glow: 0 4px 14px -2px rgba(13, 122, 111, 0.18);
+  --shadow-accent-glow: 0 4px 14px -2px rgba(10, 110, 100, 0.18);
+  --shadow-violet-glow: var(--shadow-accent-glow);
 
   /* Vietnamese-ready typography (Google Sans) shared by headings, labels and body text. */
   --font-sans: "Google Sans", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -116,7 +126,8 @@
   --font-label: var(--font-sans);
   --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, "Courier New", monospace;
 
-  --font-size-xs: 0.8125rem;   /* 13px */
+  /* Type Scale (strict 12px floor) */
+  --font-size-xs: 0.75rem;     /* 12px */
   --font-size-sm: 0.875rem;    /* 14px */
   --font-size-base: 0.9375rem; /* 15px */
   --font-size-lg: 1.0625rem;   /* 17px */
@@ -136,7 +147,7 @@
   --space-6: 2rem;     /* 32px */
   --space-8: 2.5rem;   /* 40px */
 
-  --layout-max-width: 80rem;   /* Default desktop container; widens to min(85vw, 120rem) at >=64rem */
+  --layout-max-width: 80rem;   /* Default desktop container; widens at >=64rem */
   --layout-narrow-breakpoint: 48rem; /* 768px */
 
   /* Radii */
@@ -146,12 +157,18 @@
   --radius-xl: 1.5rem;   /* 24px */
 
   /* Keyboard Focus Ring */
-  --focus-ring-color: #059669;
+  --focus-ring-color: #0A6E64;
   --focus-ring-offset: 2px;
   --focus-ring: 2px solid var(--focus-ring-color);
 
-  /* Motion */
-  --transition-fast: 160ms ease-out;
+  /* Motion (Emil design-eng curves & timings) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-press: 120ms;
+  --dur-ui: 180ms;
+  --dur-modal: 240ms;
+  --transition-fast: 160ms var(--ease-out);
 }
 
 @media (min-width: 64rem) {
@@ -162,7 +179,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --transition-fast: 0ms;
+    --dur-press: 0ms;
+    --dur-ui: 140ms;
+    --dur-modal: 150ms;
+    --transition-fast: 140ms ease;
   }
 
   *,
@@ -170,7 +190,6 @@
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 }

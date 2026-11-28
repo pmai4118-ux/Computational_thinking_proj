@@ -274,9 +274,7 @@
       if (outlineBoxes.length > 1) {
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
-        removeBtn.className = "btn btn--ghost";
-        removeBtn.style.minHeight = "2rem";
-        removeBtn.style.padding = "0.125rem 0.5rem";
+        removeBtn.className = "btn btn--ghost argument-box__remove";
         removeBtn.textContent = "Xóa";
         removeBtn.setAttribute("aria-label", `Xóa khung luận điểm ${idx + 1}`);
         removeBtn.addEventListener("click", () => {
