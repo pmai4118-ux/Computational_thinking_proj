@@ -21,6 +21,7 @@
   const next = document.querySelector("#continue-saved");
   const status = document.querySelector("#workspace-status");
   const error = document.querySelector("#workspace-error");
+  const expiredRecovery = document.querySelector("#session-expired-recovery");
   const label = document.querySelector("#draft-label");
   const counter = document.querySelector("#answer-counter");
   const key = `submission:${sessionId}:${questionId}`;
@@ -76,10 +77,15 @@
     codeLineCount.textContent = `${lines} dòng mã`;
   }
 
-  function showError(message) {
+  function showError(message, err) {
     error.textContent = message;
     error.hidden = false;
-    error.focus();
+    if (expiredRecovery && err && (err.code === "SESSION_EXPIRED" || err.status === 410)) {
+      expiredRecovery.hidden = false;
+    }
+    if (typeof error.focus === "function") {
+      error.focus();
+    }
   }
 
   function updateCounter() {
@@ -151,8 +157,30 @@
     }), 600);
   }
 
+  function exitCodeEditorFocus() {
+    const targets = [submit, next, exit, field];
+    for (const target of targets) {
+      if (target && !target.hidden && !target.disabled && typeof target.focus === "function") {
+        target.focus();
+        return;
+      }
+    }
+    if (typeof codeField.blur === "function") {
+      codeField.blur();
+    }
+  }
+
   function handleCodeKeydown(event) {
-    if (!hasCodeEditor() || codeField.readOnly) return;
+    if (!hasCodeEditor()) return;
+
+    // WCAG 2.1.2: Escape cleanly exits the Tab-indented code editor without keyboard trap.
+    if (event.key === "Escape") {
+      if (typeof event.preventDefault === "function") event.preventDefault();
+      exitCodeEditorFocus();
+      return;
+    }
+
+    if (codeField.readOnly) return;
     const start = typeof codeField.selectionStart === "number" ? codeField.selectionStart : codeField.value.length;
     const end = typeof codeField.selectionEnd === "number" ? codeField.selectionEnd : start;
     const value = codeField.value;
@@ -250,14 +278,14 @@
     if (busy) return;
     setBusy(true); error.hidden = true;
     try { await flushDraft(); leaving = true; window.location.assign("/"); }
-    catch (err) { showError(`${err.message || "Chưa lưu được bản nháp."} Nội dung vẫn ở ô trả lời; hãy thử lại.`); }
+    catch (err) { showError(`${err.message || "Chưa lưu được bản nháp."} Nội dung vẫn ở ô trả lời; hãy thử lại.`, err); }
     finally { setBusy(false); }
   });
   if (next) next.addEventListener("click", async (event) => {
     event.preventDefault();
     if (busy) return;
     setBusy(true); error.hidden = true;
-    try { await advance(); } catch (err) { showError(`${err.message || "Chưa thể chuyển câu."} Bài đã gửi vẫn được giữ.`); }
+    try { await advance(); } catch (err) { showError(`${err.message || "Chưa thể chuyển câu."} Bài đã gửi vẫn được giữ.`, err); }
     finally { setBusy(false); }
   });
   form.addEventListener("submit", async (event) => {
@@ -279,7 +307,7 @@
       submit.hidden = true;
       await advance();
     } catch (err) {
-      showError(`${err.message || "Chưa thể lưu hoặc chuyển câu."} Nội dung vẫn được giữ; hãy thử lại hoặc tải lại trang.`);
+      showError(`${err.message || "Chưa thể lưu hoặc chuyển câu."} Nội dung vẫn được giữ; hãy thử lại hoặc tải lại trang.`, err);
       if (submissionSent) {
         submissionUncertain = true;
         submit.hidden = true;

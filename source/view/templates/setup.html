@@ -1,60 +1,344 @@
 {% extends "base.html" %}
 
 {% block title %}Thiết lập phiên luyện tập — interviewUS{% endblock %}
+{% block page_id %}setup{% endblock %}
+
+{% block extra_head %}
+<style>
+  .setup-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 0.5rem);
+    padding-bottom: var(--space-4, 1rem);
+    border-bottom: 2px solid var(--sbx-ink, #191718);
+  }
+
+  .setup-header__title {
+    margin: 0;
+  }
+
+  .setup-header__lede {
+    margin: 0;
+    color: var(--sbx-muted, #625c5d);
+    font-size: var(--font-size-base, 1rem);
+    line-height: 1.62;
+  }
+
+  .setup-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.18fr) minmax(19rem, 0.82fr);
+    gap: var(--space-5, 1.5rem);
+    align-items: start;
+  }
+
+  .setup-form-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+    padding-bottom: var(--space-3, 0.75rem);
+    border-bottom: 1.5px solid var(--sbx-line, rgba(25, 23, 24, 0.22));
+  }
+
+  .setup-form-head__title {
+    margin: 0;
+  }
+
+  /* Studio Blocks MVP Scope Spec List (full-width aligned rows, zero select truncation) */
+  .setup-spec-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3, 0.75rem);
+  }
+
+  .setup-spec-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(14rem, 16rem);
+    align-items: center;
+    gap: var(--space-2, 0.5rem) var(--space-4, 1rem);
+    min-width: 0;
+    padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+    border: var(--sbx-border, 2px solid #191718);
+    border-radius: var(--radius-sm, 2px);
+    background: var(--sbx-paper, #f7f3e9);
+  }
+
+  .setup-spec-card__index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: var(--sbx-border, 2px solid #191718);
+    border-radius: var(--radius-sm, 2px);
+    background: var(--sbx-yellow, #f5d54b);
+    box-shadow: var(--sbx-shadow-xs, 2px 2px 0 #191718);
+    font-family: var(--font-mono, "JetBrains Mono", Consolas, monospace);
+    font-size: var(--font-size-mono, 0.75rem);
+    font-weight: 700;
+    color: var(--sbx-ink, #191718);
+    flex-shrink: 0;
+  }
+
+  .setup-spec-card__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .setup-spec-card__title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+  }
+
+  .setup-spec-card__scope {
+    font-family: var(--font-mono, "JetBrains Mono", Consolas, monospace);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sbx-muted, #625c5d);
+  }
+
+  .setup-spec-card__label {
+    margin: 0;
+    font-size: var(--font-size-base, 1rem);
+  }
+
+  .setup-spec-card__control {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1, 0.25rem);
+    min-width: 0;
+  }
+
+  .setup-spec-select {
+    font-family: var(--font-display, "Space Grotesk", "Be Vietnam Pro", system-ui, sans-serif);
+    font-weight: 700;
+    box-shadow: var(--sbx-shadow-xs, 2px 2px 0 #191718);
+  }
+
+  .setup-spec-card__desc {
+    margin: 0;
+    font-size: var(--font-size-xs, 0.8125rem);
+    line-height: 1.48;
+    color: var(--sbx-muted, #625c5d);
+  }
+
+  .setup-privacy-bar {
+    padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+    border: 1.5px dashed var(--sbx-ink, #191718);
+    border-radius: var(--radius-sm, 2px);
+    background: var(--sbx-paper-deep, #efe9dc);
+    font-size: var(--font-size-sm, 0.875rem);
+    color: var(--sbx-ink, #191718);
+  }
+
+  .setup-privacy-bar p {
+    margin: 0;
+  }
+
+  /* Right 4-Stage Visual Roadmap */
+  .setup-roadmap-card__title {
+    margin: 0;
+  }
+
+  .setup-roadmap {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3, 0.75rem);
+  }
+
+  .setup-roadmap__step {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    gap: var(--space-3, 0.75rem);
+    align-items: start;
+  }
+
+  .setup-roadmap__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: var(--sbx-border, 2px solid #191718);
+    border-radius: var(--radius-sm, 2px);
+    background: var(--sbx-card, #fffdf6);
+    box-shadow: var(--sbx-shadow-xs, 2px 2px 0 #191718);
+    font-family: var(--font-mono, "JetBrains Mono", Consolas, monospace);
+    font-size: var(--font-size-mono, 0.75rem);
+    font-weight: 700;
+    color: var(--sbx-ink, #191718);
+  }
+
+  .setup-roadmap__body strong {
+    display: block;
+    font-family: var(--font-display, "Space Grotesk", "Be Vietnam Pro", system-ui, sans-serif);
+    font-size: var(--font-size-base, 1rem);
+    color: var(--sbx-ink, #191718);
+  }
+
+  .setup-roadmap__body span {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: 1.5;
+    color: var(--sbx-muted, #625c5d);
+  }
+
+  .setup-note-box__title {
+    margin: 0 0 var(--space-2, 0.5rem);
+    font-family: var(--font-mono, "JetBrains Mono", Consolas, monospace);
+    font-size: var(--font-size-mono, 0.75rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sbx-violet, #6346f5);
+  }
+
+  .setup-note-box .meta-list {
+    font-size: var(--font-size-sm, 0.875rem);
+  }
+
+  @media (max-width: 64rem) {
+    .setup-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .setup-spec-card {
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .setup-spec-card__control {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="grid-two">
-  <section class="card" aria-labelledby="setup-heading">
+<header class="setup-header" data-enter>
+  <p class="eyebrow sbx-eyebrow">THIẾT LẬP PHIÊN · KHUNG ĐỀ ĐÃ KIỂM DUYỆT</p>
+  <h1 id="setup-heading" class="setup-header__title">Thiết lập phiên luyện tập</h1>
+  <p class="setup-header__lede reading-measure">
+    Bản MVP áp dụng khung đề Backend 4 câu đã kiểm duyệt theo 3 thông số chuẩn bên dưới.
+    Hệ thống tự ưu tiên câu bạn chưa làm và kỹ năng cần củng cố từ hồ sơ ẩn danh trên trình duyệt này.
+  </p>
+</header>
+
+<div class="setup-layout">
+  <section class="card" aria-labelledby="setup-spec-heading">
     <form method="post" action="/setup" class="stack" novalidate id="setup-form">
-      <div>
-        <h1 id="setup-heading">Thiết lập phiên luyện tập</h1>
-        <p class="text-secondary reading-measure">
-          Chỉ chọn thông tin cần thiết để hệ thống rút đúng bộ 4 câu hỏi đã kiểm duyệt.
-          Ứng dụng không thu thập họ tên, email hay hồ sơ CV.
+      <div class="setup-form-head">
+        <h2 id="setup-spec-heading" class="setup-form-head__title">Thông số phiên hiện tại</h2>
+        <span class="badge sbx-tag sbx-tag--yellow">KHUNG CHUẨN MVP · 4 CÂU</span>
+      </div>
+
+      <div class="setup-spec-grid">
+        <div class="form-field setup-spec-card">
+          <span class="setup-spec-card__index" aria-hidden="true">01</span>
+          <div class="setup-spec-card__meta">
+            <div class="setup-spec-card__title-row">
+              <label class="form-label setup-spec-card__label" for="role-select">Vai trò mục tiêu</label>
+              <span class="setup-spec-card__scope">Mặc định</span>
+            </div>
+            <p id="role-scope-hint" class="setup-spec-card__desc">
+              Bộ câu hỏi thực chiến về mã nguồn, giao dịch SQL và thuật toán Backend.
+            </p>
+          </div>
+          <div class="setup-spec-card__control">
+            <select
+              id="role-select"
+              name="role"
+              class="form-select setup-spec-select"
+              aria-describedby="{% if field_errors and field_errors.get('role') %}role-error {% endif %}role-scope-hint"
+              {% if field_errors and field_errors.get("role") %}aria-invalid="true"{% endif %}
+            >
+              <option value="backend_developer" {% if selected_role == "backend_developer" %}selected{% endif %}>
+                Backend Developer
+              </option>
+            </select>
+            {% if field_errors and field_errors.get("role") %}
+              <p id="role-error" class="form-error">{{ field_errors.get("role") }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-field setup-spec-card">
+          <span class="setup-spec-card__index" aria-hidden="true">02</span>
+          <div class="setup-spec-card__meta">
+            <div class="setup-spec-card__title-row">
+              <label class="form-label setup-spec-card__label" for="level-select">Cấp độ phỏng vấn</label>
+              <span class="setup-spec-card__scope">Mặc định</span>
+            </div>
+            <p id="level-scope-hint" class="setup-spec-card__desc">
+              Độ khó nền tảng và ứng dụng, chú trọng lập luận rõ ràng và ca biên.
+            </p>
+          </div>
+          <div class="setup-spec-card__control">
+            <select
+              id="level-select"
+              name="level"
+              class="form-select setup-spec-select"
+              aria-describedby="{% if field_errors and field_errors.get('level') %}level-error {% endif %}level-scope-hint"
+              {% if field_errors and field_errors.get("level") %}aria-invalid="true"{% endif %}
+            >
+              <option value="intern_fresher" {% if selected_level == "intern_fresher" %}selected{% endif %}>
+                Intern / Fresher
+              </option>
+            </select>
+            {% if field_errors and field_errors.get("level") %}
+              <p id="level-error" class="form-error">{{ field_errors.get("level") }}</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="form-field setup-spec-card">
+          <span class="setup-spec-card__index" aria-hidden="true">03</span>
+          <div class="setup-spec-card__meta">
+            <div class="setup-spec-card__title-row">
+              <label class="form-label setup-spec-card__label" for="language-select">Ngôn ngữ đề bài &amp; phản hồi</label>
+              <span class="setup-spec-card__scope">Mặc định</span>
+            </div>
+            <p id="lang-scope-hint" class="setup-spec-card__desc">
+              Đề bài, tiêu chí rubric và trích dẫn nhận xét bằng tiếng Việt chuẩn thuật ngữ.
+            </p>
+          </div>
+          <div class="setup-spec-card__control">
+            <select
+              id="language-select"
+              name="language"
+              class="form-select setup-spec-select"
+              aria-describedby="{% if field_errors and field_errors.get('language') %}language-error {% endif %}lang-scope-hint"
+              {% if field_errors and field_errors.get("language") %}aria-invalid="true"{% endif %}
+            >
+              <option value="vi" {% if selected_language == "vi" %}selected{% endif %}>
+                Tiếng Việt
+              </option>
+            </select>
+            {% if field_errors and field_errors.get("language") %}
+              <p id="language-error" class="form-error">{{ field_errors.get("language") }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-privacy-bar">
+        <p>
+          <strong>Không cần tài khoản hay hồ sơ cá nhân:</strong> không thu thập họ tên, email hay tài liệu đính kèm.
+          Đề bài ưu tiên nhóm kỹ năng cần luyện thêm trong <a href="/profile">Hồ sơ năng lực</a> của trình duyệt này.
         </p>
-      </div>
-
-      <div class="form-field">
-        <label class="form-label" for="role-select">Vai trò mục tiêu</label>
-        <select
-          id="role-select"
-          name="role"
-          class="form-select"
-          {% if field_errors and field_errors.get("role") %}aria-invalid="true" aria-describedby="role-error"{% endif %}
-        >
-          <option value="backend_developer" {% if selected_role == "backend_developer" %}selected{% endif %}>
-            Backend Developer
-          </option>
-        </select>
-        {% if field_errors and field_errors.get("role") %}
-          <p id="role-error" class="form-error">{{ field_errors.get("role") }}</p>
-        {% endif %}
-      </div>
-
-      <div class="form-field">
-        <label class="form-label" for="level-select">Cấp độ phỏng vấn</label>
-        <select
-          id="level-select"
-          name="level"
-          class="form-select"
-          {% if field_errors and field_errors.get("level") %}aria-invalid="true" aria-describedby="level-error"{% endif %}
-        >
-          <option value="intern_fresher" {% if selected_level == "intern_fresher" %}selected{% endif %}>
-            Intern / Fresher
-          </option>
-        </select>
-        {% if field_errors and field_errors.get("level") %}
-          <p id="level-error" class="form-error">{{ field_errors.get("level") }}</p>
-        {% endif %}
-      </div>
-
-      <div class="form-field">
-        <label class="form-label" for="language-select">Ngôn ngữ đề bài và phản hồi</label>
-        <select id="language-select" name="language" class="form-select">
-          <option value="vi" {% if selected_language == "vi" %}selected{% endif %}>
-            Tiếng Việt (kèm thuật ngữ kỹ thuật chuẩn)
-          </option>
-        </select>
       </div>
 
       <div class="action-row">
@@ -64,18 +348,51 @@
     </form>
   </section>
 
-  <aside class="card card--subtle" aria-labelledby="format-heading">
+  <aside class="card sbx-card sbx-card--lilac" aria-labelledby="format-heading">
     <div class="stack">
-      <h2 id="format-heading">Định dạng phiên và lưu ý</h2>
-      <ul class="meta-list">
-        <li><strong>Câu 1 — Kiến thức lập trình:</strong> Dự đoán kết quả, giải thích ngữ nghĩa và sửa hợp đồng hàm.</li>
-        <li><strong>Câu 2 — Tình huống kỹ thuật:</strong> Phân tích tranh chấp/khóa dữ liệu và thiết kế transaction nhất quán.</li>
-        <li><strong>Câu 3 — Giải thích thuật toán:</strong> Trình bày tính đúng đắn, độ phức tạp và ca kiểm thử biên.</li>
-        <li><strong>Câu 4 — Đánh giá mã nguồn:</strong> Kiểm chứng độc lập đoạn mã gợi ý, sửa lỗi và viết test.</li>
-      </ul>
-      <p class="form-hint">
-        <strong>Thời lượng ước tính:</strong> khoảng 25–35 phút cho trọn vẹn 4 câu. Nếu cần tạm dừng, hãy lưu và thoát để tiếp tục sau.
-      </p>
+      <div>
+        <p class="eyebrow sbx-eyebrow">LỘ TRÌNH 4 CHẶNG · ~25–35 PHÚT</p>
+        <h2 id="format-heading" class="setup-roadmap-card__title">Cấu trúc phiên phỏng vấn</h2>
+      </div>
+
+      <ol class="setup-roadmap">
+        <li class="setup-roadmap__step">
+          <span class="setup-roadmap__num" aria-hidden="true">01</span>
+          <div class="setup-roadmap__body">
+            <strong>Kiến thức lập trình</strong>
+            <span>Dự đoán kết quả, giải thích ngữ nghĩa và giữ nguyên hợp đồng hàm.</span>
+          </div>
+        </li>
+        <li class="setup-roadmap__step">
+          <span class="setup-roadmap__num" aria-hidden="true">02</span>
+          <div class="setup-roadmap__body">
+            <strong>Tình huống kỹ thuật</strong>
+            <span>Phân tích tranh chấp/khóa dữ liệu và thiết kế transaction nhất quán.</span>
+          </div>
+        </li>
+        <li class="setup-roadmap__step">
+          <span class="setup-roadmap__num" aria-hidden="true">03</span>
+          <div class="setup-roadmap__body">
+            <strong>Giải thích thuật toán</strong>
+            <span>Lập luận tính đúng đắn, độ phức tạp và chọn ca kiểm thử biên.</span>
+          </div>
+        </li>
+        <li class="setup-roadmap__step">
+          <span class="setup-roadmap__num" aria-hidden="true">04</span>
+          <div class="setup-roadmap__body">
+            <strong>Đánh giá mã nguồn</strong>
+            <span>Kiểm chứng độc lập đoạn mã gợi ý, sửa lỗi và viết ca kiểm thử.</span>
+          </div>
+        </li>
+      </ol>
+
+      <div class="setup-note-box">
+        <p class="setup-note-box__title">Cách chấm &amp; bảo toàn bài làm</p>
+        <ul class="meta-list">
+          <li>Sau khi nộp đủ 4/4 câu, AI chấm từng câu trên nền và mở toàn bộ kết quả tại trang Tổng kết.</li>
+          <li><strong>Thời lượng ước tính:</strong> khoảng 25–35 phút (không đếm ngược cứng). Có thể bấm <em>Lưu và thoát</em> bất cứ lúc nào.</li>
+        </ul>
+      </div>
     </div>
   </aside>
 </div>

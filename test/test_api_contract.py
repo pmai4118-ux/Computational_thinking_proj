@@ -216,9 +216,12 @@ def test_p06_tokens_and_p08_workflow_documents_exist_and_cover_required_contract
         encoding="utf-8"
     )
     for required_token in (
-        "--color-canvas: #FAF9FE",
-        "--color-surface: #FFFFFF",
-        "--color-primary: #7C3AED",
+        "--sbx-paper: #f7f3e9",
+        "--sbx-card: #fffdf6",
+        "--sbx-violet: #6346f5",
+        "--color-canvas: var(--sbx-paper)",
+        "--color-surface: var(--sbx-card)",
+        "--color-primary: var(--sbx-violet)",
         "--color-status-met-bg",
         "--color-status-unmet-bg",
         "--color-status-unresolved-bg",

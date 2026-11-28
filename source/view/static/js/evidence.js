@@ -13,10 +13,16 @@
   const retryEvalButton = document.querySelector("#retry-review-evaluation");
   const nextButton = document.querySelector("#next-question");
   const content = document.querySelector("#review-content");
+  const scoreBox = document.querySelector("#review-score-box");
   const criteriaList = document.querySelector("#criteria-list");
+  const criteriaCountTag = document.querySelector("#criteria-count-tag");
+  const selectedCriterionMeta = document.querySelector("#selected-criterion-meta");
   const total = document.querySelector("#evaluation-total");
   const evaluationState = document.querySelector("#evaluation-state");
   const answerSource = document.querySelector("#answer-source");
+  const questionDetails = document.querySelector("#review-question-details");
+  const questionPreview = document.querySelector("#review-question-preview");
+  const questionCodeBadge = document.querySelector("#review-question-code-badge");
   const questionPrompt = document.querySelector("#review-question-prompt");
   const questionCode = document.querySelector("#review-question-code");
   const detail = document.querySelector("#evidence-detail");
@@ -38,18 +44,52 @@
     return node;
   }
 
-  function renderEvidence(check, { scrollToHighlight = false } = {}) {
+  function applyInlineCode(node) {
+    const shell = window.interviewUSShell;
+    if (node && shell && typeof shell.formatInlineCode === "function") {
+      shell.formatInlineCode(node);
+    }
+  }
+
+  function statusBadgeClass(status) {
+    if (status === "met") return "badge badge--met";
+    if (status === "unmet") return "badge badge--unmet";
+    return "badge badge--unresolved";
+  }
+
+  function formatIndex(index) {
+    const value = index + 1;
+    return value < 10 ? `0${value}` : String(value);
+  }
+
+  function renderEvidence(check, index, { scrollToHighlight = false } = {}) {
     detail.replaceChildren();
-    explanation.textContent = check.explanation;
+    explanation.textContent = check.explanation || "";
+    applyInlineCode(explanation);
+    if (selectedCriterionMeta) {
+      const scoreLabel = check.score === null || check.score === undefined
+        ? "Chưa xác định"
+        : `${check.score}/${check.max_score}`;
+      selectedCriterionMeta.className = statusBadgeClass(check.status);
+      selectedCriterionMeta.textContent = `${formatIndex(index)} · ${statusLabels[check.status] || "Chưa có trạng thái"} · ${scoreLabel}`;
+      selectedCriterionMeta.hidden = false;
+    }
+
     const feedback = feedbackItems.find((item) => item.criterion_id === check.criterion_id);
     if (feedback) {
-      detail.append(element("p", "evidence-observation", feedback.message));
+      const feedbackNode = element("p", "evidence-observation", feedback.message);
+      applyInlineCode(feedbackNode);
+      detail.append(feedbackNode);
       if (feedback.suggestion) {
-        detail.append(element("p", "form-hint", `Gợi ý: ${feedback.suggestion}`));
+        const suggestionNode = element("p", "evidence-suggestion", `Gợi ý: ${feedback.suggestion}`);
+        applyInlineCode(suggestionNode);
+        detail.append(suggestionNode);
       }
     }
     if (check.unresolved_reason) {
-      detail.append(element("p", "evidence-observation", `Chưa đủ căn cứ: ${check.unresolved_reason}`));
+      const unresolvedNode = element("p", "evidence-observation evidence-observation--unresolved", `Chưa đủ căn cứ: ${check.unresolved_reason}`);
+      applyInlineCode(unresolvedNode);
+      detail.append(unresolvedNode);
     }
     const quotes = [];
     for (const evidence of check.evidence || []) {
@@ -97,12 +137,12 @@
     answerSource.append(document.createTextNode(points.slice(cursor).join("")));
   }
 
-  function selectCriterion(button, check, { scrollToHighlight = false } = {}) {
+  function selectCriterion(button, check, index, { scrollToHighlight = false } = {}) {
     for (const active of criteriaList.querySelectorAll(".criterion-button")) {
       active.setAttribute("aria-pressed", "false");
     }
     button.setAttribute("aria-pressed", "true");
-    renderEvidence(check, { scrollToHighlight });
+    renderEvidence(check, index, { scrollToHighlight });
   }
 
   function failureMessageFor(data) {
@@ -122,15 +162,25 @@
     const data = response && response.result;
     if (!data) throw new Error("Máy chủ trả thiếu kết quả đánh giá theo DTO.");
     evaluation = data;
-    questionPrompt.textContent = data.question_prompt || "";
+    const promptText = data.question_prompt || "";
+    questionPrompt.textContent = promptText;
+    applyInlineCode(questionPrompt);
+    if (questionPreview) {
+      questionPreview.textContent = promptText;
+      applyInlineCode(questionPreview);
+    }
     questionCode.textContent = data.question_code || "";
     questionCode.hidden = !data.question_code;
+    if (questionCodeBadge) questionCodeBadge.hidden = !data.question_code;
+    if (questionDetails) questionDetails.open = false;
+
     feedbackItems = response.feedback_items || [];
     criteriaList.replaceChildren();
     answerSource.textContent = data.answer_text;
 
     if (data.status === "failed") {
       content.hidden = true;
+      if (scoreBox) scoreBox.hidden = true;
       if (nextButton) nextButton.hidden = true;
       retryButton.hidden = true;
       errorBox.textContent = failureMessageFor(data);
@@ -147,6 +197,7 @@
 
     if (data.status === "processing" || data.status === "pending") {
       content.hidden = true;
+      if (scoreBox) scoreBox.hidden = true;
       if (nextButton) nextButton.hidden = true;
       errorBox.hidden = true;
       if (retryEvalButton) retryEvalButton.hidden = true;
@@ -156,35 +207,73 @@
       return;
     }
 
+    const checks = data.criterion_checks || [];
+    const hasUnresolved = checks.some((check) => check.status === "insufficient_evidence");
     if (data.total_score === null || data.total_score === undefined) {
-      const hasUnresolved = (data.criterion_checks || []).some((check) => check.status === "insufficient_evidence");
       total.textContent = data.status === "completed" && hasUnresolved
         ? "Chưa tính tổng điểm (còn tiêu chí chưa đủ bằng chứng)"
         : "Chưa có điểm vì đánh giá chưa hoàn tất";
     } else {
       total.textContent = `${data.total_score} / ${data.maximum_score}`;
     }
+
+    if (scoreBox) {
+      scoreBox.className = hasUnresolved
+        ? "score-summary review-score-chip review-score-chip--unresolved"
+        : "score-summary review-score-chip";
+      scoreBox.hidden = false;
+    }
     evaluationState.textContent = data.status === "completed" ? "Đã đánh giá" : "Chưa hoàn tất đánh giá";
+    evaluationState.className = data.status === "completed"
+      ? (hasUnresolved ? "badge badge--unresolved" : "badge badge--met")
+      : "badge badge--unresolved";
+
+    if (criteriaCountTag) {
+      const metCount = checks.filter((check) => check.status === "met").length;
+      criteriaCountTag.textContent = `${metCount}/${checks.length} đạt`;
+      criteriaCountTag.className = metCount === checks.length && checks.length > 0
+        ? "badge badge--met"
+        : hasUnresolved
+          ? "badge badge--unresolved"
+          : "badge badge--neutral";
+      criteriaCountTag.hidden = checks.length === 0;
+    }
 
     let firstSelection = null;
-    for (const check of data.criterion_checks || []) {
-      const card = element("article", "criterion-card");
+    for (let index = 0; index < checks.length; index += 1) {
+      const check = checks[index];
+      const statusModifier = check.status === "met"
+        ? "criterion-card--met"
+        : check.status === "unmet"
+          ? "criterion-card--unmet"
+          : "criterion-card--unresolved";
+      const card = element("article", `criterion-card ${statusModifier}`);
       const button = element("button", "criterion-button");
       button.type = "button";
       button.setAttribute("aria-pressed", "false");
+
+      const head = element("div", "criterion-button__head");
+      head.append(element("span", "criterion-index", formatIndex(index)));
+      head.append(element("span", statusBadgeClass(check.status), statusLabels[check.status] || "Chưa có trạng thái"));
+
       const title = element("span", "criterion-button__title", check.criterion_label);
-      const status = element("span", `badge ${check.status === "met" ? "badge--met" : check.status === "unmet" ? "badge--unmet" : "badge--unresolved"}`,
-        statusLabels[check.status] || "Chưa có trạng thái");
-      button.append(title, status);
-      const score = check.score === null || check.score === undefined
-        ? (check.status === "insufficient_evidence" ? "Chưa xác định" : "Chưa có điểm")
+
+      const scoreText = check.score === null || check.score === undefined
+        ? (check.status === "insufficient_evidence" ? "Chưa xác định (≠ 0)" : "Chưa có điểm")
         : `${check.score} / ${check.max_score} điểm`;
-      const scoreLine = element("p", "form-hint", score);
-      card.append(button, scoreLine);
+      const foot = element("div", "criterion-button__foot");
+      const scoreClass = check.score === null || check.score === undefined
+        ? "criterion-button__score criterion-button__score--unresolved"
+        : "criterion-button__score";
+      foot.append(element("span", scoreClass, scoreText));
+      foot.append(element("span", "criterion-button__active-cue", "Đang đối chiếu ▸"));
+
+      button.append(head, title, foot);
+      card.append(button);
       button.addEventListener("click", () => {
-        selectCriterion(button, check, { scrollToHighlight: true });
+        selectCriterion(button, check, index, { scrollToHighlight: true });
       });
-      if (!firstSelection) firstSelection = { button, check };
+      if (!firstSelection) firstSelection = { button, check, index };
       criteriaList.append(card);
     }
 
@@ -198,7 +287,7 @@
       nextButton.hidden = false;
     }
     if (firstSelection) {
-      selectCriterion(firstSelection.button, firstSelection.check, { scrollToHighlight: false });
+      selectCriterion(firstSelection.button, firstSelection.check, firstSelection.index, { scrollToHighlight: false });
     }
     if (data.status === "completed") {
       loadAdaptiveProbePlan();
@@ -258,12 +347,21 @@
       if (probeError) probeError.hidden = true;
       if (probeResults) {
         probeResults.replaceChildren();
+        const probeStatusLabels = {
+          met: "Đạt sau làm rõ",
+          unmet: "Chưa đạt",
+          insufficient_evidence: "Chưa đủ bằng chứng",
+          evaluated: "Đã đối chiếu",
+          asked: "Đang chờ trả lời",
+        };
         for (const item of plan.existing_probes || []) {
-          const box = element("article", "card card--subtle stack");
-          box.append(element("p", "", `Tiêu chí đào sâu: ${item.criterion_label} (${item.outcome_status || item.status})`));
+          const box = element("article", "probe-result-card");
+          const rawOutcome = item.outcome_status || item.status;
+          const localizedOutcome = probeStatusLabels[rawOutcome] || rawOutcome;
+          box.append(element("p", "", `Tiêu chí đào sâu: ${item.criterion_label} (${localizedOutcome})`));
           if (item.response_text) box.append(element("p", "text-secondary", `Phần làm rõ đã gửi: ${item.response_text}`));
           if (item.outcome_score !== null && item.outcome_score !== undefined) {
-            box.append(element("p", "", `Điểm sau làm rõ: ${item.outcome_score} / ${item.outcome_max_score}`));
+            box.append(element("p", "", `Kết quả đối chiếu bổ sung: ${item.outcome_score} / ${item.outcome_max_score} (không ghi đè điểm chính thức của phiên)`));
           }
           if (item.outcome_explanation) box.append(element("p", "", item.outcome_explanation));
           probeResults.append(box);
@@ -271,7 +369,11 @@
       }
       if (plan.can_probe && plan.probe_prompt) {
         if (probeReason) probeReason.textContent = plan.choice_reason || "";
-        if (probePrompt) probePrompt.textContent = plan.probe_prompt;
+        if (probePrompt) {
+          probePrompt.textContent = plan.probe_prompt;
+          probePrompt.hidden = false;
+          applyInlineCode(probePrompt);
+        }
         if (probeForm) {
           probeForm.hidden = false;
           probeForm.dataset.criterionId = plan.recommended_criterion_id || "";
@@ -284,7 +386,10 @@
           session_expired: "Phiên đã hết hạn nên không mở thêm lượt hỏi đào sâu.",
         };
         if (probeReason) probeReason.textContent = stopLabels[plan.stop_reason] || "";
-        if (probePrompt) probePrompt.textContent = "";
+        if (probePrompt) {
+          probePrompt.textContent = "";
+          probePrompt.hidden = true;
+        }
         if (probeForm) probeForm.hidden = true;
       }
     };
@@ -371,6 +476,7 @@
     }
     retryButton.hidden = true;
     if (retryEvalButton) retryEvalButton.hidden = true;
+    if (scoreBox) scoreBox.hidden = true;
     errorBox.hidden = true;
     content.hidden = true;
     statusBox.hidden = false;

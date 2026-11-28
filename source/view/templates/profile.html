@@ -1,16 +1,18 @@
 {% extends "base.html" %}
 
+{% block page_id %}profile{% endblock %}
 {% block title %}Hồ sơ năng lực — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/features.css?v=20261127-p1">
+<link rel="stylesheet" href="/static/css/features.css?v=20261128-sbx1">
 {% endblock %}
 
 {% block content %}
-<section class="card stack" aria-labelledby="profile-heading">
-  <div class="results-header">
+<section class="card stack profile-shell" aria-labelledby="profile-heading">
+  <div class="results-header profile-header">
     <div>
+      <p class="eyebrow">Hồ sơ năng lực · Theo dõi liên phiên</p>
       <h1 id="profile-heading">Hồ sơ năng lực qua các phiên</h1>
-      <p class="text-secondary reading-measure">
+      <p class="text-secondary reading-measure" style="margin: 0;">
         Tổng hợp từ các câu trả lời đã hoàn tất đánh giá trên trình duyệt này. Hồ sơ chỉ phản ánh tiêu chí đã quan sát được và dùng để ưu tiên câu hỏi phù hợp khi bạn mở phiên mới.
       </p>
     </div>
@@ -21,60 +23,106 @@
   </div>
 
   {% if profile.entries %}
-    <div class="summary-strip" aria-label="Thống kê hồ sơ năng lực">
-      <div class="metric-box">
-        <p class="metric-box__value">{{ counts.strength }}</p>
-        <p class="metric-box__label">Tiêu chí đã vững</p>
+    <div class="summary-strip metric-grid" aria-label="Thống kê hồ sơ năng lực">
+      <div class="metric-box metric-box--met">
+        <span class="metric-box__index" aria-hidden="true">01</span>
+        <p class="metric-box__value">{{ counts.strength_confirmed }}</p>
+        <p class="metric-box__label">Đã vững (quan sát lặp lại)</p>
       </div>
-      <div class="metric-box">
+      <div class="metric-box metric-box--violet">
+        <span class="metric-box__index" aria-hidden="true">02</span>
+        <p class="metric-box__value">{{ counts.strength_initial }}</p>
+        <p class="metric-box__label">Đạt bước đầu (chờ củng cố)</p>
+      </div>
+      <div class="metric-box metric-box--unmet">
+        <span class="metric-box__index" aria-hidden="true">03</span>
         <p class="metric-box__value">{{ counts.practice }}</p>
         <p class="metric-box__label">Tiêu chí cần luyện thêm</p>
       </div>
-      <div class="metric-box">
+      <div class="metric-box metric-box--unresolved">
+        <span class="metric-box__index" aria-hidden="true">04</span>
         <p class="metric-box__value">{{ counts.unresolved }}</p>
         <p class="metric-box__label">Chưa đủ căn cứ (không tính 0 điểm)</p>
-      </div>
-      <div class="metric-box">
-        <p class="metric-box__value">{{ profile.entries | length }}</p>
-        <p class="metric-box__label">Tổng nhóm tiêu chí đã quan sát</p>
       </div>
     </div>
 
     {% for group in grouped_entries %}
       <section class="skill-group" aria-labelledby="skill-{{ loop.index }}">
-        <h2 id="skill-{{ loop.index }}">{{ group.skill_label }}</h2>
+        <div class="skill-group__head">
+          <div class="skill-group__title-wrap">
+            <span class="skill-group__index" aria-hidden="true">{{ "%02d"|format(loop.index) }}</span>
+            <h2 id="skill-{{ loop.index }}" class="skill-group__title">{{ group.skill_label }}</h2>
+          </div>
+          <span class="skill-group__count">{{ group.entries|length }} tiêu chí</span>
+        </div>
+
         <ul class="profile-entry-list">
           {% for entry in group.entries %}
-            <li class="profile-entry">
-              <div class="stack" style="gap: var(--space-2);">
+            {% set conf_key = entry.evidence_confidence.value %}
+            {% set trend_key = entry.trend.value %}
+            {% set conf_text = confidence_labels.get(conf_key, conf_key) %}
+            {% set trend_text = trend_labels.get(trend_key, trend_key) %}
+            {% if entry.state.value == "observed_strength" %}
+              {% set state_mod = "met" %}
+              {% if conf_key == "repeated" %}
+                {% set status_label = "Đã vững (quan sát lặp lại)" %}
+              {% elif conf_key == "mixed" %}
+                {% set status_label = "Đạt gần nhất (chưa ổn định)" %}
+              {% else %}
+                {% set status_label = "Đạt ở lần quan sát đầu tiên" %}
+              {% endif %}
+            {% elif entry.state.value == "needs_practice" %}
+              {% set state_mod = "unmet" %}
+              {% set status_label = "Cần luyện thêm" %}
+            {% else %}
+              {% set state_mod = "unresolved" %}
+              {% set status_label = "Chưa đủ căn cứ để kết luận" %}
+            {% endif %}
+
+            <li class="profile-entry profile-entry--{{ state_mod }}">
+              <div class="profile-entry__body">
                 <div class="profile-entry__meta">
-                  <strong>{{ criterion_type_labels.get(entry.criterion_type, entry.criterion_type) }}</strong>
-                  {% if entry.state.value == "observed_strength" %}
-                    <span class="badge badge--met">Đã vững qua quan sát</span>
-                  {% elif entry.state.value == "needs_practice" %}
-                    <span class="badge badge--unmet">Cần luyện thêm</span>
-                  {% else %}
-                    <span class="badge badge--unresolved">Chưa đủ căn cứ</span>
-                  {% endif %}
-                  <span class="badge">{{ trend_labels.get(entry.trend.value, entry.trend.value) }}</span>
-                  <span class="badge">{{ confidence_labels.get(entry.evidence_confidence.value, entry.evidence_confidence.value) }}</span>
+                  <h3 class="profile-entry__title">{{ criterion_type_labels.get(entry.criterion_type, entry.criterion_type) }}</h3>
+                  <span class="badge badge--{{ state_mod }}">{{ status_label }}</span>
                 </div>
-                <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);">
-                  Đã quan sát {{ entry.observed_count }} lần ({{ entry.met_count }} đạt · {{ entry.unmet_count }} chưa đạt · {{ entry.unresolved_count }} chưa đủ căn cứ).
-                  {% if entry.selection_priority > 0 %}
-                    Độ ưu tiên chọn đề tiếp theo: <strong>{{ "%.0f"|format(entry.selection_priority * 100) }}%</strong>.
+
+                <div class="profile-meta-bar" aria-label="Chi tiết độ tin cậy và xu hướng">
+                  {% if not (entry.state.value == "insufficient_evidence" and conf_text == status_label) %}
+                    <span class="profile-meta-item">
+                      <span class="profile-meta-item__key">Bằng chứng</span>
+                      <span class="profile-meta-item__val">{{ conf_text }}</span>
+                    </span>
                   {% endif %}
-                </p>
-                {% if entry.recent_scored %}
-                  <div class="score-chips" aria-label="Điểm các lượt gần nhất">
-                    <span class="text-secondary" style="font-size: var(--font-size-xs); margin-right: var(--space-1);">Gần nhất:</span>
-                    {% for s in entry.recent_scored %}
-                      <span class="score-chip">{{ s.score }}/{{ s.maximum_score }}</span>
-                    {% endfor %}
-                  </div>
-                {% endif %}
+                  {% if not (trend_key == "insufficient_history" and conf_key in ("limited", "unresolved")) %}
+                    <span class="profile-meta-item">
+                      <span class="profile-meta-item__key">Xu hướng</span>
+                      <span class="profile-meta-item__val">{{ trend_text }}</span>
+                    </span>
+                  {% endif %}
+                  {% if entry.selection_priority > 0 %}
+                    <span class="profile-meta-item">
+                      <span class="profile-meta-item__key">Ưu tiên chọn đề</span>
+                      <span class="profile-meta-item__val">{{ "%.0f"|format(entry.selection_priority * 100) }}%</span>
+                    </span>
+                  {% endif %}
+                </div>
+
+                <div class="profile-entry__footer">
+                  <p class="profile-entry__stats">
+                    Đã quan sát {{ entry.observed_count }} lần ({{ entry.met_count }} đạt · {{ entry.unmet_count }} chưa đạt · {{ entry.unresolved_count }} chưa đủ căn cứ)
+                  </p>
+                  {% if entry.recent_scored %}
+                    <div class="score-chips" aria-label="Điểm các lượt gần nhất">
+                      <span class="score-chips__label">Điểm gần nhất</span>
+                      {% for s in entry.recent_scored %}
+                        <span class="score-chip">{{ s.score }}/{{ s.maximum_score }}</span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
               </div>
-              <div class="action-row">
+
+              <div class="profile-entry__action">
                 <a class="btn btn--secondary"
                    href="/sessions/{{ entry.latest_session_id }}/review?answer_id={{ entry.latest_answer_ref.id }}&amp;revision={{ entry.latest_answer_ref.revision }}">
                   Xem bằng chứng gần nhất
@@ -86,9 +134,9 @@
       </section>
     {% endfor %}
   {% else %}
-    <div class="card card--subtle stack">
-      <p style="margin: 0;"><strong>{{ profile.message or "Chưa có dữ liệu hồ sơ năng lực." }}</strong></p>
-      <p class="text-secondary reading-measure" style="margin: 0;">
+    <div class="empty-state">
+      <h2>{{ profile.message or "Chưa có dữ liệu hồ sơ năng lực." }}</h2>
+      <p class="text-secondary reading-measure">
         Hoàn tất ít nhất một phiên phỏng vấn 4 câu để hệ thống tổng hợp điểm mạnh, điểm cần luyện và tự động cá nhân hóa câu hỏi ở phiên tiếp theo.
       </p>
       <div class="action-row">

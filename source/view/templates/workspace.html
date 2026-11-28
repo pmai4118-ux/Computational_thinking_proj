@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
 {% block title %}Làm câu hỏi — interviewUS{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css?v=20261127-p3">{% endblock %}
+{% block page_id %}workspace{% endblock %}
+{% block nav_class %}site-nav--in-session{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/workspace.css?v=20261128-sbx1">{% endblock %}
 
 {% block content %}
-<section class="card workspace-card" aria-labelledby="workspace-heading"
+<section class="workspace-card" aria-labelledby="workspace-heading"
          data-workspace
          data-session-id="{{ session.session_id }}"
          data-evaluation-timing="{{ session.evaluation_timing }}"
@@ -13,15 +15,15 @@
          data-current-index="{{ session.progress.current_index }}"
          data-answer-id="{{ session.current_answer.answer_id if session.current_answer else '' }}"
          data-answer-revision="{{ session.current_answer.revision if session.current_answer else '' }}">
-  <div class="workspace-topline">
+  <div class="workspace-topline" data-enter>
     <div class="workspace-topline__title">
-      <p class="eyebrow">Luyện phỏng vấn Backend · Intern / Fresher</p>
+      <p class="eyebrow sbx-eyebrow">LUYỆN PHỎNG VẤN BACKEND · INTERN / FRESHER</p>
       <h1 id="workspace-heading">{% if session.current_question %}Không gian trả lời{% else %}Phiên luyện tập{% endif %}</h1>
     </div>
     {% if session.current_question %}
       <div class="workspace-progress" aria-label="Tiến độ phiên">
         <div class="workspace-progress__row">
-          <span class="badge badge--unresolved" id="question-progress-label">
+          <span class="badge sbx-tag--yellow" id="question-progress-label">
             Câu {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
           </span>
           <progress aria-label="Tiến độ phiên" max="{{ session.progress.total_questions }}" value="{{ session.progress.current_index + 1 }}">
@@ -31,7 +33,7 @@
         <span class="workspace-progress__meta">{{ session.progress.answered_count }} câu đã gửi</span>
       </div>
     {% else %}
-      <span class="badge badge--unresolved" id="question-progress-label">
+      <span class="badge badge--neutral" id="question-progress-label">
         Đã lưu {{ session.progress.answered_count }} / {{ session.progress.total_questions }} câu
       </span>
     {% endif %}
@@ -39,150 +41,156 @@
 
   {% if session.current_question %}
     <div class="workspace-layout">
-    <article class="workspace-question reading-measure" aria-labelledby="question-heading">
-      <div class="workspace-tags">
-        <span class="badge">
-          {% if session.current_question.category == "programming_knowledge" %}Kiến thức lập trình
-          {% elif session.current_question.category == "technical_case" %}Tình huống kỹ thuật
-          {% elif session.current_question.category == "algorithm_explanation" %}Giải thích thuật toán
-          {% elif session.current_question.category == "ai_code_review" %}Đánh giá mã nguồn
-          {% else %}{{ session.current_question.category }}{% endif %}
-        </span>
-        {% if session.current_question.source.license_spdx %}
-          <span class="badge">Nguồn mở · {{ session.current_question.source.license_spdx }}</span>
+      <article class="workspace-question reading-measure" aria-labelledby="question-heading">
+        <div class="workspace-tags">
+          <span class="badge sbx-tag--violet">
+            {% if session.current_question.category == "programming_knowledge" %}Kiến thức lập trình
+            {% elif session.current_question.category == "technical_case" %}Tình huống kỹ thuật
+            {% elif session.current_question.category == "algorithm_explanation" %}Giải thích thuật toán
+            {% elif session.current_question.category == "ai_code_review" %}Đánh giá mã nguồn
+            {% else %}{{ session.current_question.category }}{% endif %}
+          </span>
+          {% if session.current_question.source.license_spdx %}
+            <span class="badge badge--neutral">Nguồn mở · {{ session.current_question.source.license_spdx }}</span>
+          {% endif %}
+        </div>
+
+        <h2 id="question-heading" class="workspace-question__heading">Đề bài</h2>
+        <p class="workspace-question__prompt" data-inline-code>{{ session.current_question.prompt }}</p>
+
+        {% if session.current_question.code %}
+          <pre class="code-block"><code>{{ session.current_question.code }}</code></pre>
         {% endif %}
-      </div>
-      <h2 id="question-heading">Đề bài</h2>
-      <p>{{ session.current_question.prompt }}</p>
 
-      {% if session.current_question.code %}
-        <pre class="code-block"><code>{{ session.current_question.code }}</code></pre>
-      {% endif %}
-
-      {% if session.current_question.constraints %}
-        <div>
-          <h3>Ràng buộc cần lưu ý</h3>
-          <ul class="constraint-list">
-            {% for item in session.current_question.constraints %}<li>{{ item }}</li>{% endfor %}
-          </ul>
-        </div>
-      {% endif %}
-
-      {% if session.current_question.source.url %}
-        <p class="form-hint">
-          Nguồn tham chiếu:
-          <a href="{{ session.current_question.source.url }}" rel="noopener noreferrer" target="_blank">
-            {{ session.current_question.source.source_id }}
-          </a>
-        </p>
-      {% endif %}
-    </article>
-
-    <form id="answer-form" class="workspace-answer-form" method="post" action="/sessions/{{ session.session_id }}/answers" novalidate>
-      <div class="answer-panel-heading">
-        <h2>Trình bày cách giải</h2>
-        <p class="form-hint">Nêu cách suy nghĩ, giả định và cách kiểm tra kết quả.</p>
-      </div>
-      <input type="hidden" name="question_id" value="{{ session.current_question.id }}">
-      <input type="hidden" name="question_version" value="{{ session.current_question.version }}">
-      <input type="hidden" name="client_submission_id" value="{{ submission_id }}">
-      {% if session.current_answer %}
-        <div class="alert alert--status" role="status">
-          <p class="alert__title">Câu trả lời đã được lưu trên máy chủ.</p>
-          <p class="alert__hint">Câu trả lời đã khóa. Tiếp tục sang câu kế tiếp.</p>
-        </div>
-      {% endif %}
-      <div class="form-field">
-        <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
-        <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự (bao gồm cả phần mã). Bản nháp được lưu để tiếp tục sau.</p>
-        <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
-                  aria-describedby="answer-guidance answer-counter draft-label"
-                  {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% elif answer_text %}{{ answer_text }}{% endif %}</textarea>
-      </div>
-
-      {% set coding_cfg = session.current_question.coding_config %}
-      {% set coding_mode = coding_cfg.mode if coding_cfg else ("optional" if session.current_question.code_language else "optional") %}
-      {% set coding_lang = (coding_cfg.language if coding_cfg and coding_cfg.language else (session.current_question.code_language or "python")) %}
-      {% if coding_mode != "hidden" %}
-        <div class="coding-box"
-             data-coding-panel
-             data-coding-mode="{{ coding_mode }}"
-             data-coding-lang="{{ coding_lang }}"
-             data-starter-code="{{ (coding_cfg.starter_code if coding_cfg and coding_cfg.starter_code else '') | e }}">
-          <input type="hidden" name="code_language" value="{{ coding_lang }}">
-          <div class="coding-box__header">
-            <div class="coding-box__title-group">
-              <label class="form-label" for="answer-code" style="margin: 0;">Khung viết mã / kiểm thử</label>
-              <span class="badge coding-box__lang">{{ coding_lang }}</span>
-              {% if coding_mode == "required" %}
-                <span class="badge badge--met">Đề có yêu cầu viết mã</span>
-              {% else %}
-                <span class="badge">Tùy chọn</span>
-              {% endif %}
-            </div>
-            <div class="coding-box__actions">
-              {% if coding_mode == "optional" %}
-                <button class="btn btn--ghost btn--sm" id="toggle-coding-box" type="button" aria-expanded="false">
-                  Mở khung viết mã
-                </button>
-              {% endif %}
-            </div>
+        {% if session.current_question.constraints %}
+          <div class="workspace-constraints">
+            <h3>Ràng buộc cần lưu ý</h3>
+            <ul class="constraint-list">
+              {% for item in session.current_question.constraints %}<li data-inline-code>{{ item }}</li>{% endfor %}
+            </ul>
           </div>
+        {% endif %}
 
-          <div class="coding-box__body" id="coding-box-body" {% if coding_mode == "optional" %}hidden{% endif %}>
-            <div class="coding-box__toolbar">
-              <span class="coding-box__hint">Hỗ trợ Tab (4 dấu cách), Shift+Tab bỏ thụt lề và Enter tự giữ lề.</span>
-              <div class="coding-box__toolbar-buttons">
-                {% if coding_cfg and coding_cfg.starter_code and not session.current_answer %}
-                  <button class="btn btn--secondary btn--sm" id="insert-starter-code" type="button">Chèn khung mẫu</button>
+        {% if session.current_question.source.url %}
+          <p class="form-hint workspace-source">
+            Nguồn tham chiếu:
+            <a href="{{ session.current_question.source.url }}" rel="noopener noreferrer" target="_blank">
+              {{ session.current_question.source.title or session.current_question.source.source_id }}
+            </a>
+          </p>
+        {% endif %}
+      </article>
+
+      <form id="answer-form" class="workspace-answer-form" method="post" action="/sessions/{{ session.session_id }}/answers" novalidate>
+        <div class="answer-panel-heading">
+          <h2>Trình bày cách giải</h2>
+          <p class="form-hint">Nêu cách suy nghĩ, giả định và cách kiểm tra kết quả.</p>
+        </div>
+        <input type="hidden" name="question_id" value="{{ session.current_question.id }}">
+        <input type="hidden" name="question_version" value="{{ session.current_question.version }}">
+        <input type="hidden" name="client_submission_id" value="{{ submission_id }}">
+
+        {% if session.current_answer %}
+          <div class="alert alert--status" role="status">
+            <p class="alert__title">Câu trả lời đã được lưu trên máy chủ.</p>
+            <p class="alert__hint">Câu trả lời đã khóa. Tiếp tục sang câu kế tiếp.</p>
+          </div>
+        {% endif %}
+
+        <div class="form-field">
+          <label class="form-label" for="answer-text">Câu trả lời của bạn</label>
+          <p class="form-hint" id="answer-guidance">Tối đa 20.000 ký tự (bao gồm cả phần mã). Bản nháp được lưu để tiếp tục sau.</p>
+          <textarea id="answer-text" name="text" class="form-textarea" maxlength="20000"
+                    aria-describedby="answer-guidance answer-counter draft-label"
+                    {% if session.current_answer %}readonly{% endif %}>{% if session.current_answer %}{{ session.current_answer.text }}{% elif answer_text %}{{ answer_text }}{% endif %}</textarea>
+        </div>
+
+        {% set coding_cfg = session.current_question.coding_config %}
+        {% set coding_mode = coding_cfg.mode if coding_cfg else ("optional" if session.current_question.code_language else "optional") %}
+        {% set coding_lang = (coding_cfg.language if coding_cfg and coding_cfg.language else (session.current_question.code_language or "python")) %}
+        {% if coding_mode != "hidden" %}
+          <div class="coding-box"
+               data-coding-panel
+               data-coding-mode="{{ coding_mode }}"
+               data-coding-lang="{{ coding_lang }}"
+               data-starter-code="{{ (coding_cfg.starter_code if coding_cfg and coding_cfg.starter_code else '') | e }}">
+            <input type="hidden" name="code_language" value="{{ coding_lang }}">
+            <div class="coding-box__header">
+              <div class="coding-box__title-group">
+                <label class="form-label coding-box__label" for="answer-code">Khung viết mã / kiểm thử</label>
+                <span class="badge sbx-tag sbx-tag--yellow coding-box__lang">{{ coding_lang }}</span>
+                {% if coding_mode == "required" %}
+                  <span class="badge badge--met">Đề có yêu cầu viết mã</span>
+                {% else %}
+                  <span class="badge badge--neutral">Tùy chọn</span>
                 {% endif %}
-                {% if not session.current_answer %}
-                  <button class="btn btn--ghost btn--sm" id="clear-code" type="button">Xóa mã</button>
+              </div>
+              <div class="coding-box__actions">
+                {% if coding_mode == "optional" %}
+                  <button class="btn btn--secondary coding-box__toggle" id="toggle-coding-box" type="button" aria-expanded="false">
+                    Mở khung viết mã
+                  </button>
                 {% endif %}
               </div>
             </div>
-            <textarea id="answer-code"
-                      name="code_text"
-                      class="coding-box__textarea"
-                      spellcheck="false"
-                      autocomplete="off"
-                      autocapitalize="off"
-                      placeholder="{{ coding_cfg.placeholder if coding_cfg and coding_cfg.placeholder else 'Viết đoạn mã, câu lệnh SQL hoặc ca kiểm thử assert tại đây...' }}"
-                      {% if session.current_answer %}readonly{% endif %}></textarea>
-            <div class="coding-box__footer">
-              <span class="form-hint" id="code-line-count">0 dòng mã</span>
-              <span class="form-hint">Khi gửi, mã được tự động ghép chuẩn khối <code>```{{ coding_lang }}</code> vào bài nộp.</span>
+
+            <div class="coding-box__body" id="coding-box-body" {% if coding_mode == "optional" %}hidden{% endif %}>
+              <div class="coding-box__toolbar">
+                <span class="coding-box__hint" id="coding-key-hint">Tab: thụt lề · Shift+Tab: bỏ lề · Esc: thoát ô mã</span>
+                <div class="coding-box__toolbar-buttons">
+                  {% if coding_cfg and coding_cfg.starter_code and not session.current_answer %}
+                    <button class="btn btn--secondary coding-box__btn coding-box__btn--starter" id="insert-starter-code" type="button">Chèn khung mẫu</button>
+                  {% endif %}
+                  {% if not session.current_answer %}
+                    <button class="btn btn--ghost coding-box__btn coding-box__btn--clear" id="clear-code" type="button">Xóa mã</button>
+                  {% endif %}
+                </div>
+              </div>
+              <textarea id="answer-code"
+                        name="code_text"
+                        class="coding-box__textarea"
+                        spellcheck="false"
+                        autocomplete="off"
+                        autocapitalize="off"
+                        aria-describedby="coding-key-hint code-line-count"
+                        placeholder="{{ coding_cfg.placeholder if coding_cfg and coding_cfg.placeholder else 'Viết đoạn mã, câu lệnh SQL hoặc ca kiểm thử assert tại đây...' }}"
+                        {% if session.current_answer %}readonly{% endif %}></textarea>
+              <div class="coding-box__footer">
+                <span class="coding-box__lines" id="code-line-count">0 dòng mã</span>
+                <span class="form-hint">Khi gửi, mã được tự động ghép chuẩn khối <code class="sbx-inline-code">```{{ coding_lang }}</code> vào bài nộp.</span>
+              </div>
             </div>
           </div>
-        </div>
-      {% endif %}
-
-      <div class="workspace-meta-row">
-        <p class="form-hint" id="draft-label" data-draft-label>
-          {% if session.current_answer %}Đã lưu câu trả lời{% elif session.current_draft %}Đã khôi phục bản nháp{% else %}Bản nháp chưa gửi{% endif %}
-        </p>
-        <p class="form-hint" id="answer-counter" aria-live="polite"></p>
-      </div>
-
-      <p class="alert alert--error" id="workspace-error" role="alert" tabindex="-1" hidden></p>
-      <p class="alert alert--status" id="workspace-status" role="status" aria-live="polite" hidden></p>
-
-      <div class="action-row" id="session-expired-recovery" hidden>
-        <a class="btn btn--primary" id="restart-session-link" href="/setup">Bắt đầu phiên luyện tập mới</a>
-        <a class="btn btn--secondary" href="/">Về trang danh sách phiên</a>
-      </div>
-
-      <div class="action-row workspace-primary-actions">
-        <button class="btn btn--primary" id="submit-answer" type="submit" {% if session.current_answer %}hidden{% endif %}>Gửi câu trả lời</button>
-        {% if session.current_answer %}
-          <button class="btn btn--primary" id="continue-saved" type="submit" name="action" value="continue_saved">Tiếp tục</button>
         {% endif %}
-      </div>
 
-      <div class="workspace-secondary-actions" aria-label="Tùy chọn phiên">
-        <button class="btn btn--ghost" id="save-exit" type="submit" name="action" value="save_exit">Lưu và thoát</button>
-      </div>
-    </form>
+        <div class="workspace-meta-row">
+          <p class="form-hint workspace-draft-pill" id="draft-label" data-draft-label>
+            {% if session.current_answer %}Đã lưu câu trả lời{% elif session.current_draft %}Đã khôi phục bản nháp{% else %}Bản nháp chưa gửi{% endif %}
+          </p>
+          <p class="form-hint workspace-counter" id="answer-counter" aria-live="polite"></p>
+        </div>
+
+        <p class="alert alert--error" id="workspace-error" role="alert" tabindex="-1" hidden></p>
+        <p class="alert alert--status" id="workspace-status" role="status" aria-live="polite" hidden></p>
+
+        <div class="action-row" id="session-expired-recovery" hidden>
+          <a class="btn btn--primary" id="restart-session-link" href="/setup">Bắt đầu phiên luyện tập mới</a>
+          <a class="btn btn--secondary" href="/">Về trang danh sách phiên</a>
+        </div>
+
+        <div class="workspace-action-dock">
+          <div class="action-row workspace-primary-actions">
+            <button class="btn btn--primary" id="submit-answer" type="submit" {% if session.current_answer %}hidden{% endif %}>Gửi câu trả lời</button>
+            {% if session.current_answer %}
+              <button class="btn btn--primary" id="continue-saved" type="submit" name="action" value="continue_saved">Tiếp tục</button>
+            {% endif %}
+          </div>
+
+          <div class="workspace-secondary-actions" aria-label="Tùy chọn phiên">
+            <button class="btn btn--ghost" id="save-exit" type="submit" name="action" value="save_exit">Lưu và thoát</button>
+          </div>
+        </div>
+      </form>
     </div>
   {% else %}
     <div class="empty-state">
@@ -194,4 +202,4 @@
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261127-p3" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/workspace.js?v=20261128-sbx1" defer></script>{% endblock %}

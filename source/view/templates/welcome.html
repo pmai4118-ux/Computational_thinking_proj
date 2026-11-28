@@ -1,114 +1,438 @@
 {% extends "base.html" %}
 
 {% block title %}Bắt đầu luyện phỏng vấn Backend — interviewUS{% endblock %}
+{% block page_id %}home{% endblock %}
+
+{% block extra_head %}
+<style>
+  .welcome-hero {
+    padding-block: clamp(0.5rem, 2vw, 1.75rem) clamp(1rem, 2.5vw, 2rem);
+  }
+
+  .welcome-hero__copy {
+    min-width: 0;
+  }
+
+  .welcome-hero__title {
+    max-width: 17ch;
+    margin: 0;
+    font-family: var(--font-display, "Space Grotesk", "Be Vietnam Pro", system-ui, sans-serif);
+    font-size: var(--font-size-hero, clamp(2.35rem, 5.4vw, 4.75rem));
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+    color: var(--sbx-ink, #191718);
+  }
+
+  .welcome-hero__lede {
+    max-width: 56ch;
+    margin: var(--space-4, 1rem) 0 0;
+    color: var(--sbx-muted, #625c5d);
+    font-size: var(--font-size-lg, 1.125rem);
+    line-height: 1.62;
+  }
+
+  .welcome-hero__lede strong {
+    color: var(--sbx-ink, #191718);
+  }
+
+  .welcome-actions {
+    margin-top: var(--space-5, 1.5rem);
+    padding-top: 0;
+  }
+
+  .welcome-meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2, 0.5rem) var(--space-5, 1.5rem);
+    margin: var(--space-5, 1.5rem) 0 0;
+    padding: var(--space-4, 1rem) 0 0;
+    list-style: none;
+    border-top: 1px solid var(--sbx-line, rgba(25, 23, 24, 0.22));
+    font-family: var(--font-mono, "JetBrains Mono", Consolas, monospace);
+    font-size: var(--font-size-xs, 0.8125rem);
+    color: var(--sbx-muted, #625c5d);
+  }
+
+  .welcome-meta-strip strong {
+    color: var(--sbx-ink, #191718);
+  }
+
+  /* Editorial Rubric Pass preview inside Foundation .sbx-art__card */
+  .welcome-art__top {
+    padding-right: 4.25rem;
+  }
+
+  .welcome-art__title {
+    margin: 0.9rem 0 0;
+    font-family: var(--font-display, "Space Grotesk", "Be Vietnam Pro", system-ui, sans-serif);
+    font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: var(--sbx-ink, #191718);
+  }
+
+  .welcome-art__rubric {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0.85rem 0 0;
+    border-top: 1.5px solid var(--sbx-line, rgba(25, 23, 24, 0.22));
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .welcome-art__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: var(--font-size-sm, 0.875rem);
+  }
+
+  .welcome-art__criterion {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    min-width: 0;
+    color: var(--sbx-ink, #191718);
+    font-weight: 600;
+  }
+
+  .welcome-art__num {
+    font-family: var(--font-mono, "JetBrains Mono", Consolas, monospace);
+    font-size: var(--font-size-mono, 0.75rem);
+    color: var(--sbx-muted, #625c5d);
+    flex-shrink: 0;
+  }
+
+  /* Saved sessions editorial rows */
+  .welcome-session-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3, 0.75rem) var(--space-4, 1rem);
+    padding: var(--space-4, 1rem) var(--space-5, 1.5rem);
+    border: var(--sbx-border, 2px solid #191718);
+    border-radius: var(--radius-sm, 2px);
+    background: var(--sbx-card, #fffdf6);
+    box-shadow: var(--sbx-shadow-btn, 4px 4px 0 #191718);
+  }
+
+  .welcome-session-row__idx {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.35rem;
+    height: 2.35rem;
+    border: var(--sbx-border, 2px solid #191718);
+    border-radius: var(--radius-sm, 2px);
+    background: var(--sbx-paper-deep, #efe9dc);
+    font-family: var(--font-mono, "JetBrains Mono", Consolas, monospace);
+    font-size: var(--font-size-mono, 0.75rem);
+    font-weight: 700;
+    color: var(--sbx-ink, #191718);
+    align-self: start;
+  }
+
+  .welcome-session-row__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1, 0.25rem);
+    min-width: 0;
+  }
+
+  .welcome-session-row__headline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+  }
+
+  .welcome-session-row__headline strong {
+    font-family: var(--font-display, "Space Grotesk", "Be Vietnam Pro", system-ui, sans-serif);
+    font-size: var(--font-size-lg, 1.125rem);
+    color: var(--sbx-ink, #191718);
+  }
+
+  .welcome-session-row__meta {
+    color: var(--sbx-muted, #625c5d);
+    font-size: var(--font-size-sm, 0.875rem);
+  }
+
+  .welcome-session-row__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+  }
+
+  .welcome-empty {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4, 1rem);
+  }
+
+  .welcome-empty__copy {
+    margin: 0;
+    max-width: 58ch;
+    color: var(--sbx-ink, #191718);
+    font-weight: 500;
+  }
+
+  .welcome-journey-card .sbx-card__copy {
+    color: var(--sbx-ink, #191718);
+  }
+
+  @media (max-width: 48rem) {
+    .welcome-art__top {
+      padding-right: 3.25rem;
+    }
+
+    .welcome-session-row {
+      grid-template-columns: 1fr;
+      padding: var(--space-4, 1rem);
+    }
+
+    .welcome-session-row__idx {
+      display: none;
+    }
+
+    .welcome-session-row__actions .btn,
+    .welcome-empty .btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="card">
-  <div class="stack reading-measure">
-    <div>
-      <span class="badge">Phiên bản MVP · Tiếng Việt</span>
-    </div>
-    <h1>Luyện phỏng vấn kỹ thuật Backend với căn cứ từ bài làm</h1>
-    <p>
-      Thực hành trả lời tự luận cho vị trí <strong>Backend Intern / Fresher</strong>.
-      Mỗi câu trả lời được đối chiếu trực tiếp với tiêu chí quan sát được và trích dẫn nguyên văn,
-      giúp bạn phân biệt rõ phần đã đạt, phần thiếu yêu cầu và phần chưa đủ bằng chứng.
+<section class="welcome-hero" data-enter aria-labelledby="welcome-heading">
+  <div class="welcome-hero__copy">
+    <p class="eyebrow sbx-eyebrow">BACKEND INTERN / FRESHER · RUBRIC CÓ TRÍCH DẪN</p>
+    <h1 id="welcome-heading" class="welcome-hero__title">
+      Luyện phỏng vấn Backend.
+      <span class="sbx-title-accent">Chấm trên nguyên văn.</span>
+    </h1>
+    <p class="welcome-hero__lede">
+      Thực hành 4 câu tự luận kèm khung viết mã cho vị trí <strong>Backend Intern / Fresher</strong>.
+      Mỗi tiêu chí được đối chiếu trực tiếp với trích dẫn nguyên văn từ bài làm — tách bạch rõ
+      phần đã đạt, phần thiếu yêu cầu và phần chưa đủ bằng chứng.
     </p>
 
-    <ul class="meta-list" aria-label="Thông tin cấu trúc phiên">
-      <li><strong>Cấu trúc cố định:</strong> 4 câu hỏi tiếng Việt (Kiến thức lập trình, Tình huống kỹ thuật, Giải thích thuật toán, Đánh giá mã nguồn).</li>
-      <li><strong>Thời lượng ước tính:</strong> khoảng 25–35 phút (ước tính tham khảo, không giới hạn đếm ngược cứng).</li>
-      <li><strong>Quyền riêng tư:</strong> Không yêu cầu tạo tài khoản, không thu thập CV hay thông tin cá nhân.</li>
-    </ul>
-
-    <div class="action-row">
+    <div class="welcome-actions">
       <a class="btn btn--primary" href="/setup">Bắt đầu luyện tập</a>
-      <a class="btn btn--secondary" href="/profile">Xem hồ sơ năng lực</a>
-      <a class="btn btn--secondary" href="/jd">Phân tích JD</a>
-      <a class="btn btn--ghost" href="/replays">Decision Replay (Case)</a>
+      {% if sessions %}
+        <a class="btn btn--secondary" href="#history-section">Phiên đã lưu ({{ sessions | length }})</a>
+      {% else %}
+        <a class="btn btn--secondary" href="#journey-section">Xem quy trình 4 câu</a>
+      {% endif %}
     </div>
+
+    <ul class="welcome-meta-strip" aria-label="Thông tin nhanh về phiên luyện tập">
+      <li><strong>04</strong> câu hỏi tiếng Việt</li>
+      <li>Ước tính <strong>khoảng 25–35 phút</strong></li>
+      <li>Không cần tài khoản hay CV</li>
+    </ul>
+  </div>
+
+  <aside class="sbx-art" aria-label="Minh họa thẻ kết quả Rubric theo trích dẫn nguyên văn">
+    <div class="sbx-art__orbit" aria-hidden="true"></div>
+    <div class="sbx-art__card">
+      <div class="welcome-art__top">
+        <span class="badge sbx-tag sbx-tag--yellow">MOCK PASS · 4 CÂU BACKEND</span>
+      </div>
+      <p class="welcome-art__title">
+        Trích dẫn thật.<br>Điểm rõ từng tiêu chí.
+      </p>
+      <ul class="welcome-art__rubric" aria-label="Ví dụ phân loại trạng thái tiêu chí">
+        <li class="welcome-art__row">
+          <span class="welcome-art__criterion">
+            <span class="welcome-art__num">01</span>
+            <span>Hợp đồng hàm &amp; hành vi mã</span>
+          </span>
+          <span class="badge badge--met">Đạt · 2/2</span>
+        </li>
+        <li class="welcome-art__row">
+          <span class="welcome-art__criterion">
+            <span class="welcome-art__num">02</span>
+            <span>Khóa giao dịch dữ liệu</span>
+          </span>
+          <span class="badge badge--unmet">Thiếu · 0/2</span>
+        </li>
+        <li class="welcome-art__row">
+          <span class="welcome-art__criterion">
+            <span class="welcome-art__num">03</span>
+            <span>Ca kiểm thử biên</span>
+          </span>
+          <span class="badge badge--unresolved">Chưa đủ căn cứ</span>
+        </li>
+      </ul>
+      <div class="sbx-art__note">
+        <span>INTERVIEWUS / BACKEND</span>
+        <span>01 — 04</span>
+      </div>
+    </div>
+  </aside>
+</section>
+
+<section id="journey-section" class="sbx-section" aria-labelledby="journey-heading">
+  <div class="sbx-section__heading">
+    <div>
+      <p class="eyebrow sbx-eyebrow">01 / QUY TRÌNH LUYỆN TẬP</p>
+      <h2 id="journey-heading" class="sbx-section__title">Ba khối rõ ràng. Một chuẩn chấm minh bạch.</h2>
+    </div>
+    <p class="sbx-section__copy">
+      Hoàn thành trọn 4 câu không bị ngắt nhịp, rồi đối chiếu từng trích dẫn đạt — thiếu và rèn thêm kỹ năng thực chiến.
+    </p>
+  </div>
+
+  <div class="sbx-grid" data-columns="3">
+    <article class="card sbx-card welcome-journey-card">
+      <div class="sbx-card__head">
+        <span class="sbx-card__index">01</span>
+        <span class="sbx-card__label">PHỎNG VẤN · 4 CÂU</span>
+      </div>
+      <h3 class="sbx-card__title">Phỏng vấn 4 câu + Coding Box</h3>
+      <p class="sbx-card__copy">
+        Trả lời lần lượt 4 mảng cốt lõi: Kiến thức lập trình, Tình huống kỹ thuật, Giải thích thuật toán và Đánh giá mã nguồn.
+        Khung viết mã tích hợp thụt lề chuẩn và tự động lưu bản nháp để tiếp tục sau.
+      </p>
+      <div class="sbx-card__footer">
+        <span class="badge badge--neutral">Ước tính khoảng 25–35 phút</span>
+      </div>
+    </article>
+
+    <article class="card sbx-card sbx-card--lilac welcome-journey-card">
+      <div class="sbx-card__head">
+        <span class="sbx-card__index">02</span>
+        <span class="sbx-card__label">RUBRIC · NGUYÊN VĂN</span>
+      </div>
+      <h3 class="sbx-card__title">Chấm Rubric minh bạch trên trích dẫn nguyên văn</h3>
+      <p class="sbx-card__copy">
+        Điểm số được tính bằng quy tắc code rõ ràng trên đoạn trích nguyên văn từ chính câu trả lời của bạn.
+        Trạng thái chưa đủ căn cứ luôn tách biệt khỏi điểm 0 để không chấm oan.
+      </p>
+      <div class="sbx-card__footer">
+        <span class="badge sbx-tag--violet">Tách bạch 0 điểm &amp; chưa đủ căn cứ</span>
+      </div>
+    </article>
+
+    <article class="card sbx-card sbx-card--yellow welcome-journey-card">
+      <div class="sbx-card__head">
+        <span class="sbx-card__index">03</span>
+        <span class="sbx-card__label">MỞ RỘNG · THỰC CHIẾN</span>
+      </div>
+      <h3 class="sbx-card__title">Decision Replay &amp; Phân tích JD</h3>
+      <p class="sbx-card__copy">
+        Diễn tập rẽ nhánh quyết định trong tình huống sự cố với Decision Replay, ghép lỗ hổng năng lực từ mô tả công việc (JD)
+        và nhận bài tập bổ trợ có thứ tự tiên quyết rõ ràng.
+      </p>
+      <div class="sbx-card__footer">
+        <span class="badge badge--neutral">Lưu ẩn danh · Không thu thập CV</span>
+      </div>
+    </article>
   </div>
 </section>
 
-<section class="card" aria-labelledby="history-heading">
-  <div class="stack">
+<section id="history-section" class="sbx-section" aria-labelledby="history-heading">
+  <div class="sbx-section__heading">
     <div>
-      <h2 id="history-heading">Phiên luyện tập trên trình duyệt này</h2>
-      <p class="text-secondary reading-measure">
-        Danh sách phiên được gắn ẩn danh với trình duyệt hiện tại để bạn tiếp tục khi đang làm dở.
-      </p>
+      <p class="eyebrow sbx-eyebrow">02 / PHIÊN ĐÃ LƯU</p>
+      <h2 id="history-heading" class="sbx-section__title">Phiên luyện tập trên trình duyệt này</h2>
     </div>
+    <p class="sbx-section__copy">
+      Danh sách phiên được gắn ẩn danh với trình duyệt hiện tại để bạn tiếp tục khi đang làm dở hoặc mở lại bảng tổng kết.
+    </p>
+  </div>
 
-    {% if sessions %}
-      <ul class="session-list">
-        {% for item in sessions %}
-          <li class="session-item">
-            <div class="stack" style="gap: var(--space-1);">
-              <div>
-                {% set display = (session_labels.get(item.session_id) if session_labels is defined else None) %}
-                <strong>
-                  {% if display %}
-                    {{ display.title }}
-                  {% elif item.progress.total_questions == 1 %}
-                    Lượt luyện bổ trợ (1 câu)
-                  {% else %}
-                    Phiên luyện phỏng vấn ({{ item.progress.total_questions }} câu)
-                  {% endif %}
-                </strong>
-                {% if item.state.value == "in_progress" %}
+  {% if sessions %}
+    <ul class="session-list">
+      {% for item in sessions %}
+        <li class="session-item welcome-session-row">
+          <span class="welcome-session-row__idx" aria-hidden="true">{{ "%02d" | format(loop.index) }}</span>
+
+          <div class="welcome-session-row__body">
+            <div class="welcome-session-row__headline">
+              {% set display = (session_labels.get(item.session_id) if session_labels is defined else None) %}
+              <strong>
+                {% if display %}
+                  {{ display.title }}
+                {% elif item.progress.total_questions == 1 %}
+                  Lượt luyện bổ trợ (1 câu)
+                {% else %}
+                  Phiên luyện phỏng vấn ({{ item.progress.total_questions }} câu)
+                {% endif %}
+              </strong>
+              {% if item.state.value == "in_progress" %}
+                <span class="badge sbx-tag--yellow">
+                  Đang thực hiện · Câu {{ item.progress.current_index + 1 }}/{{ item.progress.total_questions }}
+                </span>
+              {% elif item.state.value == "completed" %}
+                {% if item.progress.evaluated_count < item.progress.total_questions %}
                   <span class="badge badge--unresolved">
-                    Đang thực hiện · Câu {{ item.progress.current_index + 1 }}/{{ item.progress.total_questions }}
-                  </span>
-                {% elif item.state.value == "completed" %}
-                  <span class="badge badge--met">
-                    Đã hoàn thành · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu
-                  </span>
-                {% elif item.state.value == "ended_early" %}
-                  <span class="badge">
-                    {% if item.progress.answered_count < item.progress.total_questions %}
-                      Chưa hoàn tất · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu đã gửi
-                    {% else %}
-                      Đã hoàn thành · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu đã gửi
-                    {% endif %}
-                  </span>
-                {% elif item.state.value == "expired" %}
-                  <span class="badge badge--error">
-                    Đã hết hạn · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu có kết quả
+                    Đã nộp đủ · Đang chấm {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu
                   </span>
                 {% else %}
-                  <span class="badge">
-                    Đã lưu · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu
+                  <span class="badge badge--met">
+                    Đã chấm xong · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu
                   </span>
                 {% endif %}
-              </div>
-              <span class="text-secondary" style="font-size: var(--font-size-sm);">
-                Vai trò: Backend Developer (Intern / Fresher) · Tiếng Việt · {{ item.progress.total_questions }} câu
-              </span>
+              {% elif item.state.value == "ended_early" %}
+                <span class="badge badge--neutral">
+                  {% if item.progress.answered_count < item.progress.total_questions %}
+                    Chưa hoàn tất · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu đã gửi
+                  {% else %}
+                    Đã nộp đủ · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu đã gửi
+                  {% endif %}
+                </span>
+              {% elif item.state.value == "expired" %}
+                <span class="badge badge--error">
+                  Đã hết hạn · {{ item.progress.evaluated_count }}/{{ item.progress.total_questions }} câu có kết quả
+                </span>
+              {% else %}
+                <span class="badge badge--neutral">
+                  Đã lưu · {{ item.progress.answered_count }}/{{ item.progress.total_questions }} câu
+                </span>
+              {% endif %}
+            </div>
+
+            <span class="welcome-session-row__meta">
+              Vai trò: Backend Developer (Intern / Fresher) · Tiếng Việt · {{ item.progress.total_questions }} câu
+            </span>
+
+            <details class="tech-meta">
+              <summary>Thông tin kỹ thuật</summary>
               <span class="form-hint" style="font-size: var(--font-size-xs);">
                 Mã tham chiếu: <code>{{ item.session_id }}</code>
               </span>
-            </div>
+            </details>
+          </div>
 
-            <div class="action-row">
-              {% if item.state.value == "in_progress" or (item.state.value == "ended_early" and item.progress.answered_count < item.progress.total_questions) %}
-                <a class="btn btn--primary" href="/sessions/{{ item.session_id }}">Tiếp tục phiên</a>
-              {% else %}
-                <a class="btn btn--secondary" href="/sessions/{{ item.session_id }}/summary">Xem tổng kết</a>
-              {% endif %}
-            </div>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <div class="card card--subtle">
-        <p style="margin-top: 0;">
-          Chưa có phiên luyện tập nào trên trình duyệt này. Bạn có thể thiết lập phiên 4 câu ngay bây giờ.
-        </p>
-        <div class="action-row">
-          <a class="btn btn--secondary" href="/setup">Thiết lập phiên đầu tiên</a>
-        </div>
+          <div class="action-row welcome-session-row__actions">
+            {% if item.state.value == "in_progress" or (item.state.value == "ended_early" and item.progress.answered_count < item.progress.total_questions) %}
+              <a class="btn btn--primary" href="/sessions/{{ item.session_id }}">Tiếp tục phiên</a>
+            {% else %}
+              <a class="btn btn--secondary" href="/sessions/{{ item.session_id }}/summary">Xem tổng kết</a>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="card sbx-card sbx-card--lilac welcome-empty">
+      <p class="welcome-empty__copy">
+        Chưa có phiên luyện tập nào trên trình duyệt này. Bạn có thể thiết lập phiên 4 câu ngay bây giờ.
+      </p>
+      <div class="action-row">
+        <a class="btn btn--primary" href="/setup">Thiết lập phiên đầu tiên</a>
       </div>
-    {% endif %}
-  </div>
+    </div>
+  {% endif %}
 </section>
 {% endblock %}

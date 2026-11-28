@@ -1,74 +1,122 @@
-/* Shared Design Tokens — interviewUS (Luminous Violet Glass, Stitch aligned)
- * Vietnamese-ready typography, high-contrast surfaces for reading prompts/answers,
- * evidence quote highlighting, and accessible keyboard focus states.
+/* Shared Design Tokens — interviewUS (Studio Blocks Editorial System)
+ * User-mandated warm paper (#f7f3e9) + bold ink (#191718) + violet/coral/yellow/lilac
+ * palette with empirically verified Vietnamese-complete typography and WCAG 2.2 AA contrast.
  */
 
 :root {
-  /* Core Palette (aligned with Stitch: CT - Nhóm 5) */
-  --color-canvas: #FAF9FE;
-  --color-surface: #FFFFFF;
-  --color-surface-elevated: #FBF9FF;
-  --color-subtle: #F0EAFE;
-  --color-border: #E4DDEF;
-  --color-border-strong: #C7B8E2;
+  /* 1. Studio Blocks Core Primitives */
+  --sbx-paper: #f7f3e9;
+  --sbx-card: #fffdf6;
+  --sbx-paper-deep: #efe9dc;
+  --sbx-ink: #191718;
+  --sbx-muted: #625c5d;
+  --sbx-muted-strong: #595354;
+  --sbx-line: rgba(25, 23, 24, 0.22);
+  --sbx-grid-line: rgba(25, 23, 24, 0.08);
+  --sbx-violet: #6346f5;
+  --sbx-violet-hover: #5336e3;
+  --sbx-violet-active: #4529cc;
+  --sbx-coral: #f36a3d;
+  --sbx-coral-ink: #b83c14;
+  --sbx-yellow: #f5d54b;
+  --sbx-lilac: #eee9ff;
 
-  /* Brand & Interactive */
-  --color-primary: #7C3AED;
-  --color-primary-hover: #6D28D9;
-  --color-primary-active: #5B21B6;
-  --color-on-primary: #FFFFFF;
-  --color-accent-violet-subtle: #F0EAFE;
-  --color-hero-start: #F1EAFF;
-  --color-hero-end: #FBF9FF;
+  /* 2. Borders, Radii & Hard Offset Shadows (Zero Glassmorphism) */
+  --sbx-border-width: 2px;
+  --sbx-border: 2px solid var(--sbx-ink);
+  --sbx-border-thin: 1.5px solid var(--sbx-ink);
+  --sbx-shadow-xs: 2px 2px 0 var(--sbx-ink);
+  --sbx-shadow-sm: 3px 3px 0 var(--sbx-ink);
+  --sbx-shadow-btn: 4px 4px 0 var(--sbx-ink);
+  --sbx-shadow-card: 6px 6px 0 var(--sbx-ink);
+  --sbx-shadow-card-hover: 8px 8px 0 var(--sbx-ink);
+  --sbx-shadow-card-violet: 6px 6px 0 var(--sbx-yellow);
+  --sbx-shadow-topbar: 0 4px 0 var(--sbx-ink);
 
-  /* Text Hierarchy (WCAG AA contrast against #FAF9FE and #FFFFFF) */
-  --color-text: #211A32;
-  --color-text-secondary: #584F6B;
-  --color-text-muted: #6E6582;
+  /* 3. Semantic App Token Bridge (backward-compatible across all feature stylesheets) */
+  --color-canvas: var(--sbx-paper);
+  --color-surface: var(--sbx-card);
+  --color-surface-elevated: var(--sbx-paper-deep);
+  --color-subtle: var(--sbx-lilac);
+  --color-border: var(--sbx-line);
+  --color-border-strong: var(--sbx-ink);
 
-  /* Criterion & Evaluation Status Semantics (always paired with text/icon labels) */
-  --color-status-met-bg: #F0EAFE;
-  --color-status-met-border: #7C3AED;
-  --color-status-met-text: #5227A8;
+  --color-primary: var(--sbx-violet);
+  --color-primary-hover: var(--sbx-violet-hover);
+  --color-primary-active: var(--sbx-violet-active);
+  --color-on-primary: #ffffff;
+  --color-accent-violet-subtle: var(--sbx-lilac);
+  --color-accent-coral: var(--sbx-coral);
+  --color-accent-yellow: var(--sbx-yellow);
+  --color-hero-start: var(--sbx-lilac);
+  --color-hero-end: var(--sbx-card);
 
-  --color-status-unmet-bg: #FEF2F2;
-  --color-status-unmet-border: #DC2626;
-  --color-status-unmet-text: #991B1B;
+  /* Text Hierarchy (WCAG 2.2 AA verified against #f7f3e9 and #fffdf6) */
+  --color-text: var(--sbx-ink);
+  --color-text-secondary: var(--sbx-muted);
+  --color-text-muted: var(--sbx-muted-strong);
 
-  --color-status-unresolved-bg: #FFFBEB;
-  --color-status-unresolved-border: #D97706;
-  --color-status-unresolved-text: #92400E;
+  /* 4. Semantic Status Tokens (ALWAYS paired with text/icon labels, all >= 4.5:1 AA) */
+  --color-status-met-bg: #e4f7ee;
+  --color-status-met-border: #158059;
+  --color-status-met-text: #0d5e42;
 
-  --color-status-error-bg: #FFF1F2;
-  --color-status-error-border: #E11D48;
-  --color-status-error-text: #881337;
+  --color-status-unmet-bg: #fdebe8;
+  --color-status-unmet-border: #d13426;
+  --color-status-unmet-text: #9e1c1c;
 
-  /* Exact Evidence Quote Highlight */
-  --color-evidence-highlight-bg: #F3E8FF;
-  --color-evidence-highlight-active-bg: #DDD6FE;
-  --color-evidence-highlight-border: #7C3AED;
+  --color-status-unresolved-bg: #fef6d8;
+  --color-status-unresolved-border: #b46900;
+  --color-status-unresolved-text: #7a4500;
 
-  /* Glass chrome is reserved for navigation and results headers. */
-  --surface-glass-bg: rgba(255, 255, 255, 0.82);
-  --surface-glass-border: rgba(124, 58, 237, 0.2);
-  --surface-glass-blur: 12px;
+  --color-status-error-bg: #feeaef;
+  --color-status-error-border: #d92644;
+  --color-status-error-text: #981b2f;
 
-  /* Typography — Full Vietnamese diacritic support */
-  --font-sans: "Be Vietnam Pro", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Decision Replay Safety / Operational Semantic Aliases */
+  --color-safety-ok: var(--color-status-met-border);
+  --color-safety-broken: var(--color-status-unmet-border);
+  --color-operational-warn: var(--color-status-unresolved-border);
+
+  /* Evidence Quote & JD Match Highlighting (Studio Blocks Yellow Highlighter) */
+  --color-evidence-highlight-bg: #fceea7;
+  --color-evidence-highlight-active-bg: var(--sbx-yellow);
+  --color-evidence-highlight-border: var(--sbx-ink);
+
+  /* Code / Coding Box Surface (warm-black ink + cream foreground, 16.5:1 AAA) */
+  --color-code-bg: #1a1626;
+  --color-code-toolbar-bg: #241f33;
+  --color-code-fg: #f7f3e9;
+  --color-code-muted: #c7bfb8;
+
+  /* Solid Header / Surface Aliases (replaces muddy glass chrome) */
+  --surface-header-bg: var(--sbx-paper);
+  --surface-header-border: var(--sbx-ink);
+  --surface-glass-bg: var(--sbx-card);
+  --surface-glass-border: var(--sbx-ink);
+  --surface-glass-blur: 0px;
+
+  /* 5. Typography — Full Vietnamese Diacritic Support */
+  --font-display: "Space Grotesk", "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Be Vietnam Pro", "Work Sans", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, "Courier New", monospace;
 
-  --font-size-xs: 0.8125rem;   /* 13px */
-  --font-size-sm: 0.875rem;    /* 14px */
-  --font-size-base: 1rem;      /* 16px — default for question prompt & answer textarea */
-  --font-size-lg: 1.125rem;    /* 18px */
-  --font-size-xl: 1.375rem;    /* 22px */
-  --font-size-2xl: 1.75rem;    /* 28px */
+  --font-size-mono: 0.75rem;                   /* 12px — crisp uppercase Vietnamese mono labels */
+  --font-size-xs: 0.8125rem;                   /* 13px */
+  --font-size-sm: 0.875rem;                    /* 14px */
+  --font-size-base: 1rem;                      /* 16px — prompts, body copy, textareas */
+  --font-size-lg: 1.125rem;                    /* 18px */
+  --font-size-xl: clamp(1.25rem, 1.8vw, 1.625rem);
+  --font-size-2xl: clamp(1.5rem, 2.4vw, 2.125rem);
+  --font-size-section: clamp(1.75rem, 3.6vw, 3rem);
+  --font-size-hero: clamp(2.35rem, 5.4vw, 4.75rem);
 
-  --line-height-tight: 1.35;
-  --line-height-relaxed: 1.65; /* comfortable line height for Vietnamese stacked diacritics */
-  --measure-reading: 72ch;
+  --line-height-display: 1.1;                  /* prevents stacked Vietnamese diacritic clash */
+  --line-height-tight: 1.25;
+  --line-height-relaxed: 1.62;                 /* >= 1.55 for stacked Vietnamese diacritics */
+  --measure-reading: 68ch;
 
-  /* Spacing & Layout Scale */
+  /* 6. Spacing, Equal-Edge Layout & Architectural Radii */
   --space-1: 0.25rem;  /* 4px */
   --space-2: 0.5rem;   /* 8px */
   --space-3: 0.75rem;  /* 12px */
@@ -76,23 +124,45 @@
   --space-5: 1.5rem;   /* 24px */
   --space-6: 2rem;     /* 32px */
   --space-8: 3rem;     /* 48px */
+  --space-10: 4.5rem;  /* 72px */
 
-  --layout-max-width: 76rem;   /* 1216px */
-  --layout-narrow-breakpoint: 48rem; /* 768px */
+  --layout-max-width: 80rem;                   /* 1280px — Studio Blocks shell width */
+  --layout-gutter: 1.5rem;                     /* 24px each edge */
+  --layout-narrow-breakpoint: 48rem;           /* 768px */
+  --header-height: 4.75rem;                    /* 76px desktop */
 
-  /* Radii & Shadows */
-  --radius-sm: 0.375rem; /* 6px */
-  --radius-md: 0.625rem; /* 10px */
-  --radius-lg: 0.875rem; /* 14px */
-  --shadow-card: 0 2px 8px rgba(33, 26, 50, 0.06);
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --shadow-card: var(--sbx-shadow-card);
 
-  /* Keyboard Focus Ring */
-  --focus-ring-color: #6D28D9;
-  --focus-ring-offset: 2px;
-  --focus-ring: 2px solid var(--focus-ring-color);
+  /* 7. WCAG 2.2 Keyboard Focus Ring & Tactile Motion */
+  --focus-ring-color: var(--sbx-coral);
+  --focus-ring-offset: 3px;
+  --focus-ring: 3px solid var(--focus-ring-color);
 
-  /* Motion */
-  --transition-fast: 140ms ease-out;
+  --ease-tactile: cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: 150ms var(--ease-tactile);
+}
+
+@media (max-width: 48rem) {
+  :root {
+    --header-height: 4rem; /* 64px compact mobile topbar */
+  }
+}
+
+/* WCAG 2.2 AA 2.4.11 Focus Not Obscured behind sticky topbar */
+html {
+  scroll-padding-top: calc(var(--header-height) + 1rem);
+}
+
+[id] {
+  scroll-margin-top: calc(var(--header-height) + 1rem);
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -108,9 +178,4 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: var(--focus-ring-offset);
 }

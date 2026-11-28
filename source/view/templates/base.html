@@ -4,11 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Luyện phỏng vấn kỹ thuật Backend — interviewUS{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/tokens.css?v=20261127-p6">
-  <link rel="stylesheet" href="/static/css/components.css?v=20261127-p6">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='26' height='26' fill='%23191718'/%3E%3Crect x='1.5' y='1.5' width='26' height='26' fill='%23f36a3d' stroke='%23191718' stroke-width='2.5'/%3E%3Ctext x='14.5' y='19' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='13' fill='%23191718'%3EiU%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="/static/css/tokens.css?v=20261128-sbx1">
+  <link rel="stylesheet" href="/static/css/components.css?v=20261128-sbx1">
   {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="sbx sbx--grid {% block body_class %}{% endblock %}" data-page="{% block page_id %}{% endblock %}">
   <a class="skip-link" href="#main-content">Chuyển tới nội dung chính</a>
 
   <header class="site-header">
@@ -18,15 +22,29 @@
           <span class="site-brand__mark" aria-hidden="true">iU</span>
           <span class="site-brand__text">interviewUS</span>
         </a>
-        <span class="site-brand__subtitle">Luyện phỏng vấn Backend Intern / Fresher</span>
+        <span class="site-brand__subtitle">Backend Intern / Fresher</span>
       </div>
 
-      <nav class="site-nav" aria-label="Điều hướng chính">
-        <a class="site-nav__link" href="/">Bắt đầu</a>
-        <a class="site-nav__link" href="/setup">Thiết lập phiên</a>
-        <a class="site-nav__link" href="/profile">Hồ sơ năng lực</a>
-        <a class="site-nav__link" href="/jd">Phân tích JD</a>
-        <a class="site-nav__link" href="/replays">Decision Replay</a>
+      <button id="site-nav-toggle"
+              class="sbx-nav-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="site-nav-menu"
+              aria-label="Mở menu điều hướng">
+        <svg class="sbx-nav-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+        <span>Menu</span>
+      </button>
+
+      <nav id="site-nav-menu" class="site-nav {% block nav_class %}{% endblock %}" aria-label="Điều hướng chính">
+        <a class="site-nav__link" data-nav="home" href="/">Bắt đầu</a>
+        <a class="site-nav__link" data-nav="setup" href="/setup">Thiết lập phiên</a>
+        <a class="site-nav__link" data-nav="profile" href="/profile">Hồ sơ năng lực</a>
+        <a class="site-nav__link" data-nav="jd" href="/jd">Phân tích JD</a>
+        <a class="site-nav__link" data-nav="replays" href="/replays">Decision Replay</a>
         {% if demo_mode_label %}
           <span class="badge badge--demo" role="status" aria-label="Chế độ dữ liệu: {{ demo_mode_label }}">
             {{ demo_mode_label }}
@@ -57,14 +75,19 @@
 
   <footer class="site-footer">
     <div class="site-footer__inner">
-      <p>
-        Ngân hàng câu hỏi và bài tập được tuyển chọn từ nguồn mở có giấy phép đã xác minh.
-        Điểm số được tính bằng quy tắc Rubric minh bạch trên đoạn trích nguyên văn.
-      </p>
+      <div class="site-footer__lead">
+        <span class="sbx-footer__mark" aria-hidden="true"></span>
+        <p>
+          Ngân hàng câu hỏi và bài tập được tuyển chọn từ nguồn mở có giấy phép đã xác minh.
+          Điểm số được tính bằng quy tắc Rubric minh bạch trên đoạn trích nguyên văn.
+        </p>
+      </div>
+      <span class="site-footer__meta">interviewUS / RUBRIC STUDIO</span>
     </div>
   </footer>
 
-  <script src="/static/js/api_client.js?v=20261127-p6" defer></script>
+  <script src="/static/js/api_client.js?v=20261128-sbx1" defer></script>
+  <script src="/static/js/shell.js?v=20261128-sbx1" defer></script>
   {% block extra_scripts %}{% endblock %}
 </body>
 </html>

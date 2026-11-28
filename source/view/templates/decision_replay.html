@@ -54,14 +54,14 @@
       </summary>
 
       <div id="replay-full-prompt-panel" class="replay-full-prompt">
-        <p class="replay-prompt-text reading-measure">
+        <p class="replay-prompt-text reading-measure" data-inline-code>
           {{ active_run.question_prompt or active_run.summary }}
         </p>
 
         {% if active_run.question_constraints %}
           <div class="replay-full-prompt__block">
             <p class="replay-full-prompt__label">Ràng buộc quan trọng</p>
-            <ul class="replay-constraints" aria-label="Ràng buộc quan trọng">
+            <ul class="replay-constraints" aria-label="Ràng buộc quan trọng" data-inline-code>
               {% for item in active_run.question_constraints %}
                 <li>{{ item }}</li>
               {% endfor %}
@@ -368,8 +368,7 @@
                   <div class="profile-meta-bar">
                     {% if item.total_score is not none and item.maximum_score is not none %}
                       <span class="profile-meta-item">
-                        <span class="profile-meta-item__key">Điểm gốc</span>
-                        <span class="profile-meta-item__val">Điểm gốc: {{ item.total_score }}/{{ item.maximum_score }}</span>
+                        <span class="profile-meta-item__val">Điểm gốc: <strong>{{ item.total_score }}/{{ item.maximum_score }}</strong></span>
                       </span>
                     {% endif %}
                     {% if item.existing_run_id %}

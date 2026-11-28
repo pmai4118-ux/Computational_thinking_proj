@@ -1,228 +1,596 @@
 {% extends "base.html" %}
 
-{% block title %}Phân tích JD & Khoảng cách kỹ năng — interviewUS{% endblock %}
+{% block page_id %}jd{% endblock %}
+{% block title %}Phân tích JD &amp; Khoảng cách kỹ năng — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/features.css?v=20261127-p1">
+<link rel="stylesheet" href="/static/css/features.css?v=20261128-sbx1">
 {% endblock %}
 
-{% block content %}
-<div class="grid-two">
-  <section class="card stack" aria-labelledby="jd-form-heading">
-    <div>
-      <h1 id="jd-form-heading">Phân tích tin tuyển dụng (JD)</h1>
-      <p class="text-secondary reading-measure">
-        Dán mô tả công việc để trích xuất kỹ năng kèm trích dẫn nguyên văn từ JD gốc và đối chiếu trực tiếp với hồ sơ năng lực trên trình duyệt này. Nội dung JD được xử lý như dữ liệu thô, không thực thi lệnh bên trong.
-      </p>
-    </div>
+{% macro render_jd_form(values) %}
+<form method="post" action="/jd" class="stack" id="jd-form">
+  <div class="form-field">
+    <label class="form-label" for="jd-raw-text">Nội dung mô tả công việc (JD)</label>
+    <textarea
+      id="jd-raw-text"
+      name="raw_text"
+      class="form-textarea"
+      rows="9"
+      required
+      maxlength="30000"
+      placeholder="Dán yêu cầu kỹ thuật từ tin tuyển dụng Backend Intern / Fresher (tiếng Việt hoặc tiếng Anh)..."
+    >{{ values.raw_text if values else '' }}</textarea>
+    <p class="form-hint">Nội dung JD được xử lý như dữ liệu thô để trích xuất trích đoạn nguyên văn, không thực thi lệnh bên trong.</p>
+  </div>
 
-    <form method="post" action="/jd" class="stack" id="jd-form">
+  <details class="disclosure-block">
+    <summary>Thông tin nguồn JD (tùy chọn — lưu tách biệt với kết quả phân tích)</summary>
+    <div class="jd-meta-fields">
       <div class="form-field">
-        <label class="form-label" for="jd-raw-text">Nội dung mô tả công việc (JD)</label>
-        <textarea
-          id="jd-raw-text"
-          name="raw_text"
-          class="form-textarea"
-          rows="10"
-          required
-          maxlength="30000"
-          placeholder="Dán yêu cầu kỹ thuật từ tin tuyển dụng Backend Intern / Fresher (tiếng Việt hoặc tiếng Anh)..."
-        >{{ form_values.raw_text if form_values else '' }}</textarea>
+        <label class="form-label" for="jd-title">Vị trí tuyển dụng</label>
+        <input id="jd-title" name="title" class="form-input" type="text" maxlength="200"
+               value="{{ values.title if values else '' }}"
+               placeholder="Ví dụ: Backend Developer Intern (Python / PostgreSQL)">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="jd-company">Công ty / Nhóm tuyển dụng</label>
+        <input id="jd-company" name="company" class="form-input" type="text" maxlength="200"
+               value="{{ values.company if values else '' }}"
+               placeholder="Tùy chọn">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="jd-url">Liên kết nguồn (http:// hoặc https://)</label>
+        <input id="jd-url" name="source_url" class="form-input" type="url" maxlength="1000"
+               value="{{ values.source_url if values else '' }}"
+               placeholder="https://...">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="jd-published">Ngày đăng tin (tùy chọn)</label>
+        <input id="jd-published" name="published_at" class="form-input" type="text" maxlength="64"
+               value="{{ values.published_at if values else '' }}"
+               placeholder="Ví dụ: 2026-11-20">
+      </div>
+    </div>
+  </details>
+
+  <div class="action-row">
+    <button type="submit" class="btn btn--primary">Phân tích JD và đối chiếu hồ sơ</button>
+    <button type="button" class="btn btn--secondary" id="fill-sample-jd">Điền JD mẫu Backend Intern</button>
+  </div>
+</form>
+{% endmacro %}
+
+{% block content %}
+{% if detail %}
+<section id="jd-result" class="jd-result-shell stack" aria-labelledby="jd-result-heading" tabindex="-1">
+  <header class="card jd-result-header">
+    <div class="jd-result-header__top">
+      <div class="jd-result-header__main">
+        <p class="eyebrow">Phân tích JD · Đối chiếu hồ sơ năng lực</p>
+        <h1 id="jd-result-heading" class="jd-result-title">{{ detail.title or "Kết quả phân tích JD" }}</h1>
+        <p class="text-secondary reading-measure jd-result-summary">{{ detail.summary_note }}</p>
+        {% if detail.company or detail.published_at or detail.source_url %}
+          <div class="jd-provenance-bar">
+            {% if detail.company %}
+              <span class="jd-provenance-item"><strong>Công ty:</strong> {{ detail.company }}</span>
+            {% endif %}
+            {% if detail.published_at %}
+              <span class="jd-provenance-item"><strong>Ngày đăng:</strong> {{ detail.published_at }}</span>
+            {% endif %}
+            {% if detail.source_url %}
+              <a class="jd-provenance-link" href="{{ detail.source_url }}" rel="noopener noreferrer" target="_blank">
+                Liên kết nguồn gốc ↗
+              </a>
+            {% endif %}
+          </div>
+        {% endif %}
+        <details class="tech-meta">
+          <summary>Thông tin kỹ thuật</summary>
+          <p class="form-hint">Bộ quy tắc chuẩn hóa: <code>{{ detail.normalization_version }}</code></p>
+        </details>
       </div>
 
-      <details class="disclosure-block">
-        <summary>Thông tin nguồn JD (tùy chọn — lưu tách biệt với kết quả phân tích)</summary>
-        <div class="stack" style="margin-top: var(--space-3);">
-          <div class="form-field">
-            <label class="form-label" for="jd-title">Vị trí tuyển dụng</label>
-            <input id="jd-title" name="title" class="form-input" type="text" maxlength="200"
-                   value="{{ form_values.title if form_values else '' }}"
-                   placeholder="Ví dụ: Backend Developer Intern (Python / PostgreSQL)">
-          </div>
-          <div class="form-field">
-            <label class="form-label" for="jd-company">Công ty / Nhóm tuyển dụng</label>
-            <input id="jd-company" name="company" class="form-input" type="text" maxlength="200"
-                   value="{{ form_values.company if form_values else '' }}"
-                   placeholder="Tùy chọn">
-          </div>
-          <div class="form-field">
-            <label class="form-label" for="jd-url">Liên kết nguồn (http:// hoặc https://)</label>
-            <input id="jd-url" name="source_url" class="form-input" type="url" maxlength="1000"
-                   value="{{ form_values.source_url if form_values else '' }}"
-                   placeholder="https://...">
-          </div>
-          <div class="form-field">
-            <label class="form-label" for="jd-published">Ngày đăng tin (tùy chọn)</label>
-            <input id="jd-published" name="published_at" class="form-input" type="text" maxlength="64"
-                   value="{{ form_values.published_at if form_values else '' }}"
-                   placeholder="Ví dụ: 2026-11-20">
-          </div>
+      <div class="jd-result-header__actions">
+        <div class="action-row">
+          <a class="btn btn--primary" href="/setup">Luyện phỏng vấn theo kỹ năng thiếu</a>
+          <a class="btn btn--secondary" href="/profile">Xem hồ sơ năng lực</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="jd-drawer-bar">
+      <details id="jd-new-drawer" class="jd-top-drawer"{% if form_values and form_values.raw_text %} open{% endif %}>
+        <summary class="jd-top-drawer__summary">
+          <span class="jd-top-drawer__caret" aria-hidden="true">▸</span>
+          <span>Phân tích JD mới</span>
+        </summary>
+        <div class="jd-top-drawer__body">
+          <h2 id="jd-form-heading" class="jd-drawer-heading">Dán tin tuyển dụng (JD) mới</h2>
+          {{ render_jd_form(form_values) }}
         </div>
       </details>
 
-      <div class="action-row">
-        <button type="submit" class="btn btn--primary">Phân tích JD và đối chiếu hồ sơ</button>
-        <button type="button" class="btn btn--secondary" id="fill-sample-jd">Điền JD mẫu Backend Intern</button>
-      </div>
-    </form>
-  </section>
-
-  <aside class="card card--subtle stack" aria-labelledby="jd-history-heading">
-    <h2 id="jd-history-heading">Bản phân tích JD gần đây</h2>
-    {% if history %}
-      <ul class="profile-entry-list">
-        {% for item in history %}
-          <li class="profile-entry">
-            <div class="stack" style="gap: var(--space-1);">
-              <strong>{{ item.title or "Bản phân tích JD chưa đặt tiêu đề" }}</strong>
-              {% if item.company %}
-                <span class="text-secondary" style="font-size: var(--font-size-sm);">{{ item.company }}</span>
-              {% endif %}
-              <span class="text-secondary" style="font-size: var(--font-size-xs);">
-                {{ item.matched_skill_count }} kỹ năng trong danh mục MVP · {{ item.unmatched_term_count }} ngoài danh mục · {{ item.normalization_version }}
-              </span>
-            </div>
-            <a class="btn btn--secondary" href="/jd/{{ item.analysis_id }}">Xem kết quả</a>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="text-secondary" style="margin: 0;">
-        Chưa có bản phân tích nào trên trình duyệt này. Hãy dán một JD ở khung bên cạnh hoặc dùng nút JD mẫu để kiểm tra.
-      </p>
-    {% endif %}
-  </aside>
-</div>
-
-{% if detail %}
-<section class="card stack" aria-labelledby="jd-result-heading">
-  <div class="results-header">
-    <div>
-      <h2 id="jd-result-heading">{{ detail.title or "Kết quả phân tích JD" }}</h2>
-      <p class="text-secondary reading-measure" style="margin: 0;">{{ detail.summary_note }}</p>
-      <p class="form-hint" style="margin-top: var(--space-2);">
-        Phiên bản chuẩn hóa: <code>{{ detail.normalization_version }}</code>
-        {% if detail.company %} · Công ty: {{ detail.company }}{% endif %}
-        {% if detail.published_at %} · Ngày đăng: {{ detail.published_at }}{% endif %}
-        {% if detail.source_url %} · <a href="{{ detail.source_url }}" rel="noopener noreferrer" target="_blank">Nguồn gốc</a>{% endif %}
-      </p>
+      {% if history %}
+        <details id="jd-history-drawer" class="jd-top-drawer">
+          <summary class="jd-top-drawer__summary">
+            <span class="jd-top-drawer__caret" aria-hidden="true">▸</span>
+            <span>Lịch sử JD ({{ history|length }})</span>
+          </summary>
+          <div class="jd-top-drawer__body">
+            <h2 id="jd-history-heading" class="jd-drawer-heading">Bản phân tích JD gần đây</h2>
+            <ul class="jd-history-strip">
+              {% for item in history %}
+                {% set is_current = item.analysis_id == detail.analysis_id %}
+                <li class="jd-history-item{% if is_current %} jd-history-item--active{% endif %}">
+                  <div class="jd-history-item__info">
+                    <strong>{{ item.title or "Bản phân tích JD chưa đặt tiêu đề" }}</strong>
+                    <span class="jd-history-item__meta">
+                      {% if item.company %}{{ item.company }} · {% endif %}{{ item.matched_skill_count }} khớp MVP · {{ item.unmatched_term_count }} ngoài MVP
+                    </span>
+                  </div>
+                  {% if is_current %}
+                    <span class="badge badge--met" aria-current="page">Đang xem</span>
+                  {% else %}
+                    <a class="btn btn--secondary btn--sm" href="/jd/{{ item.analysis_id }}#jd-result">Mở kết quả</a>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </details>
+      {% endif %}
     </div>
-    <div class="action-row">
-      <a class="btn btn--primary" href="/setup">Luyện phỏng vấn theo kỹ năng thiếu</a>
-      <a class="btn btn--secondary" href="/profile">Xem hồ sơ năng lực</a>
-    </div>
-  </div>
+  </header>
 
-  <div class="summary-strip" aria-label="Tổng hợp khoảng cách kỹ năng">
-    <div class="metric-box">
+  <div class="summary-strip metric-grid jd-kpi-strip" aria-label="Tổng hợp khoảng cách kỹ năng">
+    <div class="metric-box metric-box--violet">
+      <span class="metric-box__index" aria-hidden="true">01</span>
       <p class="metric-box__value">{{ detail.matched_catalog_skill_count }}</p>
       <p class="metric-box__label">Kỹ năng khớp danh mục MVP</p>
     </div>
-    <div class="metric-box">
+    <div class="metric-box metric-box--met">
+      <span class="metric-box__index" aria-hidden="true">02</span>
       <p class="metric-box__value">{{ detail.strength_count }}</p>
-      <p class="metric-box__label">Đã vững trong hồ sơ</p>
+      <p class="metric-box__label">Đạt gần nhất trong hồ sơ</p>
     </div>
-    <div class="metric-box">
+    <div class="metric-box metric-box--unmet">
+      <span class="metric-box__index" aria-hidden="true">03</span>
       <p class="metric-box__value">{{ detail.needs_practice_count }}</p>
       <p class="metric-box__label">Cần luyện thêm</p>
     </div>
-    <div class="metric-box">
+    <div class="metric-box metric-box--unresolved">
+      <span class="metric-box__index" aria-hidden="true">04</span>
       <p class="metric-box__value">{{ detail.unobserved_count }}</p>
-      <p class="metric-box__label">Chưa từng kiểm tra</p>
+      <p class="metric-box__label">Chưa từng kiểm tra{% if detail.unresolved_count %} (+{{ detail.unresolved_count }} chưa đủ căn cứ){% endif %}</p>
     </div>
   </div>
 
-  <div class="stack">
-    <h3>Đối chiếu kỹ năng JD với hồ sơ của bạn</h3>
-    {% if detail.skill_gaps %}
-      <ul class="gap-table-list">
-        {% for gap in detail.skill_gaps %}
-          <li class="skill-group">
-            <div class="profile-entry__meta">
-              <strong>{{ gap.skill_label }}</strong>
+  <div class="jd-workbench">
+    <div class="jd-workbench__gaps stack">
+      <section class="card stack" aria-labelledby="jd-gaps-heading">
+        <div class="sbx-card__head">
+          <div>
+            <p class="eyebrow">01 · Đối chiếu năng lực</p>
+            <h2 id="jd-gaps-heading" class="jd-section-title">Đối chiếu kỹ năng JD với hồ sơ của bạn</h2>
+          </div>
+          <span class="sbx-card__index" aria-hidden="true">{{ "%02d"|format(detail.skill_gaps|length) }}</span>
+        </div>
+
+        {% if detail.skill_gaps %}
+          <ul class="gap-table-list">
+            {% for gap in detail.skill_gaps %}
               {% if gap.profile_state == "observed_strength" %}
-                <span class="badge badge--met">Đã vững trong hồ sơ</span>
+                {% set state_key = "met" %}
+                {% set badge_cls = "badge--met" %}
+                {% set badge_label = "Đạt gần nhất trong hồ sơ" %}
               {% elif gap.profile_state == "needs_practice" %}
-                <span class="badge badge--unmet">Cần luyện thêm</span>
+                {% set state_key = "unmet" %}
+                {% set badge_cls = "badge--unmet" %}
+                {% set badge_label = "Cần luyện thêm" %}
               {% elif gap.profile_state == "unresolved" %}
-                <span class="badge badge--unresolved">Chưa đủ căn cứ</span>
+                {% set state_key = "unresolved" %}
+                {% set badge_cls = "badge--unresolved" %}
+                {% set badge_label = "Chưa đủ căn cứ" %}
               {% else %}
-                <span class="badge">Chưa kiểm tra qua phiên</span>
+                {% set state_key = "unobserved" %}
+                {% set badge_cls = "badge--neutral" %}
+                {% set badge_label = "Chưa kiểm tra qua phiên" %}
               {% endif %}
-            </div>
-            <p style="margin: 0;">{{ gap.explanation }}</p>
-            <p class="text-secondary" style="margin: 0; font-size: var(--font-size-sm);">
-              <strong>Bằng chứng trong JD gốc:</strong>
+
+              {% set dedup = namespace(keys=[], items=[], counts={}) %}
               {% for ev in gap.evidence %}
-                <code>"{{ ev.quote }}"</code>{% if not loop.last %}, {% endif %}
+                {% set q_norm = ev.quote.strip().lower() %}
+                {% if q_norm %}
+                  {% if q_norm not in dedup.keys %}
+                    {% set _ = dedup.keys.append(q_norm) %}
+                    {% set _ = dedup.items.append({"quote": ev.quote, "key": q_norm}) %}
+                    {% set _ = dedup.counts.update({q_norm: 1}) %}
+                  {% else %}
+                    {% set _ = dedup.counts.update({q_norm: dedup.counts[q_norm] + 1}) %}
+                  {% endif %}
+                {% endif %}
               {% endfor %}
-            </p>
-            {% if gap.recommended_exercises %}
-              <div>
-                <p style="margin: 0 0 var(--space-1) 0; font-size: var(--font-size-sm);"><strong>Bài tập đã kiểm duyệt liên quan:</strong></p>
-                <ul style="margin: 0; padding-left: 1.25rem;">
-                  {% for ex in gap.recommended_exercises %}
-                    <li>
-                      {{ ex.title }}
-                      {% if ex.estimated_duration_minutes %}
-                        <span class="text-secondary">(ước tính {{ ex.estimated_duration_minutes }} phút)</span>
-                      {% endif %}
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="text-secondary">Không có kỹ năng nào trong JD khớp bộ 4 kỹ năng cốt lõi hiện tại.</p>
-    {% endif %}
-  </div>
 
-  {% if detail.unmatched_terms %}
-    <div class="stack">
-      <h3>Yêu cầu ngoài danh mục 4 kỹ năng MVP hiện tại (hiển thị minh bạch)</h3>
-      <ul class="profile-entry-list">
+              <li class="jd-gap-card jd-gap-card--{{ state_key }}">
+                <div class="jd-gap-card__head">
+                  <h3 class="jd-gap-card__title">{{ gap.skill_label }}</h3>
+                  <span class="badge {{ badge_cls }}">{{ badge_label }}</span>
+                </div>
+
+                <p class="jd-gap-card__explanation">{{ gap.explanation }}</p>
+
+                {% if dedup.items %}
+                  <div class="jd-quote-section">
+                    <span class="jd-quote-section__label">Bằng chứng trong JD gốc (bấm để định vị):</span>
+                    <div class="jd-quote-chips" role="group" aria-label="Bằng chứng trong JD gốc cho {{ gap.skill_label }}">
+                      {% for item in dedup.items %}
+                        <button type="button"
+                                class="jd-quote-chip jd-quote-chip--{{ state_key }}"
+                                data-jd-quote="{{ item.quote }}"
+                                data-jd-skill="{{ gap.skill_label }}"
+                                data-jd-state="{{ state_key }}"
+                                aria-pressed="false">
+                          <span class="jd-quote-chip__text">“{{ item.quote }}”</span>
+                          {% if dedup.counts[item.key] > 1 %}
+                            <span class="jd-quote-chip__count" aria-label="xuất hiện {{ dedup.counts[item.key] }} lần">×{{ dedup.counts[item.key] }}</span>
+                          {% endif %}
+                        </button>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+
+                {% if gap.recommended_exercises %}
+                  <div class="jd-exercises-box">
+                    <p class="jd-exercises-box__title">Bài tập đã kiểm duyệt liên quan</p>
+                    <ul class="jd-exercises-list">
+                      {% for ex in gap.recommended_exercises %}
+                        <li>
+                          <span class="jd-exercises-list__name">{{ ex.title }}</span>
+                          {% if ex.estimated_duration_minutes %}
+                            <span class="jd-exercises-list__est">ước tính {{ ex.estimated_duration_minutes }} phút</span>
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="empty-state">
+            <p>Không có kỹ năng nào trong JD khớp bộ 4 kỹ năng cốt lõi hiện tại.</p>
+          </div>
+        {% endif %}
+      </section>
+
+      {% if detail.unmatched_terms %}
+        {% set dedup_out = namespace(keys=[], items=[], counts={}) %}
         {% for term in detail.unmatched_terms %}
-          <li class="profile-entry">
-            <div>
-              <strong>{{ term.term_label }}</strong> — trích từ JD: <code>"{{ term.quote }}"</code>
-              <p class="text-secondary" style="margin: var(--space-1) 0 0 0; font-size: var(--font-size-sm);">{{ term.reason }}</p>
-            </div>
-          </li>
+          {% set t_key = (term.term_label ~ "||" ~ term.quote.strip().lower()) %}
+          {% if t_key not in dedup_out.keys %}
+            {% set _ = dedup_out.keys.append(t_key) %}
+            {% set _ = dedup_out.items.append({"term": term, "key": t_key}) %}
+            {% set _ = dedup_out.counts.update({t_key: 1}) %}
+          {% else %}
+            {% set _ = dedup_out.counts.update({t_key: dedup_out.counts[t_key] + 1}) %}
+          {% endif %}
         {% endfor %}
-      </ul>
+        <section class="card jd-outside-card stack" aria-labelledby="jd-outside-heading">
+          <div class="sbx-card__head">
+            <div>
+              <p class="eyebrow">Hiển thị minh bạch · Không ép chấm</p>
+              <h2 id="jd-outside-heading" class="jd-section-title">Kỹ năng ngoài phạm vi MVP</h2>
+            </div>
+            <span class="badge badge--neutral">Ngoài phạm vi MVP</span>
+          </div>
+          <ul class="jd-outside-list">
+            {% for entry in dedup_out.items %}
+              {% set term = entry.term %}
+              <li class="jd-outside-item">
+                <div class="jd-outside-item__head">
+                  <strong>{{ term.term_label }}</strong>
+                  <button type="button"
+                          class="jd-quote-chip jd-quote-chip--outside"
+                          data-jd-quote="{{ term.quote }}"
+                          data-jd-skill="{{ term.term_label }} (ngoài MVP)"
+                          data-jd-state="outside"
+                          aria-pressed="false">
+                    <span class="jd-quote-chip__text">“{{ term.quote }}”</span>
+                    {% if dedup_out.counts[entry.key] > 1 %}
+                      <span class="jd-quote-chip__count">×{{ dedup_out.counts[entry.key] }}</span>
+                    {% endif %}
+                  </button>
+                </div>
+                <p class="jd-outside-item__reason">{{ term.reason }}</p>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
+      {% endif %}
     </div>
-  {% endif %}
 
-  <div class="stack">
-    <h3>Văn bản JD gốc (đánh dấu đúng trích đoạn đã trích xuất)</h3>
-    <div class="jd-raw-viewer">{% for seg in highlighted_segments %}{% if seg.highlighted %}<mark title="{{ seg.label }}">{{ seg.text }}</mark>{% else %}{{ seg.text }}{% endif %}{% endfor %}</div>
+    <aside class="jd-workbench__viewer" aria-labelledby="jd-raw-heading">
+      <div class="card jd-viewer-card stack">
+        <div class="sbx-card__head">
+          <div>
+            <p class="eyebrow">02 · Trích xuất nguyên văn</p>
+            <h2 id="jd-raw-heading" class="jd-section-title">Văn bản JD gốc</h2>
+          </div>
+          <span class="sbx-card__index" aria-hidden="true">JD</span>
+        </div>
+
+        <ul class="jd-legend" aria-label="Chú giải màu đánh dấu kỹ năng">
+          <li class="jd-legend__item"><span class="jd-legend__swatch jd-legend__swatch--met" aria-hidden="true"></span>Đạt gần nhất</li>
+          <li class="jd-legend__item"><span class="jd-legend__swatch jd-legend__swatch--unmet" aria-hidden="true"></span>Cần luyện thêm</li>
+          <li class="jd-legend__item"><span class="jd-legend__swatch jd-legend__swatch--unresolved" aria-hidden="true"></span>Chưa đủ căn cứ</li>
+          <li class="jd-legend__item"><span class="jd-legend__swatch jd-legend__swatch--unobserved" aria-hidden="true"></span>Chưa kiểm tra</li>
+          <li class="jd-legend__item"><span class="jd-legend__swatch jd-legend__swatch--outside" aria-hidden="true"></span>Ngoài MVP</li>
+        </ul>
+
+        <div id="jd-mark-inspector" class="jd-mark-inspector" role="status" aria-live="polite">
+          <p class="jd-mark-inspector__hint">
+            Bấm một thẻ trích dẫn ở cột trái hoặc dùng chuột / phím Tab chọn đoạn đánh dấu bên dưới để xem nhãn kỹ năng tương ứng.
+          </p>
+        </div>
+
+        {% set label_states = namespace(map={}) %}
+        {% for gap in detail.skill_gaps %}
+          {% set _ = label_states.map.update({gap.skill_label: gap.profile_state}) %}
+        {% endfor %}
+        <div id="jd-raw-viewer" class="jd-raw-viewer">{% for seg in highlighted_segments %}{% if seg.highlighted %}{% set is_outside = "(ngoài MVP)" in seg.label %}{% set raw_state = "outside" if is_outside else label_states.map.get(seg.label, "unobserved") %}{% set mark_mod = "outside" if raw_state == "outside" else ("met" if raw_state == "observed_strength" else ("unmet" if raw_state == "needs_practice" else ("unresolved" if raw_state == "unresolved" else "unobserved"))) %}<mark class="jd-mark jd-mark--{{ mark_mod }}" tabindex="0" role="button" data-jd-mark data-jd-skill="{{ seg.label }}" data-jd-quote="{{ seg.text }}" data-jd-state="{{ mark_mod }}" aria-label="{{ seg.text }} — {{ seg.label }}">{{ seg.text }}</mark>{% else %}{{ seg.text }}{% endif %}{% endfor %}</div>
+      </div>
+    </aside>
   </div>
 </section>
+{% else %}
+<div class="grid-two grid-two--jd">
+  <section class="card stack" aria-labelledby="jd-form-heading">
+    <div class="sbx-card__head">
+      <div>
+        <p class="eyebrow">01 · Input Studio</p>
+        <h1 id="jd-form-heading">Phân tích tin tuyển dụng (JD)</h1>
+      </div>
+      <span class="sbx-card__index" aria-hidden="true">01</span>
+    </div>
+    <p class="text-secondary reading-measure" style="margin: 0;">
+      Dán mô tả công việc để trích xuất kỹ năng kèm trích dẫn nguyên văn từ JD gốc và đối chiếu trực tiếp với hồ sơ năng lực trên trình duyệt này.
+    </p>
+    {{ render_jd_form(form_values) }}
+  </section>
+
+  <aside class="stack" aria-label="Lịch sử và phạm vi phân tích JD">
+    <section class="card card--subtle stack" aria-labelledby="jd-history-heading">
+      <div class="sbx-card__head">
+        <div>
+          <p class="eyebrow">02 · Lịch sử trên trình duyệt</p>
+          <h2 id="jd-history-heading">Bản phân tích JD gần đây</h2>
+        </div>
+        <span class="sbx-card__index" aria-hidden="true">02</span>
+      </div>
+      {% if history %}
+        <ul class="profile-entry-list">
+          {% for item in history %}
+            <li class="profile-entry">
+              <div class="stack" style="gap: var(--space-1);">
+                <strong>{{ item.title or "Bản phân tích JD chưa đặt tiêu đề" }}</strong>
+                {% if item.company %}
+                  <span class="text-secondary" style="font-size: var(--font-size-sm);">{{ item.company }}</span>
+                {% endif %}
+                <span class="jd-history-item__meta">
+                  {{ item.matched_skill_count }} kỹ năng khớp MVP · {{ item.unmatched_term_count }} ngoài danh mục
+                </span>
+              </div>
+              <a class="btn btn--secondary btn--sm" href="/jd/{{ item.analysis_id }}#jd-result">Xem kết quả</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state">
+          <p>
+            Chưa có bản phân tích nào trên trình duyệt này. Hãy dán một JD ở khung bên cạnh hoặc dùng nút <strong>Điền JD mẫu Backend Intern</strong> để thử nhanh.
+          </p>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="card jd-scope-card stack" aria-labelledby="jd-scope-heading">
+      <div class="sbx-card__head">
+        <div>
+          <p class="eyebrow">03 · Phạm vi đối chiếu</p>
+          <h2 id="jd-scope-heading">4 nhóm kỹ năng MVP</h2>
+        </div>
+        <span class="sbx-card__index" aria-hidden="true">03</span>
+      </div>
+      <ol class="jd-scope-list">
+        <li class="jd-scope-item">
+          <span class="jd-scope-item__num" aria-hidden="true">01</span>
+          <span>Ngữ nghĩa mã nguồn &amp; ngôn ngữ lập trình (Python, OOP, ngoại lệ)</span>
+        </li>
+        <li class="jd-scope-item">
+          <span class="jd-scope-item__num" aria-hidden="true">02</span>
+          <span>Nhất quán dữ liệu &amp; giao dịch Backend (PostgreSQL, ACID, khóa, deadlock)</span>
+        </li>
+        <li class="jd-scope-item">
+          <span class="jd-scope-item__num" aria-hidden="true">03</span>
+          <span>Tính đúng đắn &amp; độ phức tạp thuật toán (Big-O, tìm kiếm nhị phân)</span>
+        </li>
+        <li class="jd-scope-item">
+          <span class="jd-scope-item__num" aria-hidden="true">04</span>
+          <span>Đánh giá mã nguồn &amp; kiểm chứng (unit test, pytest, ca biên)</span>
+        </li>
+      </ol>
+    </section>
+  </aside>
+</div>
 {% endif %}
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
   (() => {
+    "use strict";
+
     const sampleBtn = document.querySelector("#fill-sample-jd");
     const field = document.querySelector("#jd-raw-text");
     const titleField = document.querySelector("#jd-title");
-    if (!sampleBtn || !field) return;
-    sampleBtn.addEventListener("click", () => {
-      field.value = [
-        "Vị trí: Backend Developer Intern (Python / PostgreSQL)",
-        "- Nắm vững ngôn ngữ lập trình Python, OOP, REST API và xử lý ngoại lệ rõ ràng.",
-        "- Hiểu cơ sở dữ liệu quan hệ PostgreSQL, ACID transaction, xử lý race condition và deadlock khi có nhiều yêu cầu đồng thời.",
-        "- Biết phân tích độ phức tạp thuật toán (Big-O), cấu trúc dữ liệu cơ bản (hash map, binary search).",
-        "- Viết unit test bằng pytest, thực hiện code review và kiểm thử các trường hợp biên.",
-        "- Điểm cộng: đã từng làm việc với Docker, Redis hoặc CI/CD."
-      ].join("\n");
-      if (titleField && !titleField.value) {
-        titleField.value = "Backend Developer Intern (Mẫu tổng hợp)";
+    const newDrawer = document.querySelector("#jd-new-drawer");
+
+    if (sampleBtn && field) {
+      sampleBtn.addEventListener("click", () => {
+        if (newDrawer) newDrawer.open = true;
+        field.value = [
+          "Vị trí: Backend Developer Intern (Python / PostgreSQL)",
+          "- Nắm vững ngôn ngữ lập trình Python, OOP, REST API và xử lý ngoại lệ rõ ràng.",
+          "- Hiểu cơ sở dữ liệu quan hệ PostgreSQL, ACID transaction, xử lý race condition và deadlock khi có nhiều yêu cầu đồng thời.",
+          "- Biết phân tích độ phức tạp thuật toán (Big-O), cấu trúc dữ liệu cơ bản (hash map, binary search).",
+          "- Viết unit test bằng pytest, thực hiện code review và kiểm thử các trường hợp biên.",
+          "- Điểm cộng: đã từng làm việc với Docker, Redis hoặc CI/CD."
+        ].join("\n");
+        if (titleField && !titleField.value) {
+          titleField.value = "Backend Developer Intern (Mẫu tổng hợp)";
+        }
+        field.focus();
+      });
+    }
+
+    const viewer = document.querySelector("#jd-raw-viewer");
+    const inspector = document.querySelector("#jd-mark-inspector");
+    if (!viewer || !inspector) return;
+
+    const marks = Array.from(viewer.querySelectorAll("mark[data-jd-mark]"));
+    const chips = Array.from(document.querySelectorAll("[data-jd-quote]"));
+    if (!marks.length) return;
+
+    const STATE_META = {
+      met: { label: "Đạt gần nhất", badge: "badge--met" },
+      unmet: { label: "Cần luyện thêm", badge: "badge--unmet" },
+      unresolved: { label: "Chưa đủ căn cứ", badge: "badge--unresolved" },
+      unobserved: { label: "Chưa kiểm tra", badge: "badge--neutral" },
+      outside: { label: "Ngoài phạm vi MVP", badge: "badge--neutral" },
+    };
+
+    const reducedMotion = () =>
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let activeChipKey = "";
+    let activeChipCycle = 0;
+
+    function resetInspector() {
+      marks.forEach((m) => m.classList.remove("is-active"));
+      chips.forEach((c) => c.setAttribute("aria-pressed", "false"));
+      activeChipKey = "";
+      activeChipCycle = 0;
+      const hint = document.createElement("p");
+      hint.className = "jd-mark-inspector__hint";
+      hint.textContent =
+        "Bấm một thẻ trích dẫn ở cột trái hoặc dùng chuột / phím Tab chọn đoạn đánh dấu bên dưới để xem nhãn kỹ năng tương ứng.";
+      inspector.replaceChildren(hint);
+    }
+
+    function activateMark(mark, { scroll = false, matchIndex = 0, matchTotal = 1, activeChip = null } = {}) {
+      marks.forEach((m) => m.classList.remove("is-active"));
+      chips.forEach((c) => c.setAttribute("aria-pressed", c === activeChip ? "true" : "false"));
+      mark.classList.add("is-active");
+
+      const skill = mark.dataset.jdSkill || "";
+      const quote = mark.dataset.jdQuote || mark.textContent || "";
+      const stateKey = mark.dataset.jdState || "unobserved";
+      const meta = STATE_META[stateKey] || STATE_META.unobserved;
+
+      const wrap = document.createElement("div");
+      wrap.className = "jd-mark-inspector__active";
+
+      const head = document.createElement("div");
+      head.className = "jd-mark-inspector__head";
+
+      const badge = document.createElement("span");
+      badge.className = `badge ${meta.badge}`;
+      badge.textContent = meta.label;
+
+      const skillEl = document.createElement("strong");
+      skillEl.className = "jd-mark-inspector__label";
+      skillEl.textContent = skill;
+
+      head.append(badge, skillEl);
+
+      const metaRow = document.createElement("div");
+      metaRow.className = "jd-mark-inspector__meta";
+
+      const quoteEl = document.createElement("code");
+      quoteEl.className = "jd-mark-inspector__quote";
+      quoteEl.textContent = `“${quote}”`;
+      metaRow.append(quoteEl);
+
+      if (matchTotal > 1) {
+        const counter = document.createElement("span");
+        counter.className = "jd-mark-inspector__counter";
+        counter.textContent = `Vị trí ${matchIndex + 1}/${matchTotal} (bấm lại để xem vị trí tiếp)`;
+        metaRow.append(counter);
       }
-      field.focus();
+
+      const clearBtn = document.createElement("button");
+      clearBtn.type = "button";
+      clearBtn.className = "jd-mark-inspector__clear";
+      clearBtn.textContent = "Bỏ chọn";
+      clearBtn.addEventListener("click", resetInspector);
+
+      wrap.append(head, metaRow);
+      inspector.replaceChildren(wrap, clearBtn);
+
+      if (scroll && typeof mark.scrollIntoView === "function") {
+        mark.scrollIntoView({
+          behavior: reducedMotion() ? "auto" : "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+      }
+    }
+
+    marks.forEach((mark) => {
+      mark.addEventListener("click", () => activateMark(mark, { scroll: false }));
+      mark.addEventListener("focus", () => activateMark(mark, { scroll: false }));
+      mark.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activateMark(mark, { scroll: true });
+        } else if (event.key === "Escape") {
+          event.preventDefault();
+          resetInspector();
+        }
+      });
+    });
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const targetQuote = (chip.dataset.jdQuote || "").trim().toLowerCase();
+        const targetSkill = chip.dataset.jdSkill || "";
+        const exactSkillMatches = marks.filter(
+          (m) =>
+            (m.dataset.jdQuote || "").trim().toLowerCase() === targetQuote &&
+            (!targetSkill || m.dataset.jdSkill === targetSkill)
+        );
+        const matches = exactSkillMatches.length
+          ? exactSkillMatches
+          : marks.filter((m) => (m.dataset.jdQuote || "").trim().toLowerCase() === targetQuote);
+        if (!matches.length) return;
+
+        const key = `${targetSkill}||${targetQuote}`;
+        if (activeChipKey === key) {
+          activeChipCycle = (activeChipCycle + 1) % matches.length;
+        } else {
+          activeChipKey = key;
+          activeChipCycle = 0;
+        }
+        const chosen = matches[activeChipCycle];
+        activateMark(chosen, {
+          scroll: true,
+          matchIndex: activeChipCycle,
+          matchTotal: matches.length,
+          activeChip: chip,
+        });
+      });
     });
   })();
 </script>

@@ -1,18 +1,19 @@
 {% extends "base.html" %}
 
+{% block page_id %}summary{% endblock %}
 {% block title %}Tổng kết phiên — interviewUS{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="/static/css/results.css?v=20261127-p3">
-<link rel="stylesheet" href="/static/css/summary.css?v=20261127-p3">
-<link rel="stylesheet" href="/static/css/features.css?v=20261127-p6">
+<link rel="stylesheet" href="/static/css/results.css?v=20261128-sbx1">
+<link rel="stylesheet" href="/static/css/summary.css?v=20261128-sbx1">
+<link rel="stylesheet" href="/static/css/features.css?v=20261128-sbx1">
 {% endblock %}
 
 {% block content %}
-<section class="card results-page" data-session-summary
+<section class="results-page summary-page" data-session-summary
          data-session-id="{{ session.session_id }}"
          aria-labelledby="summary-heading">
-  <div class="results-header">
-    <div>
+  <header class="results-header">
+    <div class="results-header__main">
       <p class="eyebrow">
         {% if session_display is defined and session_display %}
           {{ session_display.title }}
@@ -23,48 +24,90 @@
         {% endif %}
       </p>
       <h1 id="summary-heading">Tổng kết phiên luyện tập</h1>
-      <p class="form-hint">Mã tham chiếu phiên: <code>{{ session.session_id }}</code></p>
+      <details class="tech-meta summary-tech-meta">
+        <summary>Thông tin kỹ thuật</summary>
+        <p class="form-hint">Mã tham chiếu phiên: <code>{{ session.session_id }}</code></p>
+      </details>
     </div>
     <a class="btn btn--secondary" href="/">Về trang bắt đầu</a>
-  </div>
+  </header>
+
   <div id="summary-error" class="alert alert--error" role="alert" tabindex="-1" hidden></div>
   <p id="summary-status" class="alert alert--status" role="status" aria-live="polite">Đang tải kết quả và độ phủ phiên…</p>
-  <div id="summary-content" hidden>
+
+  <div id="summary-content" class="summary-content" hidden>
     <section class="coverage-card" aria-labelledby="coverage-heading">
-      <h2 id="coverage-heading">Tiến độ và độ phủ</h2>
-      <p id="summary-state" class="badge"></p>
-      <p id="coverage-count" class="coverage-count"></p>
+      <div class="coverage-card__top">
+        <div class="coverage-card__summary">
+          <p class="eyebrow">Báo cáo độ phủ rubric</p>
+          <h2 id="coverage-heading">Tiến độ và độ phủ</h2>
+          <div class="summary-status-row" aria-label="Trạng thái nộp bài và chấm điểm">
+            <span id="summary-state" class="badge badge--neutral"></span>
+            <span id="summary-eval-state" class="badge"></span>
+          </div>
+          <p id="coverage-count" class="coverage-count"></p>
+        </div>
+
+        <div id="session-score-box" class="session-score-box" hidden>
+          <span class="session-score-box__label">Tổng điểm các câu đã chấm trong phiên</span>
+          <strong id="session-score-value" class="session-score-box__value"></strong>
+          <div id="session-score-breakdown" class="session-score-breakdown" hidden></div>
+          <p id="session-score-note" class="form-hint session-score-box__note"></p>
+        </div>
+      </div>
+
       <div class="coverage-grid">
-        <div><h3>Câu chưa làm</h3><ul id="unanswered-categories"></ul></div>
-        <div><h3>Câu chưa đủ căn cứ</h3><ul id="unresolved-categories"></ul></div>
+        <div class="coverage-kpi-box">
+          <h3>Câu chưa làm</h3>
+          <ul id="unanswered-categories" class="coverage-tag-list"></ul>
+        </div>
+        <div class="coverage-kpi-box">
+          <h3>Câu chưa đủ căn cứ</h3>
+          <ul id="unresolved-categories" class="coverage-tag-list"></ul>
+        </div>
       </div>
     </section>
+
     <section id="summary-replay-banner" class="replay-callout" aria-labelledby="summary-replay-heading" hidden>
       <div class="replay-callout__body">
-        <span class="badge badge--met" style="align-self: flex-start;">Decision Replay · Tình huống kỹ thuật</span>
+        <span class="badge badge--neutral">Decision Replay · Tình huống kỹ thuật</span>
         <h2 id="summary-replay-heading">Phòng thí nghiệm rẽ nhánh từ bài Tình huống của bạn</h2>
         <p id="summary-replay-text" class="text-secondary"></p>
       </div>
       <div id="summary-replay-actions" class="action-row"></div>
     </section>
-    <section aria-labelledby="outcomes-heading">
-      <h2 id="outcomes-heading">Kết quả từng câu</h2>
+
+    <section class="summary-section" aria-labelledby="outcomes-heading">
+      <div class="summary-section__head">
+        <p class="eyebrow">Đánh giá chi tiết</p>
+        <h2 id="outcomes-heading">Kết quả từng câu</h2>
+      </div>
       <ol id="outcomes-list" class="outcome-list"></ol>
       <p id="outcomes-empty" class="empty-state" hidden>Phiên chưa có kết quả câu hỏi nào.</p>
     </section>
-    <section aria-labelledby="gaps-heading">
-      <h2 id="gaps-heading">Điểm cần luyện tiếp</h2>
+
+    <section class="summary-section" aria-labelledby="gaps-heading">
+      <div class="summary-section__head">
+        <p class="eyebrow">Lộ trình luyện tập tiếp theo</p>
+        <h2 id="gaps-heading">Điểm cần luyện tiếp</h2>
+      </div>
       <ul id="gaps-list" class="gap-list"></ul>
       <p id="gaps-empty" class="empty-state" hidden>Chưa có điểm thiếu nào được xác nhận trong dữ liệu phiên.</p>
     </section>
   </div>
-  <div class="action-row">
-    {% if session.state == "in_progress" %}<a class="btn btn--primary" href="/sessions/{{ session.session_id }}">Tiếp tục phiên</a>{% endif %}
-    <a class="btn btn--primary" href="/setup">Bắt đầu phiên mới</a>
-    <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập</a>
+
+  <footer class="action-row summary-footer-actions">
+    {% if session.state == "in_progress" %}
+      <a class="btn btn--primary" href="/sessions/{{ session.session_id }}">Tiếp tục phiên</a>
+      <a class="btn btn--secondary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập</a>
+      <a class="btn btn--secondary" href="/setup">Bắt đầu phiên mới</a>
+    {% else %}
+      <a class="btn btn--primary" href="/sessions/{{ session.session_id }}/exercises">Xem bài tập</a>
+      <a class="btn btn--secondary" href="/setup">Bắt đầu phiên mới</a>
+    {% endif %}
     <a class="btn btn--ghost" href="/profile">Xem hồ sơ năng lực</a>
-  </div>
+  </footer>
 </section>
 {% endblock %}
 
-{% block extra_scripts %}<script src="/static/js/summary.js?v=20261127-p3" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="/static/js/summary.js?v=20261128-sbx1" defer></script>{% endblock %}

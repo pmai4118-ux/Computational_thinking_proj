@@ -1,71 +1,141 @@
 {% extends "base.html" %}
 
+{% block page_id %}review{% endblock %}
 {% block title %}Kết quả đánh giá — interviewUS{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="/static/css/results.css?v=20261128-sbx1">
+{% endblock %}
 
 {% block content %}
-<section class="card stack" aria-labelledby="result-heading">
-  <div>
-    <h1 id="result-heading">Kết quả đánh giá câu trả lời</h1>
+<section class="results-page eval-result-page" aria-labelledby="result-heading">
+  <header class="results-header">
+    <div class="review-header-strip__title">
+      <p class="eyebrow">Biên bản đối chiếu rubric</p>
+      <h1 id="result-heading">Kết quả đánh giá câu trả lời</h1>
+    </div>
+    <div class="action-row">
+      <a class="btn btn--secondary" href="/sessions/{{ session_id }}">Quay lại phiên</a>
+    </div>
+  </header>
+
+  <section class="card eval-result-status" aria-label="Trạng thái đánh giá">
     {% if report and report.result.status.value == "completed" %}
-      {% if report.result.total_score is not none %}
-        <p><strong>Tổng điểm: {{ report.result.total_score }}/{{ report.result.maximum_score }}</strong></p>
-      {% else %}
-        <p><strong>Chưa thể tính tổng điểm:</strong> có tiêu chí chưa đủ căn cứ.</p>
-      {% endif %}
-      {% if report.result.demo_mode_label %}<p class="badge badge--demo">{{ report.result.demo_mode_label }}</p>{% endif %}
-      <p class="text-secondary">Mô hình: {{ report.result.model_id }} · Phiên bản prompt: {{ report.result.prompt_version }}</p>
+      <div class="eval-result-status__top">
+        <div class="eval-result-status__score">
+          {% if report.result.total_score is not none %}
+            <span class="score-summary__label">Kết quả chấm rubric</span>
+            <p class="eval-result-score-value"><strong>Tổng điểm: {{ report.result.total_score }}/{{ report.result.maximum_score }}</strong></p>
+          {% else %}
+            <span class="badge badge--unresolved">Chưa đủ căn cứ</span>
+            <p class="eval-result-score-value"><strong>Chưa thể tính tổng điểm:</strong> có tiêu chí chưa đủ căn cứ.</p>
+          {% endif %}
+        </div>
+        <div class="eval-result-status__meta">
+          {% if report.result.demo_mode_label %}
+            <span class="badge badge--demo">{{ report.result.demo_mode_label }}</span>
+          {% endif %}
+          <span class="badge badge--met">Đã hoàn tất</span>
+        </div>
+      </div>
+      <p class="eval-result-model-meta text-secondary">Mô hình: {{ report.result.model_id }} · Phiên bản prompt: {{ report.result.prompt_version }}</p>
     {% elif report and report.result.status.value == "pending" %}
-      <p>Câu trả lời đang chờ đánh giá nền. Câu trả lời gốc đã được lưu.</p>
-      <a class="btn btn--secondary" href="/sessions/{{ session_id }}/answers/{{ answer_id }}/result?revision={{ revision }}">Tải lại trạng thái</a>
+      <div class="eval-result-banner eval-result-banner--pending">
+        <span class="badge badge--unresolved">Đang chờ xử lý</span>
+        <p>Câu trả lời đang chờ đánh giá nền. Câu trả lời gốc đã được lưu.</p>
+        <div class="action-row">
+          <a class="btn btn--secondary" href="/sessions/{{ session_id }}/answers/{{ answer_id }}/result?revision={{ revision }}">Tải lại trạng thái</a>
+        </div>
+      </div>
     {% elif report and report.result.status.value == "processing" %}
-      <p>Đánh giá đang được xử lý. Câu trả lời gốc đã được lưu.</p>
-      <a class="btn btn--secondary" href="/sessions/{{ session_id }}/answers/{{ answer_id }}/result?revision={{ revision }}">Tải lại trạng thái</a>
+      <div class="eval-result-banner eval-result-banner--pending">
+        <span class="badge badge--unresolved">Đang chấm AI</span>
+        <p>Đánh giá đang được xử lý. Câu trả lời gốc đã được lưu.</p>
+        <div class="action-row">
+          <a class="btn btn--secondary" href="/sessions/{{ session_id }}/answers/{{ answer_id }}/result?revision={{ revision }}">Tải lại trạng thái</a>
+        </div>
+      </div>
     {% elif report and report.result.status.value == "failed" %}
-      <p>Đánh giá chưa hoàn tất. Câu trả lời gốc vẫn được lưu.</p>
-      <p><strong>Mã lỗi:</strong> {{ report.result.failure_code }}</p>
-      {% if report.result.failure_message %}<p>{{ report.result.failure_message }}</p>{% endif %}
+      <div class="alert alert--error" role="alert">
+        <p class="alert__title">Đánh giá chưa hoàn tất. Câu trả lời gốc vẫn được lưu.</p>
+        <p class="alert__hint"><strong>Mã lỗi:</strong> <code>{{ report.result.failure_code }}</code></p>
+        {% if report.result.failure_message %}<p class="alert__hint">{{ report.result.failure_message }}</p>{% endif %}
+      </div>
       {% if report.result.retryable %}
-        <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}">
+        <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}" class="action-row">
           <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
         </form>
       {% else %}
         <p class="form-hint">Lượt gửi này không thể chấm lại trực tiếp. Hãy quay lại phiên để chỉnh sửa và gửi bản trả lời mới sau khi khắc phục lỗi, hoặc kết thúc sớm phiên.</p>
       {% endif %}
     {% else %}
-      <p>Chưa có kết quả đánh giá hoàn tất cho bài này. Bài gốc vẫn được lưu.</p>
-      {% if can_retry %}
-        <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}">
-          <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
-        </form>
-      {% else %}
-        <p class="form-hint">Hãy quay lại phiên để chỉnh sửa và gửi bản trả lời mới sau khi khắc phục lỗi, hoặc kết thúc sớm phiên.</p>
-      {% endif %}
+      <div class="eval-result-banner">
+        <p>Chưa có kết quả đánh giá hoàn tất cho bài này. Bài gốc vẫn được lưu.</p>
+        {% if can_retry %}
+          <form method="post" action="/sessions/{{ session_id }}/answers/{{ answer_id }}/evaluate?revision={{ revision }}" class="action-row">
+            <button type="submit" class="btn btn--primary">Thử đánh giá lại</button>
+          </form>
+        {% else %}
+          <p class="form-hint">Hãy quay lại phiên để chỉnh sửa và gửi bản trả lời mới sau khi khắc phục lỗi, hoặc kết thúc sớm phiên.</p>
+        {% endif %}
+      </div>
     {% endif %}
-  </div>
+  </section>
 
   {% if report %}
-    <section class="stack" aria-labelledby="answer-heading">
+    <section class="card eval-result-answer" aria-labelledby="answer-heading">
       <h2 id="answer-heading">Câu trả lời gốc</h2>
       <pre class="code-block">{{ report.result.answer_text }}</pre>
     </section>
   {% endif %}
+
   {% if report and report.result.status.value == "completed" %}
     <section class="stack" aria-labelledby="criteria-heading">
-      <h2 id="criteria-heading">Điểm và căn cứ theo tiêu chí</h2>
-      {% for check, feedback in rows %}
-        <article class="card card--subtle stack">
-          <h3>{{ check.criterion_label }}</h3>
-          <p>Trạng thái: {% if check.status.value == "met" %}Đạt{% elif check.status.value == "unmet" %}Chưa đạt{% elif check.status.value == "insufficient_evidence" %}Chưa đủ bằng chứng{% else %}{{ check.status.value }}{% endif %} · Điểm: {% if check.score is not none %}{{ check.score }}/{{ check.max_score }}{% else %}chưa đủ căn cứ{% endif %}</p>
-          <p>{{ feedback.message }}</p>
-          {% if feedback.suggestion %}<p>{{ feedback.suggestion }}</p>{% endif %}
-          {% for item in check.evidence %}
-            {% if item.quote %}<blockquote>“{{ item.quote }}”</blockquote>
-            {% elif item.observation %}<p>Căn cứ quan sát: {{ item.observation }}</p>{% endif %}
-          {% endfor %}
-        </article>
-      {% endfor %}
+      <div class="workbench-pane-head">
+        <h2 id="criteria-heading">Điểm và căn cứ theo tiêu chí</h2>
+      </div>
+      <div class="eval-result-criteria-list">
+        {% for check, feedback in rows %}
+          <article class="card eval-criterion-card eval-criterion-card--{{ check.status.value }}">
+            <div class="eval-criterion-card__head">
+              <div class="eval-criterion-card__title-group">
+                <span class="criterion-index">{{ "%02d"|format(loop.index) }}</span>
+                <h3>{{ check.criterion_label }}</h3>
+              </div>
+              <div class="eval-criterion-card__badges">
+                {% if check.status.value == "met" %}
+                  <span class="badge badge--met">Đạt</span>
+                {% elif check.status.value == "unmet" %}
+                  <span class="badge badge--unmet">Chưa đạt</span>
+                {% elif check.status.value == "insufficient_evidence" %}
+                  <span class="badge badge--unresolved">Chưa đủ bằng chứng</span>
+                {% else %}
+                  <span class="badge badge--neutral">{{ check.status.value }}</span>
+                {% endif %}
+                <span class="badge badge--neutral">
+                  Điểm: {% if check.score is not none %}{{ check.score }}/{{ check.max_score }}{% else %}chưa đủ căn cứ{% endif %}
+                </span>
+              </div>
+            </div>
+            <p class="eval-criterion-card__meta sr-only">
+              Trạng thái: {% if check.status.value == "met" %}Đạt{% elif check.status.value == "unmet" %}Chưa đạt{% elif check.status.value == "insufficient_evidence" %}Chưa đủ bằng chứng{% else %}{{ check.status.value }}{% endif %} · Điểm: {% if check.score is not none %}{{ check.score }}/{{ check.max_score }}{% else %}chưa đủ căn cứ{% endif %}
+            </p>
+            <p class="eval-criterion-card__message">{{ feedback.message }}</p>
+            {% if feedback.suggestion %}<p class="form-hint">Gợi ý: {{ feedback.suggestion }}</p>{% endif %}
+            {% for item in check.evidence %}
+              {% if item.quote %}
+                <blockquote class="evidence-quote">“{{ item.quote }}”</blockquote>
+              {% elif item.observation %}
+                <p class="evidence-observation">Căn cứ quan sát: {{ item.observation }}</p>
+              {% endif %}
+            {% endfor %}
+          </article>
+        {% endfor %}
+      </div>
     </section>
   {% endif %}
-  <div class="action-row"><a class="btn btn--secondary" href="/sessions/{{ session_id }}">Quay lại phiên</a></div>
+
+  <div class="action-row">
+    <a class="btn btn--secondary" href="/sessions/{{ session_id }}">Quay lại phiên</a>
+  </div>
 </section>
 {% endblock %}

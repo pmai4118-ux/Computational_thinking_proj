@@ -1,20 +1,25 @@
 {% extends "base.html" %}
 
 {% block title %}Phiên {{ session.session_id }} — interviewUS{% endblock %}
+{% block page_id %}workspace{% endblock %}
+{% block nav_class %}site-nav--in-session{% endblock %}
 
 {% block content %}
 <section class="card">
   <div class="stack">
     <div class="session-item">
-      <div>
-        <strong>Phiên {{ session.session_id }}</strong>
-        {% if session.state.value == "in_progress" %}
-          <span class="badge badge--unresolved">
-            Câu {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
-          </span>
-        {% else %}
-          <span class="badge badge--met">{{ session.state.value }}</span>
-        {% endif %}
+      <div class="stack" style="gap: var(--space-1);">
+        <span class="eyebrow" style="margin: 0;">Phiên luyện phỏng vấn</span>
+        <div class="action-row" style="gap: var(--space-2);">
+          <strong>Phiên {{ session.session_id }}</strong>
+          {% if session.state.value == "in_progress" %}
+            <span class="sbx-tag sbx-tag--yellow">
+              Câu {{ session.progress.current_index + 1 }} / {{ session.progress.total_questions }}
+            </span>
+          {% else %}
+            <span class="badge badge--met">{{ session.state.value }}</span>
+          {% endif %}
+        </div>
       </div>
       <div class="action-row">
         <a class="btn btn--secondary" href="/">Về danh sách phiên</a>
@@ -22,9 +27,9 @@
     </div>
 
     {% if session.current_question %}
-      <article class="stack reading-measure" aria-labelledby="question-heading">
-        <div>
-          <span class="badge">{{ session.current_question.category }}</span>
+      <article class="stack reading-measure" aria-labelledby="question-heading" data-inline-code>
+        <div class="action-row" style="gap: var(--space-2);">
+          <span class="badge badge--neutral">{{ session.current_question.category }}</span>
           {% if session.current_question.source.license_spdx %}
             <span class="badge">Nguồn mở: {{ session.current_question.source.license_spdx }}</span>
           {% endif %}
@@ -72,7 +77,11 @@
         </div>
       </form>
     {% else %}
-      <p>Phiên luyện tập này đã kết thúc ({{ session.progress.answered_count }}/{{ session.progress.total_questions }} câu đã lưu).</p>
+      <div class="empty-state">
+        <h2>Phiên đã kết thúc</h2>
+        <p>Phiên luyện tập này đã kết thúc ({{ session.progress.answered_count }}/{{ session.progress.total_questions }} câu đã lưu).</p>
+        <a class="btn btn--primary" href="/sessions/{{ session.session_id }}/summary">Mở tổng kết phiên</a>
+      </div>
     {% endif %}
   </div>
 </section>

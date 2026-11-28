@@ -22,12 +22,31 @@
     "skill.algorithms.correctness_and_complexity": "Tính đúng đắn & độ phức tạp thuật toán",
     "skill.engineering.code_review_and_verification": "Đánh giá mã nguồn & kiểm chứng",
   };
+  const knownExerciseTitles = {
+    "exercise.programming.mutable_defaults_and_binding": "Thực hành đối số mặc định và bắt giữ biến trong closure (Python)",
+    "exercise.backend.atomic_transaction_locking": "Thiết kế giao dịch nguyên tử và chuẩn hóa thứ tự khóa trong PostgreSQL",
+    "exercise.backend.rollback_invariant_test": "Viết kiểm thử đồng thời và bảo toàn bất biến khi rollback",
+    "exercise.algorithms.loop_invariant_and_bounds": "Chứng minh bất biến vòng lặp và biên tìm kiếm nhị phân",
+    "exercise.engineering.contract_and_security_review": "Rà soát hợp đồng hàm và tham số hóa truy vấn SQL an toàn",
+  };
 
   function node(tag, className, text) {
     const item = document.createElement(tag);
     if (className) item.className = className;
     if (text !== undefined) item.textContent = text;
     return item;
+  }
+
+  function applyInlineCode(el) {
+    const shell = window.interviewUSShell;
+    if (el && shell && typeof shell.formatInlineCode === "function") {
+      shell.formatInlineCode(el);
+    }
+  }
+
+  function formatIndex(index) {
+    const value = index + 1;
+    return value < 10 ? `0${value}` : String(value);
   }
 
   function formatSkillLabel(id) {
@@ -43,22 +62,27 @@
     }
   }
 
-  function appendSection(card, title, values, emptyText) {
+  function appendSection(container, title, values, emptyText, exerciseTitleMap) {
     const section = node("section", "exercise-card__section");
     section.append(node("h3", "", title));
     const listNode = node("ul", "");
     if (values && values.length) {
       for (const value of values) {
         const entry = node("li", "");
-        entry.append(document.createTextNode("Mã bài: "));
-        entry.append(node("code", "", value));
+        const friendlyTitle = (exerciseTitleMap && exerciseTitleMap.get(value)) || knownExerciseTitles[value];
+        if (friendlyTitle) {
+          entry.textContent = friendlyTitle;
+        } else {
+          entry.append(document.createTextNode("Bài tiên quyết: "));
+          entry.append(node("code", "", value));
+        }
         listNode.append(entry);
       }
     } else {
       listNode.append(node("li", "", emptyText));
     }
     section.append(listNode);
-    card.append(section);
+    container.append(section);
   }
 
   function ensureFilterResetLink(container) {
@@ -82,10 +106,14 @@
       }
       detail.replaceChildren();
       detail.append(node("h3", "", "Hướng dẫn thực hiện"));
-      detail.append(node("p", "", data.instructions));
+      const instructionsEl = node("p", "", data.instructions);
+      applyInlineCode(instructionsEl);
+      detail.append(instructionsEl);
       if (data.observable_outcome) {
         detail.append(node("h3", "", "Kết quả cần đạt"));
-        detail.append(node("p", "", data.observable_outcome));
+        const outcomeEl = node("p", "", data.observable_outcome);
+        applyInlineCode(outcomeEl);
+        detail.append(outcomeEl);
       }
       detail.hidden = false;
       button.hidden = true;
@@ -176,41 +204,42 @@
     return Array.from(groups.values());
   }
 
-  function renderExercise(group) {
+  function renderExercise(group, exerciseTitleMap, index) {
     const item = group.primary;
     const card = node("article", "exercise-card");
+
+    const head = node("div", "exercise-card__head");
+    head.append(node("span", "exercise-card__index", formatIndex(index)));
+    const meta = node("div", "exercise-meta");
+    meta.append(node("span", "badge badge--neutral", `Thời lượng ước tính: ${item.estimated_duration_minutes == null ? "chưa có" : `${item.estimated_duration_minutes} phút`}`));
+    for (const skill of group.skillIds) meta.append(node("span", "badge badge--unmet", formatSkillLabel(skill)));
+    head.append(meta);
+    card.append(head);
+
     card.append(node("h2", "", item.title));
+    const summaryEl = node("p", "exercise-card__summary", item.summary);
+    applyInlineCode(summaryEl);
+    card.append(summaryEl);
 
     const gapSection = node("section", "exercise-card__reason");
     gapSection.append(node("h3", "", "Vì sao bài này phù hợp"));
     if (group.reasons.length > 1) {
       const reasonList = node("ul", "exercise-card__reasons");
       for (const reasonText of group.reasons) {
-        reasonList.append(node("li", "", reasonText));
+        const li = node("li", "", reasonText);
+        applyInlineCode(li);
+        reasonList.append(li);
       }
       gapSection.append(reasonList);
     } else {
-      gapSection.append(node("p", "", group.reasons[0] || "Liên quan tới tiêu chí chưa đạt trong phiên."));
+      const reasonP = node("p", "", group.reasons[0] || "Liên quan tới tiêu chí chưa đạt trong phiên.");
+      applyInlineCode(reasonP);
+      gapSection.append(reasonP);
     }
     card.append(gapSection);
 
-    card.append(node("p", "exercise-card__summary", item.summary));
-
-    const meta = node("div", "exercise-meta");
-    meta.append(node("span", "badge", `Thời lượng ước tính: ${item.estimated_duration_minutes == null ? "chưa có" : `${item.estimated_duration_minutes} phút`}`));
-    for (const skill of group.skillIds) meta.append(node("span", "badge", formatSkillLabel(skill)));
-    card.append(meta);
-
-    appendSection(card, "Bài cần học trước", item.prerequisite_ids, "Không yêu cầu bài tiên quyết.");
-
-    const detailSection = node("section", "exercise-card__section");
-    const detailButton = node("button", "btn btn--secondary", "Xem hướng dẫn bài tập");
-    detailButton.type = "button";
-    const detail = node("div", "exercise-card__detail");
-    detail.hidden = true;
-    detailButton.addEventListener("click", () => loadExerciseDetail(item, detailButton, detail));
-    detailSection.append(detailButton, detail);
-    card.append(detailSection);
+    const detailGrid = node("div", "exercise-card__grid");
+    appendSection(detailGrid, "Bài cần học trước", item.prerequisite_ids, "Không yêu cầu bài tiên quyết.", exerciseTitleMap);
 
     const source = item.source || {};
     const sourceSection = node("section", "exercise-card__section");
@@ -227,12 +256,15 @@
     }
     if (source.license_spdx) sourceSection.append(node("p", "form-hint", `Giấy phép: ${source.license_spdx}`));
     if (source.required_notice) sourceSection.append(node("p", "form-hint", source.required_notice));
-    card.append(sourceSection);
+    detailGrid.append(sourceSection);
+    card.append(detailGrid);
 
-    const actionSection = node("section", "exercise-card__section");
-    actionSection.append(node("h3", "", "Luyện lại bằng câu hỏi khác"));
+    const actionSection = node("section", "exercise-card__section exercise-card__section--actions");
+    actionSection.append(node("h3", "", "Hành động luyện tập"));
+    const actionsRow = node("div", "exercise-card__actions-row");
+
     if (group.practiceTargets.length > 0) {
-      const actions = node("div", "exercise-card__practice-actions");
+      const practiceGroup = node("div", "exercise-card__practice-actions");
       for (const target of group.practiceTargets) {
         const targetGap = target.matched_gap || {};
         const label = group.practiceTargets.length > 1 && targetGap.criterion_label
@@ -241,38 +273,63 @@
         const button = node("button", "btn btn--primary", label);
         button.type = "button";
         button.addEventListener("click", () => startPractice(target, button));
-        actions.append(button);
+        practiceGroup.append(button);
       }
-      actionSection.append(actions);
-    } else if (group.hasEligibleAlternate) {
-      actionSection.append(node("p", "form-hint", "Chưa có mã bài trả lời đã chấm để bắt đầu lượt luyện lại."));
-    } else {
-      actionSection.append(node("p", "form-hint", "Phiên này chưa có biến thể khác đủ điều kiện cho bài tập này."));
+      actionsRow.append(practiceGroup);
     }
+
+    const detailButton = node("button", "btn btn--secondary", "Xem hướng dẫn bài tập");
+    detailButton.type = "button";
+    const detail = node("div", "exercise-card__detail");
+    detail.hidden = true;
+    detailButton.addEventListener("click", () => loadExerciseDetail(item, detailButton, detail));
+    actionsRow.append(detailButton);
+    actionSection.append(actionsRow);
+
+    if (group.practiceTargets.length === 0) {
+      if (group.hasEligibleAlternate) {
+        actionSection.append(node("p", "form-hint", "Chưa có mã bài trả lời đã chấm để bắt đầu lượt luyện lại."));
+      } else {
+        actionSection.append(node("p", "form-hint", "Phiên này chưa có biến thể khác đủ điều kiện cho bài tập này."));
+      }
+    }
+    actionSection.append(detail);
     card.append(actionSection);
     return card;
   }
 
   function renderRecommendations(data) {
-    message.textContent = data.message || "";
     list.replaceChildren();
     let recommendations = data.recommendations || [];
     if (exerciseId) recommendations = recommendations.filter((item) => item.exercise_id === exerciseId);
     if (skillId) recommendations = recommendations.filter((item) => (item.related_skill_ids || []).includes(skillId));
 
+    const exerciseTitleMap = new Map();
+    for (const rec of data.recommendations || []) {
+      if (rec.exercise_id && rec.title) exerciseTitleMap.set(rec.exercise_id, rec.title);
+    }
     const grouped = groupRecommendations(recommendations);
-    for (const group of grouped) list.append(renderExercise(group));
+    for (let index = 0; index < grouped.length; index += 1) {
+      list.append(renderExercise(grouped[index], exerciseTitleMap, index));
+    }
     const noMatches = grouped.length === 0;
     empty.hidden = !noMatches;
     list.hidden = noMatches;
-    if (noMatches && data.unmatched_skill_ids && data.unmatched_skill_ids.length) {
-      emptyReason.textContent = `Chưa tìm thấy bài đã duyệt cho kỹ năng: ${data.unmatched_skill_ids.map(formatSkillLabel).join(", ")}. Không tạo bài thay thế tự động.`;
-    } else if (noMatches && skillId) {
-      emptyReason.textContent = "Chưa có bài tập phù hợp với kỹ năng đã chọn trong phiên này. Bạn có thể mở toàn bộ bài tập của phiên.";
-    } else if (noMatches && exerciseId) {
-      emptyReason.textContent = "Chưa tìm thấy bài tập đã chọn trong danh sách đề xuất của phiên này. Bạn có thể mở toàn bộ bài tập của phiên.";
-    } else if (noMatches) {
-      emptyReason.textContent = data.message || "Chưa có bài tập phù hợp với điểm thiếu đã xác nhận trong phiên.";
+    if (noMatches) {
+      message.textContent = "";
+      message.hidden = true;
+      if (data.unmatched_skill_ids && data.unmatched_skill_ids.length) {
+        emptyReason.textContent = `Chưa tìm thấy bài đã duyệt cho kỹ năng: ${data.unmatched_skill_ids.map(formatSkillLabel).join(", ")}. Không tạo bài thay thế tự động.`;
+      } else if (skillId) {
+        emptyReason.textContent = "Chưa có bài tập phù hợp với kỹ năng đã chọn trong phiên này. Bạn có thể mở toàn bộ bài tập của phiên.";
+      } else if (exerciseId) {
+        emptyReason.textContent = "Chưa tìm thấy bài tập đã chọn trong danh sách đề xuất của phiên này. Bạn có thể mở toàn bộ bài tập của phiên.";
+      } else {
+        emptyReason.textContent = data.message || "Chưa có bài tập phù hợp với điểm thiếu đã xác nhận trong phiên.";
+      }
+    } else {
+      message.textContent = data.message || "";
+      message.hidden = !data.message;
     }
     ensureFilterResetLink(noMatches ? empty : content);
     content.hidden = false;
